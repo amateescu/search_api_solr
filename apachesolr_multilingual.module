@@ -1,0 +1,129 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Multilingual search using Apache Solr.
+ *
+ * @see apachesolr.module
+ *
+ * @author Markus Kalkbrenner (mkalkbrenner) | Cocomore AG
+ *   @see http://drupal.org/user/124705
+ *   @see http://drupal.cocomore.com
+ */
+
+
+/**
+ * Implements hook_nodeapi().
+ *
+ * @param unknown_type $node
+ * @param unknown_type $op
+ * @param unknown_type $a3
+ * @param unknown_type $a4
+ * @return unknown_type
+ */
+function apachesolr_multilingual_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  switch ($op) {
+    case 'delete':
+    case 'insert':
+    case 'update':
+      if (variable_get('apachesolr_multilingual_index_translations', 0) && $node->tnid) {
+        $translations = translation_node_get_translations($node->tnid);
+        foreach ($translations as $language => $translation) {
+          if ($translation->nid != $node->nid) {
+            if ($translation_node = node_load($translation->nid)) {
+              _apachesolr_nodeapi_update($translation_node);
+            }
+          }
+        }
+      }
+      break;
+  }
+}
+
+
+/**
+ * Implements hook_apachesolr_update_index().
+ *
+ * @param unknown_type $document
+ * @param unknown_type $node
+ * @param unknown_type $namespace
+ * @return unknown_type
+ */
+function apachesolr_multilingual_apachesolr_update_index(&$document, $node, $namespace) {
+  static $reentrance = FALSE;
+
+  if (!$reentrance && $node->language && 'neutral' != $node->language) {
+    $reentrance = TRUE;
+
+    // use language specific stemming and so on ..
+    $document->{'title_' . $node->language} = $document->title;
+    $document->{'body_' . $node->language} = $document->body;
+    // TODO deal with other fileds like taxonomy or cck
+
+    if (variable_get('apachesolr_multilingual_index_translations', 0) && $node->tnid) {
+      $translations = translation_node_get_translations($node->tnid);
+      foreach ($translations as $language => $translation) {
+        if ($translation->nid != $node->nid) {
+          if ($translation_document = apachesolr_node_to_document($translation->nid, $namespace)) {
+            $document->{'title_' . $language} = $translation_document->title;
+            $document->{'body_' . $language} = $translation_document->body;
+            // TODO deal with other fileds like taxonomy or cck
+          }
+        }
+      }
+    }
+
+    $reentrance = FALSE;
+  }
+}
+
+
+/**
+ * Implements hook_form_alter().
+ *
+ * @param unknown_type $form
+ * @param unknown_type $form_state
+ * @param unknown_type $form_id
+ * @return unknown_type
+ */
+function apachesolr_multilingual_form_alter(&$form, $form_state, $form_id) {
+  if ('apachesolr_search_settings_form' == $form_id) {
+    $solr = apachesolr_get_solr();
+    $fields = $solr->getFields();
+    foreach ($fields as $field_name => $field) {
+      // Only indexed fields are searchable.
+      if ($field->schema{0} == 'I') {
+        // By default we only show text fields.  Use hook_form_alter to change.
+        $form['apachesolr_search_query_fields'][$field_name]['#access'] = (strpos($field->type, 'text') === 0);
+      }
+    }
+  }
+}
+
+
+function apachesolr_multilingual_menu() {
+  $items = array();
+
+  $items['admin/settings/apachesolr/multilingual'] = array(
+    'title' => 'Multilingual',
+    'weight' => 0,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('apachesolr_multilingual_admin_form'),
+    'file' => 'apachesolr_multilingual.admin.inc',
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_LOCAL_TASK,
+  );
+
+    $items['admin/settings/apachesolr/schema_generator'] = array(
+    'title' => 'Schema Generator',
+    'weight' => 0,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('schema_generator_form'),
+    'file' => 'apachesolr_multilingual.schema_generator.inc',
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  return $items;
+}
