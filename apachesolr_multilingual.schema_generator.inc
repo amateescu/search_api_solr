@@ -27,18 +27,50 @@
 function schema_generator_form($form_state) {
   $active_languages = locale_language_list();
 
-  $form['schema_file_select'] = array(
+  $form['set1'] = array(
+  '#type' => 'fieldset',
+  '#title' => t('Select languages to be handled by multilingual search'),
+  '#weight' => 5,
+  '#collapsible' => TRUE,
+  '#collapsed' => TRUE,
+  );
+  
+  $form['set1']['schema_file_select'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Activated languages'),
     '#options' => $active_languages,
-    '#description' => t('Select languages to be handled by multilingual serarch'),
+    '#description' => t('Select languages to be handled by multilingual search'),
   );
-
-  $form['submit'] = array(
+   
+  $form['set1']['submit_1'] = array(
     '#type' => 'submit',
-    '#value' => t('Schema generieren'),
+    '#value' => t('Generate multiple languages schema'),
   );
 
+
+  $form['set2'] = array(
+  '#type' => 'fieldset',
+  '#title' => t('Select unique language to be handled by multilingual search'),
+  '#weight' => 5,
+  '#collapsible' => TRUE,
+  '#collapsed' => TRUE,
+  );
+  
+  
+  
+  $form['set2']['schema_unique_language_select'] = array(
+    '#type' => 'radios',
+    '#title' => t('Activated languages'),
+    '#options' => $active_languages,
+    '#description' => t('Select one language to be handled by multilingual search'),
+  );
+
+  $form['set2']['submit_2'] = array(
+    '#type' => 'submit',
+    '#value' => t('Generate single language schema'),
+  );
+
+  
   return $form;
 }
 
@@ -51,23 +83,34 @@ function schema_generator_form($form_state) {
  * @return unknown_type
  */
 function schema_generator_form_validate($form, &$form_state) {
-  $all_languages = language_list();
-  $options = $form_state['values']['schema_file_select'];
 
-  // check for something selected
-  if (!in_array(TRUE, $options)){
-    form_set_error('schema_file_select', t('You have to select at least one language.'));
-    return;
+  if ($form_state['clicked_button']['#value'] === t('Generate multiple languages schema')){
+    $options = $form_state['values']['schema_file_select'];
+    // check for something selected
+    if (!in_array(TRUE, $options)){
+      form_set_error('schema_file_select', t('You have to select at least one language.'));
+      return;
+    }
+  } else {
+    $options = $form_state['values']['schema_unique_language_select'];
+    // check for something selected
+    if (!$options){
+      form_set_error('schema_unique_language_select', t('You have to select at least one language.'));
+      return;
+    }
   }
-  else {
-    ob_clean();
-    ob_start();
 
-    $schema_str_complete ='';
-    $schema_source_path = dirname(__FILE__) . '/resources/';
-    $schema_source_file = $schema_source_path . 'schema.xml';
-    $schema_str_complete = file_get_contents($schema_source_file);
+  $all_languages = language_list();
 
+  $schema_str_complete ='';
+  $schema_source_path = dirname(__FILE__) . '/resources/';
+  $schema_source_file = $schema_source_path . 'schema.xml';
+  $schema_str_complete = file_get_contents($schema_source_file);
+
+  ob_clean();
+  ob_start();
+
+  if ($form_state['clicked_button']['#value'] === t('Generate multiple languages schema')){
     // read the block fieldType_text_LANGUAGE.xml
     $schema_source_file = $schema_source_path . 'fieldType_text_LANGUAGE.xml';
     $fieldType_text_LANGUAGE = file_get_contents($schema_source_file);
@@ -96,12 +139,15 @@ function schema_generator_form_validate($form, &$form_state) {
       }
     }
 
-    ob_end_clean();
-
-    drupal_set_header('Content-Type: text/xml; charset=utf-8');
-    drupal_set_header('Content-Disposition: attachment; filename=schema.xml');
-    print $schema_str_complete;
-
-    exit();
+  } else {
+    $schema_str_complete = str_replace('language="English', 'language="'.$all_languages[$options]->name, $schema_str_complete);
   }
+
+  ob_end_clean();
+
+  drupal_set_header('Content-Type: text/xml; charset=utf-8');
+  drupal_set_header('Content-Disposition: attachment; filename=schema.xml');
+  print $schema_str_complete;
+  exit();
 }
+
