@@ -34,14 +34,14 @@ function schema_generator_form($form_state) {
   '#collapsible' => TRUE,
   '#collapsed' => TRUE,
   );
-  
+
   $form['set1']['schema_file_select'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Activated languages'),
     '#options' => $active_languages,
     '#description' => t('Select languages to be handled by multilingual search'),
   );
-   
+
   $form['set1']['submit_1'] = array(
     '#type' => 'submit',
     '#value' => t('Generate multiple languages schema'),
@@ -55,9 +55,9 @@ function schema_generator_form($form_state) {
   '#collapsible' => TRUE,
   '#collapsed' => TRUE,
   );
-  
-  
-  
+
+
+
   $form['set2']['schema_unique_language_select'] = array(
     '#type' => 'radios',
     '#title' => t('Activated languages'),
@@ -70,7 +70,7 @@ function schema_generator_form($form_state) {
     '#value' => t('Generate single language schema'),
   );
 
-  
+
   return $form;
 }
 
@@ -121,7 +121,6 @@ function schema_generator_form_validate($form, &$form_state) {
 
     $blocks = array();
     $blocks['<!-- fieldType_text_LANGUAGE -->'] = $fieldType_text_LANGUAGE;
-    $blocks['<!-- fieldType_textTight_LANGUAGE -->'] = $fieldType_textTight_LANGUAGE;
     $blocks['<!-- field_title_LANGUAGE -->'] = '   <field name="title[LANGUAGE_ID]" type="text[LANGUAGE_ID]" indexed="true" stored="true" termVectors="true" omitNorms="true"/>';
     $blocks['<!-- field_body_LANGUAGE -->'] = '   <field name="body[LANGUAGE_ID]" type="text[LANGUAGE_ID]" indexed="true" stored="false" termVectors="true"/>';
     $tse = array('[LANGUAGE_NAME]', '[LANGUAGE_ID]');
