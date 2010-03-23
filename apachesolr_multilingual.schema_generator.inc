@@ -116,13 +116,17 @@ function schema_generator_form_validate($form, &$form_state) {
     $fieldType_text_LANGUAGE = file_get_contents($schema_source_file);
 
     // read the block fieldType_textTight_LANGUAGE.xml
-    $schema_source_file = $schema_source_path . 'fieldType_textTight_LANGUAGE.xml';
-    $fieldType_textTight_LANGUAGE = file_get_contents($schema_source_file);
+    $schema_source_file = $schema_source_path . 'fieldType_textSpell_LANGUAGE.xml';
+    $fieldType_textSpell_LANGUAGE = file_get_contents($schema_source_file);
 
     $blocks = array();
     $blocks['<!-- fieldType_text_LANGUAGE -->'] = $fieldType_text_LANGUAGE;
-    $blocks['<!-- field_title_LANGUAGE -->'] = '   <field name="title[LANGUAGE_ID]" type="text[LANGUAGE_ID]" indexed="true" stored="true" termVectors="true" omitNorms="true"/>';
-    $blocks['<!-- field_body_LANGUAGE -->'] = '   <field name="body[LANGUAGE_ID]" type="text[LANGUAGE_ID]" indexed="true" stored="false" termVectors="true"/>';
+    $blocks['<!-- fieldType_textSpell_LANGUAGE -->'] = $fieldType_textSpell_LANGUAGE;
+    $blocks['<!-- field_title_LANGUAGE -->'] = '<field name="title[LANGUAGE_ID]" type="text[LANGUAGE_ID]" indexed="true" stored="true" termVectors="true" omitNorms="true"/>';
+    $blocks['<!-- field_body_LANGUAGE -->'] = '<field name="body[LANGUAGE_ID]" type="text[LANGUAGE_ID]" indexed="true" stored="false" termVectors="true"/>';
+    $blocks['<!-- field_spell_LANGUAGE -->'] = '<field name="spell[LANGUAGE_ID]" type="textSpell[LANGUAGE_ID]" indexed="true" stored="true" multiValued="true"/>';
+    $blocks['<!-- copyField_title_LANGUAGE_spell_LANGUAGE -->'] = '<copyField source="title[LANGUAGE_ID]" dest="spell[LANGUAGE_ID]"/>';
+    $blocks['<!-- copyField_body_LANGUAGE_spell_LANGUAGE -->'] = '<copyField source="body[LANGUAGE_ID]" dest="spell[LANGUAGE_ID]"/>';
     $tse = array('[LANGUAGE_NAME]', '[LANGUAGE_ID]');
     // work through the lang.
     foreach ($options as $lg => $language) {

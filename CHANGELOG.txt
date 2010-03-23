@@ -8,3 +8,6 @@ Apache Solr Multilingual 6.x-1.0-alpha1, 2010-xx-xx
 [       ] mkalkbrenner: added tabs to apache solr admin backend
 [       ] mhuder: added support for single language schema.xml
 [#750426] mkalkbrenner: removed textTight. see http://drupal.org/node/750426
+[       ] mkalkbrenner: prepared multiple spell fields
+[       ] mkalkbrenner: added compound splitter to fieldType text
+
