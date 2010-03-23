@@ -1,0 +1,54 @@
+<?php
+// $Id$
+
+/**
+ * Implementation of hook_install().
+ */
+function apachesolr_multilingual_textfile_install() {
+  // Create tables.
+  drupal_install_schema('apachesolr_multilingual_textfile');
+}
+
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function apachesolr_multilingual_textfile_uninstall() {
+  // Remove tables.
+  drupal_uninstall_schema('apachesolr_multilingual_textfile');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function apachesolr_multilingual_textfile_schema() {
+  $schema['apachesolr_multilingual_textfiles'] = array(
+  'description' => 'apachesolr_multilingual_textfiles',
+    'fields' => array(
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => "apachesolr_multilingual_textfiles nid",
+      ),
+      'vid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => "apachesolr_multilingual_textfiles vid",
+      ),
+      'filename' => array(
+        'description' => 'the filename',
+        'type' => 'text',
+        'not null' => TRUE,
+        'size' => 'big'
+      ),
+    ),
+    'primary key' => array('nid', 'vid'),
+  );
+
+  return $schema;
+}
+
+

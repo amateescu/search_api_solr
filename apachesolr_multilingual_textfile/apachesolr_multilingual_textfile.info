@@ -1,0 +1,7 @@
+; $Id$
+name = Apache Solr (Multilingual) Textfiles
+description = edit apachesolr textfiles
+dependencies[] = apachesolr_multilingual
+package = Apache Solr
+core = "6.x"
+

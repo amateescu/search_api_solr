@@ -10,4 +10,5 @@ Apache Solr Multilingual 6.x-1.0-alpha1, 2010-xx-xx
 [#750426] mkalkbrenner: removed textTight. see http://drupal.org/node/750426
 [       ] mkalkbrenner: prepared multiple spell fields
 [       ] mkalkbrenner: added compound splitter to fieldType text
+[       ] mhuder: added module apachesolr_multilingual_textfile to administer stopwords and so on
 
