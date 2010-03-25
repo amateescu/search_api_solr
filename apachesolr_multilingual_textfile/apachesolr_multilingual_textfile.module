@@ -15,42 +15,125 @@ function apachesolr_multilingual_textfile_node_info() {
 }
 
 function apachesolr_multilingual_textfile_form(&$node, $form_state) {
-  $type = node_get_types('type', $node);
+
   $node->status = 0;
+  // do not published
+  $apachesolr_multilingual_filetypes = variable_get('apachesolr_multilingual_filetypes', array('stopwords.txt' => 'stopwords.txt','synonyms.txt' => 'synonyms.txt', 'protwords.txt' => 'protwords.txt', 'compoundwords.txt' => 'compoundwords.txt'));
+  // load / set the filenames
+  $schema_source_path = dirname(__FILE__) . '/../resources/';
+  // path to resources
+
+  if ($node->filename && $node->language) {
+    $node_auto_created = TRUE;
+  } else {
+    $node_auto_created = FALSE;
+  }
+
   $form['title'] = array(
-    '#type'=> 'textfield',
-    '#title' => check_plain($type->title_label),
-    '#required' => TRUE,
-    '#default_value' => $node->title,
+  '#type'=> 'value',
+  '#value' => $node->title,
   );
 
-  $filenames = array('stopwords.txt'=>'stopwords.txt','synonyms.txt'=>'synonyms.txt', 'protwords.txt'=>'protwords.txt', 'compoundwords.txt' => 'compoundwords.txt');
+  if (!$node_auto_created) {
+    $form['filename'] = array(
+      '#type'=> 'select',
+      '#title' => t('select a text type'),
+      '#required' => TRUE,
+      '#options' => $apachesolr_multilingual_filetypes,
+      '#default_value' => $node->filename,
+    );
+  } else {
+    $form['filename'] = array(
+      '#type'=> 'value',
+      '#value' => $node->filename,
+    );
+  }
 
-  $form['filename'] = array(
-    '#type'=> 'select',
-    '#title' => t('select a text type'),
-    '#required' => TRUE,
-    '#options' => $filenames,
-  	'#default_value' => $node->filename,
-  );
+  if($node_auto_created) {
+    if (file_exists($schema_source_path.$node->filename)) {
+      $form[$node->filename] = array(
+        '#type' => 'fieldset',
+        '#title' => t('original apachesolr %filename example file', array('%filename' => $node->filename)),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+      );
+      $form[$node->filename][$node->filename.'_info'] = array(
+        '#type' => 'item',
+        '#title' => '',
+        '#value' => nl2br(file_get_contents($schema_source_path.$node->filename)),
+      );
+    }
+  } else {
+    foreach($apachesolr_multilingual_filetypes as $file)
+    {
+      if (file_exists($schema_source_path.$file)) {
+        $form[$file] = array(
+          '#type' => 'fieldset',
+          '#title' => t('original apachesolr %file example file', array('%file' => $file)),
+          '#collapsible' => TRUE,
+          '#collapsed' => TRUE,
+        );
+        $form[$file][$file.'_info'] = array(
+          '#type' => 'item',
+          '#title' => '',
+          '#value' => nl2br(file_get_contents($schema_source_path.$file)),
+        );
+      }
+    }
+  }
 
+  if ($node->title) {
+    $title = $node->title;
+  } else {
+    $title = 'Apache solr textfile';
+  }
 
   $form['body'] = array(
     '#type' => 'textarea',
-    '#title' => t('Apache Solr Textfile'),
+    '#title' => $title,
     '#rows' => 20,
-    '#required' => TRUE,
+    '#required' => FALSE,
     '#default_value' => $node->body,
   );
 
   return $form;
 }
 
+
+function apachesolr_multilingual_textfile_form_alter(&$form, &$form_state, $form_id){
+
+  if($form_id == 'apachesolr_multilingual_textfile_node_form') {
+    if ($form['#node']->filename && $form['#node']->language) {
+      unset($form['language']);
+      $form['language']['#type'] = 'value';
+      $form['language']['#value'] = $form['#node']->language;
+    }
+  }
+  if($form_id=='node_type_form') {
+    if ('apachesolr_multilingual_textfile' == $form['#node_type']->orig_type) {
+      // set the needed values
+      $form['workflow']['language_content_type']['#type'] = 'value';
+      $form['workflow']['language_content_type']['#default_value'] = '1';
+      // inform the user
+      $form['workflow']['language_content_type_info']['#type'] = 'radio';
+      $form['workflow']['language_content_type_info']['#values'] = array( 0 => '0', 1 => '1');
+      $form['workflow']['language_content_type_info']['#checked'] = 'checked';
+      $form['workflow']['language_content_type_info']["#title"] = t("Multilingual support");
+      $form['workflow']['language_content_type_info']["#description"] = t("Enabled multilingual support is necessary for this content type");
+    }
+  }
+  elseif ($form_id == 'apachesolr_multilingual_admin_form') {
+    $form['#submit'][] = 'apachesolr_multilingual_textfile_admin_form_submit';
+  }
+}
+
+
 function apachesolr_multilingual_textfile_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
-  global $user;
 
   if ('apachesolr_multilingual_textfile' == $node->type) {
+
     switch ($op) {
+
       case 'load':
         $node->filename = db_result(db_query("SELECT filename FROM {apachesolr_multilingual_textfiles} WHERE (nid = %d) and (vid = %d)", $node->nid, $node->vid));
         break;
@@ -58,6 +141,9 @@ function apachesolr_multilingual_textfile_nodeapi(&$node, $op, $teaser = NULL, $
       case 'presave':
         // prohibit publishing
         $node->status = 0;
+        // create fix title
+        $active_languages = locale_language_list();
+        $node->title = $active_languages[$node->language].' / '.$node->filename;
         break;
 
       case 'insert':
@@ -81,9 +167,31 @@ function apachesolr_multilingual_textfile_nodeapi(&$node, $op, $teaser = NULL, $
         break;
 
       case 'view':
-        $node->content['filename'] = array('#value' => $node->filename, '#weight' => -1);
         // TODO utfbody should be removed here and be aplied before file download. currently it's only debug
-        $node->content['utfbody'] = array('#value' => apachesolr_multilingual_textfile_isolatin1accent_filter($node->content['body']['#value']), '#weight' => 55);
+        $node->content['body'] = array('#value' => apachesolr_multilingual_textfile_isolatin1accent_filter($node->content['body']['#value']), '#weight' => 55);
+        break;
+
+      case 'validate':
+        if (!$node->language){
+          form_set_error('language', t('please choose a language'));
+          return;
+        }
+        if(!$node->filename){
+          form_set_error('filename', t('please choose a filename'));
+          return;
+        }
+
+        $erg = db_result(db_query("SELECT nid FROM {apachesolr_multilingual_textfiles} JOIN {node} USING (nid) WHERE language='%s' AND filename='%s'",$node->language ,$node->filename));
+        if ($erg && $erg!=$node->nid) {
+          $active_languages = locale_language_list();
+          $title  = $active_languages[$node->language].' / '.$node->filename;
+          form_set_error('title', t('node already exists: %title', array('%title' => $title)));
+        }
+
+        $error = apachesolr_multilingual_validate_solr_textfile($node->filename, $node->body);
+        if ($error) {
+          form_set_error('body', t('syntax error in apache solr textfile: %filename - %error', array('%filename' => $node->filename, '%error' => $error)));
+        }
         break;
     }
   }
@@ -104,13 +212,100 @@ function apachesolr_multilingual_textfile_isolatin1accent_filter($text) {
   foreach($lines as $line){
     $line = str_replace($sr,'',$line);
     $mappings = explode("=>", $line);
-
     $text = preg_replace( "@\\x{".str_replace('\u','',$mappings[0])."}@u", $mappings[1], $text);
-
-//    $enc_current = mb_regex_encoding();
-//    mb_regex_encoding('UTF-8');
-//    $text = mb_ereg_replace( "\\x{".str_replace('\u','',$mappings[0])."}", $mappings[1], $text);
-//    mb_regex_encoding($enc_current);
+    //    $enc_current = mb_regex_encoding();
+    //    mb_regex_encoding('UTF-8');
+    //    $text = mb_ereg_replace( "\\x{".str_replace('\u','',$mappings[0])."}", $mappings[1], $text);
+    //    mb_regex_encoding($enc_current);
   }
   return $text;
 }
+
+function apachesolr_multilingual_validate_solr_textfile($filename, $text) {
+  $message = '';
+  // remove comments for checkup and split body in lines
+  $text = preg_replace('/\s*$/','', $text);
+  $text = preg_replace('/^\s*/','', $text);
+  $lines = explode("\n",$text);
+  foreach($lines as $i => $line){
+    if (substr($line,0,1) == '#' || trim($line)== '') {
+      unset($lines[$i]);
+    }
+  }
+  // parser
+  switch ($filename) {
+    case 'stopwords.txt':
+      foreach($lines as $i=>$line){
+        $words = explode(" ",$line);
+        if (count($words) > 1) {
+          $message = drupal_strtoupper('line '.$i.': ('.$line.')');
+          break;
+        };
+      }
+      break;
+
+    case 'synonyms.txt':
+      foreach($lines as $i => $line){
+        $words = explode(" ", $line);
+        if (count($words) < 3) {
+          $message = drupal_strtoupper('line '.$i.': ('.$line.')');
+          break;
+        };
+        if ($words[1] != '=>') {
+          $message = drupal_strtoupper('line '.$i.': missing => ('.$line.')');
+          break;
+        };
+      }
+      break;
+
+    case 'protwords.txt':
+      foreach($lines as $i => $line){
+        $words = explode(" ", $line);
+        if (count($words) > 1) {
+          $message = drupal_strtoupper('line '.$i.': ('.$line.')');
+          break;
+        };
+      }
+      break;
+
+    case 'compoundwords.txt':
+      break;
+
+  }
+  return $message;
+}
+
+
+function apachesolr_multilingual_textfile_admin_form_submit($form, &$form_state) {
+  global $user;
+
+  $active_languages = locale_language_list();
+  $all_languages = language_list();
+  $posted_languages = $form['apachesolr_multilingual_languages']['#post']["apachesolr_multilingual_languages"];
+  $apachesolr_multilingual_filetypes = variable_get('apachesolr_multilingual_filetypes', array('stopwords.txt'=>'stopwords.txt','synonyms.txt'=>'synonyms.txt', 'protwords.txt'=>'protwords.txt', 'compoundwords.txt' => 'compoundwords.txt'));
+  // languages to handle
+  if($posted_languages) {
+    foreach($posted_languages as $language) {
+      foreach($apachesolr_multilingual_filetypes as $filename) {
+        if (!db_result(db_query("SELECT 1 FROM {apachesolr_multilingual_textfiles} JOIN {node} USING (nid) WHERE language='%s' AND filename='%s'",$language ,$filename))) {
+          // generate content
+          $apachesolr_multilingual_textfile = new stdClass();
+          $apachesolr_multilingual_textfile->type = 'apachesolr_multilingual_textfile';
+          $apachesolr_multilingual_textfile->title = t($active_languages[$language].' / '.$filename);
+          $apachesolr_multilingual_textfile->filename = $filename;
+          $apachesolr_multilingual_textfile->status = 0;
+          $apachesolr_multilingual_textfile->language = $language;
+          $apachesolr_multilingual_textfile->uid = $user->uid;
+          $apachesolr_multilingual_textfile->programmed = TRUE;
+
+          node_save($apachesolr_multilingual_textfile);
+
+          drupal_set_message('the content type named '.t('%filename has been created', array('%filename' => $active_languages[$language].' / '.$filename)));
+        } else {
+          drupal_set_message('the content type named '.t('%filename already exists, nothing to do', array('%filename' => $active_languages[$language].' / '.$filename)));
+        }
+      }
+    }
+  }
+}
+

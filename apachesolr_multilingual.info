@@ -2,6 +2,7 @@
 name = Apache Solr Multilingual
 description = multilingual searching with Solr
 dependencies[] = apachesolr
+dependencies[] = locale
 package = Apache Solr
 core = "6.x"
 

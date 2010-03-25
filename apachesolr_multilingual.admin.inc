@@ -13,7 +13,6 @@
  *   @see http://drupal.cocomore.com
  */
 
-
 function apachesolr_multilingual_admin_form($form_state) {
   $active_languages = locale_language_list();
 
@@ -22,6 +21,15 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#title' => t('Index translations'),
     '#default_value' => variable_get('apachesolr_multilingual_index_translations', 0),
     '#description' => t('All translations of a node will be added to the node itself ...'),
+  );
+
+  $default_values = variable_get('apachesolr_multilingual_languages', array());
+  $form['apachesolr_multilingual_languages'] = array(
+    '#type' => 'checkboxes',
+    '#title' => '',
+    '#default_value' => $default_values,
+    '#options' => $active_languages,
+    '#description' => t('Select languages to be handled by multilingual search'),
   );
 
   return system_settings_form($form);

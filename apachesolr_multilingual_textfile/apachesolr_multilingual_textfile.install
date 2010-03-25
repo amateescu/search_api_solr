@@ -7,6 +7,8 @@
 function apachesolr_multilingual_textfile_install() {
   // Create tables.
   drupal_install_schema('apachesolr_multilingual_textfile');
+  // Set initital Vars: Enable "language" on content type apachesolr_multilingual_textfile
+  variable_set('language_content_type_apachesolr_multilingual_textfile', '1');
 }
 
 

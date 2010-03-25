@@ -2,6 +2,7 @@
 name = Apache Solr (Multilingual) Textfiles
 description = edit apachesolr textfiles
 dependencies[] = apachesolr_multilingual
+dependencies[] = locale
 package = Apache Solr
 core = "6.x"
 
