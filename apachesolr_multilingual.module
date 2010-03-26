@@ -116,8 +116,8 @@ function apachesolr_multilingual_menu() {
   );
 
   $items['admin/settings/apachesolr/schema_generator'] = array(
-    'title' => 'Schema Generator',
-    'weight' => 0,
+    'title' => 'Config files',
+    'weight' => 10,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('schema_generator_form'),
     'file' => 'apachesolr_multilingual.schema_generator.inc',

@@ -23,12 +23,11 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#description' => t('All translations of a node will be added to the node itself ...'),
   );
 
-  $default_values = variable_get('apachesolr_multilingual_languages', array());
   $form['apachesolr_multilingual_languages'] = array(
     '#type' => 'checkboxes',
     '#title' => '',
-    '#default_value' => $default_values,
     '#options' => $active_languages,
+    '#default_value' => variable_get('apachesolr_multilingual_languages', array()),
     '#description' => t('Select languages to be handled by multilingual search'),
   );
 

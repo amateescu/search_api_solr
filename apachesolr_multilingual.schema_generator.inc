@@ -26,50 +26,59 @@
  */
 function schema_generator_form($form_state) {
   $active_languages = locale_language_list();
-
-  $form['set1'] = array(
-  '#type' => 'fieldset',
-  '#title' => t('Select languages to be handled by multilingual search'),
-  '#weight' => 5,
-  '#collapsible' => TRUE,
-  '#collapsed' => TRUE,
-  );
-
-  $form['set1']['schema_file_select'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Activated languages'),
+  $selected_languages = variable_get('apachesolr_multilingual_languages', array());
+  $language_count = 0;
+  foreach($selected_languages as $lang) {
+    if ($lang) {
+      $language_count++;
+    }
+  }
+  if ($language_count < 1) {
+    $form['info'] = array(
+    '#type' => 'item',
+    '#value' => t('No language selected! You have to !link at least one language.', array('!link' => l(t('select'), 'admin/settings/apachesolr/multilingual')))
+    );
+  } else {
+    $form['schema_file_select'] = array(
+	'#type' => 'checkboxes',
+    '#title' => t('Selected languages'),
     '#options' => $active_languages,
-    '#description' => t('Select languages to be handled by multilingual search'),
-  );
+    '#disabled' => true,
+    '#default_value' => $selected_languages,
+  	'#description' => t('current selected languages to be handled by multilingual search'),
+    );
+  }
+  if ($language_count > 0)
+  {
+    if ($language_count == 1 )
+    {
+      $form['set1'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('unique language schema'),
+      '#weight' => 10,
+      '#collapsible' => FALSE,
+      '#collapsed' => FALSE,
+      );
 
-  $form['set1']['submit_1'] = array(
+      $form['set1']['submit_2'] = array(
+      '#type' => 'submit',
+      '#name' => 'b1',
+      '#value' => t('Download schema.xml'),
+      );
+    }
+    $form['set2'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('multilingual schema'),
+    '#weight' => 20,
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+    );
+    $form['set2']['submit_1'] = array(
     '#type' => 'submit',
-    '#value' => t('Generate multiple languages schema'),
-  );
-
-
-  $form['set2'] = array(
-  '#type' => 'fieldset',
-  '#title' => t('Select unique language to be handled by multilingual search'),
-  '#weight' => 5,
-  '#collapsible' => TRUE,
-  '#collapsed' => TRUE,
-  );
-
-
-
-  $form['set2']['schema_unique_language_select'] = array(
-    '#type' => 'radios',
-    '#title' => t('Activated languages'),
-    '#options' => $active_languages,
-    '#description' => t('Select one language to be handled by multilingual search'),
-  );
-
-  $form['set2']['submit_2'] = array(
-    '#type' => 'submit',
-    '#value' => t('Generate single language schema'),
-  );
-
+    '#name' => 'b2',
+    '#value' => t('Download schema.xml'),
+    );
+  }
 
   return $form;
 }
@@ -83,74 +92,62 @@ function schema_generator_form($form_state) {
  * @return unknown_type
  */
 function schema_generator_form_validate($form, &$form_state) {
-
-  if ($form_state['clicked_button']['#value'] === t('Generate multiple languages schema')){
-    $options = $form_state['values']['schema_file_select'];
-    // check for something selected
-    if (!in_array(TRUE, $options)){
-      form_set_error('schema_file_select', t('You have to select at least one language.'));
-      return;
-    }
-  } else {
-    $options = $form_state['values']['schema_unique_language_select'];
-    // check for something selected
-    if (!$options){
-      form_set_error('schema_unique_language_select', t('You have to select at least one language.'));
-      return;
-    }
-  }
-
-  $all_languages = language_list();
-
-  $schema_str_complete ='';
-  $schema_source_path = dirname(__FILE__) . '/resources/';
-  $schema_source_file = $schema_source_path . 'schema.xml';
-  $schema_str_complete = file_get_contents($schema_source_file);
-
-  ob_clean();
-  ob_start();
-
-  if ($form_state['clicked_button']['#value'] === t('Generate multiple languages schema')){
-    // read the block fieldType_text_LANGUAGE.xml
-    $schema_source_file = $schema_source_path . 'fieldType_text_LANGUAGE.xml';
-    $fieldType_text_LANGUAGE = file_get_contents($schema_source_file);
-
-    // read the block fieldType_textTight_LANGUAGE.xml
-    $schema_source_file = $schema_source_path . 'fieldType_textSpell_LANGUAGE.xml';
-    $fieldType_textSpell_LANGUAGE = file_get_contents($schema_source_file);
-
-    $blocks = array();
-    $blocks['<!-- fieldType_text_LANGUAGE -->'] = $fieldType_text_LANGUAGE;
-    $blocks['<!-- fieldType_textSpell_LANGUAGE -->'] = $fieldType_textSpell_LANGUAGE;
-    $blocks['<!-- field_title_LANGUAGE -->'] = '<field name="title[LANGUAGE_ID]" type="text[LANGUAGE_ID]" indexed="true" stored="true" termVectors="true" omitNorms="true"/>';
-    $blocks['<!-- field_body_LANGUAGE -->'] = '<field name="body[LANGUAGE_ID]" type="text[LANGUAGE_ID]" indexed="true" stored="false" termVectors="true"/>';
-    $blocks['<!-- field_spell_LANGUAGE -->'] = '<field name="spell[LANGUAGE_ID]" type="textSpell[LANGUAGE_ID]" indexed="true" stored="true" multiValued="true"/>';
-    $blocks['<!-- copyField_title_LANGUAGE_spell_LANGUAGE -->'] = '<copyField source="title[LANGUAGE_ID]" dest="spell[LANGUAGE_ID]"/>';
-    $blocks['<!-- copyField_body_LANGUAGE_spell_LANGUAGE -->'] = '<copyField source="body[LANGUAGE_ID]" dest="spell[LANGUAGE_ID]"/>';
-    $tse = array('[LANGUAGE_NAME]', '[LANGUAGE_ID]');
-    // work through the lang.
-    foreach ($options as $lg => $language) {
-      if ($language){
-        // set the vars to replace in the blocks
-        $LANGUAGE_NAME = $all_languages[$language]->name;
-        $LANGUAGE_ID = '_'.$language;
-        $trp = array($LANGUAGE_NAME, $LANGUAGE_ID);
-        // replace the vars in the blocks
-        foreach ($blocks as $search => $replace) {
-          $schema_str_complete = str_replace($search, $search."\n".str_replace($tse, $trp, $replace), $schema_str_complete);
-        }
+  if ($form_state['clicked_button']['#name'] === 'b1' || $form_state['clicked_button']['#name'] === 'b2') {
+    $selected_languages = variable_get('apachesolr_multilingual_languages', array());
+    foreach($selected_languages as $lg) {
+      if ($lg) {
+        $options[] = $lg;
       }
     }
+    $all_languages = language_list();
 
-  } else {
-    $schema_str_complete = str_replace('language="English', 'language="'.$all_languages[$options]->name, $schema_str_complete);
+    $schema_str_complete ='';
+    $schema_source_path = dirname(__FILE__) . '/resources/';
+    $schema_source_file = $schema_source_path . 'schema.xml';
+    $schema_str_complete = file_get_contents($schema_source_file);
+
+    ob_clean();
+    ob_start();
+
+    if ($form_state['clicked_button']['#name'] === 'b2'){
+      // read the block fieldType_text_LANGUAGE.xml
+      $schema_source_file = $schema_source_path . 'fieldType_text_LANGUAGE.xml';
+      $fieldType_text_LANGUAGE = file_get_contents($schema_source_file);
+
+      // read the block fieldType_textTight_LANGUAGE.xml
+      $schema_source_file = $schema_source_path . 'fieldType_textSpell_LANGUAGE.xml';
+      $fieldType_textSpell_LANGUAGE = file_get_contents($schema_source_file);
+
+      $blocks = array();
+      $blocks['<!-- fieldType_text_LANGUAGE -->'] = $fieldType_text_LANGUAGE;
+      $blocks['<!-- fieldType_textSpell_LANGUAGE -->'] = $fieldType_textSpell_LANGUAGE;
+      $blocks['<!-- field_title_LANGUAGE -->'] = '<field name="title[LANGUAGE_ID]" type="text[LANGUAGE_ID]" indexed="true" stored="true" termVectors="true" omitNorms="true"/>';
+      $blocks['<!-- field_body_LANGUAGE -->'] = '<field name="body[LANGUAGE_ID]" type="text[LANGUAGE_ID]" indexed="true" stored="false" termVectors="true"/>';
+      $blocks['<!-- field_spell_LANGUAGE -->'] = '<field name="spell[LANGUAGE_ID]" type="textSpell[LANGUAGE_ID]" indexed="true" stored="true" multiValued="true"/>';
+      $blocks['<!-- copyField_title_LANGUAGE_spell_LANGUAGE -->'] = '<copyField source="title[LANGUAGE_ID]" dest="spell[LANGUAGE_ID]"/>';
+      $blocks['<!-- copyField_body_LANGUAGE_spell_LANGUAGE -->'] = '<copyField source="body[LANGUAGE_ID]" dest="spell[LANGUAGE_ID]"/>';
+      $tse = array('[LANGUAGE_NAME]', '[LANGUAGE_ID]');
+      // work through the lang.
+      foreach ($options as $lg => $language) {
+        if ($language){
+          // set the vars to replace in the blocks
+          $LANGUAGE_NAME = $all_languages[$language]->name;
+          $LANGUAGE_ID = '_'.$language;
+          $trp = array($LANGUAGE_NAME, $LANGUAGE_ID);
+          // replace the vars in the blocks
+          foreach ($blocks as $search => $replace) {
+            $schema_str_complete = str_replace($search, $search."\n".str_replace($tse, $trp, $replace), $schema_str_complete);
+          }
+        }
+      }
+    } else {
+      $schema_str_complete = str_replace('language="English', 'language="'.$all_languages[$options[0]]->name, $schema_str_complete);
+    }
+    ob_end_clean();
+    drupal_set_header('Content-Type: text/xml; charset=utf-8');
+    drupal_set_header('Content-Disposition: attachment; filename=schema.xml');
+    print $schema_str_complete;
+    exit();
   }
-
-  ob_end_clean();
-
-  drupal_set_header('Content-Type: text/xml; charset=utf-8');
-  drupal_set_header('Content-Disposition: attachment; filename=schema.xml');
-  print $schema_str_complete;
-  exit();
 }
 

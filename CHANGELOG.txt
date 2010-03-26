@@ -15,3 +15,6 @@ Apache Solr Multilingual 6.x-1.0-alpha1, 2010-xx-xx
 [       ] mhuder: added isolatin1accent_filter
 [       ] mkalkbrenner: adjusted access rights
 [       ] mkalkbrenner: added deatailed instructions to README.txt
+[       ] mkalkbrenner: added fieldType_textSpell_LANGUAGE.xml
+[       ] mhuder: added improved language selection
+

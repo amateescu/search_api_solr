@@ -14,6 +14,15 @@ function apachesolr_multilingual_textfile_node_info() {
   );
 }
 
+function apachesolr_multilingual_textfile_theme() {
+  return array(
+    'apachesolr_multilingual_textfile_form_element' => array(
+      'arguments' => array('form' => NULL),
+  ),
+  );
+}
+
+
 function apachesolr_multilingual_textfile_form(&$node, $form_state) {
 
   $node->status = 0;
@@ -99,6 +108,12 @@ function apachesolr_multilingual_textfile_form(&$node, $form_state) {
   return $form;
 }
 
+function apachesolr_multilingual_textfile_form_validate($form, &$form_state) {
+  // TODO place for generating zip files
+  //var_dump($form);
+  //exit;
+}
+
 
 function apachesolr_multilingual_textfile_form_alter(&$form, &$form_state, $form_id){
 
@@ -124,6 +139,38 @@ function apachesolr_multilingual_textfile_form_alter(&$form, &$form_state, $form
   }
   elseif ($form_id == 'apachesolr_multilingual_admin_form') {
     $form['#submit'][] = 'apachesolr_multilingual_textfile_admin_form_submit';
+  }
+  elseif ($form_id == 'schema_generator_form') {
+    $apachesolr_multilingual_filetypes = variable_get('apachesolr_multilingual_filetypes', array('stopwords.txt'=>'stopwords.txt','synonyms.txt'=>'synonyms.txt', 'protwords.txt'=>'protwords.txt', 'compoundwords.txt' => 'compoundwords.txt'));
+    $selected_languages = variable_get('apachesolr_multilingual_languages', array());
+    $language_count = 0;
+    foreach($selected_languages as $lang) {
+      if ($lang) {
+        $language_count++;
+      }
+    }
+    if ($language_count > 0) {
+      $form['#validate'][] = 'apachesolr_multilingual_textfile_form_validate';
+
+      $form['set3'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('multilingual textfiles'),
+        '#weight' => 7,
+        '#collapsible' => FALSE,
+        '#collapsed' => FALSE,
+      );
+
+      $form['set2']['submit_3'] = array(
+        '#type' => 'submit',
+        '#name' => 'b3',
+        '#value' => t('Download apachesolr_multilanguage_config.zip'),
+      );
+
+      $form['set3']['textfiles'] = array(
+        '#type' => 'item',
+        '#value' => theme('apachesolr_multilingual_textfile_form_element', $selected_languages),
+      );
+    }
   }
 }
 
@@ -197,6 +244,7 @@ function apachesolr_multilingual_textfile_nodeapi(&$node, $op, $teaser = NULL, $
   }
 }
 
+
 function apachesolr_multilingual_textfile_isolatin1accent_filter($text) {
   $mapping_source_path = dirname(__FILE__).'/../resources/';
   $mappings = file_get_contents($mapping_source_path.'mapping-ISOLatin1Accent.txt');
@@ -220,6 +268,7 @@ function apachesolr_multilingual_textfile_isolatin1accent_filter($text) {
   }
   return $text;
 }
+
 
 function apachesolr_multilingual_validate_solr_textfile($filename, $text) {
   $message = '';
@@ -335,4 +384,28 @@ function apachesolr_multilingual_textfile_access($op, $node, $account) {
   }
 
   return FALSE;
+}
+
+
+
+/**
+ * Displays the content type admin overview page.
+ */
+function theme_apachesolr_multilingual_textfile_form_element($selected_languages) {
+  $header = array(t('text file'), t('Operations'));
+  $rows = array();
+  foreach($selected_languages as $language) {
+    if ($language) {
+      if ($result = db_query("SELECT * FROM {apachesolr_multilingual_textfiles} JOIN {node} USING (nid) WHERE language='%s'", $language)) {
+        while ($db_rec = db_fetch_object($result)) {
+          $rows[] = array(
+            array('data' => $db_rec->title),
+            array('data' => l(t('edit'), 'node/' . $db_rec->nid . '/edit', array('query' => array('destination' => 'admin/settings/apachesolr/schema_generator')))),
+          );
+        }
+      }
+    }
+  }
+
+  return theme('table', $header, $rows);
 }

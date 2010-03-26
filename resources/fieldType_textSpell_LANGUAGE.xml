@@ -1,0 +1,11 @@
+    <!-- $Id$ -->
+    
+    <fieldType name="textSpell[LANGUAGE_ID]" class="solr.TextField" positionIncrementGap="100">
+      <analyzer>
+        <tokenizer class="solr.StandardTokenizerFactory" />
+        <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords[LANGUAGE_ID].txt"/>
+        <filter class="solr.LengthFilterFactory" min="4" max="20" />
+        <filter class="solr.LowerCaseFilterFactory" /> 
+        <filter class="solr.RemoveDuplicatesTokenFilterFactory" /> 
+      </analyzer>
+    </fieldType>
