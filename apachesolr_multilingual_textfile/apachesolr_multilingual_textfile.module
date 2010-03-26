@@ -309,3 +309,30 @@ function apachesolr_multilingual_textfile_admin_form_submit($form, &$form_state)
   }
 }
 
+
+function apachesolr_multilingual_textfile_perm() {
+  return array('view apachesolr_multilingual_textfile', 'create apachesolr_multilingual_textfile', 'edit apachesolr_multilingual_textfile', 'delete apachesolr_multilingual_textfile');
+}
+
+
+function apachesolr_multilingual_textfile_access($op, $node, $account) {
+  switch ($op) {
+    case 'view':
+      return user_access('view apachesolr_multilingual_textfile', $account);
+      break;
+
+    case 'create':
+      return user_access('create apachesolr_multilingual_textfile', $account);
+      break;
+
+    case 'update':
+      return user_access('edit apachesolr_multilingual_textfile', $account);
+      break;
+
+    case 'delete':
+      return user_access('delete apachesolr_multilingual_textfile', $account);
+      break;
+  }
+
+  return FALSE;
+}

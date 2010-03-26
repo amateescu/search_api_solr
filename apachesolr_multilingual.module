@@ -111,17 +111,17 @@ function apachesolr_multilingual_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('apachesolr_multilingual_admin_form'),
     'file' => 'apachesolr_multilingual.admin.inc',
-    'access arguments' => array('administer site configuration'),
+    'access arguments'   => array('administer search'),
     'type' => MENU_LOCAL_TASK,
   );
 
-    $items['admin/settings/apachesolr/schema_generator'] = array(
+  $items['admin/settings/apachesolr/schema_generator'] = array(
     'title' => 'Schema Generator',
     'weight' => 0,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('schema_generator_form'),
     'file' => 'apachesolr_multilingual.schema_generator.inc',
-    'access arguments' => array('administer site configuration'),
+    'access arguments'   => array('administer search'),
     'type' => MENU_LOCAL_TASK,
   );
 
