@@ -191,18 +191,18 @@ function apachesolr_multilingual_textfile_form_alter(&$form, &$form_state, $form
     if ($language_count > 0) {
       $form['#validate'][] = 'apachesolr_multilingual_textfile_form_validate';
 
-      $form['set3'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('multilingual textfiles'),
-        '#weight' => 7,
-        '#collapsible' => FALSE,
-        '#collapsed' => FALSE,
-      );
-
       $form['set2']['submit_3'] = array(
         '#type' => 'submit',
         '#name' => 'b3',
         '#value' => t('Download apachesolr_multilanguage_config.zip'),
+      );
+
+      $form['set3'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Manage Multilingual Configuration Files'),
+        '#weight' => 7,
+        '#collapsible' => FALSE,
+        '#collapsed' => FALSE,
       );
 
       $form['set3']['textfiles'] = array(

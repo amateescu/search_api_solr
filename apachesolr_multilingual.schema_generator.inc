@@ -45,7 +45,7 @@ function schema_generator_form($form_state) {
     '#options' => $active_languages,
     '#disabled' => true,
     '#default_value' => $selected_languages,
-  	'#description' => t('current selected languages to be handled by multilingual search'),
+    '#description' => t('Current selected languages to be handled by multilingual search. You can add or remove languages !link.', array('!link' => l(t('here'), 'admin/settings/apachesolr/multilingual'))),
     );
   }
   if ($language_count > 0)
@@ -54,8 +54,8 @@ function schema_generator_form($form_state) {
     {
       $form['set1'] = array(
       '#type' => 'fieldset',
-      '#title' => t('unique language schema'),
-      '#weight' => 10,
+      '#title' => t('Unique (Non-English) Language Configuration Download'),
+      '#weight' => 1,
       '#collapsible' => FALSE,
       '#collapsed' => FALSE,
       );
@@ -68,8 +68,8 @@ function schema_generator_form($form_state) {
     }
     $form['set2'] = array(
     '#type' => 'fieldset',
-    '#title' => t('multilingual schema'),
-    '#weight' => 20,
+    '#title' => t('Multilingual Configuration Download'),
+    '#weight' => 2,
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
     );
