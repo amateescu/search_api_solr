@@ -91,8 +91,8 @@ function schema_generator_form($form_state) {
  * @param $form_state
  * @return unknown_type
  */
-function schema_generator_form_validate($form, &$form_state) {
-  if ($form_state['clicked_button']['#name'] === 'b1' || $form_state['clicked_button']['#name'] === 'b2') {
+function schema_generator_form_validate(&$form, &$form_state) {
+  if ($form_state['clicked_button']['#name'] === 'b1' || $form_state['clicked_button']['#name'] === 'b2' || $form_state['clicked_button']['#name'] === 'b3') {
     $selected_languages = variable_get('apachesolr_multilingual_languages', array());
     foreach($selected_languages as $lg) {
       if ($lg) {
@@ -109,7 +109,7 @@ function schema_generator_form_validate($form, &$form_state) {
     ob_clean();
     ob_start();
 
-    if ($form_state['clicked_button']['#name'] === 'b2'){
+    if ($form_state['clicked_button']['#name'] === 'b2' || $form_state['clicked_button']['#name'] === 'b3'){
       // read the block fieldType_text_LANGUAGE.xml
       $schema_source_file = $schema_source_path . 'fieldType_text_LANGUAGE.xml';
       $fieldType_text_LANGUAGE = file_get_contents($schema_source_file);
@@ -144,10 +144,15 @@ function schema_generator_form_validate($form, &$form_state) {
       $schema_str_complete = str_replace('language="English', 'language="'.$all_languages[$options[0]]->name, $schema_str_complete);
     }
     ob_end_clean();
-    drupal_set_header('Content-Type: text/xml; charset=utf-8');
-    drupal_set_header('Content-Disposition: attachment; filename=schema.xml');
-    print $schema_str_complete;
-    exit();
+    if ($form_state['clicked_button']['#name'] === 'b3') {
+      $form['schema_str_complete']['#type'] = 'value';
+      $form['schema_str_complete']['#value'] = $schema_str_complete;
+    } else {
+      drupal_set_header('Content-Type: text/xml; charset=utf-8');
+      drupal_set_header('Content-Disposition: attachment; filename=schema.xml');
+      print $schema_str_complete;
+      exit();
+    }
   }
 }
 

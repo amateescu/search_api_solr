@@ -18,3 +18,4 @@ Apache Solr Multilingual 6.x-1.0-alpha1, 2010-xx-xx
 [       ] mkalkbrenner: added fieldType_textSpell_LANGUAGE.xml
 [       ] mhuder: added improved language selection
 [#750426] mkalkbrenner: set schema version to 0.9.5. see http://drupal.org/node/750426#comment-2779560
+[       ] mhuder: provide config file for download

@@ -109,9 +109,48 @@ function apachesolr_multilingual_textfile_form(&$node, $form_state) {
 }
 
 function apachesolr_multilingual_textfile_form_validate($form, &$form_state) {
-  // TODO place for generating zip files
-  //var_dump($form);
-  //exit;
+  if($form_state['clicked_button']['#name'] === 'b3') {
+    $active_languages = locale_language_list();
+    $selected_languages = variable_get('apachesolr_multilingual_languages', array());
+    $apachesolr_multilingual_filetypes = variable_get('apachesolr_multilingual_filetypes', array('stopwords.txt'=>'stopwords.txt','synonyms.txt'=>'synonyms.txt', 'protwords.txt'=>'protwords.txt', 'compoundwords.txt' => 'compoundwords.txt'));
+    $language_count = 0;
+    foreach($selected_languages as $lang) {
+      if ($lang) {
+        $language_count++;
+      }
+    }
+    if($language_count) {
+      // array for zip content
+      $files = array();
+      // languages to handle
+      foreach($selected_languages as $language) {
+        foreach($apachesolr_multilingual_filetypes as $filename) {
+          if ($result = db_query("SELECT * FROM {node} JOIN {apachesolr_multilingual_textfiles} USING (nid) WHERE language='%s' and filename='%s'",$language, $filename)) {
+            while ($db_rec = db_fetch_object($result)) {
+              $s2f = explode('.',$filename);
+              $language_filename = $s2f[0].'_'.$language.'.'.$s2f[1];
+              $files[$language_filename] = db_result(db_query("SELECT body FROM {node_revisions} where nid=%d and vid=%d", $db_rec->nid, $db_rec->vid));
+            }
+          }
+        }
+      }
+      require_once(dirname(__FILE__) . '/../lib/apachesolr_multilingual_zipfile.php');
+      $apachesolr_multilanguage_config_zip = new apachesolr_multilingual_zipfile();
+      $data = $form['schema_str_complete']['#value'];
+      $apachesolr_multilanguage_config_zip->addFile($data, 'schema.xml');
+      foreach($files as $filename => $data) {
+        $apachesolr_multilanguage_config_zip->addFile($data, $filename);
+      }
+      drupal_set_header('Content-Type: application/x-gzip');
+      drupal_set_header('Expires: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+      $dateiname = 'apachesolr_multilanguage_config.zip';
+      drupal_set_header("Content-Disposition: inline; filename=\"$dateiname\"");
+      drupal_set_header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+      drupal_set_header('Pragma: public');
+      print $apachesolr_multilanguage_config_zip->file();
+      exit;
+    }
+  }
 }
 
 
@@ -392,15 +431,16 @@ function apachesolr_multilingual_textfile_access($op, $node, $account) {
  * Displays the content type admin overview page.
  */
 function theme_apachesolr_multilingual_textfile_form_element($selected_languages) {
-  $header = array(t('text file'), t('Operations'));
+  $header = array(t('Text File'), array('data' => t('Operations'), 'colspan' => 2));
   $rows = array();
   foreach($selected_languages as $language) {
     if ($language) {
       if ($result = db_query("SELECT * FROM {apachesolr_multilingual_textfiles} JOIN {node} USING (nid) WHERE language='%s'", $language)) {
         while ($db_rec = db_fetch_object($result)) {
           $rows[] = array(
-            array('data' => $db_rec->title),
-            array('data' => l(t('edit'), 'node/' . $db_rec->nid . '/edit', array('query' => array('destination' => 'admin/settings/apachesolr/schema_generator')))),
+          array('data' => $db_rec->title),
+          array('data' => l(t('download'), 'node/' . $db_rec->nid . '/apachesolr_multilingual_textfile_download', array('query' => array('destination' => 'admin/settings/apachesolr/schema_generator')))),
+          array('data' => l(t('edit'), 'node/' . $db_rec->nid . '/edit', array('query' => array('destination' => 'admin/settings/apachesolr/schema_generator')))),
           );
         }
       }
@@ -409,3 +449,35 @@ function theme_apachesolr_multilingual_textfile_form_element($selected_languages
 
   return theme('table', $header, $rows);
 }
+
+function apachesolr_multilingual_textfile_menu() {
+  $items = array();
+  $items['node/%node/apachesolr_multilingual_textfile_download'] = array(
+    'title' => 'download apachesolr multilingual textfile',
+    'page callback' => 'apachesolr_multilingual_textfile_download',
+    'page arguments' => array(1),
+    // REVIEW access rights
+    'access callback' => 'node_access',
+    'access arguments' => array('view', 1),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+function apachesolr_multilingual_textfile_download($form) {
+  if ($result = db_query("SELECT * FROM {node} JOIN {apachesolr_multilingual_textfiles} USING (nid, vid) WHERE vid=%d", $form->vid)) {
+    $db_rec = db_fetch_object($result);
+    $s2f = explode('.', $db_rec->filename);
+    $filename = $s2f[0].'_'.$db_rec->language.'.'.$s2f[1];
+    if ($data = db_result(db_query("SELECT body FROM {node_revisions} where nid=%d and vid=%d", $form->nid, $form->vid))) {
+      drupal_set_header('Content-Type: text/xml; charset=utf-8');
+      drupal_set_header("Content-Disposition: attachment; filename=\"$filename\"");
+      print $data;
+      exit();
+    }
+    drupal_not_found();
+  }
+}
+
+
+
