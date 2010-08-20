@@ -26,7 +26,6 @@
                 />
         <filter class="solr.LowerCaseFilterFactory"/>
         <filter class="solr.DictionaryCompoundWordTokenFilterFactory" dictionary="compoundwords[LANGUAGE_ID].txt" />
-        <filter class="solr.SnowballPorterFilterFactory" language="[LANGUAGE_NAME]" protected="protwords[LANGUAGE_ID].txt"/>
         <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
       </analyzer>
       <analyzer type="query">
@@ -50,7 +49,6 @@
                 preserveOriginal="[PRESERVE_ORGINAL_QUERY]"
                 />
         <filter class="solr.LowerCaseFilterFactory"/>
-        <filter class="solr.SnowballPorterFilterFactory" language="[LANGUAGE_NAME]" protected="protwords[LANGUAGE_ID].txt"/>
         <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
       </analyzer>
     </fieldType>

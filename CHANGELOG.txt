@@ -1,6 +1,49 @@
 // $Id$
 
-Apache Solr Multilingual 6.x-1.0-alpha1, 2010-xx-xx
+Apache Solr Multilingual 6.x-2.0-alpha1, 2010-xx-xx
+---------------------------------------------------
+[#805336] mkalkbrenner: Hightlighting & body stored="false": no snippets
+[#805414] ayalon, mkalkbrenner: Compatibility to apachesolr 2.x-dev
+[#803016] ayalon, mkalkbrenner: Fatal error in combination with apachesolr 6.x-2.x-dev: function _apachesolr_nodeapi_update($translation_node);
+[#805336] mkalkbrenner: Hightlighting & body stored="false": no snippets
+[#793912] mkalkbrenner: Think about "Search fields" tab
+[#783924] mkalkbrenner: think about ts_*
+[       ] mkalkbrenenr, mhuder: added advanced language specific index options
+[       ] mhuder: only validate spell length if any language has been selected
+[       ] mhuder: updates on ts_ fields support
+[       ] mkalkbrenner: If "language" neutral" is mapped to another language the document gets indexed using this language. "Language neutral" will not occure as an filter in the language facet anymore.
+[       ] mkalkbrenner: Skip dataDir in solrconfig.xml for Multi Core Setup
+[       ] mkalkbrenner: Allow user to adjust Auto Commit Max Time
+[#394728] mkalkbrenner: By default filter by the user's language and provide setting on settings page.
+[       ] mkalkbrenner: fixed bug that language specific highlighting did not work if spell checking is disabled
+[       ] mkalkbrenner: warn user if changes to drupal config require changes to solr config
+[       ] mkalkbrenner: added alternative language facet block
+[#863154] mkalkbrenner: SpellCheckComponent error
+[#866546] mkalkbrenner: Warning: Call-time pass-by-reference
+[#887064] mkalkbrenner: How to configure Tomcat to work with Accents and Umlauts
+
+
+Apache Solr Multilingual 6.x-1.0-alpha3, 2010-05-19
+---------------------------------------------------
+[#783516] mkalkbrenner: apacheslor_multilingual must not depend on i18n
+[#778650] mkalkbrenner: language specific spell checking
+[#788842] mkalkbrenner: fieldType textSpell conficts with fieldType text
+
+
+Apache Solr Multilingual 6.x-1.0-alpha2, 2010-04-27
+---------------------------------------------------
+[       ] mkalkbrenner: deal with language neutral content
+[#778650] mkalkbrenner: language specific spell checking (work in progress)
+[#769752] mhuder: Index translated taxonomy terms
+[#778646] mhuder: language specific handling of tags
+[#779628] mkalkbrenner, mhuder: provide language specific "gettableFiles"
+[       ] mkalkbrenner: protwords must be lowercase
+[       ] mkalkbrenner: cleaned up apachesolr_multilingual_textfile
+[#782804] mkalkbrenner: support compound word splitter
+[       ] mkalkbrenner: changed some code according to drupal coding standards
+
+
+Apache Solr Multilingual 6.x-1.0-alpha1, 2010-03-10
 ---------------------------------------------------
 [       ] mkalkbrenner: first protoype for title and body
 [       ] mhuder: added first prototype of schema generator for multiple languages
@@ -20,3 +63,8 @@ Apache Solr Multilingual 6.x-1.0-alpha1, 2010-xx-xx
 [#750426] mkalkbrenner: set schema version to 0.9.5. see http://drupal.org/node/750426#comment-2779560
 [       ] mhuder: provide config file for download
 [       ] mkalkbrenner: changed some wording
+[       ] mhuder: imroved config file for download
+[       ] mkalkbrenner: reviewed and cleaned up some code
+[       ] mkalkbrenner: solr doesn't contain a stemmer for all languages
+[       ] mkalkbrenner: adjusted README
+

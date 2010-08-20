@@ -11,7 +11,7 @@
  http://wiki.apache.org/solr/SchemaXml
 -->
 
-<schema name="drupal-0.9.5" version="1.2">
+<schema name="drupal-multilingual-0.9.5" version="1.2">
     <!-- attribute "name" is the name of this schema and is only used for display purposes.
          Applications should change this to reflect the nature of the search collection.
          version="1.2" is Solr's version number for the schema syntax and semantics.  It should
@@ -214,7 +214,7 @@
     <fieldType name="textSpell" class="solr.TextField" positionIncrementGap="100">
       <analyzer>
         <tokenizer class="solr.StandardTokenizerFactory" />
-        <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+        <!-- stopwords_spell --><filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
         <filter class="solr.LengthFilterFactory" min="4" max="20" />
         <filter class="solr.LowerCaseFilterFactory" /> 
         <filter class="solr.RemoveDuplicatesTokenFilterFactory" /> 
@@ -299,7 +299,7 @@
    <field name="title" type="text" indexed="true" stored="true" termVectors="true" omitNorms="true"/>
    <!-- field_title_LANGUAGE -->
    <field name="sort_title" type="sortString" indexed="true" stored="false"/>
-   <field name="body" type="text" indexed="true" stored="false" termVectors="true"/>
+   <field name="body" type="text" indexed="true" stored="true" termVectors="true"/>
    <!-- field_body_LANGUAGE -->
    <field name="teaser" type="text" indexed="false" stored="true"/>
    <!-- entity is 'node', 'file', 'user', or some other Drupal object type -->
@@ -328,6 +328,7 @@
    <field name="tid"  type="integer" indexed="true" stored="true" multiValued="true"/>
    <field name="vid"  type="integer" indexed="true" stored="true" multiValued="true"/>
    <field name="taxonomy_names" type="text" indexed="true" stored="false" termVectors="true" multiValued="true" omitNorms="true"/>
+   <!-- field_taxonomy_names_LANGUAGE -->
    <!-- The string version of the title is used for sorting -->
    <copyField source="title" dest="sort_title"/>
    <!-- The string versions of the name used for sorting/multi-site facets -->
@@ -337,22 +338,26 @@
    <copyField source="ts_vid_*" dest="taxonomy_names"/>
    <!-- The teaser can be used when a better snippet is not available -->
    <copyField source="body" dest="teaser" maxChars="300"/>
-   
    <!-- A set of fields to contain text extracted from tag contents which we
         can boost at query time. -->
    <field name="tags_h1" type="text" indexed="true" stored="false" omitNorms="true"/>
+   <!-- field_tags_h1_LANGUAGE -->
    <field name="tags_h2_h3" type="text" indexed="true" stored="false" omitNorms="true"/>
+   <!-- field_tags_h2_h3_LANGUAGE -->
    <field name="tags_h4_h5_h6" type="text" indexed="true" stored="false" omitNorms="true"/>
+   <!-- field_tags_h4_h5_h6_LANGUAGE -->
    <field name="tags_a" type="text" indexed="true" stored="false" omitNorms="true"/>
+   <!-- field_tags_a_LANGUAGE -->
    <!-- Inline tags are typically u, b, i, em, strong -->
    <field name="tags_inline" type="text" indexed="true" stored="false" omitNorms="true"/>
+   <!-- field_tags_inline_LANGUAGE -->
 
    <!-- Here, default is used to create a "timestamp" field indicating
         when each document was indexed.-->
    <field name="timestamp" type="date" indexed="true" stored="true" default="NOW" multiValued="false"/>
 
 	<!-- This field is used to build the spellchecker index -->
-   <field name="spell" type="textSpell" indexed="true" stored="true" multiValued="true"/>
+   <field name="spell" type="textSpell" indexed="true" stored="false" multiValued="true"/>
    <!-- field_spell_LANGUAGE -->
   <!-- copyField commands copy one field to another at the time a document
         is added to the index.  It's used either to index the same field differently,
@@ -378,6 +383,7 @@
    <dynamicField name="tm_*"  type="text"    indexed="true"  stored="true" multiValued="true" termVectors="true"/>
    <dynamicField name="ss_*"  type="string"    indexed="true"  stored="true" multiValued="false"/>
    <dynamicField name="ts_*"  type="text"    indexed="true"  stored="true" multiValued="false" termVectors="true"/>
+   <!-- dynamicField_ts_LANGUAGE_* -->
    <dynamicField name="tsen2k_*" type="edge_n2_kw_text" indexed="true" stored="true" multiValued="false" omitNorms="true" omitTermFreqAndPositions="true" />
    <dynamicField name="ds_*" type="date"    indexed="true"  stored="true" multiValued="false"/>
    <dynamicField name="dm_*" type="date"    indexed="true"  stored="true" multiValued="true"/>

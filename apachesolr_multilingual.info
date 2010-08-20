@@ -1,7 +1,8 @@
 ; $Id$
 name = Apache Solr Multilingual
-description = multilingual searching with Solr
+description = multilingual and non-English search with Solr
 dependencies[] = apachesolr
+dependencies[] = apachesolr_search
 dependencies[] = locale
 package = Apache Solr
 core = "6.x"

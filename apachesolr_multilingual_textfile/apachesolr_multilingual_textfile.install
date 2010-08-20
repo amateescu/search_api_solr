@@ -2,6 +2,15 @@
 // $Id$
 
 /**
+ * @file
+ * Database schema of
+ * @see apachesolr_multilingual_textfile.module
+ *
+ * @author Markus Kalkbrenner | Cocomore AG
+ *   @see http://drupal.org/user/124705
+ */
+
+/**
  * Implementation of hook_install().
  */
 function apachesolr_multilingual_textfile_install() {
