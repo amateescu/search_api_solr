@@ -34,7 +34,7 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#title' => t('Languages'),
     '#options' => $active_languages,
     '#default_value' => variable_get('apachesolr_multilingual_languages', array()),
-    '#description' => t('Select languages to be handled by multilingual search. You can only choose from languges actived !link.', array('!link' => l(t('here'), 'admin/settings/language'))),
+    '#description' => t('Choose languages to be handled by multilingual search. You can only choose from languges actived !link.', array('!link' => l(t('here'), 'admin/settings/language'))),
     '#element_validate' => array('apachesolr_multilingual_admin_form_validate_new_config'),
   );
 
@@ -357,18 +357,18 @@ function apachesolr_multilingual_admin_form_validate($form, $form_state) {
   $languages = $form['apachesolr_multilingual_language_settings']['apachesolr_multilingual_languages']['#value'];
   foreach ( $languages as $language) {
     if ( $form['apachesolr_multilingual_advanced'][$language]['SpellLengthFilterFactory']['apachesolr_multilingual_advanced_lengthMin_spell_' . $language] ) {
-      $lengthMin = $form['apachesolr_multilingual_advanced'][$language]['SpellLengthFilterFactory']['apachesolr_multilingual_advanced_lengthMin_spell_' . $language]['#value'];
-      $lengthMax = $form['apachesolr_multilingual_advanced'][$language]['SpellLengthFilterFactory']['apachesolr_multilingual_advanced_lengthMax_spell_' . $language]['#value'];
+      $length_min = $form['apachesolr_multilingual_advanced'][$language]['SpellLengthFilterFactory']['apachesolr_multilingual_advanced_lengthMin_spell_' . $language]['#value'];
+      $length_max = $form['apachesolr_multilingual_advanced'][$language]['SpellLengthFilterFactory']['apachesolr_multilingual_advanced_lengthMax_spell_' . $language]['#value'];
 
-      if (!ctype_digit($lengthMin)) {
+      if (!ctype_digit($length_min)) {
         form_set_error('apachesolr_multilingual_advanced_lengthMin_spell_' . $language, t('Minimum number of characters needs to be numeric.'));
       }
 
-      if (!ctype_digit($lengthMax)) {
+      if (!ctype_digit($length_max)) {
         form_set_error('apachesolr_multilingual_advanced_lengthMax_spell_' . $language, t('Maximum number of characters needs to be numeric.'));
       }
 
-      if ($lengthMin < 0 || $lengthMin > $lengthMax) {
+      if ($length_min < 0 || $length_min > $length_max) {
         form_set_error('apachesolr_multilingual_advanced_lengthMax_spell_' . $language, t('Minimum number of characters need to be less than maximum number of characters.'));
       }
     }
