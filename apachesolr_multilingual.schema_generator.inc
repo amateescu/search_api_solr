@@ -33,24 +33,25 @@ function apachesolr_multilingual_schema_generator_form($form_state) {
       $language_count++;
     }
   }
-
   if ($language_count < 1) {
     $form['info'] = array(
     '#type' => 'item',
-    '#value' => t('No language selected! You have to !link at least one language.', array('!link' => l(t('select'), 'admin/settings/apachesolr/multilingual')))
+    '#value' => t('No language selected! You have to !link at least one language.', array('!link' => l(t('select'), 'admin/config/search/apachesolr/multilingual')))
     );
-  }
+  } 
   else {
     $form['schema_file_select'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Selected languages'),
-    '#options' => $active_languages,
-    '#disabled' => TRUE,
-    '#default_value' => $selected_languages,
-    '#description' => t('Current selected languages to be handled by multilingual search. You can add or remove languages !link.', array('!link' => l(t('here'), 'admin/settings/apachesolr/multilingual'))),
+      '#type' => 'checkboxes',
+      '#title' => t('Selected languages'),
+      '#options' => $active_languages,
+      '#disabled' => TRUE,
+      '#default_value' => $selected_languages,
+      '#description' => t(
+        'Current selected languages to be handled by multilingual search. You can add or remove languages !link.', 
+        array('!link' => l(t('here'), 'admin/config/search/apachesolr/multilingual'))
+      ),
     );
   }
-
   if ($language_count > 0) {
     if ($language_count == 1 ) {
       $form['set1'] = array(
@@ -104,20 +105,45 @@ function apachesolr_multilingual_schema_generator_form($form_state) {
   return $form;
 }
 
-
+/**
+ * Validate hook
+ * 
+ * @return void
+ */
 function apachesolr_multilingual_schema_generator_form_unique_language_validate(&$form, &$form_state) {
   apachesolr_multilingual_schema_generator_form_do_validate($form, $form_state, FALSE);
 }
 
-
+/**
+ * Validate hook
+ * 
+ * @return void
+ */
 function apachesolr_multilingual_schema_generator_form_multilingual_validate(&$form, &$form_state) {
   apachesolr_multilingual_schema_generator_form_do_validate($form, $form_state, TRUE);
 }
 
+/**
+ * Replaces placeholders by values
+ * configured by the user
+ *
+ * @param $language
+ *
+ * @param $tse
+ *   placeholder
+ *
+ * @param $trp
+ *   replacement
+ *
+ * @param $tx
+ *   the source text containing the placeholders
+ *
+ * @return
+ *   the source text including the replacements
+ */
+function apachesolr_multilingual_replace_language_vars($language, $text) {
 
-function apachesolr_multilingual_replace_vars($language, $tse, $trp, $tx) {
-
-  $tx = str_replace($tse, $trp, $tx);
+  $bl['[DATA_DIR]'] = variable_get('apachesolr_multilingual_dataDir', '${solr.data.dir:./solr/data}');
 
   $bl['[SPELL_LENGTH_MIN]'] = variable_get('apachesolr_multilingual_advanced_lengthMin_spell_' . $language, 4);
   $bl['[SPELL_LENGTH_MAX]'] = variable_get('apachesolr_multilingual_advanced_lengthMax_spell_' . $language, 20);
@@ -133,7 +159,7 @@ function apachesolr_multilingual_replace_vars($language, $tse, $trp, $tx) {
   $bl['[CATENATE_WORDS_INDEX]'] = variable_get('apachesolr_multilingual_advanced_catenateWords_index_' . $language, 1);
   $bl['[CATENATE_NUMBERS_INDEX]'] = variable_get('apachesolr_multilingual_advanced_catenateNumbers_index_' . $language, 1);
   $bl['[CATENATE_ALL_INDEX]'] = variable_get('apachesolr_multilingual_advanced_catenateAll_index_' . $language, 0);
-  $bl['[PRESERVE_ORGINAL_INDEX]'] = variable_get('apachesolr_multilingual_preserveOriginal_index_' . $language, 0);
+  $bl['[PRESERVE_ORGINAL_INDEX]'] = variable_get('apachesolr_multilingual_preserveOriginal_index_' . $language, 1);
 
   $bl['[SPLIT_ON_CASE_CHANGE_QUERY]'] = variable_get('apachesolr_multilingual_advanced_splitOnCaseChange_query_' . $language, 1);
   $bl['[SPILT_ON_NUMERICS_QUERY]'] = variable_get('apachesolr_multilingual_advanced_splitOnNumerics_query_' . $language, 1);
@@ -143,32 +169,39 @@ function apachesolr_multilingual_replace_vars($language, $tse, $trp, $tx) {
   $bl['[CATENATE_WORDS_QUERY]'] = variable_get('apachesolr_multilingual_advanced_catenateWords_query_' . $language, 1);
   $bl['[CATENATE_NUMBERS_QUERY]'] = variable_get('apachesolr_multilingual_advanced_catenateNumbers_query_' . $language, 1);
   $bl['[CATENATE_ALL_QUERY]'] = variable_get('apachesolr_multilingual_advanced_catenateAll_query_' . $language, 0);
-  $bl['[PRESERVE_ORGINAL_QUERY]'] = variable_get('apachesolr_multilingual_preserveOriginal_query_' . $language, 0);
+  $bl['[PRESERVE_ORGINAL_QUERY]'] = variable_get('apachesolr_multilingual_preserveOriginal_query_' . $language, 1);
 
   // replace the vars in the blocks
   foreach ($bl as $search => $replace) {
-    $tx = str_replace($search, $replace, $tx);
+    $text = str_replace($search, $replace, $text);
   }
 
-  return $tx;
+  return $text;
 }
 
 
 /**
- * Implements hook_form_validate.
+ * Implements hook_form_validate()
+ * 
+ * Validates the contents of the form. Used for
+ * several different forms.
  *
  * @param $form
  * @param $form_state
- * @return unknown_type
+ * 
+ * @return void
  */
 function apachesolr_multilingual_schema_generator_form_do_validate(&$form, &$form_state, $multilingual) {
   $selected_languages = variable_get('apachesolr_multilingual_languages', array());
   $options = array();
+
   foreach ($selected_languages as $lg) {
     if ($lg) {
       $options[] = $lg;
     }
   }
+
+  $language = $options[0];
 
   // schema.xml template file
   $schema_source_path = dirname(__FILE__) . '/resources/';
@@ -180,7 +213,7 @@ function apachesolr_multilingual_schema_generator_form_do_validate(&$form, &$for
   $solrconfig_source_file = $solrconfig_source_path . 'solrconfig.xml';
   $solrconfig_str_complete = file_get_contents($solrconfig_source_file);
 
-  if (variable_get('apachesolr_multilingual_multicore', 0)) {
+  if (variable_get('apachesolr_multilingual_multicore', 1)) {
     $solrconfig_str_complete = preg_replace("@<dataDir>.*?</dataDir>@", "<!-- disabled for multicore setup \n  $0 -->", $solrconfig_str_complete);
   }
 
@@ -191,7 +224,8 @@ function apachesolr_multilingual_schema_generator_form_do_validate(&$form, &$for
 
   if (!$multilingual) {
     $dedicated_stopwords_for_spellchecker = TRUE;
-    if ($stemmer = apachesolr_multilingual_get_stemmer($options[0])) {
+
+    if ($stemmer = apachesolr_multilingual_get_stemmer($language)) {
       // adjust stemmer
       $schema_str_complete = str_replace('language="English', 'language="' . $stemmer, $schema_str_complete);
       if ('English' == $stemmer) {
@@ -239,7 +273,7 @@ function apachesolr_multilingual_schema_generator_form_do_validate(&$form, &$for
     $blocks['<!-- lst_spellchecker_LANGUAGE -->'] = $lst_spellchecker_language;
     $blocks['<!-- field_title_LANGUAGE -->'] = '<field name="title[LANGUAGE_ID]" type="text[LANGUAGE_ID]" indexed="true" stored="true" termVectors="true" omitNorms="true"/>';
     $blocks['<!-- field_body_LANGUAGE -->'] = '<field name="body[LANGUAGE_ID]" type="text[LANGUAGE_ID]" indexed="true" stored="true" termVectors="true"/>';
-    $blocks['<!-- field_spell_LANGUAGE -->'] = '<field name="spell[LANGUAGE_ID]" type="textSpell[LANGUAGE_ID]" indexed="true" stored="false" multiValued="true"/>';
+    $blocks['<!-- field_spell_LANGUAGE -->'] = '<field name="spell[LANGUAGE_ID]" type="textSpell[LANGUAGE_ID]" indexed="true" stored="true" multiValued="true"/>';
     $blocks['<!-- copyField_title_LANGUAGE_spell_LANGUAGE -->'] = '<copyField source="title[LANGUAGE_ID]" dest="spell[LANGUAGE_ID]"/>';
     $blocks['<!-- copyField_body_LANGUAGE_spell_LANGUAGE -->'] = '<copyField source="body[LANGUAGE_ID]" dest="spell[LANGUAGE_ID]"/>';
     $blocks['<!-- field_taxonomy_names_LANGUAGE -->'] = '<field name="taxonomy_names[LANGUAGE_ID]" type="text[LANGUAGE_ID]" indexed="true" stored="false" termVectors="true" multiValued="true" omitNorms="true"/>';
@@ -276,20 +310,24 @@ function apachesolr_multilingual_schema_generator_form_do_validate(&$form, &$for
       }
 
       // schema.xml replace the vars in the blocks
-      foreach ($blocks as $search => $replace) {
-        $schema_str_complete = str_replace($search, $search . "\n" . apachesolr_multilingual_replace_vars($language, $tse, $trp, $replace), $schema_str_complete);
-      }
-
       // solrconfig.xml replace the vars in the blocks
       foreach ($blocks as $search => $replace) {
-        $solrconfig_str_complete = str_replace($search, $search . "\n" . apachesolr_multilingual_replace_vars($language, $tse, $trp, $replace), $solrconfig_str_complete);
+        $schema_str_complete = str_replace($search, $search . "\n" . apachesolr_multilingual_replace_language_vars($language, str_replace($tse, $trp, $replace)), $schema_str_complete);
+        $solrconfig_str_complete = str_replace($search, $search . "\n" . apachesolr_multilingual_replace_language_vars($language, str_replace($tse, $trp, $replace)), $solrconfig_str_complete);
       }
+
       $search = '<!-- gettableFiles_LANGUAGE  -->';
       foreach ($gettable_files as $s => $replace) {
-        $solrconfig_str_complete = str_replace($search, $search . "\n" . apachesolr_multilingual_replace_vars($language, $tse, $trp, $replace), $solrconfig_str_complete);
+        $solrconfig_str_complete = str_replace($search, $search . "\n" . apachesolr_multilingual_replace_language_vars($language, str_replace($tse, $trp, $replace)), $solrconfig_str_complete);
       }
     }
+
+    // set $language id to a value that doesn't exist. That will cause apachesolr_multilingual_replace_language_vars() to use default values.
+    $language = 'default';
   }
+
+  $schema_str_complete = apachesolr_multilingual_replace_language_vars($language, $schema_str_complete);
+  $solrconfig_str_complete = apachesolr_multilingual_replace_language_vars($language, $solrconfig_str_complete);
 
   ob_end_clean();
 
@@ -300,15 +338,15 @@ function apachesolr_multilingual_schema_generator_form_do_validate(&$form, &$for
   $form['solrconfig_str_complete']['#value'] = $solrconfig_str_complete;
 
   if ($form_state['clicked_button']['#name'] === 'b1' || $form_state['clicked_button']['#name'] === 'b2') {
-    drupal_set_header('Content-Type: text/xml; charset=utf-8');
-    drupal_set_header('Content-Disposition: attachment; filename=schema.xml');
+    drupal_add_http_header('Content-Type', 'text/xml; charset=utf-8');
+    drupal_add_http_header('Content-Disposition', 'attachment; filename=schema.xml');
     print $schema_str_complete;
     exit();
   }
-
+  
   if ($form_state['clicked_button']['#name'] === 'sc1' || $form_state['clicked_button']['#name'] === 'sc2') {
-    drupal_set_header('Content-Type: text/xml; charset=utf-8');
-    drupal_set_header('Content-Disposition: attachment; filename=solrconfig.xml');
+    drupal_add_http_header('Content-Type', 'text/xml; charset=utf-8');
+    drupal_add_http_header('Content-Disposition', 'attachment; filename=solrconfig.xml');
     print $solrconfig_str_complete;
     exit();
   }

@@ -1,9 +1,14 @@
 ; $Id$
 name = Apache Solr Multilingual
 description = multilingual and non-English search with Solr
+package = Apache Solr
+core = "7.x"
+
 dependencies[] = apachesolr
 dependencies[] = apachesolr_search
 dependencies[] = locale
-package = Apache Solr
-core = "6.x"
 
+files[] = apachesolr_multilingual.admin.inc
+files[] = apachesolr_multilingual.module
+files[] = apachesolr_multilingual.schema_generator.inc
+files[] = lib/apachesolr_multilingual_zipfile.php

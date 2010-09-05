@@ -1,8 +1,12 @@
 ; $Id$
 name = Apache Solr (Multilingual) Textfiles
 description = edit apachesolr textfiles
+package = Apache Solr
+core = "7.x"
+
 dependencies[] = apachesolr_multilingual
 dependencies[] = locale
-package = Apache Solr
-core = "6.x"
+dependencies[] = text
 
+files[] = apachesolr_multilingual_textfile.install
+files[] = apachesolr_multilingual_textfile.module

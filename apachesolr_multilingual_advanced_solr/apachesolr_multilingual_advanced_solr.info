@@ -1,0 +1,10 @@
+; $Id$
+name = Apache Solr (Multilingual) Advanced Settings
+description = Tweak things like data dir or auto commit time
+package = Apache Solr
+core = "7.x"
+
+dependencies[] = apachesolr_multilingual
+
+files[] = apachesolr_multilingual_advanced_solr.module
+files[] = apachesolr_multilingual_advanced_solr.admin.inc

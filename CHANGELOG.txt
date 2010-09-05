@@ -21,6 +21,14 @@ Apache Solr Multilingual 6.x-2.0-alpha1, 2010-xx-xx
 [#863154] mkalkbrenner: SpellCheckComponent error
 [#866546] mkalkbrenner: Warning: Call-time pass-by-reference
 [#887064] mkalkbrenner: How to configure Tomcat to work with Accents and Umlauts
+[       ] mkalkbrenner: merged schema.xml drupal-1.1
+[       ] mkalkbrenner: set preserveOriginal to 1 by default like apachesolr 6.x-1.2 does
+[       ] mkalkbrenner: Apply advanced settings to config files created by "Unique (Non-English) Language Configuration Download" as well
+[       ] mkalkbrenner: display advanced solr settings for all active languages
+[       ] mkalkbrenner: moved advanced solr configuration settings to dedicated module
+[       ] mkalkbrenner: made data dir configurable
+[#876494] mkalkbrenner: Chaotic taxonomy search fields, hard to make sense of them
+[#899636] linksunten, mkalkbrenner: corrupt validation in admin files
 
 
 Apache Solr Multilingual 6.x-1.0-alpha3, 2010-05-19

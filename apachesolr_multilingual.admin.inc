@@ -14,6 +14,12 @@
  */
 
 
+/**
+ * Implemtens hook_form().
+ *
+ * @param $form_state
+ * @return void
+ */
 function apachesolr_multilingual_admin_form($form_state) {
   $active_languages = locale_language_list();
 
@@ -41,7 +47,7 @@ function apachesolr_multilingual_admin_form($form_state) {
   $form['apachesolr_multilingual_language_settings']['apachesolr_multilingual_map_language_neutral'] = array(
     '#type' => 'radios',
     '#title' => t('Map language neutral'),
-    '#options' => array_merge(array('' => t('No mapping')), $active_languages),
+    '#options' => array_merge(array(LANGUAGE_NONE => t('No mapping')), $active_languages),
     '#default_value' => variable_get('apachesolr_multilingual_map_language_neutral', ''),
     '#description' => t('Select a language to treat content marked as language neutral. Language neutral will not occur as an filter option any more.'),
     '#element_validate' => array('apachesolr_multilingual_admin_form_validate_reindex'),
@@ -80,7 +86,7 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#type' => 'checkbox',
     '#title' => t('Index taxonomy term translations'),
     '#default_value' => variable_get('apachesolr_multilingual_index_term_translations', 0),
-    '#description' => t('Index translations of the taxonomy terms. Requires module Taxonomy Translation which is part of !link.', array('!link' => l('Internationalization', 'http://drupal.org/project/i18n'))),
+    '#description' => t('Index translations of the taxonomy terms. Requires module Taxonomy Translation which is part of !link.', array('!link' => l(t('Internationalization'), 'http://drupal.org/project/i18n'))),
     '#disabled' => !module_exists('i18ntaxonomy'),
     '#element_validate' => array('apachesolr_multilingual_admin_form_validate_reindex'),
   );
@@ -93,7 +99,7 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#description' => t('Advanced settings for every language. If there are missing some languages here you have to activate them above and save this form first.'),
   );
 
-  foreach (variable_get('apachesolr_multilingual_languages', array()) as $language) {
+  foreach (array_keys($active_languages) as $language) {
     $form['apachesolr_multilingual_advanced'][$language] = array(
       '#type' => 'fieldset',
       '#title' => $active_languages[$language],
@@ -183,7 +189,7 @@ function apachesolr_multilingual_admin_form($form_state) {
     $form['apachesolr_multilingual_advanced'][$language]['WordDelimiterFilterFactory']['index']['apachesolr_multilingual_advanced_preserveOriginal_index_' . $language] = array(
       '#type' => 'checkbox',
       '#title' => 'preserveOriginal',
-      '#default_value' => variable_get('apachesolr_multilingual_preserveOriginal_index_' . $language, 0),
+      '#default_value' => variable_get('apachesolr_multilingual_preserveOriginal_index_' . $language, 1),
       '#description' => t('Causes the original token to be indexed without modifications (in addition to the tokens produced due to other options).'),
       '#element_validate' => array('apachesolr_multilingual_admin_form_validate_new_config'),
     );
@@ -321,30 +327,6 @@ function apachesolr_multilingual_admin_form($form_state) {
     );
   }
 
-  $form['apachesolr_multilingual_advanced_solr'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Advanced Solr Settings'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#description' => t('Advanced settings for Solr.'),
-  );
-
-  $form['apachesolr_multilingual_advanced_solr']['apachesolr_multilingual_multicore'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Multi Core Setup'),
-    '#default_value' => variable_get('apachesolr_multilingual_multicore', 0),
-    '#description' => t('Removes property dataDir from solrconfig.xml. See !link for further instructions.', array('!link' => l('Core Administration', 'http://wiki.apache.org/solr/CoreAdmin'))),
-    '#element_validate' => array('apachesolr_multilingual_admin_form_validate_new_config'),
-  );
-
-  $form['apachesolr_multilingual_advanced_solr']['apachesolr_multilingual_autoCommit_maxTime'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Auto Commit Max Time'),
-    '#default_value' => variable_get('apachesolr_multilingual_autoCommit_maxTime', 120000),
-    '#description' => t('Time in ms before documents posted to Solr will be committed to the index. This option is described as "delay" at !link.', array('!link' => l(t('Search Index'), 'admin/settings/apachesolr/index'))),
-    '#element_validate' => array('apachesolr_multilingual_admin_form_validate_new_config'),
-  );
-
   return system_settings_form($form);
 }
 
@@ -354,55 +336,89 @@ function apachesolr_multilingual_admin_form_validate($form, $form_state) {
     form_set_error('apachesolr_multilingual_map_language_neutral', t('You need to map language neutral content to an activated language'));
   }
 
-  $languages = $form['apachesolr_multilingual_language_settings']['apachesolr_multilingual_languages']['#value'];
-  foreach ( $languages as $language) {
-    if ( $form['apachesolr_multilingual_advanced'][$language]['SpellLengthFilterFactory']['apachesolr_multilingual_advanced_lengthMin_spell_' . $language] ) {
-      $length_min = $form['apachesolr_multilingual_advanced'][$language]['SpellLengthFilterFactory']['apachesolr_multilingual_advanced_lengthMin_spell_' . $language]['#value'];
-      $length_max = $form['apachesolr_multilingual_advanced'][$language]['SpellLengthFilterFactory']['apachesolr_multilingual_advanced_lengthMax_spell_' . $language]['#value'];
+  $active_languages = locale_language_list();
+  foreach (array_keys($active_languages) as $language) {
+    $length_min = $form_state['values']['apachesolr_multilingual_advanced_lengthMin_spell_' . $language];
+    $length_max = $form_state['values']['apachesolr_multilingual_advanced_lengthMax_spell_' . $language];
 
-      if (!ctype_digit($length_min)) {
-        form_set_error('apachesolr_multilingual_advanced_lengthMin_spell_' . $language, t('Minimum number of characters needs to be numeric.'));
-      }
-
-      if (!ctype_digit($length_max)) {
-        form_set_error('apachesolr_multilingual_advanced_lengthMax_spell_' . $language, t('Maximum number of characters needs to be numeric.'));
-      }
-
-      if ($length_min < 0 || $length_min > $length_max) {
-        form_set_error('apachesolr_multilingual_advanced_lengthMax_spell_' . $language, t('Minimum number of characters need to be less than maximum number of characters.'));
-      }
+    if (!ctype_digit($length_min)) {
+      form_set_error('apachesolr_multilingual_advanced_lengthMin_spell_' . $language, t('Minimum number of characters needs to be numeric.'));
     }
-  }
 
-  if (!ctype_digit($form_state['values']['apachesolr_multilingual_autoCommit_maxTime'])) {
-    form_set_error('apachesolr_multilingual_autoCommit_maxTime', t('You need to privide a valid number of ms.'));
+    if (!ctype_digit($length_max)) {
+      form_set_error('apachesolr_multilingual_advanced_lengthMax_spell_' . $language, t('Maximum number of characters needs to be numeric.'));
+    }
+
+    if ($length_min < 0 || $length_min > $length_max) {
+      form_set_error('apachesolr_multilingual_advanced_lengthMax_spell_' . $language, t('Minimum number of characters need to be less than maximum number of characters.'));
+    }
   }
 }
 
+/**
+ * Shows a hint to the user to use the new configurations
+ *
+ * @param $element
+ * @param $form_state
+ *
+ * @return void
+ */
 function apachesolr_multilingual_admin_form_validate_new_config($element, $form_state) {
   static $msg_sent = FALSE;
 
   if (!$msg_sent) {
     if ($element['#value'] != $element['#default_value']) {
-       drupal_set_message(t('Changing "%title" requires you to !link_download a new set of configuration files, to update your solr configuration, to restart your solr server and to !link_delete the index.',
-         array('%title' => $element['#title'], '!link_download' => l(t('download'), '/admin/settings/apachesolr/schema_generator'), '!link_delete' => l(t('delete'), '/admin/settings/apachesolr/index'))),
-         'warning');
-
-       $msg_sent = TRUE;
-     }
+      drupal_set_message(
+        t(
+          'Changing "%title" requires you to !link_download a new set of configuration files, to update your solr configuration, to restart your solr server and to !link_delete the index.',
+          array('%title' => $element['#title'], '!link_download' => l(t('download'), 'admin/config/search/apachesolr/schema_generator'), '!link_delete' => l(t('delete'), 'admin/config/search/apachesolr/index'))
+        ),
+        'warning'
+      );
+      $msg_sent = TRUE;
+    }
   }
 }
 
+function apachesolr_multilingual_admin_form_validate_new_config_no_delete($element, $form_state) {
+  static $msg_sent = FALSE;
+
+  if (!$msg_sent) {
+    if ($element['#value'] != $element['#default_value']) {
+      drupal_set_message(
+        t(
+          'Changing "%title" requires you to !link_download a new set of configuration files, to update your solr configuration and to restart your solr server.',
+          array('%title' => $element['#title'], '!link_download' => l(t('download'), 'admin/config/search/apachesolr/schema_generator'))
+        ),
+        'warning'
+      );
+
+      $msg_sent = TRUE;
+    }
+  }
+}
+
+/**
+ * Shows a hint to the user that he has to reindex the content
+ *
+ * @param $element
+ * @param $form_state
+ *
+ * @return void
+ */
 function apachesolr_multilingual_admin_form_validate_reindex($element, $form_state) {
   static $msg_sent = FALSE;
 
   if (!$msg_sent) {
     if ($element['#value'] != $element['#default_value']) {
-       drupal_set_message(t('Changing "%title" requires you to !link_reindex your content.',
-         array('%title' => $element['#title'], '!link_reindex' => l(t('re-index'), '/admin/settings/apachesolr/index'))),
-         'warning');
-
-       $msg_sent = TRUE;
-     }
+      drupal_set_message(
+        t(
+          'Changing "%title" requires you to !link_reindex your content.',
+          array('%title' => $element['#title'], '!link_reindex' => l(t('re-index'), '/admin/config/search/apachesolr/index'))
+        ),
+        'warning'
+      );
+      $msg_sent = TRUE;
+    }
   }
 }

@@ -6,7 +6,8 @@ Apache Solr Multilingual
 Name: apachesolr_multilingual
 Authors: Markus Kalkbrenner | Cocomore AG
          Matthias Huder | Cocomore AG
-Drupal: 6.x
+Co-Maintainer: Peter Philipp | Cando Image GmbH
+Drupal: 7.x
 Sponsor: Cocomore AG - http://www.cocomore.com
                        http://drupal.cocomore.com
 
@@ -57,17 +58,17 @@ A) Unique Language and Apache Solr Multilingual Texfile
 =======================================================
 
 1. Ensure that all the language you want to cover is
-   available and enabled at admin/settings/language
+   available and enabled at admin/config/regional/language
 
 2. Enable the languages you want to cover at
-   admin/settings/apachesolr/multilingual
+   admin/config/search/apachesolr/multilingual
    and "Save configuration"
 
 3. Adjust all solr text files to your needs at
-   admin/settings/apachesolr/multilingual
+   admin/config/search/apachesolr/multilingual
 
 4. Download apachesolr_unique_language_config.zip at
-   admin/settings/apachesolr/schema_generator
+   admin/config/search/apachesolr/schema_generator
 
 5. Extract apachesolr_unique_language_config.zip to your solr
    conf directory and restart solr
@@ -80,17 +81,17 @@ B) Multiple Languages and Apache Solr Multilingual Texfile
 
 1. Ensure that all the languages you want to cover with
    multilingual search are available and enabled at
-   admin/settings/language
+   admin/regional/language
 
 2. Enable all the languages you want to cover with
-   multilingual search at admin/settings/apachesolr/multilingual
+   multilingual search at admin/config/search/apachesolr/multilingual
    and "Save configuration"
 
 3. Adjust all solr text files to your needs at
-   admin/settings/apachesolr/multilingual
+   admin/config/search/apachesolr/multilingual
 
 4. Download apachesolr_multilingual_config.zip at
-   admin/settings/apachesolr/schema_generator
+   admin/config/search/apachesolr/schema_generator
 
 5. Extract apachesolr_multilingual_config.zip to your solr
    conf directory and restart solr
@@ -100,7 +101,7 @@ B) Multiple Languages and Apache Solr Multilingual Texfile
    at this point. Otherwise the checkboxes in the next step won't
    exist until you indexed some content in a specific language
 
-7. Go to admin/settings/apachesolr/query-fields and set "Body" and
+7. Go to admin/config/search/apachesolr/query-fields and set "Body" and
    "Title" to "Omit". Enable all language specific bodies and titles
    like body_en or title_de by selecting any value you like but not
    "Omit". And don't forget to "Save configuration".
@@ -120,7 +121,7 @@ B) Multiple Languages and Apache Solr Multilingual Texfile
 
 9. Optional: If you insatalled the module "Taxonomy translation" and
    turned on "Index taxonomy term translations" at
-   /admin/settings/apachesolr/multilingual you should omit
+   admin/config/search/apachesolr/multilingual you should omit
    "All taxonomy term names" and enable the language specific equivalent
    like "taxonomy_names_de" instead like described in 7.
 
@@ -129,14 +130,14 @@ C) Unique Language
 ==================
 
 1. Ensure that all the language you want to cover is
-   available and enabled at admin/settings/language
+   available and enabled at admin/regional/language
 
 2. Enable the languages you want to cover at
-   admin/settings/apachesolr/multilingual
+   admin/config/search/apachesolr/multilingual
    and "Save configuration"
 
 4. Download schema.xml for unique language setup at
-   admin/settings/apachesolr/schema_generator
+   admin/config/search/apachesolr/schema_generator
 
 5. Copy schema.xml to your solr conf directory
 
@@ -157,14 +158,14 @@ D) Multiple Languages
 
 1. Ensure that all the languages you want to cover with
    multilingual search are available and enabled at
-   admin/settings/language
+   admin/regional/language
 
 2. Enable all the languages you want to cover with
-   multilingual search at admin/settings/apachesolr/multilingual
+   multilingual search at admin/config/search/apachesolr/multilingual
    and "Save configuration"
 
 4. Download schema.xml for multilingual setup at
-   admin/settings/apachesolr/schema_generator
+   admin/config/search/apachesolr/schema_generator
 
 5. Copy schema.xml to your solr conf directory
 
@@ -182,7 +183,7 @@ D) Multiple Languages
    at this point. Otherwise the checkboxes in the next step won't
    exist until you indexed some content in a specific language
 
-9. Go to admin/settings/apachesolr/query-fields and set "Body" and
+9. Go to admin/config/search/apachesolr/query-fields and set "Body" and
    "Title" to "Omit". Enable all language specific bodies and titles
    like body_en or title_de by selecting any value you like but not
    "Omit". And don't forget to "Save configuration".
@@ -202,7 +203,7 @@ D) Multiple Languages
 
 11. Optional: If you insatalled the module "Taxonomy translation" and
    turned on "Index taxonomy term translations" at
-   /admin/settings/apachesolr/multilingual you should omit
+   admin/config/search/apachesolr/multilingual you should omit
    "All taxonomy term names" and enable the language specific equivalent
    like "taxonomy_names_de" instead like described in 9.
 
