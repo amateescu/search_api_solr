@@ -1,0 +1,50 @@
+<?php
+// $Id$
+
+/**
+ * Implements hook_search_api_service_info().
+ */
+function search_api_solr_search_api_service_info() {
+  $services['search_api_solr_service'] = array(
+    'name' => t('Solr service'),
+    'description' => t('<p>Index items using an Apache Solr search server.</p>' .
+        '<ul>' . '<li>All field types are supported and indexed in a special way, with URI/String and Integer/Duration being equivalent.</li>' .
+        '<li>See <a href="@url">the Solr wiki</a> for information about the "direct" parse mode.</li>' .
+        '<li>Supports the search_api_facets feature.</li>' .
+        '<li>Will use internal Solr preprocessors, so Search API preprocessors should for the most part be deactivated.</li>' .
+        '<li>See the README.txt file provided with this module for details.</li>' . '</ul>',
+        array('@url' => url('http://wiki.apache.org/solr/SolrQuerySyntax'))),
+    'class' => 'SearchApiSolrService',
+  );
+  return $services;
+}
+
+/**
+ * Implements hook_help().
+ */
+function search_api_solr_help($path, array $arg = array()) {
+  if ($path == 'admin/config/search/search_api') {
+    // Included because we need the REQUIREMENT_* constants.
+    include_once(DRUPAL_ROOT . '/includes/install.inc');
+    module_load_include('install', 'search_api_solr');
+    $req = search_api_solr_requirements('runtime');
+    if (isset($req['search_api_solr']['description'])) {
+      $type = $req['search_api_solr']['severity'] == REQUIREMENT_ERROR ? 'error' : 'status';
+      drupal_set_message($req['search_api_solr']['description'], $type);
+    }
+  }
+  elseif ($path == 'admin/config/search/search_api/server/%' && !empty($arg[5])) {
+    $server = search_api_server_load($arg[5]);
+    if ($server && $server->enabled && $server->class == 'search_api_solr_service') {
+      $ping = $server->ping();
+      $type = $ping ? 'status' : 'error';
+      if ($ping) {
+        $msg = t('The Solr server could be reached (latency: @millisecs ms).', array('@millisecs' => $ping * 1000));
+      }
+      else {
+        $msg = t('The Solr server could not be reached.');
+      }
+      drupal_set_message($msg, $type);
+    }
+  }
+}

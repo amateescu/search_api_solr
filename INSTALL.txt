@@ -1,0 +1,74 @@
+$Id$
+
+Prerequisite:
+- Java 5 or higher
+
+Steps necessary:
+- Download Solr PHP client
+- Setting up Solr
+
+Download Solr PHP client
+------------------------
+
+This module uses an external PHP library for communicating with Solr servers. Go
+to [1] and download the current version of this library. (This module was tested
+with revision r22, but newer ones will probably work as well.)
+
+[1] http://code.google.com/p/solr-php-client/downloads/list
+
+Afterwards, unpack this archive to this module's directory, so the directory
+tree looks like this:
+
+search_api_solr
+|- SolrPhpClient/
+|- INSTALL.txt
+|- README.txt
+  ...
+  
+The library should then be found by Drupal.
+
+Setting up Solr
+---------------
+
+In order for this module to work, you will first need to set up a Solr server.
+Download the latest stable version of Solr (1.4.1 at the time of this writing)
+from [2] and unpack the archive somewhere outside of your web server's document
+tree.
+
+[2] http://www.apache.org/dyn/closer.cgi/lucene/solr/
+
+For small websites, using the example application, located in $SOLR/example/,
+usually suffices. In any case, you can use it for developing andd testing. The
+following instructions will assume you are using the example application,
+otherwise you should be able to substitute the corresponding paths.
+
+Before starting Solr create backups of the schema.xml and solrconfig.xml files
+that come with Solr (located in Solr's configuration directory,
+$SOLR/example/solr/conf/) and copy the two equally named files that are provided
+with this module to Solr's configuration directory.
+You can then start Solr. For the example application, go to $SOLR/example/ and
+issue the following command (assuming Java is correctly installed):
+
+java -jar start.jar
+
+Afterwards, go to [3] in your web browser to ensure Solr is running correctly.
+
+[3] http://localhost:8983/solr/admin/
+
+You can then enable this module and create a new server, using the "Solr search"
+service class. Enter the hostname, port and path corresponding to your Solr
+server in the appropriate fields. The default values already correspond to the
+example application, so you won't have to change the values if you use that.
+If you are using HTTP Authentication to protect your Solr server (which is vital
+for security on a production site) you also have to provide the appropriate user
+and password here.
+
+If you are interested in further customizing your Solr server to your needs,
+see the Solr wiki at [4] for documentation. When editing the schema.xml and
+solrconfig.xml files, please only edit the copies in the Solr configuration
+directory, not directly the ones provided with this module.
+
+[4] http://wiki.apache.org/solr/
+
+You'll have to restart your Solr server after making such changes, for them to
+take effect.
