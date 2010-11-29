@@ -1,0 +1,10 @@
+$Id$
+
+Search API Solr search 1.0, dev (xx/xx/xxxx):
+------------------------------------
+- #984134: Add Solr-specific query alter hooks.
+
+Search API Solr search 1.0, Beta 1 (11/29/2010):
+------------------------------------
+Basic functionality is in place and quite well-tested, including support for
+facets and for multi-index searches.

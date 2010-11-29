@@ -399,6 +399,13 @@ class SearchApiSolrService extends SearchApiAbstractService {
       // Send search request
       $time_processing_done = microtime(TRUE);
       $this->connect();
+      $call_args = array(
+        'query'  => &$keys,
+        'offset' => &$offset,
+        'limit'  => &$limit,
+        'params' => &$params,
+      );
+      drupal_alter('search_api_solr_query', $call_args, $query);
       $response = $this->solr->search($keys, $offset, $limit, $params);
       $time_query_done = microtime(TRUE);
 
@@ -745,6 +752,13 @@ class SearchApiSolrService extends SearchApiAbstractService {
       // Send search request
       $time_processing_done = microtime(TRUE);
       $this->connect();
+      $call_args = array(
+        'query'  => &$keys,
+        'offset' => &$offset,
+        'limit'  => &$limit,
+        'params' => &$params,
+      );
+      drupal_alter('search_api_solr_query', $call_args, $query);
       $response = $this->solr->search($keys, $offset, $limit, $params);
       $time_query_done = microtime(TRUE);
 
