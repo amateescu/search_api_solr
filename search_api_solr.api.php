@@ -46,7 +46,7 @@ function hook_search_api_solr_query_alter(array &$call_args, SearchApiQueryInter
  * @param SearchApiMultiQueryInterface $query
  *   The object representing the executed search query.
  */
-function hook_search_api_solr_query_alter(array &$call_args, SearchApiMultiQueryInterface $query) {
+function hook_search_api_solr_multi_query_alter(array &$call_args, SearchApiMultiQueryInterface $query) {
   if ($query->getOption('foobar')) {
     $call_args['params']['foo'] = 'bar';
   }

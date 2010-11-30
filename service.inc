@@ -758,7 +758,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         'limit'  => &$limit,
         'params' => &$params,
       );
-      drupal_alter('search_api_solr_query', $call_args, $query);
+      drupal_alter('search_api_solr_multi_query', $call_args, $query);
       $response = $this->solr->search($keys, $offset, $limit, $params);
       $time_query_done = microtime(TRUE);
 
