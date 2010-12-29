@@ -2,6 +2,7 @@ $Id$
 
 Search API Solr search 1.0, dev (xx/xx/xxxx):
 ------------------------------------
+- #915174: Remove unnecessary files[] declarations from .info file.
 - #984134: Add Solr-specific query alter hooks.
 
 Search API Solr search 1.0, Beta 1 (11/29/2010):
