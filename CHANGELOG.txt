@@ -2,6 +2,7 @@ $Id$
 
 Search API Solr search 1.0, dev (xx/xx/xxxx):
 ------------------------------------
+- #1010610 by mikejoconnor: Fix hook_requirements().
 - #1024146: Don't use file_get_contents() for contacting the Solr server.
 - #1010610: More helpful error message when SolrPhpClient is missing.
 - #915174: Remove unnecessary files[] declarations from .info file.
