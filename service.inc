@@ -40,28 +40,11 @@ class SearchApiSolrService extends SearchApiAbstractService {
     if (empty($this->options)) {
       // First configuring this server
       $options = array(
+        'host' => 'localhost',
+        'port' => '8983',
+        'path' => '/solr',
         'http_user' => '',
         'http_pass' => '',
-      );
-      $form['host'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Solr host'),
-        '#description' => t('The host name or IP of your Solr server, e.g. <code>localhost</code> or <code>www.example.com</code>.'),
-        '#default_value' => 'localhost',
-        '#required' => TRUE,
-      );
-      $form['port'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Solr port'),
-        '#description' => t('The Jetty example server is at port 8983, while Tomcat uses 8080 by default.'),
-        '#default_value' => '8983',
-        '#required' => TRUE,
-      );
-      $form['path'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Solr path'),
-        '#description' => t('The path that identifies the Solr instance to use on the server.'),
-        '#default_value' => '/solr',
       );
     }
     else {
@@ -74,6 +57,27 @@ class SearchApiSolrService extends SearchApiAbstractService {
         '#description' => l($url, $url),
       );
     }
+
+    $form['host'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Solr host'),
+      '#description' => t('The host name or IP of your Solr server, e.g. <code>localhost</code> or <code>www.example.com</code>.'),
+      '#default_value' => $options['host'],
+      '#required' => TRUE,
+    );
+    $form['port'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Solr port'),
+      '#description' => t('The Jetty example server is at port 8983, while Tomcat uses 8080 by default.'),
+      '#default_value' => $options['port'],
+      '#required' => TRUE,
+    );
+    $form['path'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Solr path'),
+      '#description' => t('The path that identifies the Solr instance to use on the server.'),
+      '#default_value' => $options['path'],
+    );
 
     $form['http'] = array(
       '#type' => 'fieldset',
