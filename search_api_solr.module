@@ -10,7 +10,7 @@ function search_api_solr_search_api_service_info() {
     'description' => t('<p>Index items using an Apache Solr search server.</p>' .
         '<ul>' . '<li>All field types are supported and indexed in a special way, with URI/String and Integer/Duration being equivalent.</li>' .
         '<li>See <a href="@url">the Solr wiki</a> for information about the "direct" parse mode.</li>' .
-        '<li>Supports the search_api_facets feature.</li>' .
+        '<li>Supports the search_api_facets and search_api_multi features.</li>' .
         '<li>Will use internal Solr preprocessors, so Search API preprocessors should for the most part be deactivated.</li>' .
         '<li>See the README.txt file provided with this module for details.</li>' . '</ul>',
         array('@url' => url('http://wiki.apache.org/solr/SolrQuerySyntax'))),
