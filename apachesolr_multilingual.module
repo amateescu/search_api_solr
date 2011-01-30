@@ -57,7 +57,7 @@ function apachesolr_multilingual_node_update($node) {
  * @param $namespace
  * @return mixed
  */
-function apachesolr_multilingual_apachesolr_update_index(&$document, $node, $namespace) {
+function apachesolr_multilingual_apachesolr_update_index($document, $node, $namespace) {
   static $reentrance = FALSE;
 
   if (!$reentrance) {
@@ -114,22 +114,37 @@ function apachesolr_multilingual_apachesolr_update_index(&$document, $node, $nam
       // use language specific stemming and so on ..
       $document->{'title_' . $language} = $document->title;
       $document->{'body_' . $language} = $document->body;
-      $document->{'tags_h1_' . $language} = $document->tags_h1;
-      $document->{'tags_h2_h3_' . $language} = $document->tags_h2_h3;
-      $document->{'tags_h4_h5_h6_' . $language} = $document->tags_h4_h5_h6;
-      $document->{'tags_a_' . $language} = $document->tags_a;
-      $document->{'tags_inline_' . $language} = $document->tags_inline;
 
       $solr = apachesolr_get_solr();
       $fields = $solr->getFields();
       foreach ($fields as $field_name => $field) {
         if (strpos($field_name, 'ts_') === 0 && !empty($document->{$field_name})) {
-          // deal with fields like cck using dynamic ts_* fields
+          // deal with fields using dynamic ts_* fields
 
           // search for existing language identifier at second position
           $tmp = explode('_', $field_name);
           if ($language != $tmp[1]) {
             $document->{'ts_' . $language . drupal_substr($field_name, 2)} = $document->{$field_name};
+          }
+        }
+
+        if (strpos($field_name, 'tm_') === 0 && !empty($document->{$field_name})) {
+          // deal with fields using dynamic ts_* fields
+
+          // search for existing language identifier at second position
+          $tmp = explode('_', $field_name);
+          if ($language != $tmp[1]) {
+            $document->{'tm_' . $language . drupal_substr($field_name, 2)} = $document->{$field_name};
+          }
+        }
+
+        if (strpos($field_name, 'tags_') === 0 && !empty($document->{$field_name})) {
+          // deal with fields using dynamic ts_* fields
+
+          // search for existing language identifier at second position
+          $tmp = explode('_', $field_name);
+          if ($language != $tmp[1]) {
+            $document->{'tags_' . $language . drupal_substr($field_name, 2)} = $document->{$field_name};
           }
         }
       }
@@ -142,21 +157,38 @@ function apachesolr_multilingual_apachesolr_update_index(&$document, $node, $nam
               if ($translation_document = apachesolr_node_to_document($translation_node, $namespace)) {
                 $document->{'title_' . $translation_language} = $translation_document->title;
                 $document->{'body_' . $translation_language} = $translation_document->body;
-                $document->{'tags_h1_' . $translation_language} = $translation_document->tags_h1;
-                $document->{'tags_h2_h3_' . $translation_language} = $translation_document->tags_h2_h3;
-                $document->{'tags_h4_h5_h6_' . $translation_language} = $translation_document->tags_h4_h5_h6;
-                $document->{'tags_a_' . $translation_language} = $translation_document->tags_a;
-                $document->{'tags_inline_' . $translation_language} = $translation_document->tags_inline;
 
                 foreach ($fields as $field_name => $field) {
                   if (strpos($field_name, 'ts_') === 0 && !empty($translation_document->{$field_name})) {
-                    // deal with fields like cck using dynamic ts_* fields
+                    // deal with fields using dynamic ts_* fields
 
-                  	// search for existing language identifier at
-                  	// second position
+                    // search for existing language identifier at
+                   // second position
                     $tmp = explode('_', $field_name);
                     if ($translation_language != $tmp[1]) {
                       $document->{'ts_' . $translation_language . drupal_substr($field_name, 2)} = $translation_document->{$field_name};
+                    }
+                  }
+
+                  if (strpos($field_name, 'tm_') === 0 && !empty($translation_document->{$field_name})) {
+                    // deal with fields using dynamic ts_* fields
+
+                    // search for existing language identifier at
+                   // second position
+                    $tmp = explode('_', $field_name);
+                    if ($translation_language != $tmp[1]) {
+                      $document->{'tm_' . $translation_language . drupal_substr($field_name, 2)} = $translation_document->{$field_name};
+                    }
+                  }
+
+                  if (strpos($field_name, 'tags_') === 0 && !empty($translation_document->{$field_name})) {
+                    // deal with fields using dynamic ts_* fields
+
+                    // search for existing language identifier at
+                   // second position
+                    $tmp = explode('_', $field_name);
+                    if ($translation_language != $tmp[1]) {
+                      $document->{'tags_' . $translation_language . drupal_substr($field_name, 2)} = $translation_document->{$field_name};
                     }
                   }
                 }
@@ -166,7 +198,6 @@ function apachesolr_multilingual_apachesolr_update_index(&$document, $node, $nam
         }
       }
     }
-
     $reentrance = FALSE;
   }
 }
