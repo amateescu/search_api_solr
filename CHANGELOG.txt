@@ -29,6 +29,12 @@ Apache Solr Multilingual 6.x-2.0-alpha1, 2010-xx-xx
 [       ] mkalkbrenner: made data dir configurable
 [#876494] mkalkbrenner: Chaotic taxonomy search fields, hard to make sense of them
 [#899636] linksunten, mkalkbrenner: corrupt validation in admin files
+[       ] mkalkbrenner: fixed some internal links in message boxes
+[       ] mkalkbrenner: fixed some more warnings
+[       ] mkalkbrenner: added mapping-ISOLatin1Accent.txt to ziped configuration download
+[       ] mkalkbrenner: fixed compatibility to apachesolr 6.x-1.2, hidden get parameters are no longer serialized but json encoded
+[#915626] robertDouglass, mkalkbrenner: hook modify_query clobbers hl.fl from previous modules
+[#915626] robertDouglass, mkalkbrenner: hook modify query is determining the user's language improperly
 
 
 Apache Solr Multilingual 6.x-1.0-alpha3, 2010-05-19

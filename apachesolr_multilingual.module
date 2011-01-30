@@ -36,7 +36,7 @@ function apachesolr_multilingual_node_delete($node) {
  * @return void
  */
 function apachesolr_multilingual_node_update($node) {
-  if (variable_get('apachesolr_multilingual_index_translations', 0) && $node->tnid) {
+  if (variable_get('apachesolr_multilingual_index_translations', 0) && !empty($node->tnid)) {
     $translations = translation_node_get_translations($node->tnid);
     foreach ($translations as $language => $translation) {
       if ($translation->nid != $node->nid) {
@@ -352,7 +352,7 @@ function apachesolr_multilingual_apachesolr_modify_query(&$query, $caller) {
 
   if (!$filter_language && variable_get('apachesolr_multilingual_auto_language_filter', 0)
      && (!variable_get('apachesolr_multilingual_auto_language_filter_detachable', 0)
-     || (variable_get('apachesolr_multilingual_auto_language_filter_detachable', 0) && !$_GET['detach-auto-language-filter']))) {
+     || (variable_get('apachesolr_multilingual_auto_language_filter_detachable', 0) && empty($_GET['detach-auto-language-filter'])))) {
 
     if (!empty($language->language)) {
       if (in_array($language->language, $languages)) {
@@ -368,17 +368,29 @@ function apachesolr_multilingual_apachesolr_modify_query(&$query, $caller) {
     }
   }
 
-  // $params['hl.fl'] = 'title,body';
-  $query->params['hl.fl'] = 'body';
+  if (empty($params['hl.fl'])) {
+    $params['hl.fl'] = 'body';
+  }
 
   if ($filter_language && in_array($filter_language, $languages)) {
     $solr = apachesolr_get_solr();
     $fields = $solr->getFields();
 
-    if (array_key_exists('body_' . $filter_language, $fields)) {
-      // $params['hl.fl'] = 'title_' . $lang . ',body_' . $filter_language;
-      $query->params['hl.fl'] = 'body_' . $filter_language;
+    $highlighted_fields = explode(',', $params['hl.fl']);
+    foreach ($highlighted_fields as $key => $highlighted_field) {
+      if (array_key_exists($highlighted_field . '_' . $filter_language, $fields)) {
+        // title, body, spell
+        $highlighted_fields[$key] .= '_' . $filter_language;
+      }
+      elseif (strpos('ts_', $highlighted_field) === 0 && strpos('ts_' . $filter_language, $highlighted_field) !== 0) {
+        $highlighted_fields[$key] = 'ts_' . $filter_language . substr($highlighted_field, 2);
+      }
+      elseif (strpos('tm_', $highlighted_field) === 0 && strpos('tm_' . $filter_language, $highlighted_field) !== 0) {
+        $highlighted_fields[$key] = 'tm_' . $filter_language . substr($highlighted_field, 2);
+      }
     }
+
+    $params['hl.fl'] = implode(',', $highlighted_fields);
 
     if (variable_get('apachesolr_search_spellcheck', FALSE)
       && array_key_exists('spell_' . $filter_language, $fields)
@@ -400,7 +412,7 @@ function apachesolr_multilingual_form_search_form_alter(&$form, $form_state) {
     if (variable_get('apachesolr_multilingual_auto_language_filter', 0)
       && variable_get('apachesolr_multilingual_auto_language_filter_detachable', 0)
     ) {
-      $lang_filter = (strpos($_GET['filters'], 'language:') !== FALSE);
+      $lang_filter = (!empty($_GET['filters']) && strpos($_GET['filters'], 'language:') !== FALSE);
 
       $form['basic']['apachesolr_search']['detach_auto_language_filter'] = array(
         '#type' => $lang_filter ? 'hidden' : 'checkbox',
@@ -419,14 +431,18 @@ function apachesolr_multilingual_form_search_form_alter(&$form, $form_state) {
  */
 function apachesolr_multilingual_form_search_submit($form, &$form_state) {
   $fv = $form_state['values'];
-  $get = unserialize($fv['apachesolr_search']['get']);
-  if ($fv['apachesolr_search']['detach_auto_language_filter']) {
-    $get['detach-auto-language-filter'] = '1';
+  if (!empty($fv['apachesolr_search']['get'])) {
+    $get = json_decode($fv['apachesolr_search']['get'], TRUE);
+
+    if (!empty($fv['apachesolr_search']['detach_auto_language_filter'])) {
+      $get['detach-auto-language-filter'] = '1';
+    }
+    elseif (isset($get['detach-auto-language-filter'])) {
+      unset($get['detach-auto-language-filter']);
+    }
+
+    $form_state['values']['apachesolr_search']['get'] = json_encode($get);
   }
-  else {
-    unset($get['detach-auto-language-filter']);
-  }
-  $form_state['values']['apachesolr_search']['get'] = serialize($get);
 }
 
 
@@ -478,7 +494,7 @@ function apachesolr_multilingual_block($op = 'list', $delta = 0, $edit = array()
             if (!variable_get('apachesolr_multilingual_auto_language_filter', 0)
               ||(variable_get('apachesolr_multilingual_auto_language_filter', 0)
               && variable_get('apachesolr_multilingual_auto_language_filter_detachable', 0))
-              && (count((array) $response->facet_counts->facet_fields->$facets[$delta]['facet_field']) > 1 || strpos($_GET['filters'], 'language:') !== FALSE)
+              && (count((array) $response->facet_counts->facet_fields->$facets[$delta]['facet_field']) > 1 || (!empty($_GET['filters']) && strpos($_GET['filters'], 'language:') !== FALSE))
             ) {
               return apachesolr_facet_block(
                 $response,

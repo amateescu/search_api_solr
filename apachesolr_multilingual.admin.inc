@@ -55,16 +55,16 @@ function apachesolr_multilingual_admin_form($form_state) {
 
   $form['apachesolr_multilingual_language_settings']['apachesolr_multilingual_auto_language_filter'] = array(
     '#type' => 'checkbox',
-    '#title' => t("Limit search to user's language by default"),
+    '#title' => t("Limit search to current language by default"),
     '#default_value' => variable_get('apachesolr_multilingual_auto_language_filter', 0),
-    '#description' => t("Show only search results that match the user's current language."),
+    '#description' => t("Show only search results that match the current language."),
   );
 
   $form['apachesolr_multilingual_language_settings']['apachesolr_multilingual_auto_language_filter_detachable'] = array(
     '#type' => 'checkbox',
-    '#title' => t("Limit search to user's language could be disabled by user"),
+    '#title' => t("Limit search to current language could be disabled by user"),
     '#default_value' => variable_get('apachesolr_multilingual_auto_language_filter_detachable', 0),
-    '#description' => t("Displays a checkbox on search result page to search over all languages if \"Limit search to user's language by default\" is active."),
+    '#description' => t("Displays a checkbox on search result page to search over all languages if \"Limit search to current language by default\" is active."),
   );
 
   $form['apachesolr_multilingual_clir'] = array(
@@ -414,7 +414,7 @@ function apachesolr_multilingual_admin_form_validate_reindex($element, $form_sta
       drupal_set_message(
         t(
           'Changing "%title" requires you to !link_reindex your content.',
-          array('%title' => $element['#title'], '!link_reindex' => l(t('re-index'), '/admin/config/search/apachesolr/index'))
+          array('%title' => $element['#title'], '!link_reindex' => l(t('re-index'), 'admin/config/search/apachesolr/index'))
         ),
         'warning'
       );

@@ -171,6 +171,9 @@ function apachesolr_multilingual_textfile_download_config_validate($form, &$form
     $data = $form['schema_str_complete']['#value'];
     $apachesolr_multilingual_config_zip->addFile($data, 'schema.xml');
 
+    $data = file_get_contents(dirname(__FILE__) . '/../resources/mapping-ISOLatin1Accent.txt');
+    $apachesolr_multilingual_config_zip->addFile($data, 'mapping-ISOLatin1Accent.txt');
+
     if (!isset($files['compoundwords.txt'])) {
       // solr example installation doesn't contain compoundwords.txt. so we have to ensure that it exists in our package
       $files['compoundwords.txt'] = '';
