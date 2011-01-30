@@ -11,7 +11,7 @@
  http://wiki.apache.org/solr/SchemaXml
 -->
 
-<schema name="drupal-multilingual-1.1" version="1.2">
+<schema name="drupal-multilingual-7.1.0-alpha1" version="1.2">
     <!-- attribute "name" is the name of this schema and is only used for display purposes.
          Applications should change this to reflect the nature of the search collection.
          version="1.2" is Solr's version number for the schema syntax and semantics.  It should
@@ -141,6 +141,7 @@
     <fieldType name="text_ws" class="solr.TextField" positionIncrementGap="100">
       <analyzer>
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
       </analyzer>
     </fieldType>
 
@@ -301,49 +302,62 @@
        fields or fields that need an index-time boost need norms.
    -->
 
-<!-- The document id is derived from a site-spcific key (hash) and the node ID like:
+<!-- The document id is derived from a site-spcific key (hash) and the entity type and ID like:
      $document->id = $hash . '/node/' . $node->nid; -->
 
    <field name="id" type="string" indexed="true" stored="true" required="true" />
+   <!-- entity_id is tlong, since in some cases we may want to use it as a default sort to
+        get deterministic ordering of results -->
+   <field name="entity_id"  type="tlong" indexed="true" stored="true" required="true" />
+   <!-- entity is 'node', 'file', 'user', or some other Drupal object type -->
+   <field name="entity" type="string" indexed="true" stored="true" required="true" />
+   <!-- bundle is a node type, or as appropriate for other entity types -->
+   <field name="bundle" type="string" indexed="true" stored="true"/>
+   <field name="bundle_name" type="string" indexed="true" stored="true"/>
+   <!-- legacy: type is a node type, or can be used flexibly for other entity types -->
+   <field name="type" type="string" indexed="true" stored="true"/>
+   <field name="type_name" type="string" indexed="true" stored="true"/>
+   <!-- Copy the bundle to the type so Drupal 6 sites get expected fields in multisite search -->
+   <copyField source="bundle" dest="type"/>
+   <copyField source="bundle_name" dest="type_name"/>
 
-<!-- These are the fields that correspond to a Drupal node. The beauty of having
-     Lucene store title, body, type, etc., is that we retrieve them with the search
-     result set and don't need to go to the database with a node_load. -->
 
    <field name="site" type="string" indexed="true" stored="true"/>
    <field name="hash" type="string" indexed="true" stored="true"/>
    <field name="url" type="string" indexed="true" stored="true"/>
+   <!-- title is the default field for a human-readable string for this entity -->
    <field name="title" type="text" indexed="true" stored="true" termVectors="true" omitNorms="true"/>
    <!-- field_title_LANGUAGE -->
    <field name="sort_title" type="sortString" indexed="true" stored="false"/>
+   <!-- body is the default field for full text search - dump crap here -->
    <field name="body" type="text" indexed="true" stored="true" termVectors="true"/>
    <!-- field_body_LANGUAGE -->
    <field name="teaser" type="text" indexed="false" stored="true"/>
-   <!-- entity is 'node', 'file', 'user', or some other Drupal object type -->
-   <field name="entity" type="string" indexed="true" stored="true"/>
-   <!-- type is a node type, or can be used flexibly for other entity types -->
-   <field name="type" type="string" indexed="true" stored="true"/>
-   <field name="type_name" type="string" indexed="true" stored="true"/>
+
    <field name="path" type="string" indexed="true" stored="true"/>
    <field name="path_alias" type="text" indexed="true" stored="true" termVectors="true"/>
-   <field name="uid"  type="integer" indexed="true" stored="true"/>
+
+ <!-- These are the fields that correspond to a Drupal node. The beauty of having
+     Lucene store title, body, type, etc., is that we retrieve them with the search
+     result set and don't need to go to the database with a node_load. -->
+   <field name="uid"  type="long" indexed="true" stored="true"/>
    <field name="name" type="text" indexed="true" stored="true" termVectors="true"/>
    <field name="sname" type="string" indexed="true" stored="false"/>
    <field name="sort_name" type="sortString" indexed="true" stored="false"/>
-   <field name="created" type="date" indexed="true" stored="true"/>
-   <field name="changed" type="date" indexed="true" stored="true"/>
-   <field name="last_comment_or_change" type="date" indexed="true" stored="true"/>
-   <field name="nid"  type="integer" indexed="true" stored="true"/>
+   <field name="created" type="tdate" indexed="true" stored="true"/>
+   <field name="changed" type="tdate" indexed="true" stored="true"/>
+   <field name="last_comment_or_change" type="tdate" indexed="true" stored="true"/>
+   <field name="nid"  type="long" indexed="true" stored="true"/>
    <field name="status" type="boolean" indexed="true" stored="true"/>
    <field name="promote" type="boolean" indexed="true" stored="true"/>
    <field name="moderate" type="boolean" indexed="true" stored="true"/>
    <field name="sticky" type="boolean" indexed="true" stored="true"/>
-   <field name="tnid"  type="integer" indexed="true" stored="true"/>
+   <field name="tnid"  type="long" indexed="true" stored="true"/>
    <field name="translate" type="boolean" indexed="true" stored="true"/>
    <field name="language" type="string" indexed="true" stored="true"/>
-   <field name="comment_count" type="integer" indexed="true" stored="true"/>
-   <field name="tid"  type="integer" indexed="true" stored="true" multiValued="true"/>
-   <field name="vid"  type="integer" indexed="true" stored="true" multiValued="true"/>
+   <field name="comment_count" type="tint" indexed="true" stored="true"/>
+   <field name="tid"  type="long" indexed="true" stored="true" multiValued="true"/>
+   <field name="vid"  type="long" indexed="true" stored="true" multiValued="true"/>
    <field name="taxonomy_names" type="text" indexed="true" stored="false" termVectors="true" multiValued="true" omitNorms="true"/>
    <!-- field_taxonomy_names_LANGUAGE -->
    <!-- The string version of the title is used for sorting -->
@@ -353,22 +367,7 @@
    <copyField source="name" dest="sort_name"/>
    <!-- Copy terms to a single field that contains all taxonomy term names -->
    <copyField source="ts_vid_*" dest="taxonomy_names"/>
-   <!-- The teaser can be used when a better snippet is not available -->
-   <copyField source="body" dest="teaser" maxChars="300"/>
-  
-   <!-- A set of fields to contain text extracted from tag contents which we
-        can boost at query time. -->
-   <field name="tags_h1" type="text" indexed="true" stored="false" omitNorms="true"/>
-   <!-- field_tags_h1_LANGUAGE -->
-   <field name="tags_h2_h3" type="text" indexed="true" stored="false" omitNorms="true"/>
-   <!-- field_tags_h2_h3_LANGUAGE -->
-   <field name="tags_h4_h5_h6" type="text" indexed="true" stored="false" omitNorms="true"/>
-   <!-- field_tags_h4_h5_h6_LANGUAGE -->
-   <field name="tags_a" type="text" indexed="true" stored="false" omitNorms="true"/>
-   <!-- field_tags_a_LANGUAGE -->
-   <!-- Inline tags are typically u, b, i, em, strong -->
-   <field name="tags_inline" type="text" indexed="true" stored="false" omitNorms="true"/>
-   <!-- field_tags_inline_LANGUAGE -->
+   <copyField source="tm_vid_*" dest="taxonomy_names"/>
 
    <!-- Here, default is used to create a "timestamp" field indicating
         when each document was indexed.-->
@@ -394,20 +393,26 @@
         Longer patterns will be matched first.  if equal size patterns
         both match, the first appearing in the schema will be used.  -->
 
-   <dynamicField name="is_*"  type="integer" indexed="true"  stored="true" multiValued="false"/>
-   <dynamicField name="im_*"  type="integer" indexed="true"  stored="true" multiValued="true"/>
-   <dynamicField name="sis_*" type="sint"    indexed="true"  stored="true" multiValued="false"/>
-   <dynamicField name="sim_*" type="sint"    indexed="true"  stored="true" multiValued="true"/>
-   <dynamicField name="sm_*"  type="string"    indexed="true"  stored="true" multiValued="true"/>
-   <dynamicField name="tm_*"  type="text"    indexed="true"  stored="true" multiValued="true" termVectors="true"/>
+   <!-- A set of fields to contain text extracted from HTML tag contents which we
+        can boost at query time. -->
+   <dynamicField name="tags_*" type="text" indexed="true" stored="false" omitNorms="true"/>
+   <!-- dynamicField_tags_LANGUAGE_* -->
+   
+   <!-- We use long everywhere we used int previously since 64 bit ints are now typical in PHP. -->
+   <dynamicField name="is_*"  type="long" indexed="true"  stored="true" multiValued="false"/>
+   <dynamicField name="im_*"  type="long" indexed="true"  stored="true" multiValued="true"/>
+   <dynamicField name="sis_*" type="slong"    indexed="true"  stored="true" multiValued="false"/>
+   <dynamicField name="sim_*" type="slong"    indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="ss_*"  type="string"    indexed="true"  stored="true" multiValued="false"/>
+   <dynamicField name="sm_*"  type="string"    indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="ts_*"  type="text"    indexed="true"  stored="true" multiValued="false" termVectors="true"/>
    <!-- dynamicField_ts_LANGUAGE_* -->
+   <dynamicField name="tm_*"  type="text"    indexed="true"  stored="true" multiValued="true" termVectors="true"/>
+   <!-- dynamicField_tm_LANGUAGE_* -->
    <dynamicField name="tsen2k_*" type="edge_n2_kw_text" indexed="true" stored="true" multiValued="false" omitNorms="true" omitTermFreqAndPositions="true" />
-   <dynamicField name="ds_*" type="date"    indexed="true"  stored="true" multiValued="false"/>
-   <dynamicField name="dm_*" type="date"    indexed="true"  stored="true" multiValued="true"/>
-   <dynamicField name="tds_*" type="tdate"    indexed="true"  stored="true" multiValued="false"/>
-   <dynamicField name="tdm_*" type="tdate"    indexed="true"  stored="true" multiValued="true"/>
+   <dynamicField name="twsm_*" type="text_ws" indexed="true" stored="true" multiValued="true"/>
+   <dynamicField name="ds_*" type="tdate"    indexed="true"  stored="true" multiValued="false"/>
+   <dynamicField name="dm_*" type="tdate"    indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="bm_*"  type="boolean" indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="bs_*"  type="boolean" indexed="true"  stored="true" multiValued="false"/>
    <dynamicField name="fs_*"  type="sfloat"  indexed="true"  stored="true" multiValued="false"/>
@@ -415,14 +420,23 @@
    <dynamicField name="ps_*"  type="sdouble" indexed="true"  stored="true" multiValued="false"/>
    <dynamicField name="pm_*"  type="sdouble" indexed="true"  stored="true" multiValued="true"/>
 
-   <dynamicField name="tis_*"  type="tint"  indexed="true"  stored="true" multiValued="false"/>
-   <dynamicField name="tim_*"  type="tint"  indexed="true"  stored="true" multiValued="true"/>
-   <dynamicField name="tls_*"  type="tlong" indexed="true"  stored="true" multiValued="false"/>
-   <dynamicField name="tlm_*"  type="tlong" indexed="true"  stored="true" multiValued="true"/>
+   <dynamicField name="tis_*"  type="tlong" indexed="true"  stored="true" multiValued="false"/>
+   <dynamicField name="tim_*"  type="tlong" indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="tfs_*"  type="tfloat"  indexed="true"  stored="true" multiValued="false"/>
    <dynamicField name="tfm_*"  type="tfloat"  indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="tps_*"  type="tdouble" indexed="true"  stored="true" multiValued="false"/>
    <dynamicField name="tpm_*"  type="tdouble" indexed="true"  stored="true" multiValued="true"/>
+
+   <!-- In rare cases a date rather than tdate is needed for sortMissingLast -->
+   <dynamicField name="dds_*" type="date"    indexed="true"  stored="true" multiValued="false"/>
+   <dynamicField name="ddm_*" type="date"    indexed="true"  stored="true" multiValued="true"/>
+   <!-- In case a 32 bit int is really needed, we provide these fields -->
+   <dynamicField name="iis_*"  type="integer" indexed="true"  stored="true" multiValued="false"/>
+   <dynamicField name="iim_*"  type="integer" indexed="true"  stored="true" multiValued="true"/>
+   <dynamicField name="isis_*" type="sint"    indexed="true"  stored="true" multiValued="false"/>
+   <dynamicField name="isim_*" type="sint"    indexed="true"  stored="true" multiValued="true"/>
+   <dynamicField name="itis_*"  type="tint" indexed="true"  stored="true" multiValued="false"/>
+   <dynamicField name="itim_*"  type="tint" indexed="true"  stored="true" multiValued="true"/>
    <!-- Sortable version of the dynamic string field -->
    <dynamicField name="sort_ss_*" type="sortString" indexed="true" stored="false"/>
    <copyField source="ss_*" dest="sort_ss_*"/>
@@ -436,20 +450,7 @@
         Alternately, change the type="ignored" to some other type e.g. "text" if you want
         unknown fields indexed and/or stored by default -->
    <dynamicField name="*" type="ignored" multiValued="true" />
-   
-   
-   
-   <!-- BACKWARDS COMPATIBILITY -->
-   <!-- Here is where we store fields which are no longer used -->
-   
-   <!-- Fields previously used for sorting -->
-   <field name="stitle" type="string" indexed="true" stored="true"/>
-   <field name="title_sort" type="sortString" indexed="true" stored="false"/>
 
-   <field name="name_sort" type="sortString" indexed="true" stored="false"/>
-    
-    
-   <!-- /BACKWARDS COMPATIBILITY -->
  </fields>
 
  <!-- Field to use to determine and enforce document uniqueness.
