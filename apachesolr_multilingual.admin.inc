@@ -40,7 +40,7 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#title' => t('Languages'),
     '#options' => $active_languages,
     '#default_value' => variable_get('apachesolr_multilingual_languages', array()),
-    '#description' => t('Choose languages to be handled by multilingual search. You can only choose from languges actived !link.', array('!link' => l(t('here'), 'admin/settings/language'))),
+    '#description' => t('Choose languages to be handled by multilingual search. You can only choose from languages activated !link.', array('!link' => l(t('here'), 'admin/config/regional/language'))),
     '#element_validate' => array('apachesolr_multilingual_admin_form_validate_new_config'),
   );
 
@@ -49,7 +49,7 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#title' => t('Map language neutral'),
     '#options' => array_merge(array(LANGUAGE_NONE => t('No mapping')), $active_languages),
     '#default_value' => variable_get('apachesolr_multilingual_map_language_neutral', ''),
-    '#description' => t('Select a language to treat content marked as language neutral. Language neutral will not occur as an filter option any more.'),
+    '#description' => t('Select a language to treat content marked as language neutral. Language neutral will not occur as filter option any more.'),
     '#element_validate' => array('apachesolr_multilingual_admin_form_validate_reindex'),
   );
 
