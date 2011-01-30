@@ -4,9 +4,15 @@ Apache Solr Multilingual
 ========================
 
 Name: apachesolr_multilingual
-Authors: Markus Kalkbrenner | Cocomore AG
-         Matthias Huder | Cocomore AG
-Co-Maintainer: Peter Philipp | Cando Image GmbH
+
+Authors: 
+Markus Kalkbrenner | Cocomore AG
+Matthias Huder     | Cocomore AG
+
+Co-Maintainers:
+Peter Philipp      | Cando Image GmbH
+Christian Spitzlay | Cocomore AG
+
 Drupal: 7.x
 Sponsor: Cocomore AG - http://www.cocomore.com
                        http://drupal.cocomore.com
@@ -73,7 +79,7 @@ A) Unique Language and Apache Solr Multilingual Texfile
 5. Extract apachesolr_unique_language_config.zip to your solr
    conf directory and restart solr
 
-6. "Re-index all content" at settings/apachesolr/index.
+6. "Queue content for reindexing" at admin/config/search/apachesolr/index.
 
 
 B) Multiple Languages and Apache Solr Multilingual Texfile
@@ -96,7 +102,7 @@ B) Multiple Languages and Apache Solr Multilingual Texfile
 5. Extract apachesolr_multilingual_config.zip to your solr
    conf directory and restart solr
 
-6. "Re-index all content" at settings/apachesolr/index.
+6. "Queue content for reindexing" at admin/config/search/apachesolr/index.
    It's important that you already have content in every langauge
    at this point. Otherwise the checkboxes in the next step won't
    exist until you indexed some content in a specific language
@@ -150,7 +156,7 @@ C) Unique Language
 
 7. Restart solr
 
-8. "Re-index all content" at settings/apachesolr/index.
+8. "Queue content for reindexing" at admin/config/search/apachesolr/index.
 
 
 D) Multiple Languages
@@ -178,7 +184,7 @@ D) Multiple Languages
 
 7. Restart solr
 
-8. "Re-index all content" at settings/apachesolr/index.
+8. "Queue content for reindexing" at admin/config/search/apachesolr/index.
    It's important that you already have content in every langauge
    at this point. Otherwise the checkboxes in the next step won't
    exist until you indexed some content in a specific language
