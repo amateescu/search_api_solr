@@ -509,12 +509,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       }
       else {
         $key = trim($key);
-        if (strpos($key, ' ') !== FALSE) {
-          $key = SearchApiSolrConnection::phrase($key);
-        }
-        else {
-          $key = SearchApiSolrConnection::escape($key);
-        }
+        $key = SearchApiSolrConnection::phrase($key);
         $k[] = $key;
       }
     }
@@ -566,7 +561,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
    * and operator.
    */
   protected function createFilterQuery($field, $value, $operator, $field_info) {
-    $field = SearchApiSolrConnection::escape($field);
+    $field = SearchApiSolrConnection::escapeFieldName($field);
     if ($value === NULL) {
       return ($operator == '=' ? '-' : '') . "$field:[* TO *]";
     }
@@ -605,7 +600,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         $value = format_date($value, 'custom', self::SOLR_DATE_FORMAT, 'UTC');
         break;
     }
-    return strpos($value, ' ') === FALSE ? SearchApiSolrConnection::escape($value) : SearchApiSolrConnection::phrase($value);
+    return SearchApiSolrConnection::phrase($value);
   }
 
   /**

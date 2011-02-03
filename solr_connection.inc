@@ -156,5 +156,36 @@ class SearchApiSolrConnection extends Apache_Solr_Service {
     return array($result->data, $headers);
   }
 
+  /**
+   * Convenience function for escaping a field name.
+   *
+   * Since field names can only contain one special character, ":", there is no
+   * need to use the complete escape() method.
+   *
+   * @param string $value
+   *   The field name to escape.
+   *
+   * @return string
+   *   An escaped string suitable for passing to Solr.
+   */
+  static public function escapeFieldName($value) {
+    $value = str_replace(':', '\:', $value);
+    return $value;
+  }
+
+  /**
+   * Convenience function for creating phrase syntax from a value.
+   *
+   * @param string $value
+   *   The string to convert into a Solr phrase value.
+   *
+   * @return string
+   *   A quoted string suitable for passing to Solr.
+   */
+  static public function phrase($value) {
+    $value = str_replace("\\", "\\\\", $value);
+    $value = str_replace('"', '\"', $value);
+    return '"' . $value . '"';
+  }
 
 }
