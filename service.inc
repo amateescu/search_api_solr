@@ -455,6 +455,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
                 array_pop($terms);
               }
             }
+            elseif (isset($terms->_empty_)) {
+              clone $terms;
+              unset($terms->_empty_);
+            }
             foreach ($terms as $term => $count) {
               if ($count >= $min_count) {
                 $term = $term == '_empty_' ? '!' : '"' . $term . '"';
