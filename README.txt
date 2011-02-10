@@ -14,7 +14,7 @@ All Search API datatypes are supported by using appropriate Solr datatypes for
 indexing them. By default, "String"/"URI" and "Integer"/"Duration" are defined
 equivalently. However, through manual configuration of the used schema.xml this
 can be changed arbitrarily. Using your own Solr extensions is thereby also
-possible. 
+possible.
 
 The "direct" parse mode for queries will result in the keys being directly used
 as the query to Solr. For details about Lucene's query syntax, see [1]. There
@@ -51,6 +51,22 @@ different sets of fields in different searches on an index, it is adviced that
 you simply set all fields that should be searched to type "Fulltext" (but don't
 check "Indexed"), add the "Fulltext field" data alter callback and only index
 the newly added field named "Fulltext".
+
+Customizing your Solr server
+----------------------------
+
+The schema.xml and solrconfig.xml files contain extensive comments on how to
+add additional features or modify behaviour, e.g., for adding a language-
+specific stemmer or a stopword list.
+If you are interested in further customizing your Solr server to your needs,
+see the Solr wiki at [4] for documentation. When editing the schema.xml and
+solrconfig.xml files, please only edit the copies in the Solr configuration
+directory, not directly the ones provided with this module.
+
+[4] http://wiki.apache.org/solr/
+
+You'll have to restart your Solr server after making such changes, for them to
+take effect.
 
 Developers
 ----------
