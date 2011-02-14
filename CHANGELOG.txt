@@ -2,9 +2,10 @@
 
 Apache Solr Multilingual 7.x-1.0-alpha1, 2011-xx-xx
 ---------------------------------------------------
-[       ] daspeter: intial port to d7
-[       ] mkalkbrenner: adjusted schema.xml and solrconfig.xml according to apachesolr-7.x-1.0-beta3
-[       ] mkalkbrenner: replaced multiple tag_XYZ fields by dynamic field tags_*
+[        ] daspeter: intial port to d7
+[        ] mkalkbrenner: adjusted schema.xml and solrconfig.xml according to apachesolr-7.x-1.0-beta3
+[        ] mkalkbrenner: replaced multiple tag_XYZ fields by dynamic field tags_*
+[#1048066] webflo, mkalkbrenner: Drupal 7 Upgrade. Port hook_block to new hooks.
 
 
 Apache Solr Multilingual 6.x-2.0-alpha1, 2010-xx-xx

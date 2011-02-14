@@ -18,7 +18,7 @@
  * @return void
  */
 function apachesolr_multilingual_node_insert($node) {
-	apachesolr_multilingual_node_update($node);
+  apachesolr_multilingual_node_update($node);
 }
 
 /**
@@ -27,7 +27,7 @@ function apachesolr_multilingual_node_insert($node) {
  * @return void
  */
 function apachesolr_multilingual_node_delete($node) {
-	apachesolr_multilingual_node_update($node);
+  apachesolr_multilingual_node_update($node);
 }
 
 /**
@@ -105,7 +105,7 @@ function apachesolr_multilingual_apachesolr_update_index($document, $node, $name
             }
 
             if ($terms) {
-            	$document->{'taxonomy_names_' . $term_language} = $terms;
+              $document->{'taxonomy_names_' . $term_language} = $terms;
             }
           }
         }
@@ -483,7 +483,7 @@ function apachesolr_multilingual_form_search_submit($form, &$form_state) {
  * @return array
  */
 function apachesolr_multilingual_apachesolr_facets() {
-  $facets['apachesolr_multilingual_language'] = array(
+  $facets['language'] = array(
     'info' => t('Apache Solr Multilingual: Filter by Language'),
     'facet_field' => 'language',
   );
@@ -493,60 +493,57 @@ function apachesolr_multilingual_apachesolr_facets() {
 
 
 /**
- * Implements hook_block().
- *
- * @return mixed
+ * Implements hook_block_info().
  */
-function apachesolr_multilingual_block($op = 'list', $delta = 0, $edit = array()) {
-  switch ($op) {
-    case 'list':
-      $enabled_facets = apachesolr_get_enabled_facets('apachesolr_multilingual');
-      $facets = apachesolr_multilingual_apachesolr_facets();
-      // Add the blocks
-      $blocks = array();
-      foreach ($enabled_facets as $delta => $facet_field) {
-        if (isset($facets[$delta])) {
-          $blocks[$delta] = $facets[$delta] + array('cache' => BLOCK_CACHE_PER_PAGE);
-        }
-      }
-      return $blocks;
+function apachesolr_multilingual_block_info() {
+  $module = 'apachesolr_multilingual';
+  $server_id = apachesolr_default_server();
+  $enabled_facets = apachesolr_get_enabled_facets($server_id, $module);
+  $facets = apachesolr_multilingual_apachesolr_facets();
 
-    case 'view':
-      if (apachesolr_has_searched()) {
-        $response = apachesolr_static_response_cache();
-        if (empty($response)) {
-          return;
-        }
-        $query = apachesolr_current_query();
-        $facets = apachesolr_multilingual_apachesolr_facets();
+  // Add the blocks
+  $blocks = array();
+  foreach ($enabled_facets as $delta => $facet_info) {
+    if (isset($facets[$delta])) {
+      $blocks[$delta] = $facets[$delta] + array('cache' => DRUPAL_NO_CACHE);
+    }
+  }
+  return $blocks;
+}
 
-        switch ($delta) {
-          case 'apachesolr_multilingual_language':
-            if (!variable_get('apachesolr_multilingual_auto_language_filter', 0)
-              ||(variable_get('apachesolr_multilingual_auto_language_filter', 0)
-              && variable_get('apachesolr_multilingual_auto_language_filter_detachable', 0))
-              && (count((array) $response->facet_counts->facet_fields->$facets[$delta]['facet_field']) > 1 || (!empty($_GET['filters']) && strpos($_GET['filters'], 'language:') !== FALSE))
-            ) {
-              return apachesolr_facet_block(
-                $response,
-                $query,
-                'apachesolr_multilingual',
-                $delta,
-                $facets[$delta]['facet_field'],
-                t('Filter by language'),
-                'apachesolr_search_language_name'
-              );
-            }
-            break;
-        }
-      }
-      break;
+/**
+ * Implements hook_block_configure().
+ */
+function apachesolr_multilingual_block_configure($delta = '') {
+  return apachesolr_facetcount_form('apachesolr_multilingual', $delta);
+}
 
-    case 'configure':
-      return apachesolr_facetcount_form('apachesolr_multilingual', $delta);
+/**
+ * Implements hook_block_save().
+ */
+function apachesolr_multilingual_block_save($delta, $edit) {
+  apachesolr_facetcount_save($edit);
+}
 
-    case 'save':
-      apachesolr_facetcount_save($edit);
-      break;
+
+/**
+ * Implements hook_block_view().
+ */
+function apachesolr_multilingual_block_view($delta = '') {
+  if (apachesolr_has_searched()) {
+    $response = apachesolr_static_response_cache();
+    if (empty($response)) {
+      return;
+    }
+    $query = apachesolr_current_query();
+    $facets = apachesolr_multilingual_apachesolr_facets();
+
+    if (isset($facets[$delta]) && (!variable_get('apachesolr_multilingual_auto_language_filter', 0)
+      || (variable_get('apachesolr_multilingual_auto_language_filter', 0)
+      && variable_get('apachesolr_multilingual_auto_language_filter_detachable', 0))
+      && (count((array) $response->facet_counts->facet_fields->$facets[$delta]['facet_field']) > 1
+      || strpos($_GET['filters'], 'language:') !== FALSE))) {
+        return apachesolr_facet_block($response, $query, 'apachesolr_multilingual', $delta, t('Filter by language'), 'apachesolr_search_language_name');
+    }
   }
 }
