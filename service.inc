@@ -413,6 +413,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         'params' => &$params,
       );
       drupal_alter('search_api_solr_query', $call_args, $query);
+      $this->preQuery($call_args, $query);
       $response = $this->solr->search($keys, $offset, $limit, $params);
       $time_query_done = microtime(TRUE);
 
@@ -474,6 +475,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
           }
         }
       }
+
+      $this->postQuery($query, $response, $results);
 
       // Compute performance
       $time_end = microtime(TRUE);
@@ -639,6 +642,34 @@ class SearchApiSolrService extends SearchApiAbstractService {
       }
     }
     return $facet_params;
+  }
+
+  /**
+   * Empty method to allow subclassed to apply custom changes before the query
+   * is sent to Solr. Works exactly like hook_search_api_solr_query_alter().
+   *
+   * @param array $call_args
+   *   An associative array containing all four arguments to the
+   *   Apache_Solr_Service::search() call ("query", "offset", "limit" and
+   *   "params") as references.
+   * @param SearchApiQueryInterface $query
+   *   The SearchApiQueryInterface object representing the executed search query.
+   */
+  function preQuery(array &$call_args, SearchApiQueryInterface $query) {
+  }
+
+  /**
+   * Empty method to allow subclassed to apply custom changes before search
+   * results are returned.
+   *
+   * @param SearchApiQueryInterface $query
+   *   The SearchApiQueryInterface object representing the executed search query.
+   * @param Apache_Solr_Response $response
+   *   The response object returned by Solr.
+   * @param array $results
+   *   The results array that will be returned for the search.
+   */
+  function postQuery(SearchApiQueryInterface $query, Apache_Solr_Response $response, array &$results) {
   }
 
   //
