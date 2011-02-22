@@ -29,6 +29,10 @@ Regarding third-party features, this module supports the "search_api_facets"
 feature, introduced by the module of the same name. This lets you create
 facetted searches for any index lying on a Solr server.
 
+Also supported is the "search_api_multi" feature (likewise introduced by the
+module of the same name) which allows multiple indexes lying on a single Solr
+server to be searched simultaneously.
+
 If you feel some service option is missing, or have other ideas for improving
 this implementation, please file a feature request in the project's issue queue,
 at [3], using the "Solr search" component.
