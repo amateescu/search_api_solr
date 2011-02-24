@@ -32,6 +32,23 @@ function hook_search_api_solr_query_alter(array &$call_args, SearchApiQueryInter
 }
 
 /**
+ * Lets modules alter the search results returned from a Solr search, based on
+ * the original Solr response.
+ *
+ * @param array $results
+ *   The results array that will be returned for the search.
+ * @param SearchApiQueryInterface $query
+ *   The SearchApiQueryInterface object representing the executed search query.
+ * @param Apache_Solr_Response $response
+ *   The response object returned by Solr.
+ */
+function hook_search_api_solr_search_results_alter(array &$results, SearchApiQueryInterface $query, Apache_Solr_Response $response) {
+  if (isset($response->facet_counts->facet_fields->custom_field)) {
+    // Do something with $results.
+  }
+}
+
+/**
  * Lets modules alter a Solr search request for a multi-index search before
  * sending it.
  *

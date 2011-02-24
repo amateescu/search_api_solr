@@ -457,7 +457,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
               }
             }
             elseif (isset($terms->_empty_)) {
-              clone $terms;
+              $terms = clone $terms;
               unset($terms->_empty_);
             }
             foreach ($terms as $term => $count) {
@@ -476,7 +476,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
         }
       }
 
-      $this->postQuery($query, $response, $results);
+      drupal_alter('search_api_solr_search_results', $results, $query, $response);
+      $this->postQuery($results, $query, $response);
 
       // Compute performance
       $time_end = microtime(TRUE);
@@ -659,17 +660,18 @@ class SearchApiSolrService extends SearchApiAbstractService {
   }
 
   /**
-   * Empty method to allow subclassed to apply custom changes before search
-   * results are returned.
+   * Empty method to allow subclasses to apply custom changes before search results are returned.
    *
+   * Works exactly like hook_search_api_solr_search_results_alter().
+   *
+   * @param array $results
+   *   The results array that will be returned for the search.
    * @param SearchApiQueryInterface $query
    *   The SearchApiQueryInterface object representing the executed search query.
    * @param Apache_Solr_Response $response
    *   The response object returned by Solr.
-   * @param array $results
-   *   The results array that will be returned for the search.
    */
-  function postQuery(SearchApiQueryInterface $query, Apache_Solr_Response $response, array &$results) {
+  function postQuery(array &$results, SearchApiQueryInterface $query, Apache_Solr_Response $response) {
   }
 
   //
