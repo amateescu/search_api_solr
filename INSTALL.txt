@@ -1,4 +1,3 @@
-$Id$
 
 Prerequisite:
 - Java 5 or higher

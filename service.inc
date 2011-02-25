@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Search service class using Solr server.

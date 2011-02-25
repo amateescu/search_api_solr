@@ -1,4 +1,3 @@
-$Id$
 
 Search API Solr search 1.0, dev (xx/xx/xxxx):
 ------------------------------------

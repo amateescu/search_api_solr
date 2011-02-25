@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * A few custom rewrites to the Apache_Solr_Service class, to allow providing
