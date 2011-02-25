@@ -1,4 +1,3 @@
-; $Id$
 name = Apache Solr (Multilingual) Textfiles
 description = edit apachesolr textfiles
 package = Apache Solr

@@ -1,4 +1,3 @@
-    <!-- $Id$ -->
     
     <fieldType name="textSpell[LANGUAGE_ID]" class="solr.TextField" positionIncrementGap="100">
       <analyzer>

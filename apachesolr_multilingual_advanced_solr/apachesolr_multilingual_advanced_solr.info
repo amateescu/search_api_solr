@@ -1,4 +1,3 @@
-; $Id$
 name = Apache Solr (Multilingual) Advanced Settings
 description = Tweak things like data dir or auto commit time
 package = Apache Solr

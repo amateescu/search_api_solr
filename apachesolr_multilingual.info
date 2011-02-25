@@ -1,4 +1,3 @@
-; $Id$
 name = Apache Solr Multilingual
 description = multilingual and non-English search with Solr
 package = Apache Solr

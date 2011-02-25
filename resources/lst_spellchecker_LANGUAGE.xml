@@ -1,4 +1,3 @@
-    <!-- $Id$ -->
     <lst name="spellchecker">
       <str name="name">spellchecker[LANGUAGE_ID]</str>
       <str name="field">spell[LANGUAGE_ID]</str>
