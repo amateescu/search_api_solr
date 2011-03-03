@@ -1,6 +1,7 @@
 
 Search API Solr search 1.0, dev (xx/xx/xxxx):
 ------------------------------------
+- #1071894 by drunken monkey: Fixed incorrect handling of boolean facets.
 - #1071796: Add additional help for Solr-specific extensions.
 - #1056018: Better document Solr config customization options.
 - #1049900: Field values are sometimes not escaped properly.
