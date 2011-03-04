@@ -1,6 +1,8 @@
-
 Search API Solr search 1.0, dev (xx/xx/xxxx):
-------------------------------------
+---------------------------------------------
+
+Search API Solr search 1.0, Beta 2 (03/04/2011):
+------------------------------------------------
 - #1071894 by drunken monkey: Fixed incorrect handling of boolean facets.
 - #1071796: Add additional help for Solr-specific extensions.
 - #1056018: Better document Solr config customization options.
@@ -13,6 +15,6 @@ Search API Solr search 1.0, dev (xx/xx/xxxx):
 - #984134: Add Solr-specific query alter hooks.
 
 Search API Solr search 1.0, Beta 1 (11/29/2010):
-------------------------------------
+------------------------------------------------
 Basic functionality is in place and quite well-tested, including support for
 facets and for multi-index searches.
