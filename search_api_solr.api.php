@@ -31,6 +31,22 @@ function hook_search_api_solr_query_alter(array &$call_args, SearchApiQueryInter
 }
 
 /**
+ * Change the way the index's field names are mapped to Solr field names.
+ *
+ * @param $index
+ *   The index whose field mappings are altered.
+ * @param array $fields
+ *   An associative array containing the index field names mapped to their Solr
+ *   counterparts. The special fields 'search_api_id' and 'search_api_relevance'
+ *   are also included.
+ */
+function hook_search_api_solr_field_mapping_alter(SearchApiIndex $index, array &$fields) {
+  if ($index->entity_type == 'node' && isset($fields['body:value'])) {
+    $fields['body:value'] = 'text';
+  }
+}
+
+/**
  * Lets modules alter the search results returned from a Solr search, based on
  * the original Solr response.
  *

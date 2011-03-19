@@ -268,6 +268,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $name = $pref . '_' . $key;
       $ret[$key] = $name;
     }
+
+    // Let modules adjust the field mappings.
+    drupal_alter('search_api_solr_field_mapping', $index, $ret);
+
     return $ret;
   }
 
