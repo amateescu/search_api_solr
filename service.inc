@@ -331,6 +331,12 @@ class SearchApiSolrService extends SearchApiAbstractService {
         }
         $value = format_date($value, 'custom', self::SOLR_DATE_FORMAT, 'UTC');
         break;
+      case 'integer':
+        $value = (int) $value;
+        break;
+      case 'decimal':
+        $value = (float) $value;
+        break;
     }
     if ($multi_valued) {
       $doc->addField($key, $value);
