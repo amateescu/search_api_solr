@@ -15,6 +15,19 @@ class SearchApiSolrConnection extends Apache_Solr_Service {
   protected $http_auth;
 
   /**
+   * Additional servlet mapping. Allows us to use the LukeRequestHandler Solr
+   * service.
+   */
+  const LUKE_SERVLET = 'admin/luke';
+
+  /**
+   * Lucene index schema information.
+   *
+   * @var Apache_Solr_Response
+   */
+  protected $luke;
+
+  /**
    * Constructs a Solr connection with an optional HTTP user and password.
    *
    * @param array $options
@@ -185,6 +198,37 @@ class SearchApiSolrConnection extends Apache_Solr_Service {
     $value = str_replace("\\", "\\\\", $value);
     $value = str_replace('"', '\"', $value);
     return '"' . $value . '"';
+  }
+
+  /**
+   * Get metadata about the Lucene index.
+   *
+   * @param int $num_terms
+   *   Number of 'top terms' to return. @TODO this isn't exposed anywhere. Do we care?
+   *
+   * @return
+   *   An Apache_Solr_Response object.
+   */
+  public function getLuke($num_terms = 0) {
+    if (!isset($this->luke[$num_terms])) {
+      $url = $this->_constructUrl(self::LUKE_SERVLET, array('numTerms' => "$num_terms", 'wt' => self::SOLR_WRITER));
+      $this->luke[$num_terms] = $this->_sendRawGet($url);
+    }
+    return $this->luke[$num_terms];
+  }
+
+  /**
+   * Get metadata about fields in the Lucene index.
+   * @see SearchApiSolrConnection::getLuke()
+   *
+   * @param int $num_terms
+   *   Number of 'top terms' to return. @TODO this isn't exposed anywhere. Do we care?
+   *
+   * @return
+   *   An array of objects describing fields on the index.
+   */
+  public function getFields($num_terms = 0) {
+    return (array) $this->getLuke($num_terms)->fields;
   }
 
 }

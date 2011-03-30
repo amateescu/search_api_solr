@@ -35,6 +35,29 @@ class SearchApiSolrService extends SearchApiAbstractService {
     'uri' => 's',
   );
 
+  /**
+   * Metadata describing fields on the Solr/Lucene index.
+   * @see SearchApiSolrService::getFields().
+   *
+   * @var array
+   */
+  protected $fields;
+
+  /**
+   * Cache id for the contents of $this->field.
+   * @see SearchApiSolrService::getFields().
+   *
+   * @var string
+   */
+  protected $fields_cid;
+
+  public function __construct(SearchApiServer $server) {
+    parent::__construct($server);
+
+    // Initialize the index field metadata cache id.
+    $this->fields_cid = 'search_api_solr:fields:' . $server->machine_name;
+  }
+
   public function configurationForm(array $form, array &$form_state) {
     if (empty($this->options)) {
       // First configuring this server
@@ -895,6 +918,31 @@ class SearchApiSolrService extends SearchApiAbstractService {
   public function ping() {
     $this->connect();
     return $this->solr->ping();
+  }
+
+  /**
+   * Get metadata about fields in the Solr/Lucene index.
+   *
+   * @param boolean $reset
+   *   Reload the cached data?
+   */
+  public function getFields($reset = FALSE) {
+    if (!$reset) {
+      // Check for cached data.
+      $cache = cache_get($this->fields_cid);
+      if (isset($cache->data) && !$reset) {
+        $this->fields = $cache->data;
+      }
+    }
+
+    if (!isset($this->fields) || $reset) {
+      // Get fresh data and set the cache.
+      $this->connect();
+      $this->fields = $this->solr->getFields();
+      cache_set($this->fields_cid, $this->fields);
+    }
+
+    return $this->fields;
   }
 
 }
