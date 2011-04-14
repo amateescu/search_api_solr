@@ -492,16 +492,19 @@ class SearchApiSolrService extends SearchApiAbstractService {
               $terms = clone $terms;
               unset($terms->_empty_);
             }
-            $bool = isset($index->options['fields'][$info['field']]['type']) && $index->options['fields'][$info['field']]['type'] == 'boolean';
+            $type = isset($index->options['fields'][$info['field']]['type']) ? $index->options['fields'][$info['field']]['type'] : 'string';
             foreach ($terms as $term => $count) {
               if ($count >= $min_count) {
-                if ($bool) {
+                if ($type == 'boolean') {
                   if ($term == 'true') {
                     $term = 1;
                   }
                   elseif ($term == 'false') {
                     $term = 0;
                   }
+                }
+                elseif ($type == 'date') {
+                  $term = isset($term) ? strtotime($term) : NULL;
                 }
                 $term = $term === '_empty_' ? '!' : '"' . $term . '"';
                 $results['search_api_facets'][$delta][] = array(
