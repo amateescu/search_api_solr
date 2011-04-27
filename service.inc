@@ -43,19 +43,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
    */
   protected $fields;
 
-  /**
-   * Cache id for the contents of $this->field.
-   * @see SearchApiSolrService::getFields().
-   *
-   * @var string
-   */
-  protected $fields_cid;
-
   public function __construct(SearchApiServer $server) {
     parent::__construct($server);
-
-    // Initialize the index field metadata cache id.
-    $this->fields_cid = 'search_api_solr:fields:' . $server->machine_name;
   }
 
   public function configurationForm(array $form, array &$form_state) {
@@ -936,19 +925,26 @@ class SearchApiSolrService extends SearchApiAbstractService {
    *   Reload the cached data?
    */
   public function getFields($reset = FALSE) {
-    if (!$reset) {
-      // Check for cached data.
-      $cache = cache_get($this->fields_cid);
+    $cid = 'search_api_solr:fields:' . $this->server->machine_name;
+
+    // If the data hasn't been retrieved before and we aren't refreshing it, try
+    // to get data from the cache.
+    if (!isset($this->fields) && !$reset) {
+      $cache = cache_get($cid);
       if (isset($cache->data) && !$reset) {
         $this->fields = $cache->data;
       }
     }
 
+    // If there was no data in the cache, or if we're refreshing the data,
+    // connect to the Solr server, retrieve schema information, and cache it.
     if (!isset($this->fields) || $reset) {
-      // Get fresh data and set the cache.
       $this->connect();
-      $this->fields = $this->solr->getFields();
-      cache_set($this->fields_cid, $this->fields);
+      $this->fields = array();
+      foreach ($this->solr->getFields() as $name => $info) {
+        $this->fields[$name] = new SearchApiSolrField($info);
+      }
+      cache_set($cid, $this->fields);
     }
 
     return $this->fields;

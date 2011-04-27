@@ -204,10 +204,10 @@ class SearchApiSolrConnection extends Apache_Solr_Service {
    * Get metadata about the Lucene index.
    *
    * @param int $num_terms
-   *   Number of 'top terms' to return. @TODO this isn't exposed anywhere. Do we care?
+   *   Number of 'top terms' to return.
    *
-   * @return
-   *   An Apache_Solr_Response object.
+   * @return Apache_Solr_Response
+   *   A response object containing schema information.
    */
   public function getLuke($num_terms = 0) {
     if (!isset($this->luke[$num_terms])) {
@@ -219,16 +219,15 @@ class SearchApiSolrConnection extends Apache_Solr_Service {
 
   /**
    * Get metadata about fields in the Lucene index.
+   *
+   * @return array
+   *   An array of objects, keyed by field name, describing fields on the index.
+   *
    * @see SearchApiSolrConnection::getLuke()
-   *
-   * @param int $num_terms
-   *   Number of 'top terms' to return. @TODO this isn't exposed anywhere. Do we care?
-   *
-   * @return
-   *   An array of objects describing fields on the index.
+   * @see http://wiki.apache.org/solr/LukeRequestHandler
    */
-  public function getFields($num_terms = 0) {
-    return (array) $this->getLuke($num_terms)->fields;
+  public function getFields() {
+    return (array) $this->getLuke()->fields;
   }
 
 }

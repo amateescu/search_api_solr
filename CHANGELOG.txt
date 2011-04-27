@@ -1,7 +1,7 @@
 Search API Solr search 1.0, dev (xx/xx/xxxx):
 ---------------------------------------------
 - #1127038 by drunken monkey: Fixed handling of date facets.
-- #1110820 by becw: Added support for the Luke request handler.
+- #1110820 by becw, drunken monkey: Added support for the Luke request handler.
 - #1095956 by drunken monkey: Added Solr-specific index alter hook.
 
 Search API Solr search 1.0, Beta 2 (03/04/2011):
