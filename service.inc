@@ -36,6 +36,11 @@ class SearchApiSolrService extends SearchApiAbstractService {
   );
 
   /**
+   * @var array
+   */
+  protected $fieldNames = array();
+
+  /**
    * Metadata describing fields on the Solr/Lucene index.
    * @see SearchApiSolrService::getFields().
    *
@@ -255,36 +260,51 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
   /**
    * Create a list of all indexed field names mapped to their Solr field names.
-   * The special fields "search_api_id" and "search_api_relevance" are also
-   * included.
+   *
+   * The special fields "search_api_id", "search_api_relevance", and "id" are
+   * also included. Any Solr fields that exist on search results are mapped back
+   * to their local field names in the final result set.
+   *
+   * @see SearchApiSolrService::search()
    */
-  protected function getFieldNames(SearchApiIndex $index) {
-    $ret = array(
-      'search_api_id' => 'is_search_api_id',
-      'search_api_relevance' => 'score',
-    );
-    if (empty($index->options['fields'])) {
-      return $ret;
-    }
-    $fields = $index->options['fields'];
-    foreach ($fields as $key => $field) {
-      if (empty($field['indexed'])) {
-        continue;
+  protected function getFieldNames(SearchApiIndex $index, $reset = FALSE) {
+    if (!isset($this->fieldNames[$index->machine_name]) || $reset) {
+      // This array maps "local property name" => "solr doc property name".
+      $ret = array(
+        'search_api_id' => 'is_search_api_id',
+        'search_api_relevance' => 'score',
+        'search_api_item_id' => 'item_id',
+      );
+
+      // Add the names of any "fields" configured on the index.
+      $fields = (isset($index->options['fields']) ? $index->options['fields'] : array());
+      foreach ($fields as $key => $field) {
+        // Since this determines which fields can be searched and filtered on,
+        // don't include fields that aren't indexed.
+        if (empty($field['indexed'])) {
+          continue;
+        }
+
+        // Generate a field name; this corresponds with naming conventions in
+        // our schema.xml
+        $type = $field['type'];
+        $inner_type = search_api_extract_inner_type($type);
+        $pref = isset(self::$type_prefixes[$inner_type]) ? self::$type_prefixes[$inner_type] : '';
+        if ($pref != 't') {
+          $pref .= $type == $inner_type ? 's' : 'm';
+        }
+        $name = $pref . '_' . $key;
+
+        $ret[$key] = $name;
       }
-      $type = $field['type'];
-      $inner_type = search_api_extract_inner_type($type);
-      $pref = self::$type_prefixes[$inner_type];
-      if ($pref != 't') {
-        $pref .= $type == $inner_type ? 's' : 'm';
-      }
-      $name = $pref . '_' . $key;
-      $ret[$key] = $name;
+
+      // Let modules adjust the field mappings.
+      drupal_alter('search_api_solr_field_mapping', $index, $ret);
+
+      $this->fieldNames[$index->machine_name] = $ret;
     }
 
-    // Let modules adjust the field mappings.
-    drupal_alter('search_api_solr_field_mapping', $index, $ret);
-
-    return $ret;
+    return $this->fieldNames[$index->machine_name];
   }
 
   /**
@@ -369,6 +389,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
   public function search(SearchApiQueryInterface $query) {
     $time_method_called = microtime(TRUE);
+    // Reset request handler
+    $this->request_handler = NULL;
     // Get field information
     $index = $query->getIndex();
     $fields = $this->getFieldNames($index);
@@ -422,17 +444,20 @@ class SearchApiSolrService extends SearchApiAbstractService {
     if (!empty($facet_params['facet.field'])) {
       $params += $facet_params;
     }
+    $call_args = array(
+      'query'  => &$keys,
+      'offset' => &$offset,
+      'limit'  => &$limit,
+      'params' => &$params,
+    );
+    if ($this->request_handler) {
+      $this->setRequestHandler($this->request_handler, $call_args);
+    }
 
     try {
       // Send search request
       $time_processing_done = microtime(TRUE);
       $this->connect();
-      $call_args = array(
-        'query'  => &$keys,
-        'offset' => &$offset,
-        'limit'  => &$limit,
-        'params' => &$params,
-      );
       drupal_alter('search_api_solr_query', $call_args, $query);
       $this->preQuery($call_args, $query);
       $response = $this->solr->search($keys, $offset, $limit, $params);
@@ -444,69 +469,11 @@ class SearchApiSolrService extends SearchApiAbstractService {
       }
 
       // Extract results
-      $results = array();
-      $results['result count'] = $response->response->numFound;
-      $results['results'] = array();
-      foreach ($response->response->docs as $doc) {
-        $doc->id = $doc->item_id;
-        unset($doc->item_id);
-        foreach ($doc as $k => $v) {
-          $result[$k] = $v;
-        }
-        $results['results'][$doc->id] = $result;
-      }
+      $results = $this->extractResults($query, $response);
 
       // Extract facets
-      if (isset($response->facet_counts->facet_fields)) {
-        $results['search_api_facets'] = array();
-        $facet_fields = $response->facet_counts->facet_fields;
-        foreach ($facets as $delta => $info) {
-          $field = $fields[$info['field']];
-          if ($field[0] == 's') {
-            $field = 'f_' . $field;
-          }
-          if (!empty($facet_fields->$field)) {
-            $min_count = $info['min_count'];
-            $terms = $facet_fields->$field;
-            if ($info['missing']) {
-              // We have to correctly incorporate the "_empty_" term.
-              // This will ensure that the term with the least results is dropped, if the limit would be exceeded.
-              $terms = (array) $terms;
-              arsort($terms);
-              if (count($terms) > $info['limit']) {
-                array_pop($terms);
-              }
-            }
-            elseif (isset($terms->_empty_)) {
-              $terms = clone $terms;
-              unset($terms->_empty_);
-            }
-            $type = isset($index->options['fields'][$info['field']]['type']) ? $index->options['fields'][$info['field']]['type'] : 'string';
-            foreach ($terms as $term => $count) {
-              if ($count >= $min_count) {
-                if ($type == 'boolean') {
-                  if ($term == 'true') {
-                    $term = 1;
-                  }
-                  elseif ($term == 'false') {
-                    $term = 0;
-                  }
-                }
-                elseif ($type == 'date') {
-                  $term = isset($term) ? strtotime($term) : NULL;
-                }
-                $term = $term === '_empty_' ? '!' : '"' . $term . '"';
-                $results['search_api_facets'][$delta][] = array(
-                  'filter' => $term,
-                  'count' => $count,
-                );
-              }
-            }
-            if (empty($results['search_api_facets'][$delta]) || count($results['search_api_facets'][$delta]) <= 1) {
-              unset($results['search_api_facets'][$delta]);
-            }
-          }
-        }
+      if ($facets = $this->extractFacets($query, $response)) {
+        $results['search_api_facets'] = $facets;
       }
 
       drupal_alter('search_api_solr_search_results', $results, $query, $response);
@@ -529,6 +496,133 @@ class SearchApiSolrService extends SearchApiAbstractService {
   }
 
   /**
+   * Extract results from a Solr response.
+   *
+   * @param Apache_Solr_Response $response
+   *   A response object from SolrPhpClient.
+   *
+   * @return array
+   *   An array with two keys:
+   *   - 'result count' contains an integer number of total results
+   *   - 'results' is an array of search results; keys are document ids, values
+   *      are arrays of property => value pairs
+   */
+  protected function extractResults(SearchApiQueryInterface $query, Apache_Solr_Response $response) {
+    $index = $query->getIndex();
+    $fields = $this->getFieldNames($index);
+
+    // Set up the results array.
+    $results = array();
+    $results['result count'] = $response->response->numFound;
+    $results['results'] = array();
+
+    // Add each search result to the results array.
+    foreach ($response->response->docs as $doc) {
+      // Blank result array.
+      $result = array(
+        'id' => NULL,
+        'score' => NULL,
+        'fields' => array(),
+      );
+
+      // Extract properties from the Solr document, translating from Solr to
+      // Search API property names. This reverses the mapping in
+      // SearchApiSolrService::getFieldNames().
+      foreach ($fields as $search_api_property => $solr_property) {
+        if (isset($doc->{$solr_property})) {
+          $result['fields'][$search_api_property] = $doc->{$solr_property};
+        }
+      }
+
+      // We can find the entity id and score in the special 'search_api_*'
+      // properties. Mappings are provided for these properties in
+      // SearchApiSolrService::getFieldNames().
+      $result['id'] = $result['fields']['search_api_item_id'];
+      $result['score'] = $result['fields']['search_api_relevance'];
+
+      // Use the result's id as the array key. By default, 'id' is mapped to
+      // 'item_id' in SearchApiSolrService::getFieldNames().
+      if ($result['id']) {
+        $results['results'][$result['id']] = $result;
+      }
+    }
+
+    return $results;
+  }
+
+  /**
+   * Extract facets from a Solr response.
+   *
+   * @param Apache_Solr_Response $response
+   *   A response object from SolrPhpClient.
+   *
+   * @return array
+   *   An array describing facets that apply to the current results.
+   */
+  protected function extractFacets(SearchApiQueryInterface $query, Apache_Solr_Response $response) {
+    if (isset($response->facet_counts->facet_fields)) {
+      $index = $query->getIndex();
+      $fields = $this->getFieldNames($index);
+
+      $facets = array();
+      $facet_fields = $response->facet_counts->facet_fields;
+
+      $extract_facets = $query->getOption('search_api_facets');
+      $extract_facets = ($extract_facets ? $extract_facets : array());
+
+      foreach ($extract_facets as $delta => $info) {
+        $field = $fields[$info['field']];
+        if ($field[0] == 's') {
+          $field = 'f_' . $field;
+        }
+        if (!empty($facet_fields->$field)) {
+          $min_count = $info['min_count'];
+          $terms = $facet_fields->$field;
+          if ($info['missing']) {
+            // We have to correctly incorporate the "_empty_" term.
+            // This will ensure that the term with the least results is dropped, if the limit would be exceeded.
+            $terms = (array) $terms;
+            arsort($terms);
+            if (count($terms) > $info['limit']) {
+              array_pop($terms);
+            }
+          }
+          elseif (isset($terms->_empty_)) {
+            $terms = clone $terms;
+            unset($terms->_empty_);
+          }
+          $type = isset($index->options['fields'][$info['field']]['type']) ? $index->options['fields'][$info['field']]['type'] : 'string';
+          foreach ($terms as $term => $count) {
+            if ($count >= $min_count) {
+              if ($type == 'boolean') {
+                if ($term == 'true') {
+                  $term = 1;
+                }
+                elseif ($term == 'false') {
+                  $term = 0;
+                }
+              }
+              elseif ($type == 'date') {
+                $term = isset($term) ? strtotime($term) : NULL;
+              }
+              $term = $term === '_empty_' ? '!' : '"' . $term . '"';
+              $facets[$delta][] = array(
+                'filter' => $term,
+                'count' => $count,
+              );
+            }
+          }
+          if (empty($facets[$delta]) || count($facets[$delta]) <= 1) {
+            unset($facets[$delta]);
+          }
+        }
+      }
+
+      return $facets;
+    }
+  }
+
+  /**
    * Flatten a keys array into a single search string.
    *
    * @param array $keys
@@ -540,13 +634,27 @@ class SearchApiSolrService extends SearchApiAbstractService {
    */
   protected function flattenKeys(array $keys) {
     $k = array();
+    $or = $keys['#conjunction'] == 'OR';
+    $neg = !empty($keys['#negation']);
     foreach (element_children($keys) as $i) {
       $key = $keys[$i];
       if (!$key) {
         continue;
       }
       if (is_array($key)) {
-        $k[] = $this->flattenKeys($key);
+        $subkeys = $this->flattenKeys($key);
+        if ($subkeys) {
+          $nested_expressions = TRUE;
+          // If this is a negated OR expression, we can't just use nested keys
+          // as-is, but have to put them into parantheses.
+          if ($or && $neg) {
+            if (empty($this->request_handler) || $this->request_handler == 'dismax') {
+              $this->request_handler = 'standard';
+            }
+            $subkeys = "($subkeys)";
+          }
+          $k[] = $subkeys;
+        }
       }
       else {
         $key = trim($key);
@@ -557,13 +665,39 @@ class SearchApiSolrService extends SearchApiAbstractService {
     if (!$k) {
       return '';
     }
-    if ($keys['#conjunction'] == 'OR') {
-      $k = '((' . implode(') OR (', $k) . '))';
-      return empty($keys['#negation']) ? $k : '-' . $k;
+
+    // Normally, we use the "dismax" request handler, as it yields the best
+    // results for simple queries (only single terms, phrases or simple
+    // negation). In more complex cases, we have to switch to the "standard"
+    // handler, which offers complex syntax. This is guided by the "#negation"
+    // and "#conjunction" settings. Results of the following form will be
+    // returned:
+    //
+    // #conjunction | #negation | handler  | return value
+    // ----------------------------------------------------------------
+    // AND          | FALSE     | dismax   | A B C
+    // AND          | TRUE      | standard | -(A B C)
+    // OR           | FALSE     | standard | ((A) OR (B) OR (C))
+    // OR           | TRUE      | dismax   | -A -B -C
+
+    // If there was just a single, unnested key, we can ignore all this.
+    if (count($k) == 1 && empty($nested_expressions)) {
+      $k = reset($k);
+      return $neg ? "-$k" : $k;
     }
 
+    if ($or != $neg && (empty($this->request_handler) || $this->request_handler == 'dismax')) {
+      $this->request_handler = 'standard';
+    }
+
+    if ($or) {
+      if ($neg) {
+        return '-' . implode(' -', $k);
+      }
+      return '((' . implode(') OR (', $k) . '))';
+    }
     $k = implode(' ', $k);
-    return empty($keys['#negation']) ? $k : '-(' . $k . ')';
+    return $neg ? "-($k)" : $k;
   }
 
   /**
@@ -679,6 +813,39 @@ class SearchApiSolrService extends SearchApiAbstractService {
   }
 
   /**
+   * Helper method for setting the request handler, and making necessary
+   * adjustments to the request parameters.
+   *
+   * @param $handler
+   *   Name of the handler to set.
+   * @param array $call_args
+   *   An associative array containing all four arguments to the
+   *   Apache_Solr_Service::search() call ("query", "offset", "limit" and
+   *   "params") as references.
+   *
+   * @return boolean
+   *   TRUE iff this method invocation handled the given handler. This allows
+   *   subclasses to recognize whether the request handler was already set by
+   *   this method.
+   */
+  protected function setRequestHandler($handler, array &$call_args) {
+    if ($handler == 'dismax') {
+      return TRUE;
+    }
+    if ($handler == 'standard') {
+      $keys = &$call_args['query'];
+      $params = &$call_args['params'];
+      $params['qt'] = $handler;
+      $k = $keys;
+      $fields = $params['qf'];
+      unset($params['qf']);
+      $keys = implode(":($k) OR ", array_map(array('SearchApiSolrConnection', 'escapeFieldName'), $fields)) . ":($k)";
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
    * Empty method to allow subclassed to apply custom changes before the query
    * is sent to Solr. Works exactly like hook_search_api_solr_query_alter().
    *
@@ -689,7 +856,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
    * @param SearchApiQueryInterface $query
    *   The SearchApiQueryInterface object representing the executed search query.
    */
-  function preQuery(array &$call_args, SearchApiQueryInterface $query) {
+  protected function preQuery(array &$call_args, SearchApiQueryInterface $query) {
   }
 
   /**
@@ -704,7 +871,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
    * @param Apache_Solr_Response $response
    *   The response object returned by Solr.
    */
-  function postQuery(array &$results, SearchApiQueryInterface $query, Apache_Solr_Response $response) {
+  protected function postQuery(array &$results, SearchApiQueryInterface $query, Apache_Solr_Response $response) {
   }
 
   //
