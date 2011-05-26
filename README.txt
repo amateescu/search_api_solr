@@ -28,6 +28,9 @@ Regarding third-party features, this module supports the "search_api_facets"
 feature, introduced by the module of the same name. This lets you create
 facetted searches for any index lying on a Solr server.
 
+The "search_api_spellcheck" feature/module is supported, which allows spellcheck
+suggestions from Solr to be viewed for searches.
+
 Also supported is the "search_api_multi" feature (likewise introduced by the
 module of the same name) which allows multiple indexes lying on a single Solr
 server to be searched simultaneously.

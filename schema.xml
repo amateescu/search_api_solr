@@ -318,6 +318,11 @@
    <!-- Since sorting by ID is explicitly allowed, store item_id also in a sortable way. -->
    <copyField source="item_id" dest="is_search_api_id" />
 
+   <!-- This field is used to build the spellchecker index. -->
+   <field name="spell" type="textSpell" indexed="true" stored="true" multiValued="true"/>
+  <!-- Copy all text fields into our spell field for indexing. -->
+   <copyField source="t_*" dest="spell"/>
+
    <!-- Dynamic field definitions.  If a field name is not found, dynamicFields
         will be used if the name matches any of the patterns.
         RESTRICTION: the glob-like pattern in the name attribute must have

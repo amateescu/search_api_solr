@@ -130,7 +130,12 @@ class SearchApiSolrService extends SearchApiAbstractService {
   }
 
   public function supportsFeature($feature) {
-    return $feature == 'search_api_facets' || $feature == 'search_api_multi';
+    $supported = drupal_map_assoc(array(
+      'search_api_facets',
+      'search_api_multi',
+      'search_api_spellcheck',
+    ));
+    return isset($supported[$feature]);
   }
 
   /**
@@ -444,6 +449,9 @@ class SearchApiSolrService extends SearchApiAbstractService {
     if (!empty($facet_params['facet.field'])) {
       $params += $facet_params;
     }
+    if (!empty($options['search_api_spellcheck'])) {
+      $params['spellcheck'] = 'true';
+    }
     $call_args = array(
       'query'  => &$keys,
       'offset' => &$offset,
@@ -545,6 +553,11 @@ class SearchApiSolrService extends SearchApiAbstractService {
       if ($result['id']) {
         $results['results'][$result['id']] = $result;
       }
+    }
+
+    // Check for spellcheck suggestions.
+    if (module_exists('search_api_spellcheck') && $query->getOption('search_api_spellcheck')) {
+      $results['search_api_spellcheck'] = new SearchApiSpellcheckSolr($response);
     }
 
     return $results;

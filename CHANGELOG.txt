@@ -1,5 +1,6 @@
 Search API Solr search 1.0, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1153306 by JoeMcGuire, drunken monkey: Added spellchecking support.
 - #1138230 by becw, drunken monkey: Added increased flexibility to the service
   class.
 - #1127038 by drunken monkey: Fixed handling of date facets.

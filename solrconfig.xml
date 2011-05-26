@@ -494,7 +494,18 @@
       <str name="fl">item_id,score</str>
       <str name="q.op">AND</str>
       <str name="q.alt">*:*</str>
+
+      <!-- By default don't spell check. -->
+      <str name="spellcheck">false</str>
+      <!-- Defaults for the spell checker when used. -->
+      <str name="spellcheck.onlyMorePopular">true</str>
+      <str name="spellcheck.extendedResults">false</str>
+      <!-- The number of suggestions to return. -->
+      <str name="spellcheck.count">1</str>
     </lst>
+    <arr name="last-components">
+      <str>spellcheck</str>
+    </arr>
   </requestHandler>
 
 <!-- Please refer to http://wiki.apache.org/solr/SolrReplication for details on configuring replication -->
@@ -557,7 +568,18 @@
           found -->
      <str name="f.name.hl.alternateField">name</str>
      <str name="f.text.hl.fragmenter">regex</str> <!-- defined below -->
+
+      <!-- By default don't spell check. -->
+      <str name="spellcheck">false</str>
+      <!-- Defaults for the spell checker when used. -->
+      <str name="spellcheck.onlyMorePopular">true</str>
+      <str name="spellcheck.extendedResults">false</str>
+      <!-- The number of suggestions to return. -->
+      <str name="spellcheck.count">1</str>
     </lst>
+    <arr name="last-components">
+      <str>spellcheck</str>
+    </arr>
   </requestHandler>
 
   <!-- Note how you can register the same handler multiple times with
@@ -657,18 +679,19 @@
 
     <lst name="spellchecker">
       <str name="name">default</str>
-      <str name="field">name</str>
+      <str name="field">spell</str>
       <str name="spellcheckIndexDir">./spellchecker</str>
+      <str name="buildOnOptimize">true</str>
     </lst>
 
-    <!-- a spellchecker that uses a different distance measure
+    <!-- a spellchecker that uses a different distance measure -->
     <lst name="spellchecker">
       <str name="name">jarowinkler</str>
       <str name="field">spell</str>
       <str name="distanceMeasure">org.apache.lucene.search.spell.JaroWinklerDistance</str>
       <str name="spellcheckIndexDir">./spellchecker2</str>
+      <str name="buildOnOptimize">true</str>
     </lst>
-     -->
 
     <!-- a file based spell checker
     <lst name="spellchecker">
@@ -680,6 +703,8 @@
     </lst>
     -->
   </searchComponent>
+
+  <queryConverter name="queryConverter" class="solr.SpellingQueryConverter"/>
 
   <!-- A request handler utilizing the spellcheck component.
   #############################################################################
