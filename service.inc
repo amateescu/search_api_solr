@@ -134,6 +134,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       'search_api_facets',
       'search_api_multi',
       'search_api_spellcheck',
+      'search_api_mlt',
     ));
     return isset($supported[$feature]);
   }
@@ -431,6 +432,23 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $facets = $query->getOption('search_api_facets') ? $query->getOption('search_api_facets') : array();
     $facet_params = $this->getFacetParams($facets, $fields);
 
+    // Handle More Like This query
+    $mlt = $query->getOption('search_api_mlt');
+    if ($mlt) {
+      $mlt_params['qt'] = 'mlt';
+      // The fields to look for similarities in.
+      $mlt_fl = array();
+      foreach($mlt['fields'] as $f) {
+        $mlt_fl[] = $fields[$f];
+        // For non-text fields, set minimum word length to 0.
+        if (isset($index->options['fields'][$f]['type']) && !search_api_is_text_type($index->options['fields'][$f]['type'])) {
+          $mlt_params['f.' . $fields[$f] . '.mlt.minwl'] = 0;
+        }
+      }
+      $mlt_params['mlt.fl'] = implode(',', $mlt_fl);
+      $keys = 'id:' . $index->machine_name . '-' . $mlt['id'];
+    }
+
     // Set defaults
     if (!$keys) {
       $keys = NULL;
@@ -451,6 +469,9 @@ class SearchApiSolrService extends SearchApiAbstractService {
     }
     if (!empty($options['search_api_spellcheck'])) {
       $params['spellcheck'] = 'true';
+    }
+    if (!empty($mlt_params['mlt.fl'])) {
+      $params += $mlt_params;
     }
     $call_args = array(
       'query'  => &$keys,
@@ -999,7 +1020,6 @@ class SearchApiSolrService extends SearchApiAbstractService {
     if (!empty($facet_params['facet.field'])) {
       $params += $facet_params;
     }
-
     try {
       // Send search request
       $time_processing_done = microtime(TRUE);

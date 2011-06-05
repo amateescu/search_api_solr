@@ -125,7 +125,7 @@
      -->
     <!--<mergeScheduler class="org.apache.lucene.index.ConcurrentMergeScheduler"/>-->
 
-	
+
     <!--
       This option specifies which Lucene LockFactory implementation to use.
 
@@ -636,6 +636,21 @@
     </lst>
   </requestHandler>
 
+  <!-- The more like this handler offers many advantages over the standard handler,
+    when performing moreLikeThis requests.-->
+  <requestHandler name="mlt" class="solr.MoreLikeThisHandler">
+    <lst name="defaults">
+      <str name="mlt.mintf">1</str>
+      <str name="mlt.mindf">1</str>
+      <str name="mlt.minwl">3</str>
+      <str name="mlt.maxwl">15</str>
+      <str name="mlt.maxqt">20</str>
+      <str name="mlt.match.include">false</str>
+      <str name="fl">item_id,score </str>
+      <!-- Abort any searches longer than 1.5 seconds -->
+      <!-- <int name="timeAllowed">1500</int> -->
+    </lst>
+  </requestHandler>
 
   <!--
    Search components are registered to SolrCore and used by Search Handlers

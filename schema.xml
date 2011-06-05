@@ -350,27 +350,27 @@
 -->
 
    <!-- Fulltext fields (are always multiValued) -->
-   <dynamicField name="t_*" type="text" />
+   <dynamicField name="t_*" type="text" termVectors="true" />
    <!-- These will be used for fields with type "String" or "URI". -->
-   <dynamicField name="ss_*" type="sortString" multiValued="false" />
-   <dynamicField name="sm_*" type="sortString" multiValued="true" />
+   <dynamicField name="ss_*" type="sortString" multiValued="false" termVectors="true" />
+   <dynamicField name="sm_*" type="sortString" multiValued="true" termVectors="true" />
    <!-- These will be used for fields with type "Integer" or "Duration". -->
-   <dynamicField name="is_*" type="tlong" multiValued="false" />
-   <dynamicField name="im_*" type="tlong" multiValued="true" />
+   <dynamicField name="is_*" type="tlong" multiValued="false" termVectors="true" />
+   <dynamicField name="im_*" type="tlong" multiValued="true" termVectors="true" />
    <!-- These will be used for fields with type "Decimal". -->
-   <dynamicField name="fs_*" type="tdouble" multiValued="false" />
-   <dynamicField name="fm_*" type="tdouble" multiValued="true" />
+   <dynamicField name="fs_*" type="tdouble" multiValued="false" termVectors="true" />
+   <dynamicField name="fm_*" type="tdouble" multiValued="true" termVectors="true" />
    <!-- These will be used for fields with type "Date". -->
-   <dynamicField name="ds_*" type="tdate" multiValued="false" />
-   <dynamicField name="dm_*" type="tdate" multiValued="true" />
+   <dynamicField name="ds_*" type="tdate" multiValued="false" termVectors="true" />
+   <dynamicField name="dm_*" type="tdate" multiValued="true" termVectors="true" />
    <!-- These will be used for fields with type "Boolean". -->
-   <dynamicField name="bs_*" type="boolean" multiValued="false" />
-   <dynamicField name="bm_*" type="boolean" multiValued="true" />
-   
+   <dynamicField name="bs_*" type="boolean" multiValued="false" termVectors="true" />
+   <dynamicField name="bm_*" type="boolean" multiValued="true" termVectors="true" />
+
    <!-- These fields are used for facetting on string fields, so case and
         special characters are correctly displayed. -->
-   <dynamicField name="f_ss_*" type="string" multiValued="false" />
-   <dynamicField name="f_sm_*" type="string" multiValued="true" />
+   <dynamicField name="f_ss_*" type="string" multiValued="false" termVectors="true" />
+   <dynamicField name="f_sm_*" type="string" multiValued="true" termVectors="true" />
    <copyField source="ss_*" dest="f_ss_*" />
    <copyField source="sm_*" dest="f_sm_*" />
 
