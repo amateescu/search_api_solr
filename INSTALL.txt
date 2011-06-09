@@ -10,8 +10,8 @@ Download Solr PHP client
 ------------------------
 
 This module uses an external PHP library for communicating with Solr servers. Go
-to [1] and download the current version of this library. (This module was tested
-with revision r22, but newer ones will probably work as well.)
+to [1] and download version r22 of this library. (Note that the newer r60 will
+NOT work!)
 
 [1] http://code.google.com/p/solr-php-client/downloads/list
 

@@ -1,5 +1,7 @@
 Search API Solr search 1.0, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1184002 by drunken monkey: Fixed INSTALL.txt to reflect that the module
+  doesn't work with the latest Solr PHP Client version.
 
 Search API Solr search 1.0, Beta 3 (06/06/2011):
 ------------------------------------------------
