@@ -502,6 +502,20 @@
       <str name="spellcheck.extendedResults">false</str>
       <!-- The number of suggestions to return. -->
       <str name="spellcheck.count">1</str>
+
+      <!-- Highlighting parameters -->
+      <!-- By default, don't highlight. -->
+      <str name="hl">false</str>
+      <!-- Use the spellcheck field for highlighting, as that contains all text
+           data anyways. -->
+      <str name="hl.fl">spell</str>
+      <!-- Use special syntax for highlighting, so we can later strip other HTML
+           tags from the excerpt. -->
+      <str name="hl.simple.pre">[HIGHLIGHT]</str>
+      <str name="hl.simple.post">[/HIGHLIGHT]</str>
+      <!-- Use several shorter snippets and concatenate them. -->
+      <str name="hl.snippets">3</str>
+      <str name="hl.fragsize">70</str>
     </lst>
     <arr name="last-components">
       <str>spellcheck</str>
@@ -560,14 +574,19 @@
      <int name="ps">100</int>
      <str name="q.alt">*:*</str>
 
-     <!-- example highlighter config, enable per-query with hl=true -->
-     <str name="hl.fl">text features name</str>
-     <!-- for this field, we want no fragmenting, just highlighting -->
-     <str name="f.name.hl.fragsize">0</str>
-     <!-- instructs Solr to return the field itself if no query terms are
-          found -->
-     <str name="f.name.hl.alternateField">name</str>
-     <str name="f.text.hl.fragmenter">regex</str> <!-- defined below -->
+      <!-- Highlighting parameters -->
+      <!-- By default, don't highlight. -->
+      <str name="hl">false</str>
+      <!-- Use the spellcheck field for highlighting, as that contains all text
+           data anyways. -->
+      <str name="hl.fl">spell</str>
+      <!-- Use special syntax for highlighting, so we can later strip other HTML
+           tags from the excerpt. -->
+      <str name="hl.simple.pre">[HIGHLIGHT]</str>
+      <str name="hl.simple.post">[/HIGHLIGHT]</str>
+      <!-- Use several shorter snippets and concatenate them. -->
+      <str name="hl.snippets">3</str>
+      <str name="hl.fragsize">70</str>
 
       <!-- By default don't spell check. -->
       <str name="spellcheck">false</str>

@@ -53,26 +53,25 @@ class SearchApiSolrService extends SearchApiAbstractService {
   }
 
   public function configurationForm(array $form, array &$form_state) {
-    if (empty($this->options)) {
-      // First configuring this server
-      $options = array(
-        'host' => 'localhost',
-        'port' => '8983',
-        'path' => '/solr',
-        'http_user' => '',
-        'http_pass' => '',
-      );
-    }
-    else {
+    if ($this->options) {
       // Editing this server
-      $options = $this->options;
-      $url = 'http://' . $options['host'] . ':' . $options['port'] . $options['path'];
+      $url = 'http://' . $this->options['host'] . ':' . $this->options['port'] . $this->options['path'];
       $form['server_description'] = array(
         '#type' => 'item',
         '#title' => t('Solr server URI'),
         '#description' => l($url, $url),
       );
     }
+
+    $options = $this->options + array(
+      'host' => 'localhost',
+      'port' => '8983',
+      'path' => '/solr',
+      'http_user' => '',
+      'http_pass' => '',
+      'excerpt' => FALSE,
+      'retrieve_data' => FALSE,
+    );
 
     $form['host'] = array(
       '#type' => 'textfield',
@@ -113,6 +112,28 @@ class SearchApiSolrService extends SearchApiAbstractService {
       '#default_value' => $options['http_pass'],
     );
 
+    $form['advanced'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Advanced'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $form['advanced']['excerpt'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Return an excerpt for all results'),
+      '#description' => t("If search keywords are given, use Solr's capabilities to create a highlighted search excerpt for each result. " .
+          'Whether the excerpts will actually be displayed depends on the settings of the search, though.'),
+      '#default_value' => $options['excerpt'],
+    );
+    $form['advanced']['retrieve_data'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Retrieve result data from Solr'),
+      '#description' => t('When checked, result data will be retrieved directly from the Solr server. ' .
+          'This might make entity loads unnecessary. Only indexed fields can be retrieved. ' .
+          'Note also that the returned field data might not always be correct, due to preprocessing and caching issues.'),
+      '#default_value' => $options['retrieve_data'],
+    );
+
     return $form;
   }
 
@@ -123,9 +144,11 @@ class SearchApiSolrService extends SearchApiAbstractService {
   }
 
   public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
-    $http = $values['http'];
-    unset($values['http']);
-    $values += $http;
+    // Since the form is nested into another, we can't simply use #parents for
+    // doing this array restructuring magic.
+    $values += $values['http'];
+    $values += $values['advanced'];
+    unset($values['http'], $values['advanced']);
     parent::configurationFormSubmit($form, $values, $form_state);
   }
 
@@ -432,6 +455,12 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $facets = $query->getOption('search_api_facets') ? $query->getOption('search_api_facets') : array();
     $facet_params = $this->getFacetParams($facets, $fields);
 
+    // Handle highlighting
+    if (!empty($this->options['excerpt'])) {
+      $highlight_params['hl'] = 'true';
+      $highlight_params['hl.snippets'] = 3;
+    }
+
     // Handle More Like This query
     $mlt = $query->getOption('search_api_mlt');
     if ($mlt) {
@@ -467,11 +496,17 @@ class SearchApiSolrService extends SearchApiAbstractService {
     if (!empty($facet_params['facet.field'])) {
       $params += $facet_params;
     }
+    if (!empty($highlight_params)) {
+      $params += $highlight_params;
+    }
     if (!empty($options['search_api_spellcheck'])) {
       $params['spellcheck'] = 'true';
     }
     if (!empty($mlt_params['mlt.fl'])) {
       $params += $mlt_params;
+    }
+    if (!empty($this->options['retrieve_data'])) {
+      $params['fl'] = '*,score';
     }
     $call_args = array(
       'query'  => &$keys,
@@ -532,13 +567,14 @@ class SearchApiSolrService extends SearchApiAbstractService {
    *
    * @return array
    *   An array with two keys:
-   *   - 'result count' contains an integer number of total results
-   *   - 'results' is an array of search results; keys are document ids, values
-   *      are arrays of property => value pairs
+   *   - result count: The number of total results.
+   *   - results: An array of search results, as specified by
+   *     SearchApiQueryInterface::execute().
    */
   protected function extractResults(SearchApiQueryInterface $query, Apache_Solr_Response $response) {
     $index = $query->getIndex();
     $fields = $this->getFieldNames($index);
+    $field_options = $index->options['fields'];
 
     // Set up the results array.
     $results = array();
@@ -560,6 +596,13 @@ class SearchApiSolrService extends SearchApiAbstractService {
       foreach ($fields as $search_api_property => $solr_property) {
         if (isset($doc->{$solr_property})) {
           $result['fields'][$search_api_property] = $doc->{$solr_property};
+          // Date fields need some special treatment to become valid date values
+          // (i.e., timestamps) again.
+          if (isset($field_options[$search_api_property]['type'])
+              && $field_options[$search_api_property]['type'] == 'date'
+              && preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $result['fields'][$search_api_property])) {
+            $result['fields'][$search_api_property] = strtotime($result['fields'][$search_api_property]);
+          }
         }
       }
 
@@ -568,6 +611,11 @@ class SearchApiSolrService extends SearchApiAbstractService {
       // SearchApiSolrService::getFieldNames().
       $result['id'] = $result['fields']['search_api_item_id'];
       $result['score'] = $result['fields']['search_api_relevance'];
+
+      $excerpt = $this->getExcerpt($response, $this->createId($index->machine_name, $result['id']));
+      if ($excerpt) {
+        $result['excerpt'] = $excerpt;
+      }
 
       // Use the result's id as the array key. By default, 'id' is mapped to
       // 'item_id' in SearchApiSolrService::getFieldNames().
@@ -582,6 +630,31 @@ class SearchApiSolrService extends SearchApiAbstractService {
     }
 
     return $results;
+  }
+
+  /**
+   * Extract and format highlighting information for a specific item from a Solr response.
+   */
+  protected function getExcerpt(Apache_Solr_Response $response, $id) {
+    if (!isset($response->highlighting->$id)) {
+      return FALSE;
+    }
+    $output = '';
+
+    foreach ($response->highlighting->$id as $field) {
+      foreach ($field as $snippet) {
+        $snippet = strip_tags($snippet);
+        $snippet = preg_replace('/^.*>|<.*$/', '', $snippet);
+        $snippet = preg_replace('#\[(/?)HIGHLIGHT\]#', '<$1strong>', $snippet);
+        // The created fragments sometimes have leading or trailing punctuation.
+        // We remove that here for all common cases, but take care not to remove
+        // < or > (so HTML tags stay valid).
+        $snippet = trim($snippet, "\00..\x2F:;=\x3F..\x40\x5B..\x60");
+        $output .= $snippet . ' … ';
+      }
+    }
+
+    return $output;
   }
 
   /**

@@ -1,5 +1,8 @@
 Search API Solr search 1.0, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1177648 by drunken monkey: Added option to use Solr's built-in highlighting.
+- #1154116 by drunken monkey: Added option for retrieving search results data
+  directly from Solr.
 - #1184002 by drunken monkey: Fixed INSTALL.txt to reflect that the module
   doesn't work with the latest Solr PHP Client version.
 

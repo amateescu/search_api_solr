@@ -34,10 +34,10 @@
        limits compression (if enabled in the derived fields) to values which
        exceed a certain size (in characters).
     -->
-    <fieldType name="string" class="solr.StrField" indexed="true" stored="false" sortMissingLast="true" omitNorms="true"/>
+    <fieldType name="string" class="solr.StrField" indexed="true" stored="true" sortMissingLast="true" omitNorms="true"/>
 
     <!-- boolean type: "true" or "false" -->
-    <fieldType name="boolean" class="solr.BoolField" indexed="true" stored="false" sortMissingLast="true" omitNorms="true"/>
+    <fieldType name="boolean" class="solr.BoolField" indexed="true" stored="true" sortMissingLast="true" omitNorms="true"/>
 
     <!-- The optional sortMissingLast and sortMissingFirst attributes are
          currently supported on types that are sorted internally as strings.
@@ -87,10 +87,10 @@
      indexed per value, slightly larger index size, and faster range queries.
      A precisionStep of 0 disables indexing at different precision levels.
     -->
-    <fieldType name="tint" class="solr.TrieIntField" indexed="true" stored="false" precisionStep="8" omitNorms="true" positionIncrementGap="0"/>
-    <fieldType name="tfloat" class="solr.TrieFloatField" indexed="true" stored="false" precisionStep="8" omitNorms="true" positionIncrementGap="0"/>
-    <fieldType name="tlong" class="solr.TrieLongField" indexed="true" stored="false" precisionStep="8" omitNorms="true" positionIncrementGap="0"/>
-    <fieldType name="tdouble" class="solr.TrieDoubleField" indexed="true" stored="false" precisionStep="8" omitNorms="true" positionIncrementGap="0"/>
+    <fieldType name="tint" class="solr.TrieIntField" indexed="true" stored="true" precisionStep="8" omitNorms="true" positionIncrementGap="0"/>
+    <fieldType name="tfloat" class="solr.TrieFloatField" indexed="true" stored="true" precisionStep="8" omitNorms="true" positionIncrementGap="0"/>
+    <fieldType name="tlong" class="solr.TrieLongField" indexed="true" stored="true" precisionStep="8" omitNorms="true" positionIncrementGap="0"/>
+    <fieldType name="tdouble" class="solr.TrieDoubleField" indexed="true" stored="true" precisionStep="8" omitNorms="true" positionIncrementGap="0"/>
 
 
     <!-- The format for this date field is of the form 1995-12-31T23:59:59Z, and
@@ -116,7 +116,7 @@
     <fieldType name="date" class="solr.DateField" sortMissingLast="true" omitNorms="true"/>
 
     <!-- A Trie based date field for faster date range queries and date faceting. -->
-    <fieldType name="tdate" class="solr.TrieDateField" indexed="true" stored="false" omitNorms="true" precisionStep="6" positionIncrementGap="0"/>
+    <fieldType name="tdate" class="solr.TrieDateField" indexed="true" stored="true" omitNorms="true" precisionStep="6" positionIncrementGap="0"/>
 
     <!-- solr.TextField allows the specification of custom text analyzers
          specified as a tokenizer and a list of token filters. Different
@@ -161,7 +161,7 @@
     stopwords.txt and protwords.txt, and selecting the language used for
     stemming) if you want to use them.
 -->
-    <fieldType name="text" class="solr.TextField" indexed="true" stored="false" multiValued="true" positionIncrementGap="100">
+    <fieldType name="text" class="solr.TextField" indexed="true" stored="true" multiValued="true" positionIncrementGap="100">
       <analyzer type="index">
         <charFilter class="solr.MappingCharFilterFactory" mapping="mapping-ISOLatin1Accent.txt"/>
         <tokenizer class="solr.HTMLStripWhitespaceTokenizerFactory"/>
@@ -246,7 +246,7 @@
          With various TokenFilterFactories to produce a sortable field
          that does not include some properties of the source text
       -->
-    <fieldType name="sortString" class="solr.TextField" indexed="true" stored="false" sortMissingLast="true" omitNorms="true">
+    <fieldType name="sortString" class="solr.TextField" indexed="true" stored="true" sortMissingLast="true" omitNorms="true">
       <analyzer>
         <!-- KeywordTokenizer does no actual tokenizing, so the entire
              input string is preserved as a single token
@@ -282,7 +282,7 @@
     <!-- since fields of this type are by default not stored or indexed, any data added to
          them will be ignored outright
      -->
-    <fieldtype name="ignored" stored="false" indexed="false" class="solr.StrField" />
+    <fieldtype name="ignored" stored="true" indexed="false" class="solr.StrField" />
 
  </types>
 
@@ -341,12 +341,7 @@
      this behaviour in one instance. E.g., for indexing a node title not with
      the normal "text" datatype but with "text_ws" (see definitions above), you
      could add:
-     <field name="t_title" type="text_ws" indexed="true" stored="false" />
-
-     Note that all types are defined as indexed=true stored=false, since we only
-     need the result ids and then do an entity_load().
-     We also always use the sortable types, since we don't need the verbatim
-     data anyways.
+     <field name="t_title" type="text_ws" indexed="true" stored="true" />
 -->
 
    <!-- Fulltext fields (are always multiValued) -->
