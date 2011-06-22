@@ -154,10 +154,11 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
   public function supportsFeature($feature) {
     $supported = drupal_map_assoc(array(
+      'search_api_autocomplete',
       'search_api_facets',
+      'search_api_mlt',
       'search_api_multi',
       'search_api_spellcheck',
-      'search_api_mlt',
     ));
     return isset($supported[$feature]);
   }
@@ -979,6 +980,219 @@ class SearchApiSolrService extends SearchApiAbstractService {
    *   The response object returned by Solr.
    */
   protected function postQuery(array &$results, SearchApiQueryInterface $query, Apache_Solr_Response $response) {
+  }
+
+  //
+  // Autocompletion feature
+  //
+
+  /**
+   * Get autocompletion suggestions for some user input.
+   *
+   * @param SearchApiQueryInterface $query
+   *   A query representing the completed user input so far.
+   * @param SearchApiAutocompleteSearch $search
+   *   An object containing details about the search the user is on, and
+   *   settings for the autocompletion.
+   * @param string $incomplete_key
+   *   The start of another fulltext keyword for the search, which should be
+   *   completed.
+   * @param string $user_input
+   *   The complete user input for the fulltext search keywords so far.
+   *
+   * @return array
+   *   An array of suggestion. Each suggestion is either a simple string
+   *   containing the whole suggested keywords, or an array containing the
+   *   following keys:
+   *   - prefix: For special suggestions, some kind of prefix describing them.
+   *   - suggestion_prefix: A suggested prefix for the entered input.
+   *   - user_input: The input entered by the user. Defaults to $user_input.
+   *   - suggestion_suffix: A suggested suffix for the entered input.
+   *   - results: If available, the estimated number of results for these keys.
+   */
+  // Largely copied from the apachesolr_autocomplete module.
+  public function getAutocompleteSuggestions(SearchApiQueryInterface $query, SearchApiAutocompleteSearch $search, $incomplete_key, $user_input) {
+    $suggestions = array();
+    // Reset request handler
+    $this->request_handler = NULL;
+
+    $index = $query->getIndex();
+    $fields = $this->getFieldNames($index);
+    $complete = $query->getOriginalKeys();
+
+    // Extract keys
+    $keys = $query->getKeys();
+    if (is_array($keys)) {
+      $keys_array = array();
+      while ($keys) {
+        reset($keys);
+        if (!element_child(key($keys))) {
+          array_shift($keys);
+          continue;
+        }
+        $key = array_shift($keys);
+        if (is_array($key)) {
+          $keys = array_merge($keys, $key);
+        }
+        else {
+          $keys_array[$key] = $key;
+        }
+      }
+      $keys = $this->flattenKeys($query->getKeys());
+    }
+    else {
+      $keys_array = drupal_map_assoc(preg_split('/[-\s():{}\[\]\\\\"]+/', $keys, -1, PREG_SPLIT_NO_EMPTY));
+    }
+    if (!$keys) {
+      $keys = NULL;
+    }
+
+    // Set searched fields
+    $options = $query->getOptions();
+    $search_fields = $query->getFields();
+    $qf = array();
+    foreach ($search_fields as $f) {
+      $qf[] = $fields[$f];
+    }
+
+    // Extract filters
+    $fq = $this->createFilterQueries($query->getFilter(), $fields, $index->options['fields']);
+    $fq[] = 'index_id:' . $index->machine_name;
+
+    // Autocomplete magic
+    if (!array_diff($index->getFulltextFields(), $search_fields)) {
+      $facet_fields = array('spell');
+    }
+    else {
+      $facet_fields = array();
+      foreach ($search_fields as $f) {
+        $facet_fields[] = $fields[$f];
+      }
+    }
+
+    $limit = $query->getOption('limit', 10);
+
+    $params = array(
+      'qf' => $qf,
+      'fq' => $fq,
+      'facet' => 'true',
+      'facet.field' => $facet_fields,
+      'facet.prefix' => $incomplete_key,
+      'facet.limit' => $limit * 5,
+      'facet.mincount' => 1,
+      'spellcheck' => 'true',
+      'spellcheck.count' => 1,
+      'start' => 0,
+      'rows' => 0,
+    );
+    $call_args = array(
+      'query'  => &$keys,
+      'offset' => &$offset,
+      'limit'  => &$limit,
+      'params' => &$params,
+    );
+    if ($this->request_handler) {
+      $this->setRequestHandler($this->request_handler, $call_args);
+    }
+
+    for ($i = 0; $i < 2; ++$i) {
+      try {
+        // Send search request
+        $this->connect();
+        drupal_alter('search_api_solr_query', $call_args, $query);
+        $this->preQuery($call_args, $query);
+        $response = $this->solr->search($keys, $offset, $limit, $params);
+
+        if ($response->getHttpStatus() != 200) {
+          watchdog('search_api_solr', 'The Solr server responded with status code !status: !msg.',
+              array('!status' => $response->getHttpStatus(), '!msg' => $response->getHttpStatusMessage()),
+              WATCHDOG_WARNING, 'admin/config/search/search_api/server/' . $this->server->machine_name);
+          return array();
+        }
+
+        if (!empty($response->spellcheck->suggestions)) {
+          $replace = array();
+          foreach ($response->spellcheck->suggestions as $word => $data) {
+            $replace[$word] = $data->suggestion[0];
+          }
+          $corrected = str_replace(array_keys($replace), array_values($replace), $user_input);
+          if ($corrected != $user_input) {
+            $suggestions[] = array(
+              'prefix' => t('Did you mean') . ':',
+              'user_input' => $corrected,
+            );
+          }
+        }
+
+        $matches = array();
+        if (isset($response->facet_counts->facet_fields)) {
+          foreach ($response->facet_counts->facet_fields as $terms) {
+            foreach ($terms as $term => $count) {
+              if (isset($matches[$term])) {
+                $matches[$term] += $count;
+              }
+              else {
+                $matches[$term] = $count;
+              }
+            }
+          }
+
+          if ($matches) {
+            // Eliminate suggestions that are too short or already in the query.
+            foreach ($matches as $term => $count) {
+              if (strlen($term) < 3 || isset($keys_array[$term])) {
+                unset($matches[$term]);
+              }
+            }
+
+            // Don't suggest terms that are too frequent (in > 90% of results).
+            $max_occurence = $response->response->numFound * 0.9;
+            foreach ($matches as $match => $count) {
+              if ($count > $max_occurence) {
+                unset($matches[$match]);
+              }
+            }
+
+            // The $count in this array is actually a score. We want the
+            // highest ones first.
+            arsort($matches);
+
+            // Shorten the array to the right ones.
+            $additional_matches = array_slice($matches, $limit - count($suggestions), NULL, TRUE);
+            $matches = array_slice($matches, 0, $limit, TRUE);
+
+            // Build suggestions using returned facets
+            $incomp_length = strlen($incomplete_key);
+            foreach ($matches as $term => $count) {
+              if (substr($term, 0, $incomp_length) == $incomplete_key) {
+                $suggestions[] = array(
+                  'suggestion_suffix' => substr($term, $incomp_length),
+                  'results' => $count,
+                );
+              }
+              else {
+                $suggestions[] = array(
+                  'suggestion_suffix' => ' ' . $term,
+                  'results' => $count,
+                );
+              }
+            }
+          }
+        }
+      }
+      catch (Exception $e) {
+        watchdog('search_api_solr', $e->getMessage(), NULL, WATCHDOG_WARNING);
+      }
+
+      if (count($suggestions) >= $limit) {
+        break;
+      }
+      // Change parameters for second query.
+      unset($params['facet.prefix'], $params['spellcheck']);
+      $keys = trim ($keys . ' ' . $incomplete_key);
+    }
+
+    return $suggestions;
   }
 
   //

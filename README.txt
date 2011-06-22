@@ -24,16 +24,27 @@ default, this module uses the dismax query handler, so searches like
 [1] http://lucene.apache.org/java/2_9_1/queryparsersyntax.html
 [2] http://wiki.apache.org/solr/SolrQuerySyntax
 
-Regarding third-party features, this module supports the "search_api_facets"
-feature, introduced by the module of the same name. This lets you create
-facetted searches for any index lying on a Solr server.
+Regarding third-party features, the following are supported:
 
-The "search_api_spellcheck" feature/module is supported, which allows spellcheck
-suggestions from Solr to be viewed for searches.
-
-Also supported is the "search_api_multi" feature (likewise introduced by the
-module of the same name) which allows multiple indexes lying on a single Solr
-server to be searched simultaneously.
+- search_api_autocomplete
+  Introduced by module: search_api_autocomplete
+  Lets you add autocompletion capabilities to search forms on the site.
+- search_api_facets
+  Introduced by module: search_api_facets
+  Allows you to create facetted searches for dynamically filtering search
+  results.
+- search_api_mlt
+  Introduced by module: search_api_views
+  Lets you display items that are similar to a given one. Use, e.g., to create
+  a "More like this" block for node pages.
+- search_api_multi
+  Introduced by module: search_api_multi
+  Allows you to search multiple indexes at once, as long as they are on the same
+  server. You can use this to let users simultaneously search all content on the
+  site – nodes, comments, user profiles, etc.
+- search_api_spellcheck
+  Introduced by module: search_api_spellcheck
+  Gives the option to display automatic spellchecking for searches.
 
 If you feel some service option is missing, or have other ideas for improving
 this implementation, please file a feature request in the project's issue queue,
