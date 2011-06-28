@@ -1015,6 +1015,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $suggestions = array();
     // Reset request handler
     $this->request_handler = NULL;
+    // Turn inputs to lower case, otherwise we get case sensivity problems.
+    $incomp = drupal_strtolower($incomplete_key);
 
     $index = $query->getIndex();
     $fields = $this->getFieldNames($index);
@@ -1077,7 +1079,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       'fq' => $fq,
       'facet' => 'true',
       'facet.field' => $facet_fields,
-      'facet.prefix' => $incomplete_key,
+      'facet.prefix' => $incomp,
       'facet.limit' => $limit * 5,
       'facet.mincount' => 1,
       'spellcheck' => 'true',
@@ -1115,7 +1117,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
           foreach ($response->spellcheck->suggestions as $word => $data) {
             $replace[$word] = $data->suggestion[0];
           }
-          $corrected = str_replace(array_keys($replace), array_values($replace), $user_input);
+          $corrected = str_ireplace(array_keys($replace), array_values($replace), $user_input);
           if ($corrected != $user_input) {
             $suggestions[] = array(
               'prefix' => t('Did you mean') . ':',
@@ -1162,9 +1164,9 @@ class SearchApiSolrService extends SearchApiAbstractService {
             $matches = array_slice($matches, 0, $limit, TRUE);
 
             // Build suggestions using returned facets
-            $incomp_length = strlen($incomplete_key);
+            $incomp_length = strlen($incomp);
             foreach ($matches as $term => $count) {
-              if (substr($term, 0, $incomp_length) == $incomplete_key) {
+              if (drupal_strtolower(substr($term, 0, $incomp_length)) == $incomp) {
                 $suggestions[] = array(
                   'suggestion_suffix' => substr($term, $incomp_length),
                   'results' => $count,
