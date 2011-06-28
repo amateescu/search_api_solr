@@ -1,5 +1,6 @@
 Search API Solr search 1.0, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1116896 by drunken monkey: Adapted to newer Solr versions.
 - #1190462 by drunken monkey: Added option to directly highlight retrieved data
   from Solr.
 - #1196514 by drunken monkey, klausi: Fixed case sensitivity of input keys for
