@@ -516,6 +516,7 @@
       <!-- Use several shorter snippets and concatenate them. -->
       <str name="hl.snippets">3</str>
       <str name="hl.fragsize">70</str>
+      <str name="hl.mergeContiguous">true</str>
     </lst>
     <arr name="last-components">
       <str>spellcheck</str>
@@ -587,6 +588,7 @@
       <!-- Use several shorter snippets and concatenate them. -->
       <str name="hl.snippets">3</str>
       <str name="hl.fragsize">70</str>
+      <str name="hl.mergeContiguous">true</str>
 
       <!-- By default don't spell check. -->
       <str name="spellcheck">false</str>

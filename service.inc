@@ -71,6 +71,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       'http_pass' => '',
       'excerpt' => FALSE,
       'retrieve_data' => FALSE,
+      'highlight_data' => FALSE,
     );
 
     $form['host'] = array(
@@ -133,6 +134,17 @@ class SearchApiSolrService extends SearchApiAbstractService {
           'Note also that the returned field data might not always be correct, due to preprocessing and caching issues.'),
       '#default_value' => $options['retrieve_data'],
     );
+    $form['advanced']['highlight_data'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Highlight retrieved data'),
+      '#description' => t('When retrieving result data from the Solr server, try to highlight the search terms in the returned fulltext fields.'),
+      '#default_value' => $options['highlight_data'],
+    );
+    // Highlighting retrieved data only makes sense when we retrieve data.
+    // (Actually, internally it doesn't really matter. However, from a user's
+    // perspective, having to check both probably makes sense.)
+    $form['advanced']['highlight_data']['#states']['invisible']
+        [':input[name="options[form][advanced][retrieve_data]"]']['checked'] = FALSE;
 
     return $form;
   }
@@ -145,10 +157,14 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
   public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
     // Since the form is nested into another, we can't simply use #parents for
-    // doing this array restructuring magic.
+    // doing this array restructuring magic. (At least not without creating an
+    // unnecessary dependency on internal implementation.)
     $values += $values['http'];
     $values += $values['advanced'];
     unset($values['http'], $values['advanced']);
+    // Highlighting retrieved data only makes sense when we retrieve data.
+    $values['highlight_data'] &= $values['retrieve_data'];
+
     parent::configurationFormSubmit($form, $values, $form_state);
   }
 
@@ -461,6 +477,23 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $highlight_params['hl'] = 'true';
       $highlight_params['hl.snippets'] = 3;
     }
+    if (!empty($this->options['highlight_data'])) {
+      $excerpt = !empty($highlight_params);
+      $highlight_params['hl'] = 'true';
+      $highlight_params['hl.fl'] = 't_*';
+      $highlight_params['hl.snippets'] = 1;
+      $highlight_params['hl.fragsize'] = 0;
+      if ($excerpt) {
+        // If we also generate a "normal" excerpt, set the settings for the
+        // "spell" field (which we use to generate the excerpt) back to the
+        // default values from solrconfig.xml.
+        $highlight_params['f.spell.hl.snippets'] = 3;
+        $highlight_params['f.spell.hl.fragsize'] = 70;
+        // It regrettably doesn't seem to be possible to set hl.fl to several
+        // values, if one contains wild cards (i.e., "t_*,spell" wouldn't work).
+        $highlight_params['hl.fl'] = '*';
+      }
+    }
 
     // Handle More Like This query
     $mlt = $query->getOption('search_api_mlt');
@@ -613,7 +646,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $result['id'] = $result['fields']['search_api_item_id'];
       $result['score'] = $result['fields']['search_api_relevance'];
 
-      $excerpt = $this->getExcerpt($response, $this->createId($index->machine_name, $result['id']));
+      $solr_id = $this->createId($index->machine_name, $result['id']);
+      $excerpt = $this->getExcerpt($response, $solr_id, $result['fields'], $fields);
       if ($excerpt) {
         $result['excerpt'] = $excerpt;
       }
@@ -635,18 +669,21 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
   /**
    * Extract and format highlighting information for a specific item from a Solr response.
+   *
+   * Will also use highlighted fields to replace retrieved field data, if the
+   * corresponding option is set.
    */
-  protected function getExcerpt(Apache_Solr_Response $response, $id) {
+  protected function getExcerpt(Apache_Solr_Response $response, $id, array &$fields, array $field_mapping) {
     if (!isset($response->highlighting->$id)) {
       return FALSE;
     }
     $output = '';
 
-    foreach ($response->highlighting->$id as $field) {
-      foreach ($field as $snippet) {
+    if (!empty($this->options['excerpt']) && !empty($response->highlighting->$id->spell)) {
+      foreach ($response->highlighting->$id->spell as $snippet) {
         $snippet = strip_tags($snippet);
         $snippet = preg_replace('/^.*>|<.*$/', '', $snippet);
-        $snippet = preg_replace('#\[(/?)HIGHLIGHT\]#', '<$1strong>', $snippet);
+        $snippet = $this->formatHighlighting($snippet);
         // The created fragments sometimes have leading or trailing punctuation.
         // We remove that here for all common cases, but take care not to remove
         // < or > (so HTML tags stay valid).
@@ -654,8 +691,22 @@ class SearchApiSolrService extends SearchApiAbstractService {
         $output .= $snippet . ' … ';
       }
     }
+    if (!empty($this->options['highlight_data'])) {
+      foreach ($field_mapping as $search_api_property => $solr_property) {
+        if (substr($solr_property, 0, 2) == 't_' && !empty($response->highlighting->$id->$solr_property)) {
+          // Contrary to above, we here want to preserve HTML, so we just
+          // replace the [HIGHLIGHT] tags with the appropriate format here.
+          $fields[$search_api_property] = $this->formatHighlighting($response->highlighting->$id->$solr_property);
+        }
+      }
+    }
 
     return $output;
+  }
+
+
+  protected function formatHighlighting($snippet) {
+    return preg_replace('#\[(/?)HIGHLIGHT\]#', '<$1strong>', $snippet);
   }
 
   /**
