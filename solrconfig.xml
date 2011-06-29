@@ -664,7 +664,7 @@
       <str name="mlt.mintf">1</str>
       <str name="mlt.mindf">1</str>
       <str name="mlt.minwl">3</str>
-      <str name="mlt.maxwl">15</str>
+      <str name="mlt.maxwl">50</str>
       <str name="mlt.maxqt">20</str>
       <str name="mlt.match.include">false</str>
       <str name="fl">item_id,score </str>
