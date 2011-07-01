@@ -1,5 +1,6 @@
 Search API Solr search 1.0, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1203680 by klausi: Fixed use of taxonomy terms for "More like this".
 - #1181260 by klausi: Fixed mlt.maxwl in solrconfig.xml.
 - #1116896 by drunken monkey: Adapted to newer Solr versions.
 - #1190462 by drunken monkey: Added option to directly highlight retrieved data

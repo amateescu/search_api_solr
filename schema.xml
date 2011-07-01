@@ -352,7 +352,7 @@
    <dynamicField name="sm_*" type="sortString" multiValued="true" termVectors="true" />
    <!-- These will be used for fields with type "Integer" or "Duration". -->
    <dynamicField name="is_*" type="tlong" multiValued="false" termVectors="true" />
-   <dynamicField name="im_*" type="tlong" multiValued="true" termVectors="true" />
+   <dynamicField name="im_*" type="long" multiValued="true" termVectors="true" />
    <!-- These will be used for fields with type "Decimal". -->
    <dynamicField name="fs_*" type="tdouble" multiValued="false" termVectors="true" />
    <dynamicField name="fm_*" type="tdouble" multiValued="true" termVectors="true" />
