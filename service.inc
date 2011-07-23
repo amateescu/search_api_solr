@@ -130,7 +130,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       '#type' => 'checkbox',
       '#title' => t('Retrieve result data from Solr'),
       '#description' => t('When checked, result data will be retrieved directly from the Solr server. ' .
-          'This might make entity loads unnecessary. Only indexed fields can be retrieved. ' .
+          'This might make item loads unnecessary. Only indexed fields can be retrieved. ' .
           'Note also that the returned field data might not always be correct, due to preprocessing and caching issues.'),
       '#default_value' => $options['retrieve_data'],
     );
@@ -273,7 +273,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         $ret[] = $id;
       }
       catch (Exception $e) {
-        watchdog('search_api_solr', t('An error occurred while indexing !type with ID !id: !msg.', array('!type' => $index->entity_type, '!id' => $id, '!msg' => $e->getMessage())), NULL, WATCHDOG_WARNING);
+        watchdog('search_api_solr', t('An error occurred while indexing !type with ID !id: !msg.', array('!type' => $index->item_type, '!id' => $id, '!msg' => $e->getMessage())), NULL, WATCHDOG_WARNING);
       }
     }
 
@@ -317,7 +317,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     if (!isset($this->fieldNames[$index->machine_name]) || $reset) {
       // This array maps "local property name" => "solr doc property name".
       $ret = array(
-        'search_api_id' => 'is_search_api_id',
+        'search_api_id' => 'ss_search_api_id',
         'search_api_relevance' => 'score',
         'search_api_item_id' => 'item_id',
       );
@@ -640,7 +640,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         }
       }
 
-      // We can find the entity id and score in the special 'search_api_*'
+      // We can find the item id and score in the special 'search_api_*'
       // properties. Mappings are provided for these properties in
       // SearchApiSolrService::getFieldNames().
       $result['id'] = $result['fields']['search_api_item_id'];
@@ -1286,7 +1286,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $time_method_called = microtime(TRUE);
     // Get field information
     $solr_fields = array(
-      'search_api_id' => 'is_search_api_id',
+      'search_api_id' => 'ss_search_api_id',
       'search_api_relevance' => 'score',
       'search_api_multi_index' => 'index_id',
     );

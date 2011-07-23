@@ -313,11 +313,11 @@
 -->
 
    <field name="id"       type="string" indexed="true" stored="true" required="true" />
-   <field name="item_id"  type="long"   indexed="true" stored="true" required="true" />
+   <field name="item_id"  type="string" indexed="true" stored="true" required="true" />
    <field name="index_id" type="string" indexed="true" stored="true" required="true" />
 
    <!-- Since sorting by ID is explicitly allowed, store item_id also in a sortable way. -->
-   <copyField source="item_id" dest="is_search_api_id" />
+   <copyField source="item_id" dest="ss_search_api_id" />
 
    <!-- This field is used to build the spellchecker index. -->
    <field name="spell" type="textSpell" indexed="true" stored="true" multiValued="true"/>
