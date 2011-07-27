@@ -72,6 +72,7 @@ function search_api_solr_uninstall() {
       ->condition('class', 'search_api_solr_service')
       ->execute();
   }
+  variable_del('search_api_solr_last_optimize');
 }
 
 /**

@@ -284,7 +284,9 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $this->connect();
       $response = $this->solr->addDocuments($documents);
       if ($response->getHttpStatus() == 200) {
-        $this->solr->commit(TRUE, FALSE, FALSE);
+        if (!empty($index->options['index_directly'])) {
+          $this->solr->commit(FALSE, FALSE, FALSE);
+        }
         return $ret;
       }
       throw new SearchApiException(t('HTTP status !status: !msg.',
@@ -1456,6 +1458,15 @@ class SearchApiSolrService extends SearchApiAbstractService {
   public function ping() {
     $this->connect();
     return $this->solr->ping();
+  }
+
+  /**
+   * @return SearchApiSolrConnection
+   *   The solr connection object used by this server.
+   */
+  public function getSolrConnection() {
+    $this->connect();
+    return $this->solr;
   }
 
   /**

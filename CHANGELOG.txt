@@ -1,5 +1,7 @@
 Search API Solr search 1.0, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1225926 by drunken monkey, fago: Fixed performance problems in indexing
+  workflow.
 - #1219310 by drunken monkey: Adapted to recent API change.
 - #1203680 by klausi: Fixed use of taxonomy terms for "More like this".
 - #1181260 by klausi: Fixed mlt.maxwl in solrconfig.xml.

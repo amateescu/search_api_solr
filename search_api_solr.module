@@ -47,3 +47,19 @@ function search_api_solr_help($path, array $arg = array()) {
     }
   }
 }
+
+/**
+ * Implements hook_cron().
+ *
+ * Used to execute an optimization operation on all enabled Solr servers once a
+ * day.
+ */
+function search_api_solr_cron() {
+  if (REQUEST_TIME - variable_get('search_api_solr_last_optimize', 0) > 86400) {
+    variable_set('search_api_solr_last_optimize', REQUEST_TIME);
+    $conditions = array('class' => 'search_api_solr_service', 'enabled' => TRUE);
+    foreach (search_api_server_load_multiple(FALSE, $conditions) as $server) {
+      $server->getSolrConnection()->optimize(FALSE, FALSE);
+    }
+  }
+}
