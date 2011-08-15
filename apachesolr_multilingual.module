@@ -73,7 +73,7 @@ function apachesolr_multilingual_apachesolr_update_index($document, $node, $name
     }
 
     if ($language) {
-      if (is_array($document->vid)) { // vid is vocabulary id in this case
+      if (isset($document->vid) && is_array($document->vid)) { // vid is vocabulary id in this case
         $term_languages = array($language);
         if (module_exists('i18ntaxonomy') && variable_get('apachesolr_multilingual_index_term_translations', 0)) {
           $term_languages = variable_get('apachesolr_multilingual_languages', array());
@@ -85,10 +85,12 @@ function apachesolr_multilingual_apachesolr_update_index($document, $node, $name
             foreach ($vids as $vid) {
               if (module_exists('i18ntaxonomy')) {
                 $tmp = '';
-                foreach ($document->{'im_vid_' . $vid} as $tid) {
-                  $term = i18nstrings("taxonomy:term:$tid:name", '', $term_language);
-                  if (!empty($term)) {
-                    $tmp .= $term . ' ';
+                if (isset($document->{'im_vid_' . $vid})) {
+                  foreach ($document->{'im_vid_' . $vid} as $tid) {
+                    $term = i18nstrings("taxonomy:term:$tid:name", '', $term_language);
+                    if (!empty($term)) {
+                      $tmp .= $term . ' ';
+                    }
                   }
                 }
                 if (!empty($tmp)) {
@@ -98,7 +100,9 @@ function apachesolr_multilingual_apachesolr_update_index($document, $node, $name
               else {
                 // module i18ntaxonomy isn't installed
                 // in this case we simply copy the terms
-                $terms[] = $document->{'ts_vid_' . $vid . '_names'};
+                 if (isset($document->{'ts_vid_' . $vid . '_names'})) {
+                   $terms[] = $document->{'ts_vid_' . $vid . '_names'};
+                 }
                 // REVIEW see http://drupal.org/node/783924
               }
             }

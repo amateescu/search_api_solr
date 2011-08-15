@@ -18,9 +18,9 @@ function apachesolr_multilingual_advanced_solr_form($form_state) {
 
   $form['apachesolr_multilingual_multicore'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Default Data Dir or Multi Core Setup'),
+    '#title' => t('Disable Data Dir setting'),
     '#default_value' => variable_get('apachesolr_multilingual_multicore', 1),
-    '#description' => t('Removes property dataDir from solrconfig.xml. See !link for further instructions.', array('!link' => l(t('Core Administration'), 'http://wiki.apache.org/solr/CoreAdmin'))),
+    '#description' => t('Removes property dataDir from solrconfig.xml. This might be usefull for solr multi core setups or if you want to use solr\'s default data dir location. See !link for further instructions.', array('!link' => l(t('Core Administration'), 'http://wiki.apache.org/solr/CoreAdmin'))),
     '#element_validate' => array('apachesolr_multilingual_admin_form_validate_new_config'),
   );
 

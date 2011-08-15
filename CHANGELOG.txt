@@ -5,6 +5,8 @@ Apache Solr Multilingual 7.x-1.0-alpha1, 2011-xx-xx
 [        ] mkalkbrenner: adjusted schema.xml and solrconfig.xml according to apachesolr-7.x-1.0-beta3
 [        ] mkalkbrenner: replaced multiple tag_XYZ fields by dynamic field tags_*
 [#1048066] webflo, mkalkbrenner: Drupal 7 Upgrade. Port hook_block to new hooks.
+[       ] mkalkbrenner: fixed a lot of warnings if some properties of document are not set
+[       ] mkalkbrenner: changed description for data dir setting
 
 
 Apache Solr Multilingual 6.x-2.0-alpha1, 2010-xx-xx
