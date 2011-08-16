@@ -1,4 +1,3 @@
-
 Prerequisite:
 - Java 5 or higher
 
@@ -15,16 +14,16 @@ NOT work!)
 
 [1] http://code.google.com/p/solr-php-client/downloads/list
 
-Afterwards, unpack this archive to this module's directory, so the directory
+Afterwards, unpack this archive to drupal's libraries folder, so the directory
 tree looks like this:
 
-search_api_solr
-|- SolrPhpClient/
-|- INSTALL.txt
-|- README.txt
-  ...
+/path/to/drupal/sites/all/libraries/
+  |- SolrPhpClient
+     |- Apache/
+     |- ChangeLog
+     ...
 
-The library should then be found by Drupal.
+The library should then be found by the module.
 
 Setting up Solr
 ---------------

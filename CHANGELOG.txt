@@ -1,5 +1,7 @@
 Search API Solr search 1.0, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1032848 by das-peter, drunken monkey: Added possibility to save SolrPhpClient
+  to the libraries directory.
 - #1225926 by drunken monkey, fago: Fixed performance problems in indexing
   workflow.
 - #1219310 by drunken monkey: Adapted to recent API change.

@@ -1,4 +1,45 @@
 <?php
+/**
+ * @file
+ * Provides a Solr-based service class for the Search API.
+ */
+
+/**
+ * Implements hook_init().
+ */
+function search_api_solr_init() {
+  spl_autoload_register('_search_api_solr_autoload');
+}
+
+/**
+ * Autoloader for the SolrPhpClient classes.
+ */
+function _search_api_solr_autoload($name) {
+  static $path, $lookup_cache = array();
+
+  if (isset($lookup_cache[$name])) {
+    return $lookup_cache[$name];
+  }
+  elseif (substr($name, 0, 11) == 'Apache_Solr') {
+    if (!isset($path)) {
+      foreach (array(dirname(__FILE__), DRUPAL_ROOT . '/sites/all/libraries', NULL) as $path) {
+        if (!$path || is_dir($path .=  '/SolrPhpClient/')) {
+          break;
+        }
+      }
+      if (!$path) {
+        throw new Exception('SolrPhpClient library not found! Please follow the instructions in search_api_solr/INSTALL.txt for installing the Solr search module.');
+      }
+    }
+    if (file_exists($file_path = $path . str_replace('_', '/', $name) . '.php')) {
+      require_once $file_path;
+      $lookup_cache[$name] = TRUE;
+      return TRUE;
+    }
+  }
+  $lookup_cache[$name] = FALSE;
+  return FALSE;
+}
 
 /**
  * Implements hook_search_api_service_info().
