@@ -6,8 +6,9 @@
 function search_api_solr_requirements($phase) {
   if ($phase == 'install') {
     $t = get_t();
-    $dir = dirname(__FILE__) . '/SolrPhpClient/Apache/Solr/';
-    if (file_exists($dir . 'Document.php') && file_exists($dir . 'Response.php') && file_exists($dir . 'Service.php')) {
+    module_load_include('module', 'search_api_solr');
+    spl_autoload_register('_search_api_solr_autoload');
+    if (class_exists('Apache_Solr_Response')) {
       return array(
         'search_api_solr' => array(
           'title' => $t('Solr PHP library'),
