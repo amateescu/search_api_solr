@@ -433,6 +433,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $q = $ids == 'all' ? '*:*' : $ids;
       $this->solr->deleteByQuery($q);
     }
+    $this->solr->commit(FALSE, FALSE, FALSE);
   }
 
   public function search(SearchApiQueryInterface $query) {
