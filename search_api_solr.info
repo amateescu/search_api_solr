@@ -1,4 +1,3 @@
-
 name = Solr search
 description = Offers an implementation of the Search API that uses an Apache Solr server for indexing content.
 dependencies[] = search_api
@@ -8,4 +7,5 @@ package = Search
 files[] = service.inc
 files[] = solr_connection.inc
 files[] = solr_field.inc
+files[] = includes/solr_httptransport.inc
 files[] = includes/spellcheck.inc

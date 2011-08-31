@@ -67,10 +67,12 @@ function search_api_solr_help($path, array $arg = array()) {
     // Included because we need the REQUIREMENT_* constants.
     include_once(DRUPAL_ROOT . '/includes/install.inc');
     module_load_include('install', 'search_api_solr');
-    $req = search_api_solr_requirements('runtime');
-    if (isset($req['search_api_solr']['description'])) {
-      $type = $req['search_api_solr']['severity'] == REQUIREMENT_ERROR ? 'error' : 'status';
-      drupal_set_message($req['search_api_solr']['description'], $type);
+    $reqs = search_api_solr_requirements('runtime');
+    foreach ($reqs as $req) {
+      if (isset($req['description'])) {
+        $type = $req['severity'] == REQUIREMENT_ERROR ? 'error' : ($req['severity'] == REQUIREMENT_WARNING ? 'warning' : 'status');
+        drupal_set_message($req['description'], $type);
+      }
     }
   }
   elseif ($path == 'admin/config/search/search_api/server/%' && !empty($arg[5])) {

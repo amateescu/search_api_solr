@@ -8,7 +8,18 @@ function search_api_solr_requirements($phase) {
     $t = get_t();
     module_load_include('module', 'search_api_solr');
     spl_autoload_register('_search_api_solr_autoload');
-    if (class_exists('Apache_Solr_Response')) {
+    if (class_exists('Apache_Solr_Service')) {
+      $version = trim(Apache_Solr_Service::SVN_REVISION, '$ :A..Za..z');
+      if ($version < 59) {
+        return array(
+          'search_api_solr' => array(
+            'title' => $t('Solr PHP library'),
+            'description' => $t('The library is correctly installed, but out of date. ' .
+                'It is suggested to install the newest version (@version).', array('@version' => 'r60')),
+            'severity' => REQUIREMENT_WARNING,
+          ),
+        );
+      }
       return array(
         'search_api_solr' => array(
           'title' => $t('Solr PHP library'),
@@ -59,6 +70,19 @@ function search_api_solr_requirements($phase) {
     else {
       $ret['search_api_solr']['description'] = format_plural($count, 'The Solr server could be reached.', 'All @count Solr servers could be reached.');
       $ret['search_api_solr']['severity'] = REQUIREMENT_OK;
+    }
+
+    // Check version of the SolrPhpClient library.
+    $version = trim(Apache_Solr_Service::SVN_REVISION, '$ :A..Za..z');
+    if ($version < 59) {
+      $ret['search_api_solr_client'] = array(
+        'title' => t('Solr PHP library'),
+        'value' => t('Version @version', array('@version' => "r$version")),
+        'description' => t('The library is correctly installed, but out of date. ' .
+            'It is suggested to install the <a href="@url">newest version</a> (@version).',
+            array('@url' => 'http://code.google.com/p/solr-php-client/downloads/list', '@version' => 'r60')),
+        'severity' => REQUIREMENT_WARNING,
+      );
     }
     return $ret;
   }

@@ -743,10 +743,15 @@ class SearchApiSolrService extends SearchApiAbstractService {
           if ($info['missing']) {
             // We have to correctly incorporate the "_empty_" term.
             // This will ensure that the term with the least results is dropped, if the limit would be exceeded.
-            $terms = (array) $terms;
-            arsort($terms);
-            if (count($terms) > $info['limit']) {
-              array_pop($terms);
+            if (isset($terms->_empty_) && $terms->_empty_ < $min_count) {
+              unset($terms->_empty_);
+            }
+            else {
+              $terms = (array) $terms;
+              arsort($terms);
+              if (count($terms) > $info['limit']) {
+                array_pop($terms);
+              }
             }
           }
           elseif (isset($terms->_empty_)) {

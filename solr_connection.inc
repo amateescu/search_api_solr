@@ -28,6 +28,13 @@ class SearchApiSolrConnection extends Apache_Solr_Service {
   protected $luke;
 
   /**
+   * Identifies which version of the SolrPhpClient this uses, "old" or "new".
+   *
+   * @var bool
+   */
+  protected $newClient = FALSE;
+
+  /**
    * Constructs a Solr connection with an optional HTTP user and password.
    *
    * @param array $options
@@ -47,6 +54,13 @@ class SearchApiSolrConnection extends Apache_Solr_Service {
     }
     // Since /ping otherwise complains about missing default field.
     $this->_pingUrl .= '?q=id:1';
+
+    // As of July 2011, the newest release is r60, with Service.php having
+    // revision 59. Revision 40 is just anything between 22 (old) and that.
+    $this->newClient = trim(parent::SVN_REVISION, '$ :A..Za..z') > 40;
+    if ($this->newClient) {
+      $this->_httpTransport = new SearchApiSolrHttpTransport($this->http_auth);
+    }
   }
 
   /**
@@ -61,6 +75,10 @@ class SearchApiSolrConnection extends Apache_Solr_Service {
     // always add "q", even if it is empty. Therefore, we delete empty "q"
     // parameters here.
     $url = preg_replace('/([?&])q=(&|$)/', '$1', $url);
+
+    if ($this->newClient) {
+      return parent::_sendRawGet($url, $timeout);
+    }
 
     list($data, $headers) = $this->_makeHttpRequest($url, 'GET', array(), '', $timeout);
     $response = new Apache_Solr_Response($data, $headers, $this->_createDocuments, $this->_collapseSingleValueArrays);
@@ -82,6 +100,10 @@ class SearchApiSolrConnection extends Apache_Solr_Service {
    * @see Apache_Solr_Service::_sendRawPost()
    */
   protected function _sendRawPost($url, $rawPost, $timeout = FALSE, $contentType = 'text/xml; charset=UTF-8') {
+    if ($this->newClient) {
+      return parent::_sendRawPost($url, $rawPost, $timeout, $contentType);
+    }
+
     $request_headers = array('Content-Type' => $contentType);
     list($data, $headers) = $this->_makeHttpRequest($url, 'POST', $request_headers, $rawPost, $timeout);
     $response = new Apache_Solr_Response($data, $headers, $this->_createDocuments, $this->_collapseSingleValueArrays);
@@ -107,6 +129,9 @@ class SearchApiSolrConnection extends Apache_Solr_Service {
    *   (float) seconds taken to ping the server, FALSE if timeout occurs.
    */
   public function ping($timeout = 2) {
+    if ($this->newClient) {
+      return parent::ping($timeout);
+    }
     $start = microtime(TRUE);
 
     if ($timeout <= 0.0) {
