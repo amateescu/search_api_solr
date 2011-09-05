@@ -42,11 +42,19 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
   /**
    * Metadata describing fields on the Solr/Lucene index.
+   *
    * @see SearchApiSolrService::getFields().
    *
    * @var array
    */
   protected $fields;
+
+  /**
+   * Saves whether a commit operation was already scheduled for this server.
+   *
+   * @var boolean
+   */
+  protected $commitScheduled = FALSE;
 
   public function __construct(SearchApiServer $server) {
     parent::__construct($server);
@@ -285,7 +293,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $response = $this->solr->addDocuments($documents);
       if ($response->getHttpStatus() == 200) {
         if (!empty($index->options['index_directly'])) {
-          $this->solr->commit(FALSE, FALSE, FALSE);
+          $this->scheduleCommit();
         }
         return $ret;
       }
@@ -433,7 +441,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $q = $ids == 'all' ? '*:*' : $ids;
       $this->solr->deleteByQuery($q);
     }
-    $this->solr->commit(FALSE, FALSE, FALSE);
+    $this->scheduleCommit();
   }
 
   public function search(SearchApiQueryInterface $query) {
@@ -1458,12 +1466,40 @@ class SearchApiSolrService extends SearchApiAbstractService {
   //
 
   /**
-   * Ping the Solr server to tell whether it can be accessed. Uses the
-   * admin/ping request handler.
+   * Ping the Solr server to tell whether it can be accessed.
+   *
+   * Uses the admin/ping request handler.
    */
   public function ping() {
     $this->connect();
     return $this->solr->ping();
+  }
+
+  /**
+   * Sends a commit command to the Solr server.
+   */
+  public function commit() {
+    try {
+      $this->connect();
+      return $this->solr->commit(FALSE, FALSE, FALSE);
+    }
+    catch (Exception $e) {
+      watchdog('search_api_solr', 'A commit operation for server !name failed: !msg.',
+          array('!name' => $this->server->machine_name, '!msg' => $e->getMessage()), WATCHDOG_WARNING);
+    }
+  }
+
+  /**
+   * Schedules a commit operation for this server.
+   *
+   * The commit will be sent at the end of the current page request. Multiple
+   * calls to this method will still only result in one commit operation.
+   */
+  public function scheduleCommit() {
+    if (!$this->commitScheduled) {
+      $this->commitScheduled = TRUE;
+      drupal_register_shutdown_function(array($this, 'commit'));
+    }
   }
 
   /**
