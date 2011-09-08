@@ -1,5 +1,8 @@
 Search API Solr search 1.0, dev (xx/xx/xxxx):
 ---------------------------------------------
+
+Search API Solr search 1.0, Beta 4 (09/08/2011):
+------------------------------------------------
 - #1230536 by thegreat, drunken monkey: Added support for OR facets.
 - #1184002 by drunken monkey: Fixed support of the latest SolrPhpClient version.
 - #1032848 by das-peter, drunken monkey: Added possibility to save SolrPhpClient
