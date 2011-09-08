@@ -56,6 +56,13 @@ class SearchApiSolrService extends SearchApiAbstractService {
    */
   protected $commitScheduled = FALSE;
 
+  /**
+   * Request handler to use for this search query.
+   *
+   * @var string
+   */
+  protected $request_handler = NULL;
+
   public function __construct(SearchApiServer $server) {
     parent::__construct($server);
   }
@@ -180,6 +187,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $supported = drupal_map_assoc(array(
       'search_api_autocomplete',
       'search_api_facets',
+      'search_api_facets_operator_or',
       'search_api_mlt',
       'search_api_multi',
       'search_api_spellcheck',
@@ -481,7 +489,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
     // Get facet fields
     $facets = $query->getOption('search_api_facets') ? $query->getOption('search_api_facets') : array();
-    $facet_params = $this->getFacetParams($facets, $fields);
+    $facet_params = $this->getFacetParams($facets, $fields, $fq);
 
     // Handle highlighting
     if (!empty($this->options['excerpt'])) {
@@ -896,14 +904,14 @@ class SearchApiSolrService extends SearchApiAbstractService {
         if ($filter->getConjunction() != $f->getConjunction()) {
           // $or == TRUE means the nested filter has conjunction AND, and vice versa
           $sep = $or ? ' ' : ' OR ';
-          $fq[] = '((' . implode(')' . $sep . '(', $q) . '))';
+          $fq[] = count($q) == 1 ? reset($q) : '((' . implode(')' . $sep . '(', $q) . '))';
         }
         else {
           $fq = array_merge($fq, $q);
         }
       }
     }
-    return $or ? array('((' . implode(') OR (', $fq) . '))') : $fq;
+    return ($or && count($fq) > 1) ? array('((' . implode(') OR (', $fq) . '))') : $fq;
   }
 
   /**
@@ -956,7 +964,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
   /**
    * Helper method for creating the facet field parameters.
    */
-  protected function getFacetParams(array $facets, array $fields) {
+  protected function getFacetParams(array $facets, array $fields, array &$fq = array()) {
     if (!$facets) {
       return array();
     }
@@ -965,25 +973,56 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $facet_params['facet.limit'] = 10;
     $facet_params['facet.mincount'] = 1;
     $facet_params['facet.missing'] = 'false';
+    $taggedFields = array();
     foreach ($facets as $info) {
       if (empty($fields[$info['field']])) {
         continue;
       }
-      $field = $fields[$info['field']];
+      $field = $f = $fields[$info['field']];
+      // String fields have their own corresponding facet fields.
       if ($field[0] == 's') {
         $field = 'f_' . $field;
       }
-      $facet_params['facet.field'][] = $field;
+      // Check for the "or" operator.
+      if (isset($info['operator']) && $info['operator'] === 'or') {
+        // Remember that filters for this field should be tagged.
+        $escaped = SearchApiSolrConnection::escapeFieldName($f);
+        $taggedFields[$escaped] = "{!tag=$escaped}";
+        // Add the facet field.
+        $facet_params['facet.field'][] = "{!ex=$escaped}$field";
+      }
+      else {
+        // Add the facet field.
+        $facet_params['facet.field'][] = $field;
+      }
+      // Set limit, unless it's the default.
       if ($info['limit'] != 10) {
         $facet_params["f.$field.facet.limit"] = $info['limit'] ? $info['limit'] : -1;
       }
+      // Set mincount, unless it's the default.
       if ($info['min_count'] != 1) {
         $facet_params["f.$field.facet.mincount"] = $info['min_count'];
       }
+      // Set missing, if specified.
       if ($info['missing']) {
         $facet_params["f.$field.facet.missing"] = 'true';
       }
     }
+    // Tag filters of fields with "OR" facets.
+    foreach ($taggedFields as $field => $tag) {
+      $regex = '#(?<![^( ])' . preg_quote($field, '#') . ':#';
+      foreach ($fq as $i => $filter) {
+        // Solr can't handle two tags on the same filter, so we don't add two.
+        // Another option here would even be to remove the other tag, too,
+        // since we can be pretty sure that this filter does not originate from
+        // a facet – however, wrong results would still be possible, and this is
+        // definitely an edge case, so don't bother.
+        if (preg_match($regex, $filter) && substr($filter, 0, 6) != '{!tag=') {
+          $fq[$i] = $tag . $filter;
+        }
+      }
+    }
+
     return $facet_params;
   }
 
