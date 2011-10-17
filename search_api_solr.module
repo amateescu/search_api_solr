@@ -12,26 +12,56 @@ function search_api_solr_init() {
 }
 
 /**
+ * Return path to SolrPhpClient library path, or FALSE if not found.
+ */
+function _search_api_solr_solrphpclient_path() {
+  static $path = NULL;
+
+  if (!isset($path)) {
+    $path = FALSE;
+    // If Libraries API is installed, we first use that to try and find the
+    // library. Otherwise we manually check a few locations.
+    $search_dirs = array();
+    if (function_exists('libraries_get_path')) {
+      $dir = libraries_get_path('SolrPhpClient');
+      // Confusingly, Libraries API 1.x will return sites/all/libraries/NAME on
+      // failure, while Libraries API 2.x returns FALSE in that case.
+      if ($dir) {
+        $search_dirs[] = $dir;
+      }
+    }
+    else {
+      $search_dirs[] = 'sites/all/libraries/SolrPhpClient';
+    }
+    $search_dirs[] = drupal_get_path('module', 'search_api_solr') . '/SolrPhpClient';
+    foreach ($search_dirs as $dir) {
+      $dir = DRUPAL_ROOT . '/' . $dir;
+      if (is_dir($dir)) {
+        $path = $dir;
+        break;
+      }
+    }
+  }
+
+  if ($path == FALSE) {
+    throw new Exception('SolrPhpClient library not found! Please follow the instructions in search_api_solr/INSTALL.txt for installing the Solr search module.');
+  }
+
+  return $path;
+}
+
+/**
  * Autoloader for the SolrPhpClient classes.
  */
 function _search_api_solr_autoload($name) {
-  static $path, $lookup_cache = array();
+  static $lookup_cache = array();
 
   if (isset($lookup_cache[$name])) {
     return $lookup_cache[$name];
   }
   elseif (substr($name, 0, 11) == 'Apache_Solr') {
-    if (!isset($path)) {
-      foreach (array(dirname(__FILE__), DRUPAL_ROOT . '/sites/all/libraries', NULL) as $path) {
-        if (!$path || is_dir($path .=  '/SolrPhpClient/')) {
-          break;
-        }
-      }
-      if (!$path) {
-        throw new Exception('SolrPhpClient library not found! Please follow the instructions in search_api_solr/INSTALL.txt for installing the Solr search module.');
-      }
-    }
-    if (file_exists($file_path = $path . str_replace('_', '/', $name) . '.php')) {
+    $path = _search_api_solr_solrphpclient_path();
+    if (file_exists($file_path = $path . '/' . str_replace('_', '/', $name) . '.php')) {
       require_once $file_path;
       $lookup_cache[$name] = TRUE;
       return TRUE;

@@ -1,5 +1,6 @@
 Search API Solr search 1.0, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1309650 by jonhattan, drunken monkey: Added support for the Libraries API.
 
 Search API Solr search 1.0, Beta 4 (09/08/2011):
 ------------------------------------------------
