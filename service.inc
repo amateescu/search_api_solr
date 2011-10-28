@@ -346,12 +346,6 @@ class SearchApiSolrService extends SearchApiAbstractService {
       // Add the names of any "fields" configured on the index.
       $fields = (isset($index->options['fields']) ? $index->options['fields'] : array());
       foreach ($fields as $key => $field) {
-        // Since this determines which fields can be searched and filtered on,
-        // don't include fields that aren't indexed.
-        if (empty($field['indexed'])) {
-          continue;
-        }
-
         // Generate a field name; this corresponds with naming conventions in
         // our schema.xml
         $type = $field['type'];
@@ -902,7 +896,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $fq = array();
     foreach ($filter->getFilters() as $f) {
       if (is_array($f)) {
-        if (!isset($fields[$f[0]]) || empty($fields[$f[0]]['indexed'])) {
+        if (!isset($fields[$f[0]])) {
           throw new SearchApiException(t('Filter term on unknown or unindexed field !field.', array('!field' => $f[0])));
         }
         if ($f[1] !== '') {
@@ -1355,7 +1349,6 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $fields = array(
       'search_api_multi_index' => array(
         'type' => 'string',
-        'indexed' => TRUE,
       ),
     );
     foreach ($query->getIndexes() as $index_id => $index) {
