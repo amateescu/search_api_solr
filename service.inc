@@ -256,12 +256,15 @@ class SearchApiSolrService extends SearchApiAbstractService {
       views_invalidate_cache();
     }
     $id = is_object($index) ? $index->machine_name : $index;
-    try {
-      $this->connect();
-      $this->solr->deleteByQuery("index_id:" . $id);
-    }
-    catch (Exception $e) {
-      watchdog('search_api_solr', t("An error occurred while deleting an index' data: !msg.", array('!msg' => $e->getMessage())));
+    // Only delete the index's data if the index isn't read-only.
+    if (!is_object($index) || empty($index->read_only)) {
+      try {
+        $this->connect();
+        $this->solr->deleteByQuery("index_id:" . $id);
+      }
+      catch (Exception $e) {
+        watchdog('search_api_solr', t("An error occurred while deleting an index' data: !msg.", array('!msg' => $e->getMessage())));
+      }
     }
   }
 
