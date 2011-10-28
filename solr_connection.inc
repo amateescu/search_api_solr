@@ -47,13 +47,14 @@ class SearchApiSolrConnection extends Apache_Solr_Service {
       'path' => '',
       'http_user' => NULL,
       'http_pass' => NULL,
+      'default_field'=>'id',
     );
     parent::__construct($options['host'], $options['port'], $options['path']);
     if ($options['http_user'] && $options['http_pass']) {
       $this->http_auth = 'Basic ' . base64_encode($options['http_user'] . ':' . $options['http_pass']);
     }
     // Since /ping otherwise complains about missing default field.
-    $this->_pingUrl .= '?q=id:1';
+    $this->_pingUrl .= '?q=' . $options['default_field'] . ':1';
 
     // As of July 2011, the newest release is r60, with Service.php having
     // revision 59. Revision 40 is just anything between 22 (old) and that.

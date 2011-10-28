@@ -752,10 +752,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $extract_facets = ($extract_facets ? $extract_facets : array());
 
       foreach ($extract_facets as $delta => $info) {
-        $field = $fields[$info['field']];
-        if ($field[0] == 's') {
-          $field = 'f_' . $field;
-        }
+        $field = $this->getFacetField($fields[$info['field']]);
         if (!empty($facet_fields->$field)) {
           $min_count = $info['min_count'];
           $terms = $facet_fields->$field;
@@ -806,6 +803,16 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
       return $facets;
     }
+  }
+
+  /**
+   * Return the facet field corresponding to a normal Solr field name.
+   *
+   * In the default configuration, string fields have additional fields
+   * specifically for facetting purposes, prefixed with an additional 'f_'.
+   */
+  protected function getFacetField($field) {
+    return ($field[0] == 's') ? 'f_' . $field : $field;
   }
 
   /**
@@ -981,15 +988,12 @@ class SearchApiSolrService extends SearchApiAbstractService {
       if (empty($fields[$info['field']])) {
         continue;
       }
-      $field = $f = $fields[$info['field']];
       // String fields have their own corresponding facet fields.
-      if ($field[0] == 's') {
-        $field = 'f_' . $field;
-      }
+      $field = $this->getFacetField($fields[$info['field']]);
       // Check for the "or" operator.
       if (isset($info['operator']) && $info['operator'] === 'or') {
         // Remember that filters for this field should be tagged.
-        $escaped = SearchApiSolrConnection::escapeFieldName($f);
+        $escaped = SearchApiSolrConnection::escapeFieldName($fields[$info['field']]);
         $taggedFields[$escaped] = "{!tag=$escaped}";
         // Add the facet field.
         $facet_params['facet.field'][] = "{!ex=$escaped}$field";
@@ -1455,10 +1459,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         $results['search_api_facets'] = array();
         $facet_fields = $response->facet_counts->facet_fields;
         foreach ($facets as $delta => $info) {
-          $field = $solr_fields[$info['field']];
-          if ($field[0] == 's') {
-            $field = 'f_' . $field;
-          }
+          $field = $this->getFacetField($solr_fields[$info['field']]);
           if (!empty($facet_fields->$field)) {
             $min_count = $info['min_count'];
             $terms = $facet_fields->$field;
