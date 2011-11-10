@@ -1,5 +1,8 @@
 Search API Solr search 1.0, dev (xx/xx/xxxx):
 ---------------------------------------------
+
+Search API Solr search 1.0, RC 1 (11/10/2011):
+----------------------------------------------
 - #1308638 by drunken monkey: Adapted to new structure of field settings.
 - #1308498 by zenlan, drunken monkey: Added flexibility for facet fields.
 - #1319544 by drunken monkey: Fixed never delete contents of read-only indexes.
