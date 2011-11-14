@@ -605,7 +605,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
       return $results;
     }
     catch (Exception $e) {
-      throw new SearchApiException($e->getMessage());
+      throw new SearchApiException(t('An error occurred while trying to search with Solr: !msg.',
+          array('!msg' => $e->getMessage())));
     }
   }
 

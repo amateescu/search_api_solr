@@ -1,5 +1,6 @@
 Search API Solr search 1.0, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1340244 by drunken monkey, alanomaly: Added more helpful error messages.
 
 Search API Solr search 1.0, RC 1 (11/10/2011):
 ----------------------------------------------
