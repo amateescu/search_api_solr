@@ -89,6 +89,16 @@ function search_api_solr_requirements($phase) {
 }
 
 /**
+ * Implements hook_install().
+ *
+ * We register our autoloader here because our hook_init() won't get called
+ * until the next bootstrap (it registers the autoloader too.)
+ */
+function search_api_solr_install() {
+  spl_autoload_register('_search_api_solr_autoload');
+}
+
+/**
  * Implements hook_uninstall().
  */
 function search_api_solr_uninstall() {
