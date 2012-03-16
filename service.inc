@@ -466,9 +466,12 @@ class SearchApiSolrService extends SearchApiAbstractService {
     // Set searched fields
     $options = $query->getOptions();
     $search_fields = $query->getFields();
+    // Get the index fields to be able to retrieve boosts.
+    $index_fields = $index->getFields();
     $qf = array();
     foreach ($search_fields as $f) {
-      $qf[] = $fields[$f];
+      $boost = isset($index_fields[$f]['boost']) ? '^' . $index_fields[$f]['boost'] : '';
+      $qf[] = $fields[$f] . $boost;
     }
 
     // Extract filters
