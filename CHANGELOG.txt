@@ -1,5 +1,6 @@
 Search API Solr search 1.0, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1480170 by kotnik: Fix hook_requirements() has wrong return value.
 - #1500210 by ezra-g, acrollet, jsacksick: _search_api_solr_solrphpclient_path()
   fails when installing with non-default installation profile.
 - #1444432 by Damien Tournoud, jsacksick: Implement field-level boosting.
