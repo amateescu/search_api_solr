@@ -196,11 +196,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
   }
 
   /**
-   * View this server's settings. Output can be HTML or a render array, a <dl>
-   * listing all relevant settings is preferred.
-   *
-   * The default implementation does a crude output as a definition list, with
-   * option names taken from the configuration form.
+   * View this server's settings.
    */
   public function viewSettings() {
     $output = '';
@@ -216,9 +212,9 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $output .= "\n  <dt>";
       $output .= t('Basic HTTP authentication');
       $output .= "</dt>\n  <dd>";
-      $output .= t('Username: !user', array('!user' => $options['http_user']));
+      $output .= t('Username: @user', array('@user' => $options['http_user']));
       $output .= "</dd>\n  <dd>";
-      $output .= t('Password: !pass', array('!pass' => str_repeat('*', strlen($options['http_pass']))));
+      $output .= t('Password: @pass', array('@pass' => str_repeat('*', strlen($options['http_pass']))));
       $output .= '</dd>';
     }
     $output .= "\n</dl>";
@@ -263,7 +259,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         $this->solr->deleteByQuery("index_id:" . $id);
       }
       catch (Exception $e) {
-        watchdog('search_api_solr', t("An error occurred while deleting an index' data: !msg.", array('!msg' => $e->getMessage())));
+        watchdog('search_api_solr', t("An error occurred while deleting an index' data: @msg.", array('@msg' => $e->getMessage())));
       }
     }
   }
@@ -283,7 +279,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
         foreach ($item as $key => $field) {
           if (!isset($fields[$key])) {
-            throw new SearchApiException(t('Unknown field !field.', array('!field' => $key)));
+            throw new SearchApiException(t('Unknown field @field.', array('@field' => $key)));
           }
           $this->addIndexField($doc, $fields[$key], $field['value'], $field['type']);
         }
@@ -292,7 +288,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         $ret[] = $id;
       }
       catch (Exception $e) {
-        watchdog('search_api_solr', t('An error occurred while indexing !type with ID !id: !msg.', array('!type' => $index->item_type, '!id' => $id, '!msg' => $e->getMessage())), NULL, WATCHDOG_WARNING);
+        watchdog('search_api_solr', t('An error occurred while indexing @type with ID @id: @msg.', array('@type' => $index->item_type, '@id' => $id, '@msg' => $e->getMessage())), NULL, WATCHDOG_WARNING);
       }
     }
 
@@ -308,11 +304,11 @@ class SearchApiSolrService extends SearchApiAbstractService {
         }
         return $ret;
       }
-      throw new SearchApiException(t('HTTP status !status: !msg.',
-          array('!status' => $response->getHttpStatus(), '!msg' => $response->getHttpStatusMessage())));
+      throw new SearchApiException(t('HTTP status @status: @msg.',
+          array('@status' => $response->getHttpStatus(), '@msg' => $response->getHttpStatusMessage())));
     }
     catch (Exception $e) {
-      watchdog('search_api_solr', t('An error occurred while indexing: !msg.', array('!msg' => $e->getMessage())), NULL, WATCHDOG_ERROR);
+      watchdog('search_api_solr', t('An error occurred while indexing: @msg.', array('@msg' => $e->getMessage())), NULL, WATCHDOG_ERROR);
     }
     return array();
   }
@@ -581,8 +577,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $time_query_done = microtime(TRUE);
 
       if ($response->getHttpStatus() != 200) {
-        throw new SearchApiException(t('The Solr server responded with status code !status: !msg.',
-            array('!status' => $response->getHttpStatus(), '!msg' => $response->getHttpStatusMessage())));
+        throw new SearchApiException(t('The Solr server responded with status code @status: @msg.',
+            array('@status' => $response->getHttpStatus(), '@msg' => $response->getHttpStatusMessage())));
       }
 
       // Extract results
@@ -608,8 +604,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
       return $results;
     }
     catch (Exception $e) {
-      throw new SearchApiException(t('An error occurred while trying to search with Solr: !msg.',
-          array('!msg' => $e->getMessage())));
+      throw new SearchApiException(t('An error occurred while trying to search with Solr: @msg.',
+          array('@msg' => $e->getMessage())));
     }
   }
 
@@ -901,7 +897,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     foreach ($filter->getFilters() as $f) {
       if (is_array($f)) {
         if (!isset($fields[$f[0]])) {
-          throw new SearchApiException(t('Filter term on unknown or unindexed field !field.', array('!field' => $f[0])));
+          throw new SearchApiException(t('Filter term on unknown or unindexed field @field.', array('@field' => $f[0])));
         }
         if ($f[1] !== '') {
           $fq[] = $this->createFilterQuery($solr_fields[$f[0]], $f[1], $f[2], $fields[$f[0]]);
@@ -1217,8 +1213,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
         $response = $this->solr->search($keys, $offset, $limit, $params);
 
         if ($response->getHttpStatus() != 200) {
-          watchdog('search_api_solr', 'The Solr server responded with status code !status: !msg.',
-              array('!status' => $response->getHttpStatus(), '!msg' => $response->getHttpStatusMessage()),
+          watchdog('search_api_solr', 'The Solr server responded with status code @status: @msg.',
+              array('@status' => $response->getHttpStatus(), '@msg' => $response->getHttpStatusMessage()),
               WATCHDOG_WARNING, 'admin/config/search/search_api/server/' . $this->server->machine_name);
           return array();
         }
@@ -1294,7 +1290,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         }
       }
       catch (Exception $e) {
-        watchdog('search_api_solr', $e->getMessage(), NULL, WATCHDOG_WARNING);
+        watchdog('search_api_solr', check_plain($e->getMessage()), NULL, WATCHDOG_WARNING);
       }
 
       if (count($suggestions) >= $limit) {
@@ -1434,8 +1430,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $time_query_done = microtime(TRUE);
 
       if ($response->getHttpStatus() != 200) {
-        throw new SearchApiException(t('The Solr server responded with status code !status: !msg.',
-            array('!status' => $response->getHttpStatus(), '!msg' => $response->getHttpStatusMessage())));
+        throw new SearchApiException(t('The Solr server responded with status code @status: @msg.',
+            array('@status' => $response->getHttpStatus(), '@msg' => $response->getHttpStatusMessage())));
       }
 
       // Extract results
@@ -1524,8 +1520,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
       return $this->solr->commit(FALSE, FALSE, FALSE);
     }
     catch (Exception $e) {
-      watchdog('search_api_solr', 'A commit operation for server !name failed: !msg.',
-          array('!name' => $this->server->machine_name, '!msg' => $e->getMessage()), WATCHDOG_WARNING);
+      watchdog('search_api_solr', 'A commit operation for server @name failed: @msg.',
+          array('@name' => $this->server->machine_name, '@msg' => $e->getMessage()), WATCHDOG_WARNING);
     }
   }
 
