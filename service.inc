@@ -466,7 +466,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $index_fields = $index->getFields();
     $qf = array();
     foreach ($search_fields as $f) {
-      $boost = isset($index_fields[$f]['boost']) ? '^' . $index_fields[$f]['boost'] : '';
+      $boost = '';
+      if ($this->request_handler != 'standard') {
+        $boost = isset($index_fields[$f]['boost']) ? '^' . $index_fields[$f]['boost'] : '';
+      }
       $qf[] = $fields[$f] . $boost;
     }
 
