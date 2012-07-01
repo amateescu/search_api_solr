@@ -1360,7 +1360,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       }
       $prefix = $index_id . ':';
       foreach ($this->getFieldNames($index) as $field => $key) {
-        if (substr($field, 0, 11) !== 'search_api_') {
+        if (!isset($solr_fields[$field])) {
           $solr_fields[$prefix . $field] = $key;
         }
       }
