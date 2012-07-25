@@ -1,6 +1,9 @@
-
-Apache Solr Multilingual 7.x-1.0-alpha1, 2011-xx-xx
+Apache Solr Multilingual 7.x-1.0-alpha1, 2012-xx-xx
 ---------------------------------------------------
+[        ] mkalkbrenner: declared querypath dependency
+
+Apache Solr Multilingual 7.x-1.0-alpha0, never released
+-------------------------------------------------------
 [        ] daspeter: intial port to d7
 [        ] mkalkbrenner: adjusted schema.xml and solrconfig.xml according to apachesolr-7.x-1.0-beta3
 [        ] mkalkbrenner: replaced multiple tag_XYZ fields by dynamic field tags_*

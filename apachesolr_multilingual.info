@@ -6,6 +6,7 @@ core = "7.x"
 dependencies[] = apachesolr
 dependencies[] = apachesolr_search
 dependencies[] = locale
+dependencies[] = querypath
 
 files[] = apachesolr_multilingual.admin.inc
 files[] = apachesolr_multilingual.module

@@ -7,9 +7,8 @@
  * @see apachesolr_multilingual.module
  * @see apachesolr.module
  *
- * @author Markus Kalkbrenner (mkalkbrenner) | Cocomore AG
+ * @author Markus Kalkbrenner (mkalkbrenner) | bio.logis GmbH
  *   @see http://drupal.org/user/124705
- *   @see http://drupal.cocomore.com
  */
 
 
