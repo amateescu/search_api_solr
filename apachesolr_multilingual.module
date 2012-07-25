@@ -500,8 +500,8 @@ function apachesolr_multilingual_apachesolr_facets() {
  */
 function apachesolr_multilingual_block_info() {
   $module = 'apachesolr_multilingual';
-  $server_id = apachesolr_default_server();
-  $enabled_facets = apachesolr_get_enabled_facets($server_id, $module);
+  $env_id = apachesolr_default_environment();
+  $enabled_facets = facetapi_get_enabled_facets('apachesolr@' . $env_id, $module);
   $facets = apachesolr_multilingual_apachesolr_facets();
 
   // Add the blocks

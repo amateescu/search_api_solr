@@ -5,6 +5,7 @@ core = "7.x"
 
 dependencies[] = apachesolr
 dependencies[] = apachesolr_search
+dependencies[] = facetapi
 dependencies[] = locale
 dependencies[] = querypath
 
