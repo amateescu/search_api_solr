@@ -273,38 +273,39 @@ function apachesolr_multilingual_form_alter(&$form, &$form_state, $form_id) {
 /**
  * Implements hook_apachesolr_field_name_map_alter().
  */
-function apachesolr_multilingual_apachesolr_field_name_map_alter(&$map) {
-  $active_languages = locale_language_list();
-  $solr = apachesolr_get_solr();
-  $fields = $solr->getFields();
-  foreach ($fields as $field_name => $field) {
-    // Only indexed fields are searchable.
-    if ($field->schema{0} == 'I') {
-      if ('text' != $field->type && strpos($field->type, 'text') === 0 && strpos($field->type, 'textSpell') !== 0) {
-        // serach for language identifier at last or second position
-        // within the field name
-        $tmp = explode('_', $field_name);
-        $lang = array_pop($tmp);
-        if (empty($active_languages[$lang])) {
-          $tmp[] = $lang;
-          if (!empty($active_languages[$tmp[1]])) {
-            $lang = $tmp[1];
-            unset($tmp[1]);
-          }
-        }
-        $base_field_name = implode('_', $tmp);
-        if (!empty($active_languages[$lang])) {
-          $map[$field_name] = '<em>' . $active_languages[$lang] . '</em> - ' . $map[$base_field_name];
-        }
-      }
-    }
-  }
-}
+// function apachesolr_multilingual_apachesolr_field_name_map_alter(&$map) {
+//   $active_languages = locale_language_list();
+//   $solr = apachesolr_get_solr();
+//   $fields = $solr->getFields();
+//   foreach ($fields as $field_name => $field) {
+//     // Only indexed fields are searchable.
+//     if ($field->schema{0} == 'I') {
+//       if ('text' != $field->type && strpos($field->type, 'text') === 0 && strpos($field->type, 'textSpell') !== 0) {
+//         // search for language identifier at last or second position
+//         // within the field name
+//         $tmp = explode('_', $field_name);
+//         $lang = array_pop($tmp);
+//         if (empty($active_languages[$lang])) {
+//           $tmp[] = $lang;
+//           if (!empty($active_languages[$tmp[1]])) {
+//             $lang = $tmp[1];
+//             unset($tmp[1]);
+//           }
+//         }
+//         $base_field_name = implode('_', $tmp);
+//         if (!empty($active_languages[$lang])) {
+//           $map[$field_name] = '<em>' . $active_languages[$lang] . '</em> - ' . $map[$base_field_name];
+//         }
+//       }
+//     }
+//   }
+// }
 
 /**
  * Implements hook_menu().
  */
 function apachesolr_multilingual_menu() {
+
   $items = array();
 
   $items['admin/config/search/apachesolr/multilingual'] = array(

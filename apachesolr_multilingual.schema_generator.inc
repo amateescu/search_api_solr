@@ -24,6 +24,7 @@
  * @return unknown_type
  */
 function apachesolr_multilingual_schema_generator_form($form_state) {
+  $form = array();
   $active_languages = locale_language_list();
   $selected_languages = variable_get('apachesolr_multilingual_languages', array());
   $language_count = 0;
@@ -33,10 +34,7 @@ function apachesolr_multilingual_schema_generator_form($form_state) {
     }
   }
   if ($language_count < 1) {
-    $form['info'] = array(
-    '#type' => 'item',
-    '#value' => t('No language selected! You have to !link at least one language.', array('!link' => l(t('select'), 'admin/config/search/apachesolr/multilingual')))
-    );
+    drupal_set_message(t('No language selected! You have to !link at least one language.', array('!link' => l(t('select'), 'admin/config/search/apachesolr/multilingual'))), 'error');
   }
   else {
     $form['schema_file_select'] = array(
@@ -50,8 +48,6 @@ function apachesolr_multilingual_schema_generator_form($form_state) {
         array('!link' => l(t('here'), 'admin/config/search/apachesolr/multilingual'))
       ),
     );
-  }
-  if ($language_count > 0) {
     if ($language_count == 1 ) {
       $form['set1'] = array(
         '#type' => 'fieldset',
@@ -96,10 +92,8 @@ function apachesolr_multilingual_schema_generator_form($form_state) {
       '#validate' => array('apachesolr_multilingual_schema_generator_form_multilingual_validate'),
     );
 
-
+    $form['#submit'] = array('apachesolr_multilingual_schema_generator_form_submit');
   }
-
-  $form['#submit'] = array('apachesolr_multilingual_schema_generator_form_submit');
 
   return $form;
 }
