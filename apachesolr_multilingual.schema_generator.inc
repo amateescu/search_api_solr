@@ -57,13 +57,13 @@ function apachesolr_multilingual_schema_generator_form($form_state) {
     $form['set2']['submit'] = array(
       '#type' => 'submit',
       '#name' => 'b2',
-      '#value' => t('Download !file', array('!file' => 'schema.xml')),
+      '#value' => t('Download !file for solr !version', array('!file' => 'schema.xml', '!version' => '1.4.x')),
     );
 
     $form['set2']['submitsc'] = array(
       '#type' => 'submit',
       '#name' => 'sc2',
-      '#value' => t('Download !file', array('!file' => 'solrconfig.xml')),
+      '#value' => t('Download !file for solr !version', array('!file' => 'solrconfig.xml', '!version' => '1.4.x')),
     );
 
     $form['#submit'] = array('apachesolr_multilingual_schema_generator_form_submit');
@@ -113,115 +113,29 @@ function apachesolr_multilingual_schema_generator_form_validate(&$form, &$form_s
     $language_name = apachesolr_multilingual_get_stemmer($language);
 
     $qp_schema_language_specific
-      ->find(':root')->xpath("types/fieldType[@name='text']/analyzer[@type='index']/filter[@class='solr.StopFilterFactory']")->attr('words', 'stopwords_' . $language . '.txt')
+      //->find(':root')->xpath("types/fieldType[@name='text']/analyzer[@type='index']/filter[@class='solr.StopFilterFactory']")->attr('words', 'stopwords_' . $language . '.txt')
+      //TODO handle all the txt files and and all language specific attributes
       ->find(':root')->xpath("types/fieldType[@name='text']")->attr('name', 'text_' . $language)
-      ->insertAfter($qp_schema->find(':root')->xpath("types/fieldType[@name='text']"))
-    ;
-//     $trp = array($LANGUAGE_NAME, $LANGUAGE_ID);
+      ->insertAfter($qp_schema->find(':root')->xpath("types/fieldType[@name='text']"));
 
-//     if ($LANGUAGE_NAME) {
-//       $blocks['<!-- fieldType_text_LANGUAGE -->'] = $field_type_text_language;
-//     }
-//     else {
-//       $blocks['<!-- fieldType_text_LANGUAGE -->'] = $field_type_text_no_stemming_language;
-//     }
+    $dynamic_fields = $qp_schema_language_specific->find(':root')->xpath("fields/dynamicField[@type='text']");
+    foreach ($dynamic_fields as $dynamic_field) {
+      $name = $dynamic_field->attr('name');
+      $dynamic_field
+        ->attr('type', 'text_' . $language)
+        ->attr('name', preg_replace('/(.*)\*/', '$1' . $language . '_*', $name))
+        ->insertAfter($qp_schema->find(':root')->xpath("fields/dynamicField[@name='$name']"));
+    }
 
-//     // schema.xml replace the vars in the blocks
-//     // solrconfig.xml replace the vars in the blocks
-//     foreach ($blocks as $search => $replace) {
-//       $schema_str_complete = str_replace($search, $search . "\n" . apachesolr_multilingual_replace_language_vars($language, str_replace($tse, $trp, $replace)), $schema_str_complete);
-//       $solrconfig_str_complete = str_replace($search, $search . "\n" . apachesolr_multilingual_replace_language_vars($language, str_replace($tse, $trp, $replace)), $solrconfig_str_complete);
-//     }
-
-//     $search = '<!-- gettableFiles_LANGUAGE  -->';
-//     foreach ($gettable_files as $s => $replace) {
-//       $solrconfig_str_complete = str_replace($search, $search . "\n" . apachesolr_multilingual_replace_language_vars($language, str_replace($tse, $trp, $replace)), $solrconfig_str_complete);
-//     }
+    $fields = $qp_schema_language_specific->find(':root')->xpath("fields/field[@type='text']");
+    foreach ($fields as $field) {
+      $name = $field->attr('name');
+      $field
+        ->attr('type', 'text_' . $language)
+        ->attr('name', $name . '_' . $language)
+        ->insertAfter($qp_schema->find(':root')->xpath("fields/field[@name='$name']"));
+    }
   }
-
-//   // REVIEW
-//   // unfortunately solr accepts only one stop word list to preprocess input for spellchecker.
-//   // in multilingual setup it's better to have no stopwords than combine all languages
-//   $schema_str_complete = preg_replace("/<!-- stopwords_spell -->.*$/m", '<!-- no stopwords -->', $schema_str_complete);
-
-//   // read the block fieldType_text_LANGUAGE.xml
-//   $schema_source_file = $schema_source_path . 'fieldType_text_LANGUAGE.xml';
-//   $field_type_text_language = file_get_contents($schema_source_file);
-
-//   // read the block fieldType_text_no_stemming_LANGUAGE.xml
-//   $schema_source_file = $schema_source_path . 'fieldType_text_no_stemming_LANGUAGE.xml';
-//   $field_type_text_no_stemming_language = file_get_contents($schema_source_file);
-
-//   // read the block fieldType_textSpell_LANGUAGE.xml
-//   $schema_source_file = $schema_source_path . 'fieldType_textSpell_LANGUAGE.xml';
-//   $field_type_text_spell_language = file_get_contents($schema_source_file);
-
-//   // read the block fieldType_textSpell_multilingual.xml
-//   $schema_source_file = $schema_source_path . 'fieldType_textSpell_multilingual.xml';
-//   $field_type_text_spell_multilingual = file_get_contents($schema_source_file);
-//   $schema_str_complete = str_replace('<!-- fieldType_textSpell_multilingual_StopFilter -->', $field_type_text_spell_multilingual, $schema_str_complete);
-
-//   // read the block lst_spellchecker_LANGUAGE.xml
-//   $solrconfig_source_file = $solrconfig_source_path . 'lst_spellchecker_LANGUAGE.xml';
-//   $lst_spellchecker_language = file_get_contents($solrconfig_source_file);
-
-//   $blocks = array();
-//   $blocks['<!-- fieldType_textSpell_LANGUAGE -->'] = $field_type_text_spell_language;
-//   $blocks['<!-- lst_spellchecker_LANGUAGE -->'] = $lst_spellchecker_language;
-//   $blocks['<!-- field_title_LANGUAGE -->'] = '<field name="title[LANGUAGE_ID]" type="text[LANGUAGE_ID]" indexed="true" stored="true" termVectors="true" omitNorms="true"/>';
-//   $blocks['<!-- field_body_LANGUAGE -->'] = '<field name="body[LANGUAGE_ID]" type="text[LANGUAGE_ID]" indexed="true" stored="true" termVectors="true"/>';
-//   $blocks['<!-- field_spell_LANGUAGE -->'] = '<field name="spell[LANGUAGE_ID]" type="textSpell[LANGUAGE_ID]" indexed="true" stored="true" multiValued="true"/>';
-//   $blocks['<!-- copyField_title_LANGUAGE_spell_LANGUAGE -->'] = '<copyField source="title[LANGUAGE_ID]" dest="spell[LANGUAGE_ID]"/>';
-//   $blocks['<!-- copyField_body_LANGUAGE_spell_LANGUAGE -->'] = '<copyField source="body[LANGUAGE_ID]" dest="spell[LANGUAGE_ID]"/>';
-//   $blocks['<!-- field_taxonomy_names_LANGUAGE -->'] = '<field name="taxonomy_names[LANGUAGE_ID]" type="text[LANGUAGE_ID]" indexed="true" stored="false" termVectors="true" multiValued="true" omitNorms="true"/>';
-//   $blocks['<!-- dynamicField_tags_LANGUAGE_* -->'] = '<dynamicField name="tags[LANGUAGE_ID]_*" type="text[LANGUAGE_ID]" indexed="true" stored="false" omitNorms="true"/>';
-//   $blocks['<!-- fieldType_textSpell_multilingual_StopFilter -->'] = '<filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords_spell[LANGUAGE_ID].txt"/>';
-//   $blocks['<!-- dynamicField_ts_LANGUAGE_* -->'] = '<dynamicField name="ts[LANGUAGE_ID]_*" type="text[LANGUAGE_ID]" indexed="true" stored="true" multiValued="false" termVectors="true"/>';
-
-//   // solrconfig.xml gettablefiles
-//   $apachesolr_multilingual_filetypes = variable_get('apachesolr_multilingual_filetypes', array('stopwords.txt' => 'stopwords.txt', 'synonyms.txt' => 'synonyms.txt', 'protwords.txt' => 'protwords.txt', 'compoundwords.txt' => 'compoundwords.txt'));
-//   $apachesolr_multilingual_filetypes['stopwords_spell.txt'] = 'stopwords_spell.txt';
-
-//   // FIXME add language specific config files to replication in solrconfig.xml
-
-//   $gettable_files = array();
-//   foreach ($apachesolr_multilingual_filetypes as $gettable_file) {
-//     $gettable_files[] = str_replace('.txt', '[LANGUAGE_ID].txt', $gettable_file);
-//   }
-
-//   $tse = array('[LANGUAGE_NAME]', '[LANGUAGE_ID]');
-//   // work through the lang.
-//   foreach ($options as $language) {
-//     // set the vars to replace in the blocks
-//     $LANGUAGE_NAME = apachesolr_multilingual_get_stemmer($language);
-//     $LANGUAGE_ID = '_' . $language;
-//     $trp = array($LANGUAGE_NAME, $LANGUAGE_ID);
-
-//     if ($LANGUAGE_NAME) {
-//       $blocks['<!-- fieldType_text_LANGUAGE -->'] = $field_type_text_language;
-//     }
-//     else {
-//       $blocks['<!-- fieldType_text_LANGUAGE -->'] = $field_type_text_no_stemming_language;
-//     }
-
-//     // schema.xml replace the vars in the blocks
-//     // solrconfig.xml replace the vars in the blocks
-//     foreach ($blocks as $search => $replace) {
-//       $schema_str_complete = str_replace($search, $search . "\n" . apachesolr_multilingual_replace_language_vars($language, str_replace($tse, $trp, $replace)), $schema_str_complete);
-//       $solrconfig_str_complete = str_replace($search, $search . "\n" . apachesolr_multilingual_replace_language_vars($language, str_replace($tse, $trp, $replace)), $solrconfig_str_complete);
-//     }
-
-//     $search = '<!-- gettableFiles_LANGUAGE  -->';
-//     foreach ($gettable_files as $s => $replace) {
-//       $solrconfig_str_complete = str_replace($search, $search . "\n" . apachesolr_multilingual_replace_language_vars($language, str_replace($tse, $trp, $replace)), $solrconfig_str_complete);
-//     }
-//   }
-
-//   // set $language id to a value that doesn't exist. That will cause apachesolr_multilingual_replace_language_vars() to use default values.
-//   $language = 'default';
-
-//   $schema_str_complete = apachesolr_multilingual_replace_language_vars($language, $schema_str_complete);
-//   $solrconfig_str_complete = apachesolr_multilingual_replace_language_vars($language, $solrconfig_str_complete);
 
   ob_end_clean();
 
