@@ -56,152 +56,138 @@ function apachesolr_multilingual_node_update($node) {
  * @param $namespace
  * @return mixed
  */
-function apachesolr_multilingual_apachesolr_update_index($document, $node, $namespace) {
+function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $entity, $entity_type, $env_id) {
   static $reentrance = FALSE;
 
-  if (!$reentrance) {
-    $reentrance = TRUE;
+  foreach ($documents as $document) {
+    if ('node' == $document->entity_type && !$reentrance) {
+      $reentrance = TRUE;
 
-    $language = $node->language;
-
-    if ($language == LANGUAGE_NONE) {
-      // Language neutral
-      $language = variable_get('apachesolr_multilingual_map_language_neutral', '');
-      if ($language) {
-        $document->language = $node->language = $language;
+      if (LANGUAGE_NONE == $document->ss_language) {
+        // Language neutral
+        $document->ss_language = variable_get('apachesolr_multilingual_map_language_neutral', LANGUAGE_NONE);
       }
-    }
 
-    if ($language) {
-      if (isset($document->vid) && is_array($document->vid)) { // vid is vocabulary id in this case
-        $term_languages = array($language);
-        if (module_exists('i18ntaxonomy') && variable_get('apachesolr_multilingual_index_term_translations', 0)) {
-          $term_languages = variable_get('apachesolr_multilingual_languages', array());
-        }
-        foreach ($term_languages as $term_language) {
-          if ($term_language) {
-            $vids = array_unique($document->vid);
-            $terms = array();
-            foreach ($vids as $vid) {
-              if (module_exists('i18ntaxonomy')) {
-                $tmp = '';
-                if (isset($document->{'im_vid_' . $vid})) {
-                  foreach ($document->{'im_vid_' . $vid} as $tid) {
-                    $term = i18nstrings("taxonomy:term:$tid:name", '', $term_language);
-                    if (!empty($term)) {
-                      $tmp .= $term . ' ';
-                    }
-                  }
-                }
-                if (!empty($tmp)) {
-                  $terms[] = $tmp;
-                }
-              }
-              else {
-                // module i18ntaxonomy isn't installed
-                // in this case we simply copy the terms
-                 if (isset($document->{'ts_vid_' . $vid . '_names'})) {
-                   $terms[] = $document->{'ts_vid_' . $vid . '_names'};
-                 }
-                // REVIEW see http://drupal.org/node/783924
-              }
-            }
+      $fields = $document->getFieldNames();
+//       if (in_array('vid', $fields) && is_array($document->vid)) { // vid is vocabulary id in this case
+//         $term_languages = array($language);
+//         if (module_exists('i18ntaxonomy') && variable_get('apachesolr_multilingual_index_term_translations', 0)) {
+//           $term_languages = variable_get('apachesolr_multilingual_languages', array());
+//         }
+//         foreach ($term_languages as $term_language) {
+//           if ($term_language) {
+//             $vids = array_unique($document->vid);
+//             $terms = array();
+//             foreach ($vids as $vid) {
+//               if (module_exists('i18ntaxonomy')) {
+//                 $tmp = '';
+//                 if (in_array('im_vid_' . $vid, $fields)) {
+//                   foreach ($document->{'im_vid_' . $vid} as $tid) {
+//                     $term = i18nstrings("taxonomy:term:$tid:name", '', $term_language);
+//                     if (!empty($term)) {
+//                       $tmp .= $term . ' ';
+//                     }
+//                   }
+//                 }
+//                 if (!empty($tmp)) {
+//                   $terms[] = $tmp;
+//                 }
+//               }
+//               else {
+//                 // module i18ntaxonomy isn't installed
+//                 // in this case we simply copy the terms
+//                 if (in_array('ts_vid_' . $vid . '_names', $fields)) {
+//                   $terms[] = $document->{'ts_vid_' . $vid . '_names'};
+//                 }
+//                 // REVIEW see http://drupal.org/node/783924
+//               }
+//             }
 
-            if ($terms) {
-              $document->{'taxonomy_names_' . $term_language} = $terms;
-            }
-          }
-        }
-      }
+//             if ($terms) {
+//               $document->{'taxonomy_names_' . $term_language} = $terms;
+//             }
+//           }
+//         }
+//       }
 
       // use language specific stemming and so on ..
-      $document->{'title_' . $language} = $document->title;
-      $document->{'body_' . $language} = $document->body;
+      if (in_array('label', $fields)) {
+        $document->{'label_' . $document->ss_language} = $document->label;
+      }
+      if (in_array('teaser', $fields)) {
+        $document->{'teaser_' . $document->ss_language} = $document->teaser;
+      }
+      if (in_array('content', $fields)) {
+        $document->{'content_' . $document->ss_language} = $document->content;
+      }
+      if (in_array('path_alias', $fields)) {
+        $document->{'path_alias_' . $document->ss_language} = $document->path_alias;
+      }
 
-      $solr = apachesolr_get_solr();
-      $fields = $solr->getFields();
-      foreach ($fields as $field_name => $field) {
-        if (strpos($field_name, 'ts_') === 0 && !empty($document->{$field_name})) {
-          // deal with fields using dynamic ts_* fields
-
+      foreach ($fields as $field_name) {
+        if ((strpos($field_name, 'ts_') === 0 || strpos($field_name, 'tm_') === 0) && !empty($document->{$field_name})) {
           // search for existing language identifier at second position
           $tmp = explode('_', $field_name);
-          if ($language != $tmp[1]) {
-            $document->{'ts_' . $language . drupal_substr($field_name, 2)} = $document->{$field_name};
+          if ($document->ss_language != $tmp[1]) {
+            $document->{$tmp[0] . '_' . $document->ss_language . drupal_substr($field_name, 2)} = $document->{$field_name};
           }
         }
-
-        if (strpos($field_name, 'tm_') === 0 && !empty($document->{$field_name})) {
-          // deal with fields using dynamic ts_* fields
-
+        if ((strpos($field_name, 'tos_') === 0 || strpos($field_name, 'tom_') === 0) && !empty($document->{$field_name})) {
           // search for existing language identifier at second position
           $tmp = explode('_', $field_name);
-          if ($language != $tmp[1]) {
-            $document->{'tm_' . $language . drupal_substr($field_name, 2)} = $document->{$field_name};
-          }
-        }
-
-        if (strpos($field_name, 'tags_') === 0 && !empty($document->{$field_name})) {
-          // deal with fields using dynamic ts_* fields
-
-          // search for existing language identifier at second position
-          $tmp = explode('_', $field_name);
-          if ($language != $tmp[1]) {
-            $document->{'tags_' . $language . drupal_substr($field_name, 2)} = $document->{$field_name};
+          if ($document->ss_language != $tmp[1]) {
+            $document->{$tmp[0] . '_' . $document->ss_language . drupal_substr($field_name, 3)} = $document->{$field_name};
           }
         }
       }
 
-      if (variable_get('apachesolr_multilingual_index_translations', 0) && $node->tnid) {
-        $translations = translation_node_get_translations($node->tnid);
-        foreach ($translations as $translation_language => $translation) {
-          if ($translation->nid != $node->nid) {
-            if ($translation_node = node_load($translation->nid)) {
-              if ($translation_document = apachesolr_node_to_document($translation_node, $namespace)) {
-                $document->{'title_' . $translation_language} = $translation_document->title;
-                $document->{'body_' . $translation_language} = $translation_document->body;
+//       if (variable_get('apachesolr_multilingual_index_translations', 0) && $node->tnid) {
+//         $translations = translation_node_get_translations($node->tnid);
+//         foreach ($translations as $translation_language => $translation) {
+//           if ($translation->nid != $node->nid) {
+//             if ($translation_node = node_load($translation->nid)) {
+//               if ($translation_document = apachesolr_node_to_document($translation_node, $namespace)) {
+//                 if (in_array('title', $fields)) {
+//                   $document->{'title_' . $translation_language} = $translation_document->title;
+//                 }
+//                 if (in_array('body', $fields)) {
+//                   $document->{'body_' . $translation_language} = $translation_document->body;
+//                 }
+//                 if (in_array('tags_h1', $fields)) {
+//                   $document->{'tags_h1_' . $translation_language} = $translation_document->tags_h1;
+//                 }
+//                 if (in_array('tags_h2_h3', $fields)) {
+//                   $document->{'tags_h2_h3_' . $translation_language} = $translation_document->tags_h2_h3;
+//                 }
+//                 if (in_array('tags_h4_h5_h6', $fields)) {
+//                   $document->{'tags_h4_h5_h6_' . $translation_language} = $translation_document->tags_h4_h5_h6;
+//                 }
+//                 if (in_array('tags_a', $fields)) {
+//                   $document->{'tags_a_' . $translation_language} = $translation_document->tags_a;
+//                 }
+//                 if (in_array('tags_inline', $fields)) {
+//                   $document->{'tags_inline_' . $translation_language} = $translation_document->tags_inline;
+//                 }
 
-                foreach ($fields as $field_name => $field) {
-                  if (strpos($field_name, 'ts_') === 0 && !empty($translation_document->{$field_name})) {
-                    // deal with fields using dynamic ts_* fields
+//                 foreach ($fields as $field_name) {
+//                   if ((strpos($field_name, 'ts_') === 0 || strpos($field_name, 'tm_') === 0) && !empty($translation_document->{$field_name})) {
+//                     // deal with fields like cck using dynamic ts_* fields
 
-                    // search for existing language identifier at
-                   // second position
-                    $tmp = explode('_', $field_name);
-                    if ($translation_language != $tmp[1]) {
-                      $document->{'ts_' . $translation_language . drupal_substr($field_name, 2)} = $translation_document->{$field_name};
-                    }
-                  }
+//                     // search for existing language identifier at second position
+//                     $tmp = explode('_', $field_name);
+//                     if ($translation_language != $tmp[1]) {
+//                       $document->{$tmp[0] . '_' . $translation_language . drupal_substr($field_name, 2)} = $translation_document->{$field_name};
+//                     }
+//                   }
+//                 }
+//               }
+//             }
+//           }
+//         }
+//       }
 
-                  if (strpos($field_name, 'tm_') === 0 && !empty($translation_document->{$field_name})) {
-                    // deal with fields using dynamic ts_* fields
-
-                    // search for existing language identifier at
-                   // second position
-                    $tmp = explode('_', $field_name);
-                    if ($translation_language != $tmp[1]) {
-                      $document->{'tm_' . $translation_language . drupal_substr($field_name, 2)} = $translation_document->{$field_name};
-                    }
-                  }
-
-                  if (strpos($field_name, 'tags_') === 0 && !empty($translation_document->{$field_name})) {
-                    // deal with fields using dynamic ts_* fields
-
-                    // search for existing language identifier at
-                   // second position
-                    $tmp = explode('_', $field_name);
-                    if ($translation_language != $tmp[1]) {
-                      $document->{'tags_' . $translation_language . drupal_substr($field_name, 2)} = $translation_document->{$field_name};
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+      $reentrance = FALSE;
     }
-    $reentrance = FALSE;
   }
 }
 
