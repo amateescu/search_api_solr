@@ -170,99 +170,102 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
 
 
 /**
- * Implements hook_form_alter().
- *
- * By default we only show text fields. Use hook_form_alter to change.
+ * Implements hook_form_apachesolr_search_bias_form_alter().
  *
  * @param $form
  * @param $state
  * @param $form_id
  * @return mixed
  */
-function apachesolr_multilingual_form_alter(&$form, &$form_state, $form_id) {
-  if ('apachesolr_search_settings_form' == $form_id) {
-    $active_languages = locale_language_list();
-    $solr = apachesolr_get_solr();
-    $fields = $solr->getFields();
+function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, &$form_state, $form_id) {
+  $environment = apachesolr_environment_load($form['#env_id']);
+  $fields = apachesolr_search_get_fields($environment);
+  $selected_languages = variable_get('apachesolr_multilingual_languages', array());
+  $types = array('text');
+  $defaults = array();
+  foreach ($selected_languages as $langauge) {
+    $types[] = 'text_' . $langauge;
+    // get the current weights
+    $defaults['content_' . $langauge] = '1.0';
+    $defaults['ts_' . $langauge .'_comments'] = '0.5';
+    $defaults['tos_' . $langauge .'_content_extra'] = '0.1';
+    $defaults['label_' . $langauge] = '5.0';
+    $defaults['tos_' . $langauge .'_name'] = '3.0';
+    $defaults['taxonomy_names_' . $langauge] = '2.0';
+    $defaults['tags_' . $langauge .'_h1'] = '5.0';
+    $defaults['tags_' . $langauge .'_h2_h3'] = '3.0';
+    $defaults['tags_' . $langauge .'_h4_h5_h6'] = '2.0';
+    $defaults['tags_' . $langauge .'_inline'] = '1.0';
+    $defaults['tags_' . $langauge .'_a'] = '0';
+  }
 
-    $form['apachesolr_search_query_fields']['#description'] .= '<br />' . t('<b>Note:</b> If you are missing some language specific fields here you have to index some corresponding content first.');
-    $qf = variable_get('apachesolr_search_query_fields', array());
-    // Note - we have default values set in solrconfig.xml, which will operate
-    // when none are set.  That's the preferred state.
-    $defaults = array(
-      'body' => '1.0',
-      'title' => '5.0',
-      'name' => '3.0',
-      'taxonomy_names' => '2.0',
-      'tags_h1' => '5.0',
-      'tags_h2_h3' => '3.0',
-      'tags_h4_h5_h6' => '2.0',
-      'tags_inline' => '1.0',
-      'tags_a' => '0',
-    );
-    if (!$qf) {
-      $qf = $defaults;
-    }
-
+  $qf = apachesolr_environment_variable_get($env_id, 'field_bias', $defaults);
+  $weights = drupal_map_assoc(array('21.0', '13.0', '8.0', '5.0', '3.0', '2.0', '1.0', '0.8', '0.5', '0.3', '0.2', '0.1'));
+  $weights['0'] = t('Omit');
+  if (!$qf) {
+    $qf = $defaults;
+  }
+  if ($fields) {
     foreach ($fields as $field_name => $field) {
-      // Only indexed fields are searchable.
+      // Only indexed feids are searchable.
       if ($field->schema{0} == 'I') {
-        if ('text' != $field->type && strpos($field->type, 'text') === 0 && strpos($field->type, 'textSpell') !== 0) {
-          // search for language identifier at last or second position
-          $tmp = explode('_', $field_name);
-          $lang = array_pop($tmp);
-          if (empty($active_languages[$lang])) {
-            $tmp[] = $lang;
-            if (!empty($active_languages[$tmp[1]])) {
-              $lang = $tmp[1];
-              unset($tmp[1]);
-            }
-          }
-          if (!empty($active_languages[$lang])) {
-            $base_field_name = implode('_', $tmp);
-            $form['apachesolr_search_query_fields'][$base_field_name]['#description'] = t('Recommended to "Omit". Use language specific fields instead.');
-            $form['apachesolr_search_query_fields'][$field_name]['#access'] = TRUE;
-
-            if (!array_key_exists($field_name, $qf)) {
-              $form['apachesolr_search_query_fields'][$field_name]['#default_value'] = isset($qf[$base_field_name]) ? $qf[$base_field_name] : '0';
-            }
-          }
-        }
+        // We use filter_xss to make sure links are allowed
+        $form['field_bias'][$field_name] = array(
+          '#access' => in_array($field->type, $types),
+          '#type' => 'select',
+          '#options' => $weights,
+          '#title' => filter_xss(apachesolr_field_name_map($field_name)),
+          '#default_value' => isset($qf[$field_name]) ? $qf[$field_name] : '0',
+          '#description' => 'text' == $field->type ? t('Unspecified language: recomandation is set this bias to "Omit"') : '',
+        );
       }
     }
+
+    // Make sure all the default fields are included, even if they have
+    // no indexed content.
+    foreach ($defaults as $field_name => $weight) {
+      $form['field_bias'][$field_name] = array(
+        '#type' => 'select',
+        '#options' => $weights,
+        '#title' => check_plain(apachesolr_field_name_map($field_name)),
+        '#default_value' => isset($qf[$field_name]) ? $qf[$field_name] : $defaults[$field_name],
+      );
+    }
+
+    ksort($form['field_bias']);
   }
 }
 
 /**
  * Implements hook_apachesolr_field_name_map_alter().
  */
-// function apachesolr_multilingual_apachesolr_field_name_map_alter(&$map) {
-//   $active_languages = locale_language_list();
-//   $solr = apachesolr_get_solr();
-//   $fields = $solr->getFields();
-//   foreach ($fields as $field_name => $field) {
-//     // Only indexed fields are searchable.
-//     if ($field->schema{0} == 'I') {
-//       if ('text' != $field->type && strpos($field->type, 'text') === 0 && strpos($field->type, 'textSpell') !== 0) {
-//         // search for language identifier at last or second position
-//         // within the field name
-//         $tmp = explode('_', $field_name);
-//         $lang = array_pop($tmp);
-//         if (empty($active_languages[$lang])) {
-//           $tmp[] = $lang;
-//           if (!empty($active_languages[$tmp[1]])) {
-//             $lang = $tmp[1];
-//             unset($tmp[1]);
-//           }
-//         }
-//         $base_field_name = implode('_', $tmp);
-//         if (!empty($active_languages[$lang])) {
-//           $map[$field_name] = '<em>' . $active_languages[$lang] . '</em> - ' . $map[$base_field_name];
-//         }
+function apachesolr_multilingual_apachesolr_field_name_map_alter(&$map) {
+  $active_languages = locale_language_list();
+  foreach ($active_languages as $language => $langauge_name) {
+    $map['content_' . $language] = $langauge_name .': ' . t('The full, rendered content (e.g. the rendered node body)');
+    $map['ts_' . $language . '_comments'] = $langauge_name .': ' . t('The rendered comments associated with a node');
+    $map['tos_' . $language . '_content_extra'] = $langauge_name .': ' . t('Extra rendered content or keywords');
+    $map['tos_' . $language . '_name_formatted'] = $langauge_name .': ' . t('Author name (Formatted)');
+    $map['label_' . $language] = $langauge_name .': ' . t('Title or label');
+    $map['teaser_' . $language] = $langauge_name .': ' . t('Teaser or preview');
+    $map['tos_' . $language . '_name'] = $langauge_name .': ' . t('Author name');
+    $map['path_alias_' . $language] = $langauge_name .': ' . t('Path alias');
+    $map['tags_h1_' . $language] = $langauge_name .': ' . t('Body text inside H1 tags');
+    $map['tags_h2_h3_' . $language] = $langauge_name .': ' . t('Body text inside H2 or H3 tags');
+    $map['tags_h4_h5_h6_' . $language] = $langauge_name .': ' . t('Body text inside H4, H5, or H6 tags');
+    $map['tags_inline_' . $language] = $langauge_name .': ' . t('Body text in inline tags like EM or STRONG');
+    $map['tags_a_' . $language] = $langauge_name .': ' . t('Body text inside links (A tags)');
+//     if (module_exists('taxonomy')) {
+//      $map['taxonomy_names' => t('All taxonomy term names'),
+//       foreach (taxonomy_get_vocabularies() as $vocab) {
+//         $map['tm_vid_' . $vocab->vid . '_names'] = t('Taxonomy term names only from the %name vocabulary', array('%name' => $vocab->name));
+//         $map['im_vid_' . $vocab->vid] = t('Taxonomy term IDs from the %name vocabulary', array('%name' => $vocab->name));
 //       }
 //     }
 //   }
-// }
+  }
+}
+
 
 /**
  * Implements hook_menu().
@@ -346,6 +349,7 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
   // We assume that a user is not able to select two different languages as filter
   $language_filters = $query->getFilters('ss_language');
   if (!empty($language_filters)) {
+    //FIXME
     var_dump($language_filters);
     exit();
     $filter_language = $language_filters[0]['#value'];
