@@ -51,11 +51,8 @@ function apachesolr_multilingual_node_update($node) {
  * Implements hook_apachesolr_index_documents_alter().
  */
 function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $entity, $entity_type, $env_id) {
-  static $reentrance = FALSE;
-
   foreach ($documents as $document) {
-    if ('node' == $document->entity_type && !$reentrance) {
-      $reentrance = TRUE;
+    if ('node' == $document->entity_type) {
 
       if (LANGUAGE_NONE == $document->ss_language) {
         // Language neutral
@@ -104,7 +101,9 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
 //         }
 //       }
 
-      // use language specific stemming and so on ..
+      // use language specific stemming and so on
+      // by copying all fields of type text to
+      // a language specific text field
       if (in_array('label', $fields)) {
         $document->{'label_' . $document->ss_language} = $document->label;
       }
@@ -117,70 +116,56 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
       if (in_array('path_alias', $fields)) {
         $document->{'path_alias_' . $document->ss_language} = $document->path_alias;
       }
-
       foreach ($fields as $field_name) {
-        if ((strpos($field_name, 'ts_') === 0 || strpos($field_name, 'tm_') === 0) && !empty($document->{$field_name})) {
-          // search for existing language identifier at second position
-          $tmp = explode('_', $field_name);
-          if ($document->ss_language != $tmp[1]) {
-            $document->{$tmp[0] . '_' . $document->ss_language . drupal_substr($field_name, 2)} = $document->{$field_name};
-          }
-        }
-        if ((strpos($field_name, 'tos_') === 0 || strpos($field_name, 'tom_') === 0) && !empty($document->{$field_name})) {
-          // search for existing language identifier at second position
-          $tmp = explode('_', $field_name);
-          if ($document->ss_language != $tmp[1]) {
-            $document->{$tmp[0] . '_' . $document->ss_language . drupal_substr($field_name, 3)} = $document->{$field_name};
+        foreach (array('ts_', 'tm_', 'tos_', 'tom_', 'tags_') as $prefix) {
+          if (strpos($field_name, $prefix) === 0 && !empty($document->{$field_name})) {
+            // search for existing language identifier at second position
+            $tmp = explode('_', $field_name);
+            if ($document->ss_language != $tmp[1]) {
+              $document->{$tmp[0] . '_' . $document->ss_language . drupal_substr($field_name, strlen($tmp[0]))} = $document->{$field_name};
+            }
           }
         }
       }
 
-//       if (variable_get('apachesolr_multilingual_index_translations', 0) && $node->tnid) {
-//         $translations = translation_node_get_translations($node->tnid);
-//         foreach ($translations as $translation_language => $translation) {
-//           if ($translation->nid != $node->nid) {
-//             if ($translation_node = node_load($translation->nid)) {
-//               if ($translation_document = apachesolr_node_to_document($translation_node, $namespace)) {
-//                 if (in_array('title', $fields)) {
-//                   $document->{'title_' . $translation_language} = $translation_document->title;
-//                 }
-//                 if (in_array('body', $fields)) {
-//                   $document->{'body_' . $translation_language} = $translation_document->body;
-//                 }
-//                 if (in_array('tags_h1', $fields)) {
-//                   $document->{'tags_h1_' . $translation_language} = $translation_document->tags_h1;
-//                 }
-//                 if (in_array('tags_h2_h3', $fields)) {
-//                   $document->{'tags_h2_h3_' . $translation_language} = $translation_document->tags_h2_h3;
-//                 }
-//                 if (in_array('tags_h4_h5_h6', $fields)) {
-//                   $document->{'tags_h4_h5_h6_' . $translation_language} = $translation_document->tags_h4_h5_h6;
-//                 }
-//                 if (in_array('tags_a', $fields)) {
-//                   $document->{'tags_a_' . $translation_language} = $translation_document->tags_a;
-//                 }
-//                 if (in_array('tags_inline', $fields)) {
-//                   $document->{'tags_inline_' . $translation_language} = $translation_document->tags_inline;
-//                 }
-
-//                 foreach ($fields as $field_name) {
-//                   if ((strpos($field_name, 'ts_') === 0 || strpos($field_name, 'tm_') === 0) && !empty($translation_document->{$field_name})) {
-//                     // deal with fields like cck using dynamic ts_* fields
-
-//                     // search for existing language identifier at second position
-//                     $tmp = explode('_', $field_name);
-//                     if ($translation_language != $tmp[1]) {
-//                       $document->{$tmp[0] . '_' . $translation_language . drupal_substr($field_name, 2)} = $translation_document->{$field_name};
-//                     }
-//                   }
-//                 }
-//               }
-//             }
-//           }
-//         }
-//       }
-
-      $reentrance = FALSE;
+      if (variable_get('apachesolr_multilingual_index_translations', 0) && in_array('is_tnid', $fields) && !empty($document->is_tnid)) {
+        $translations = translation_node_get_translations($document->is_tnid);
+        foreach ($translations as $node_stub) {
+          if ($node_stub->nid != $document->entity_id) {
+            if ($translation_node = node_load($node_stub->nid)) {
+              $translation_document = new ApacheSolrDocument();
+              apachesolr_index_node_solr_document($translation_document, $translation_node, 'node', $env_id);
+              $translation_fields = $translation_document->getFieldNames();
+              // use language specific stemming and so on
+              // by copying all fields of type text to
+              // a language specific text field
+              if (in_array('label', $translation_fields)) {
+                $document->{'label_' . $translation_document->ss_language} = $translation_document->label;
+              }
+              if (in_array('teaser', $translation_fields)) {
+                $document->{'teaser_' . $translation_document->ss_language} = $translation_document->teaser;
+              }
+              if (in_array('content', $translation_fields)) {
+                $document->{'content_' . $translation_document->ss_language} = $translation_document->content;
+              }
+              if (in_array('path_alias', $translation_fields)) {
+                $document->{'path_alias_' . $translation_document->ss_language} = $translation_document->path_alias;
+              }
+              foreach ($translation_fields as $field_name) {
+                foreach (array('ts_', 'tm_', 'tos_', 'tom_', 'tags_') as $prefix) {
+                  if (strpos($field_name, $prefix) === 0 && !empty($translation_document->{$field_name})) {
+                    // search for existing language identifier at second position
+                    $tmp = explode('_', $field_name);
+                    if ($translation_document->ss_language != $tmp[1]) {
+                      $document->{$tmp[0] . '_' . $translation_document->ss_language . drupal_substr($field_name, strlen($tmp[0]))} = $translation_document->{$field_name};
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
