@@ -387,10 +387,6 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
     }
   }
 
-//   if (empty($params['hl.fl'])) {
-//     $params['hl.fl'] = 'body';
-//   }
-
   if ($filter_language && in_array($filter_language, $languages)) {
     foreach ($qf as $index => $field) {
       foreach (array('label_', 'teaser_', 'content_', 'path_alias_', 'ts_', 'tm_', 'tos_', 'tom_', 'tags_') as $prefix) {
@@ -403,24 +399,9 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
     }
     $query->replaceParam('qf', $qf);
 
-//     $solr = apachesolr_get_solr();
-//     $fields = $solr->getFields();
-
-//     $highlighted_fields = explode(',', $params['hl.fl']);
-//     foreach ($highlighted_fields as $key => $highlighted_field) {
-//       if (array_key_exists($highlighted_field . '_' . $filter_language, $fields)) {
-//         // title, body, spell
-//         $highlighted_fields[$key] .= '_' . $filter_language;
-//       }
-//       elseif (strpos('ts_', $highlighted_field) === 0 && strpos('ts_' . $filter_language, $highlighted_field) !== 0) {
-//         $highlighted_fields[$key] = 'ts_' . $filter_language . substr($highlighted_field, 2);
-//       }
-//       elseif (strpos('tm_', $highlighted_field) === 0 && strpos('tm_' . $filter_language, $highlighted_field) !== 0) {
-//         $highlighted_fields[$key] = 'tm_' . $filter_language . substr($highlighted_field, 2);
-//       }
-//     }
-
-//     $params['hl.fl'] = implode(',', $highlighted_fields);
+    // use language specfic fields for keyword highlighting in search result snippets
+    $query->replaceParam('hl.fl', 'content_' . $filter_language);
+    $query->addParam('f.content_' . $filter_language .'.hl.alternateField', 'teaser_' . $filter_language);
 
 //     if (variable_get('apachesolr_search_spellcheck', FALSE) && array_key_exists('spell_' . $filter_language, $fields)) {
 //       $params['spellcheck.dictionary'] = 'spellchecker_' . $filter_language;
