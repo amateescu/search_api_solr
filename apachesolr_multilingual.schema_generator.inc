@@ -85,13 +85,6 @@ function apachesolr_multilingual_schema_generator_form_validate(&$form, &$form_s
   ob_start();
 
   $selected_languages = variable_get('apachesolr_multilingual_languages', array());
-  $options = array();
-
-  foreach ($selected_languages as $lg) {
-    if ($lg) {
-      $options[] = $lg;
-    }
-  }
 
   $solr_conf_path = drupal_get_path('module', 'apachesolr') . '/solr-conf/';
   $schema_str_complete = file_get_contents($solr_conf_path . 'schema.xml');
@@ -108,9 +101,17 @@ function apachesolr_multilingual_schema_generator_form_validate(&$form, &$form_s
 
   $qp_solrconfig->find(':root maxTime')->text(variable_get('apachesolr_multilingual_autoCommit_maxTime', 120000));
 
-  foreach ($options as $language) {
+  foreach ($selected_languages as $language) {
     $qp_schema_language_specific = qp($schema_str_complete, NULL, array('use_parser' => 'xml'));
-    $language_name = apachesolr_multilingual_get_stemmer($language);
+    $stemmer = apachesolr_multilingual_get_stemmer($language);
+    if ($stemmer) {
+      $qp_schema_language_specific
+        ->find(':root')->xpath("//filter[@class='solr.SnowballPorterFilterFactory']")->attr('language', $stemmer)->attr('protected', 'protwords_' . $language . '.txt');
+    }
+    else {
+      $qp_schema_language_specific
+        ->find(':root')->xpath("//filter[@class='solr.SnowballPorterFilterFactory']")->detach();
+    }
 
     $qp_schema_language_specific
       //->find(':root')->xpath("types/fieldType[@name='text']/analyzer[@type='index']/filter[@class='solr.StopFilterFactory']")->attr('words', 'stopwords_' . $language . '.txt')
