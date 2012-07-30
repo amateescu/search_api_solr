@@ -1,5 +1,6 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1299940 by drunken monkey: Fixed handling of empty response.
 - #1507818 by larowlan: Fixed field boosts for standard request handler.
 
 Search API Solr search 1.0, RC 2 (05/23/2012):

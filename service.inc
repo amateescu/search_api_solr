@@ -631,8 +631,14 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
     // Set up the results array.
     $results = array();
-    $results['result count'] = $response->response->numFound;
     $results['results'] = array();
+    // In some rare cases (e.g., MLT query with nonexistent ID) the response
+    // will be NULL.
+    if (!isset($response->response)) {
+      $results['result count'] = 0;
+      return $results;
+    }
+    $results['result count'] = $response->response->numFound;
 
     // Add each search result to the results array.
     foreach ($response->response->docs as $doc) {
