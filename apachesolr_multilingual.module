@@ -36,11 +36,9 @@ function apachesolr_multilingual_node_delete($node) {
 function apachesolr_multilingual_node_update($node) {
   if (variable_get('apachesolr_multilingual_index_translations', 0) && !empty($node->tnid)) {
     $translations = translation_node_get_translations($node->tnid);
-    foreach ($translations as $language => $translation) {
-      if ($translation->nid != $node->nid) {
-        if ($translation_node = node_load($translation->nid)) {
-          apachesolr_node_update($translation_node);
-        }
+    foreach ($translations as $node_stub) {
+      if ($node_stub->nid != $node->nid) {
+        apachesolr_mark_entity('node', $node_stub->nid);
       }
     }
   }
