@@ -297,6 +297,59 @@ function apachesolr_multilingual_admin_form($form_state) {
       '#element_validate' => array('apachesolr_multilingual_admin_form_validate_new_config'),
     );
 
+    $form['apachesolr_multilingual_advanced'][$language]['LengthFilterFactory'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'LengthFilterFactory',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+
+    $form['apachesolr_multilingual_advanced'][$language]['LengthFilterFactory']['index'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'Index',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+
+    $form['apachesolr_multilingual_advanced'][$language]['LengthFilterFactory']['index']['apachesolr_multilingual_advanced_min_index_' . $language] = array(
+      '#type' => 'textfield',
+      '#title' => 'min',
+      '#default_value' => variable_get('apachesolr_multilingual_advanced_min_index_' . $language, 2),
+      '#description' => t('TODO'),
+      '#element_validate' => array('apachesolr_multilingual_admin_form_validate_new_config'),
+    );
+
+    $form['apachesolr_multilingual_advanced'][$language]['LengthFilterFactory']['index']['apachesolr_multilingual_advanced_max_index_' . $language] = array(
+      '#type' => 'textfield',
+      '#title' => 'max',
+      '#default_value' => variable_get('apachesolr_multilingual_advanced_max_index_' . $language, 100),
+      '#description' => t('TODO'),
+      '#element_validate' => array('apachesolr_multilingual_admin_form_validate_new_config'),
+    );
+
+    $form['apachesolr_multilingual_advanced'][$language]['LengthFilterFactory']['query'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'Qery',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+
+    $form['apachesolr_multilingual_advanced'][$language]['LengthFilterFactory']['query']['apachesolr_multilingual_advanced_min_query_' . $language] = array(
+      '#type' => 'textfield',
+      '#title' => 'min',
+      '#default_value' => variable_get('apachesolr_multilingual_advanced_min_query_' . $language, 2),
+      '#description' => t('TODO'),
+      '#element_validate' => array('apachesolr_multilingual_admin_form_validate_new_config'),
+    );
+
+    $form['apachesolr_multilingual_advanced'][$language]['LengthFilterFactory']['query']['apachesolr_multilingual_advanced_max_query_' . $language] = array(
+      '#type' => 'textfield',
+      '#title' => 'max',
+      '#default_value' => variable_get('apachesolr_multilingual_advanced_max_query_' . $language, 100),
+      '#description' => t('TODO'),
+      '#element_validate' => array('apachesolr_multilingual_admin_form_validate_new_config'),
+    );
+
     $form['apachesolr_multilingual_advanced'][$language]['StopFilterFactory'] = array(
       '#type' => 'fieldset',
       '#title' => 'StopFilterFactory',
