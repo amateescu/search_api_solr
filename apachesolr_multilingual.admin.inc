@@ -20,10 +20,17 @@
  */
 function apachesolr_multilingual_admin_form($form_state) {
   $active_languages = locale_language_list();
+  $custom_stemmer_languages = array();
+  $stemmer = array_unique(apachesolr_multilingual_get_stemmer());
+  sort($stemmer);
 
   foreach ($active_languages as $id => $language) {
     if (!apachesolr_multilingual_get_stemmer($id)) {
       $active_languages[$id] .= ' ' . t('(without stemming)');
+      $custom_stemmer_languages[$id] = $language;
+    }
+    elseif (variable_get('apachesolr_multilingual_stemmer_' .  $id, '') != '') {
+      $custom_stemmer_languages[$id] = $language;
     }
   }
 
@@ -64,6 +71,25 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#default_value' => variable_get('apachesolr_multilingual_auto_language_filter_detachable', 0),
     '#description' => t("Displays a checkbox on search result page to search over all languages if \"Limit search to current language by default\" is active."),
   );
+
+  if (!empty($custom_stemmer_languages)) {
+    $form['apachesolr_multilingual_stemmer_settings'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Stemmer'),
+      '#collapsible' => TRUE,
+      '#description' => t('Manually assign available stemmers to languages, where the stemmer auto-detection failed.'),
+    );
+
+    foreach ($custom_stemmer_languages as $id => $language) {
+      $form['apachesolr_multilingual_stemmer_settings']['apachesolr_multilingual_stemmer_' .  $id] = array(
+        '#type' => 'select',
+        '#title' => $language,
+        '#options' => array('' => t('No Stemming')) + array_combine($stemmer, $stemmer),
+        '#default_value' => apachesolr_multilingual_get_stemmer($id) ? apachesolr_multilingual_get_stemmer($id) : '',
+        '#description' => t('Select the stemmer.'),
+      );
+    }
+  }
 
   $form['apachesolr_multilingual_clir'] = array(
     '#type' => 'fieldset',

@@ -313,7 +313,7 @@ function apachesolr_multilingual_apachesolr_confgen_solrconfig_alter($qp, $solr_
  * @return string
  *   the name of the stemmer
  */
-function apachesolr_multilingual_get_stemmer($language_id) {
+function apachesolr_multilingual_get_stemmer($language_id = NULL) {
   static $available_stemmers = array(
     'da' => 'Danish',
     'nl' => 'Dutch',
@@ -342,7 +342,7 @@ function apachesolr_multilingual_get_stemmer($language_id) {
   }
 
   return variable_get('apachesolr_multilingual_stemmer_' .  $language_id, '');
-  }
+}
 
 /**
  * Implements hook_apachesolr_modify_query().
