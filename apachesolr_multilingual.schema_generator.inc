@@ -14,7 +14,10 @@
 
 function apachesolr_multilingual_modify_schema($qp_schema, $solr_version) {
   $selected_languages = variable_get('apachesolr_multilingual_languages', array());
-  foreach ($selected_languages as $language) {
+  foreach ($selected_languages as $language => $active) {
+    if (!$active) {
+      continue;
+    }
     $qp_schema_language_specific = apachesolr_confgen_clone_qp($qp_schema);
     $stemmer = apachesolr_multilingual_get_stemmer($language);
     if ($stemmer) {
