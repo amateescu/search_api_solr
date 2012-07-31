@@ -4,12 +4,11 @@ package = Apache Solr
 core = "7.x"
 
 dependencies[] = apachesolr
+dependencies[] = apachesolr_confgen
 dependencies[] = apachesolr_search
 dependencies[] = facetapi
 dependencies[] = locale
-dependencies[] = querypath
 
 files[] = apachesolr_multilingual.admin.inc
 files[] = apachesolr_multilingual.module
 files[] = apachesolr_multilingual.schema_generator.inc
-files[] = lib/apachesolr_multilingual_zipfile.php

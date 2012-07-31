@@ -3,6 +3,7 @@ Apache Solr Multilingual 7.x-1.0-alpha1, 2012-xx-xx
 [        ] mkalkbrenner: declared querypath dependency
 [#1185196] pfrenssen, andymantell: Call to undefined function apachesolr_default_server()
 [        ] mkalkbrenner: new schema generator based on querypath
+[#931950] mkalkbrenner: moved gerneric part of config file generation in a separate module called apachesolr_confgen and introduced alter hooks
 
 
 Apache Solr Multilingual 7.x-1.0-alpha0, never released
