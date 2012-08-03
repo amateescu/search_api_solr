@@ -112,11 +112,5 @@ function apachesolr_multilingual_modify_schema($qp_schema, $solr_version) {
 
 
 function apachesolr_multilingual_modify_solrconfig($qp_solrconfig, $solr_version) {
-#  $solrconfig_str_complete = preg_replace("@<!--\s*(<dataDir>.*?</dataDir>)\s*-->@s", "$1", $solrconfig_str_complete);
-
-  if (variable_get('apachesolr_multilingual_multicore', 1)) {
-#    $qp_solrconfig->find(':root dataDir')->detach();
-  }
-
-  $qp_solrconfig->find(':root maxTime')->text(variable_get('apachesolr_multilingual_autoCommit_maxTime', 120000));
+  // TODO spell checker
 }
