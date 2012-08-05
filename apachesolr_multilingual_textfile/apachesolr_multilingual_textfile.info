@@ -1,6 +1,6 @@
 name = Apache Solr (Multilingual) Textfiles
 description = edit apachesolr textfiles
-package = Apache Solr
+package = Search Toolkit
 core = "7.x"
 
 dependencies[] = apachesolr_multilingual

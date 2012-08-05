@@ -1,6 +1,6 @@
 name = Apache Solr Multilingual
 description = multilingual and non-English search with Solr
-package = Apache Solr
+package = Search Toolkit
 core = "7.x"
 
 dependencies[] = apachesolr
