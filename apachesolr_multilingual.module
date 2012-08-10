@@ -199,7 +199,7 @@ function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, 
     $defaults['tags_' . $langauge .'_a'] = '0';
   }
 
-  $qf = apachesolr_environment_variable_get($env_id, 'field_bias', $defaults);
+  $qf = apachesolr_environment_variable_get($environment['env_id'], 'field_bias', $defaults);
   $weights = drupal_map_assoc(array('21.0', '13.0', '8.0', '5.0', '3.0', '2.0', '1.0', '0.8', '0.5', '0.3', '0.2', '0.1'));
   $weights['0'] = t('Omit');
   if (!$qf) {
