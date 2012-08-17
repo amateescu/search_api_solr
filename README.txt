@@ -2,24 +2,6 @@
 Apache Solr Multilingual
 ========================
 
-Name: apachesolr_multilingual
-
-Authors: 
-Markus Kalkbrenner | Cocomore AG
-Matthias Huder     | Cocomore AG
-
-Co-Maintainers:
-Peter Philipp      | Cando Image GmbH
-Christian Spitzlay | Cocomore AG
-
-Drupal: 7.x
-Sponsor: Cocomore AG - http://www.cocomore.com
-                       http://drupal.cocomore.com
-
-
-Description
-===========
-
 Apache Solr Multilingual extends Apache Solr Search Integration
 in a clean way to provide:
   * better support for non-English languages
