@@ -138,84 +138,58 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#collapsed' => TRUE,
   );
 
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['index']['apachesolr_multilingual_advanced_splitOnCaseChange_index'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'splitOnCaseChange',
-    '#default_value' => variable_get_value('apachesolr_multilingual_advanced_splitOnCaseChange_index'),
-    '#description' => t('Causes lowercase => uppercase transitions to generate a new part.<br />"PowerShot" => "Power" "Shot"<br />"TransAM" => "Trans" "AM"'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
+  $structure = array(
+    'WordDelimiterFilterFactory' => array(
+      'index' => array(
+        'apachesolr_multilingual_advanced_splitOnCaseChange_index',
+        'apachesolr_multilingual_advanced_splitOnNumerics_index',
+        'apachesolr_multilingual_advanced_stemEnglishPossessive_index',
+        'apachesolr_multilingual_advanced_generateWordParts_index',
+        'apachesolr_multilingual_advanced_generateNumberParts_index',
+        'apachesolr_multilingual_advanced_catenateWords_index',
+        'apachesolr_multilingual_advanced_catenateNumbers_index',
+        'apachesolr_multilingual_advanced_catenateAll_index',
+'apachesolr_multilingual_advanced_preserveOriginal_index',
+
+          ),
+    ),
   );
 
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['index']['apachesolr_multilingual_advanced_splitOnNumerics_index'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'splitOnNumerics',
-    '#default_value' => variable_get_value('apachesolr_multilingual_advanced_splitOnNumerics_index'),
-    '#description' => t('Causes alphabet => number transitions to generate a new part.<br />"j2se" => "j" "2" "se"'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
+  foreach ($structure as $component => $arr) {
+    foreach ($arr as $type => $var_name) {
+      // example: $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['index']['apachesolr_multilingual_advanced_splitOnCaseChange_index']
+      $form['apachesolr_multilingual_advanced'][$component][$type][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($name);
+    }
+  }
 
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['index']['apachesolr_multilingual_advanced_stemEnglishPossessive_index'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'stemEnglishPossessive',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_stemEnglishPossessive_index', 1),
-    '#description' => t('Causes trailing "\'s" to be removed for each subword.<br />"Doug\'s" => "Doug"<br />"O\'Neil\'s" -> "O", "Neil"'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
 
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['index']['apachesolr_multilingual_advanced_generateWordParts_index'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'generateWordParts',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_generateWordParts_index', 1),
-    '#description' => t('Causes parts of words to be generated.<br />"PowerShot" => "Power" "Shot" (if splitOnCaseChange=1)<br />"Power-Shot" => "Power" "Shot"'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
+  // 'apachesolr_multilingual_advanced_splitOnCaseChange_index';
+  //    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
 
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['index']['apachesolr_multilingual_advanced_generateNumberParts_index'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'generateNumberParts',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_generateNumberParts_index', 1),
-    '#description' => t('Causes number subwords to be generated.<br />"500-42" => "500" "42"'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
+  // 'apachesolr_multilingual_advanced_splitOnNumerics_index';
+//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
 
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['index']['apachesolr_multilingual_advanced_catenateWords_index'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'catenateWords',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_catenateWords_index', 1),
-    '#description' => t('Causes maximum runs of word parts to be catenated.<br />"wi-fi" => "wifi"'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
+  //$name = 'apachesolr_multilingual_advanced_stemEnglishPossessive_index';
+//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
 
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['index']['apachesolr_multilingual_advanced_catenateNumbers_index'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'catenateNumbers',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_catenateNumbers_index', 1),
-    '#description' => t('Causes maximum runs of number parts to be catenated.<br />"500-42" => "50042"'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
+//  $name = 'apachesolr_multilingual_advanced_generateWordParts_index';
+//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
 
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['index']['apachesolr_multilingual_advanced_catenateAll_index'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'catenateAll',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_catenateAll_index', 0),
-    '#description' => t('Causes all subword parts to be catenated.<br />"wi-fi-4000" => "wifi4000"'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
+  //'apachesolr_multilingual_advanced_generateNumberParts_index'] = array(
+    //'#element_validate' => array('apachesolr_confgen_validate_new_config'),
 
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['index']['apachesolr_multilingual_advanced_preserveOriginal_index'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'preserveOriginal',
-    '#default_value' => variable_get('apachesolr_multilingual_preserveOriginal_index', 1),
-    '#description' => t('Causes the original token to be indexed without modifications (in addition to the tokens produced due to other options).'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
 
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['query'] = array(
-    '#type' => 'fieldset',
-    '#title' => 'Query',
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
+ // 'apachesolr_multilingual_advanced_catenateWords_index'
+ //   '#element_validate' => array('apachesolr_confgen_validate_new_config'),
+
+  //'apachesolr_multilingual_advanced_catenateNumbers_index'
+//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
+
+  //'apachesolr_multilingual_advanced_catenateAll_index'] = array(
+  //  '#element_validate' => array('apachesolr_confgen_validate_new_config'),
+
+ //'apachesolr_multilingual_advanced_preserveOriginal_index'] = array(
+//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
 
   $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['query']['apachesolr_multilingual_advanced_splitOnCaseChange_query'] = array(
     '#type' => 'checkbox',
@@ -422,4 +396,18 @@ function apachesolr_multilingual_admin_form_validate($form, $form_state) {
     }
   }
 }
+
+
+/**
+ * A shorthand for variable_get_info and variable_form_element
+ *
+ * @param string $name
+ * @return Array The generated form element
+ */
+function _apachesolr_multilingual_variable_definition_to_form_element($name) {
+  module_load_include('form.inc', 'variable');
+  $variable = variable_get_info($name, $options);
+  return variable_form_element($variable, $options);
+}
+
 
