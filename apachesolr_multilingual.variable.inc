@@ -145,7 +145,7 @@ function apachesolr_multilingual_variable_info($options) {
   );
 
 
-  $variables['SpellLengthFilterFactory']['apachesolr_multilingual_advanced_lengthMin_spell'] = array(
+  $variables['apachesolr_multilingual_advanced_lengthMin_spell'] = array(
     'type' => 'string',
     'title' => t('min', array(), $options),
     'default' => '4',
@@ -153,7 +153,7 @@ function apachesolr_multilingual_variable_info($options) {
     'group' => 'apachesolr_multilingual',
   );
 
-  $variables['SpellLengthFilterFactory']['apachesolr_multilingual_advanced_lengthMax_spell'] = array(
+  $variables['apachesolr_multilingual_advanced_lengthMax_spell'] = array(
     'type' => 'string',
     'title' => t('max', array(), $options),
     'default' => '20',

@@ -144,6 +144,27 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#collapsed' => TRUE,
   );
 
+  $form['apachesolr_multilingual_advanced']['LengthFilterFactory'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'LengthFilterFactory',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['apachesolr_multilingual_advanced']['LengthFilterFactory']['index'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Index',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['apachesolr_multilingual_advanced']['LengthFilterFactory']['query'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Query',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
   $structure = array(
     'WordDelimiterFilterFactory' => array(
       'index' => array(
@@ -170,6 +191,16 @@ function apachesolr_multilingual_admin_form($form_state) {
         ),
 
     ),
+    'LengthFilterFactory' => array(
+      'index' => array(
+        'apachesolr_multilingual_advanced_min_index',
+        'apachesolr_multilingual_advanced_max_index',
+      ),
+      'query' => array(
+        'apachesolr_multilingual_advanced_min_query',
+        'apachesolr_multilingual_advanced_max_query',
+      ),
+    )
   );
 
   foreach ($structure as $component => $arr) {
@@ -181,58 +212,6 @@ function apachesolr_multilingual_admin_form($form_state) {
     }
   }
 
-  $form['apachesolr_multilingual_advanced']['LengthFilterFactory'] = array(
-    '#type' => 'fieldset',
-    '#title' => 'LengthFilterFactory',
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
-
-  $form['apachesolr_multilingual_advanced']['LengthFilterFactory']['index'] = array(
-    '#type' => 'fieldset',
-    '#title' => 'Index',
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
-
-  $form['apachesolr_multilingual_advanced']['LengthFilterFactory']['index']['apachesolr_multilingual_advanced_min_index'] = array(
-    '#type' => 'textfield',
-    '#title' => 'min',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_min_index', 2),
-    '#description' => t('TODO'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
-
-  $form['apachesolr_multilingual_advanced']['LengthFilterFactory']['index']['apachesolr_multilingual_advanced_max_index'] = array(
-    '#type' => 'textfield',
-    '#title' => 'max',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_max_index', 100),
-    '#description' => t('TODO'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
-
-  $form['apachesolr_multilingual_advanced']['LengthFilterFactory']['query'] = array(
-    '#type' => 'fieldset',
-    '#title' => 'Qery',
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
-
-  $form['apachesolr_multilingual_advanced']['LengthFilterFactory']['query']['apachesolr_multilingual_advanced_min_query'] = array(
-    '#type' => 'textfield',
-    '#title' => 'min',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_min_query', 2),
-    '#description' => t('TODO'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
-
-  $form['apachesolr_multilingual_advanced']['LengthFilterFactory']['query']['apachesolr_multilingual_advanced_max_query'] = array(
-    '#type' => 'textfield',
-    '#title' => 'max',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_max_query', 100),
-    '#description' => t('TODO'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
 
   $form['apachesolr_multilingual_advanced']['StopFilterFactory'] = array(
     '#type' => 'fieldset',
@@ -241,13 +220,10 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#collapsed' => TRUE,
   );
 
-  $form['apachesolr_multilingual_advanced']['StopFilterFactory']['apachesolr_multilingual_advanced_ignoreCase_stopwords'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'ignoreCase',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_stopwords', 1),
-    '#description' => t('Causes to ignore the case of tokens when comparing to the stopword list.'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
+  $var_name = 'apachesolr_multilingual_advanced_ignoreCase_stopwords';
+  $form['apachesolr_multilingual_advanced']['StopFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
+//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
+
 
   $form['apachesolr_multilingual_advanced']['SynonymFilterFactory'] = array(
     '#type' => 'fieldset',
@@ -256,13 +232,10 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#collapsed' => TRUE,
   );
 
-  $form['apachesolr_multilingual_advanced']['SynonymFilterFactory']['apachesolr_multilingual_advanced_ignoreCase_synonyms'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'ignoreCase',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_ignoreCase_synonyms', 1),
-    '#description' => t('If ignoreCase is true, matching will lowercase before checking equality.'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
+  $var_name = 'apachesolr_multilingual_advanced_ignoreCase_synonyms';
+  $form['apachesolr_multilingual_advanced']['SynonymFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
+//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
+
 
   $form['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'] = array(
     '#type' => 'fieldset',
@@ -271,21 +244,15 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#collapsed' => TRUE,
   );
 
-  $form['apachesolr_multilingual_advanced']['SpellLengthFilterFactory']['apachesolr_multilingual_advanced_lengthMin_spell'] = array(
-    '#type' => 'textfield',
-    '#title' => 'min',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_lengthMin_spell', 4),
-    '#description' => t('Minimum number of characters to add a word to a spell checker.'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
+  $var_name = 'apachesolr_multilingual_advanced_lengthMin_spell';
+  $form['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
+//      '#element_validate' => array('apachesolr_confgen_validate_new_config'),
 
-  $form['apachesolr_multilingual_advanced']['SpellLengthFilterFactory']['apachesolr_multilingual_advanced_lengthMax_spell'] = array(
-    '#type' => 'textfield',
-    '#title' => 'max',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_lengthMax_spell', 20),
-    '#description' => t('Maximum number of characters to add a word to a spell checker.'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
+  $var_name = 'apachesolr_multilingual_advanced_lengthMax_spell';
+  $form['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
+  //'#element_validate' => array('apachesolr_confgen_validate_new_config'),
+
+
 
   // 'apachesolr_multilingual_advanced_splitOnCaseChange_index';
   //    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
@@ -314,6 +281,14 @@ function apachesolr_multilingual_admin_form($form_state) {
 
  //'apachesolr_multilingual_advanced_preserveOriginal_index'] = array(
 //    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
+
+
+
+  //['apachesolr_multilingual_advanced_min_index'] = array(
+  //  '#element_validate' => array('apachesolr_confgen_validate_new_config'),
+
+  // 'apachesolr_multilingual_advanced_max_index'] = array(
+  //    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
 
 
 
@@ -355,6 +330,7 @@ function apachesolr_multilingual_admin_form_validate($form, $form_state) {
 function _apachesolr_multilingual_variable_definition_to_form_element($name) {
   module_load_include('form.inc', 'variable');
   $variable = variable_get_info($name, $options);
+
   return variable_form_element($variable, $options);
 }
 
