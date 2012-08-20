@@ -527,3 +527,30 @@ function apachesolr_multilingual_block_view($delta = '') {
     }
   }
 }
+
+function apachesolr_multilingual_get_i18n_variables() {
+  module_load_include('inc', 'variable');
+  $list = variable_list_group('apachesolr_multilingual');
+  return array_keys($list);
+}
+
+/**
+ * Implements hook_variable_realm_variable_list_alter.
+ *
+ * Prevents removal of apachesolr_multilingual variables
+ * from the list of multilingual variables.
+ */
+function apachesolr_multilingual_variable_realm_variable_list_alter(&$variables, $realm_name) {
+  if ('language' == $realm_name) {
+    $new_variables = array_merge($variables, apachesolr_multilingual_get_i18n_variables());
+    $diff = array_diff($new_variables, $variables);
+    if (!empty($diff)) {
+      foreach ($diff as $name) {
+        $info = variable_get_info($name);
+        drupal_set_message(t('Variable %title has been declared as multilingual by Apache Solr Multilingual and cannot be removed from the list of multilingual variables.', array('%title' => $info['title'])), 'error');
+      }
+
+      $variables = $new_variables;
+    }
+  }
+}

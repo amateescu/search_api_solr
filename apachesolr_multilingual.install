@@ -1,0 +1,15 @@
+<?php
+
+/**
+ * Implements hook_enable().
+ *
+ * @return void
+ */
+function apachesolr_multilingual_enable() {
+  variable_cache_clear();
+  $new_variables = apachesolr_multilingual_get_i18n_variables();
+  $controller = variable_realm_controller('language');
+  $old_variables = $controller->getEnabledVariables();
+  $variables = array_merge($old_variables, $new_variables);
+  $controller->setRealmVariable('list', $variables);
+}

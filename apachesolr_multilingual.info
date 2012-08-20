@@ -1,14 +1,16 @@
 name = Apache Solr Multilingual
-description = multilingual and non-English search with Solr
+description = Multilingual and non-English search with Solr
 package = Search Toolkit
 core = "7.x"
 
 dependencies[] = apachesolr
-dependencies[] = apachesolr_confgen
+dependencies[] = apachesolr_confgen_textfiles
 dependencies[] = apachesolr_search
 dependencies[] = facetapi
+dependencies[] = i18n_variable
 dependencies[] = locale
 
 files[] = apachesolr_multilingual.admin.inc
 files[] = apachesolr_multilingual.module
 files[] = apachesolr_multilingual.schema_generator.inc
+files[] = apachesolr_multilingual.variable.inc
