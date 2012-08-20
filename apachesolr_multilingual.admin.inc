@@ -137,6 +137,13 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#collapsed' => TRUE,
   );
 
+  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['query'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Query',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
   $structure = array(
     'WordDelimiterFilterFactory' => array(
       'index' => array(
@@ -148,119 +155,31 @@ function apachesolr_multilingual_admin_form($form_state) {
         'apachesolr_multilingual_advanced_catenateWords_index',
         'apachesolr_multilingual_advanced_catenateNumbers_index',
         'apachesolr_multilingual_advanced_catenateAll_index',
-'apachesolr_multilingual_advanced_preserveOriginal_index',
+        'apachesolr_multilingual_advanced_preserveOriginal_index',
+      ),
+      'query' => array(
+        'apachesolr_multilingual_advanced_splitOnCaseChange_query',
+        'apachesolr_multilingual_advanced_splitOnNumerics_query',
+        'apachesolr_multilingual_advanced_stemEnglishPossessive_query',
+        'apachesolr_multilingual_advanced_generateWordParts_query',
+        'apachesolr_multilingual_advanced_generateNumberParts_query',
+        'apachesolr_multilingual_advanced_catenateWords_query',
+        'apachesolr_multilingual_advanced_catenateNumbers_query',
+        'apachesolr_multilingual_advanced_catenateAll_query',
+        'apachesolr_multilingual_advanced_preserveOriginal_query',
+        ),
 
-          ),
     ),
   );
 
   foreach ($structure as $component => $arr) {
-    foreach ($arr as $type => $var_name) {
-      // example: $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['index']['apachesolr_multilingual_advanced_splitOnCaseChange_index']
-      $form['apachesolr_multilingual_advanced'][$component][$type][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($name);
+    foreach ($arr as $type => $var_names) {
+      foreach ($var_names as $var_name) {
+        // example: $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['index']['apachesolr_multilingual_advanced_splitOnCaseChange_index']
+        $form['apachesolr_multilingual_advanced'][$component][$type][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
+      }
     }
   }
-
-
-  // 'apachesolr_multilingual_advanced_splitOnCaseChange_index';
-  //    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
-  // 'apachesolr_multilingual_advanced_splitOnNumerics_index';
-//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
-  //$name = 'apachesolr_multilingual_advanced_stemEnglishPossessive_index';
-//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
-//  $name = 'apachesolr_multilingual_advanced_generateWordParts_index';
-//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
-  //'apachesolr_multilingual_advanced_generateNumberParts_index'] = array(
-    //'#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
-
- // 'apachesolr_multilingual_advanced_catenateWords_index'
- //   '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
-  //'apachesolr_multilingual_advanced_catenateNumbers_index'
-//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
-  //'apachesolr_multilingual_advanced_catenateAll_index'] = array(
-  //  '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
- //'apachesolr_multilingual_advanced_preserveOriginal_index'] = array(
-//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['query']['apachesolr_multilingual_advanced_splitOnCaseChange_query'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'splitOnCaseChange',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_splitOnCaseChange_query', 1),
-    '#description' => t('Causes lowercase => uppercase transitions to generate a new part.<br />"PowerShot" => "Power" "Shot"<br />"TransAM" => "Trans" "AM"'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
-
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['query']['apachesolr_multilingual_advanced_splitOnNumerics_query'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'splitOnNumerics',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_splitOnNumerics_query', 1),
-    '#description' => t('Causes alphabet => number transitions to generate a new part.<br />"j2se" => "j" "2" "se"'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
-
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['query']['apachesolr_multilingual_advanced_stemEnglishPossessive_query'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'stemEnglishPossessive',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_stemEnglishPossessive_query', 1),
-    '#description' => t('Causes trailing "\'s" to be removed for each subword.<br />"Doug\'s" => "Doug"<br />"O\'Neil\'s" -> "O", "Neil"'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
-
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['query']['apachesolr_multilingual_advanced_generateWordParts_query'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'generateWordParts',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_generateWordParts_query', 1),
-    '#description' => t('Causes parts of words to be generated.<br />"PowerShot" => "Power" "Shot" (if splitOnCaseChange=1)<br />"Power-Shot" => "Power" "Shot"'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
-
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['query']['apachesolr_multilingual_advanced_generateNumberParts_query'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'generateNumberParts',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_generateNumberParts_query', 1),
-    '#description' => t('Causes number subwords to be generated.<br />"500-42" => "500" "42"'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
-
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['query']['apachesolr_multilingual_advanced_catenateWords_query'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'catenateWords',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_catenateWords_query', 0),
-    '#description' => t('Causes maximum runs of word parts to be catenated.<br />"wi-fi" => "wifi"'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
-
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['query']['apachesolr_multilingual_advanced_catenateNumbers_query'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'catenateNumbers',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_catenateNumbers_query', 0),
-    '#description' => t('Causes maximum runs of number parts to be catenated.<br />"500-42" => "50042"'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
-
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['query']['apachesolr_multilingual_advanced_catenateAll_query'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'catenateAll',
-    '#default_value' => variable_get('apachesolr_multilingual_advanced_catenateAll_query', 0),
-    '#description' => t('Causes all subword parts to be catenated.<br />"wi-fi-4000" => "wifi4000"'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
-
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['query']['apachesolr_multilingual_advanced_preserveOriginal_query'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'preserveOriginal',
-    '#default_value' => variable_get('apachesolr_multilingual_preserveOriginal_query', 0),
-    '#description' => t('Causes the original token to be queried without modifications (in addition to the tokens produced due to other options).'),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
 
   $form['apachesolr_multilingual_advanced']['LengthFilterFactory'] = array(
     '#type' => 'fieldset',
@@ -367,6 +286,36 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#description' => t('Maximum number of characters to add a word to a spell checker.'),
     '#element_validate' => array('apachesolr_confgen_validate_new_config'),
   );
+
+  // 'apachesolr_multilingual_advanced_splitOnCaseChange_index';
+  //    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
+
+  // 'apachesolr_multilingual_advanced_splitOnNumerics_index';
+//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
+
+  //$name = 'apachesolr_multilingual_advanced_stemEnglishPossessive_index';
+//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
+
+//  $name = 'apachesolr_multilingual_advanced_generateWordParts_index';
+//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
+
+  //'apachesolr_multilingual_advanced_generateNumberParts_index'] = array(
+    //'#element_validate' => array('apachesolr_confgen_validate_new_config'),
+
+
+ // 'apachesolr_multilingual_advanced_catenateWords_index'
+ //   '#element_validate' => array('apachesolr_confgen_validate_new_config'),
+
+  //'apachesolr_multilingual_advanced_catenateNumbers_index'
+//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
+
+  //'apachesolr_multilingual_advanced_catenateAll_index'] = array(
+  //  '#element_validate' => array('apachesolr_confgen_validate_new_config'),
+
+ //'apachesolr_multilingual_advanced_preserveOriginal_index'] = array(
+//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
+
+
 
   return system_settings_form($form);
 }
