@@ -34,46 +34,44 @@ function apachesolr_multilingual_admin_form($form_state) {
     }
   }
 
-  $form['apachesolr_multilingual_language_settings'] = array(
+  $form['apachesolr_multilingual_query_settings'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Languages'),
+    '#title' => t('Query Settings'),
     '#collapsible' => TRUE,
   );
 
-  $form['apachesolr_multilingual_language_settings']['apachesolr_multilingual_languages'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Languages'),
-    '#options' => $active_languages,
-    '#default_value' => variable_get('apachesolr_multilingual_languages', array()),
-    '#description' => t('Choose languages to be handled by multilingual search. You can only choose from languages activated !link.', array('!link' => l(t('here'), 'admin/config/regional/language'))),
-    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-  );
-
-  $form['apachesolr_multilingual_language_settings']['apachesolr_multilingual_map_language_neutral'] = array(
-    '#type' => 'radios',
-    '#title' => t('Map language neutral'),
-    '#options' => array_merge(array(LANGUAGE_NONE => t('No mapping')), $active_languages),
-    '#default_value' => variable_get('apachesolr_multilingual_map_language_neutral', ''),
-    '#description' => t('Select a language to treat content marked as language neutral. Language neutral will not occur as filter option any more.'),
-    '#element_validate' => array('apachesolr_confgen_validate_reindex'),
-  );
-
-  $form['apachesolr_multilingual_language_settings']['apachesolr_multilingual_auto_language_filter'] = array(
+  $form['apachesolr_multilingual_query_settings']['apachesolr_multilingual_auto_language_filter'] = array(
     '#type' => 'checkbox',
     '#title' => t("Limit search to current language by default"),
     '#default_value' => variable_get('apachesolr_multilingual_auto_language_filter', 0),
     '#description' => t("Show only search results that match the current language."),
   );
 
-  $form['apachesolr_multilingual_language_settings']['apachesolr_multilingual_auto_language_filter_detachable'] = array(
+  $form['apachesolr_multilingual_query_settings']['apachesolr_multilingual_auto_language_filter_detachable'] = array(
     '#type' => 'checkbox',
     '#title' => t("Limit search to current language could be disabled by user"),
     '#default_value' => variable_get('apachesolr_multilingual_auto_language_filter_detachable', 0),
     '#description' => t("Displays a checkbox on search result page to search over all languages if \"Limit search to current language by default\" is active."),
   );
 
+  $form['apachesolr_multilingual_index_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Index Settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['apachesolr_multilingual_index_settings']['apachesolr_multilingual_map_language_neutral'] = array(
+    '#type' => 'radios',
+    '#title' => t('Map language neutral'),
+    '#options' => array_merge(array(LANGUAGE_NONE => t('No mapping')), $active_languages),
+    '#default_value' => variable_get('apachesolr_multilingual_map_language_neutral', LANGUAGE_NONE),
+    '#description' => t('Select a language to treat content marked as language neutral. Language neutral will not occur as filter option any more.'),
+    '#element_validate' => array('apachesolr_confgen_validate_reindex'),
+  );
+
   if (!empty($custom_stemmer_languages)) {
-    $form['apachesolr_multilingual_stemmer_settings'] = array(
+    $form['apachesolr_multilingual_index_settings']['apachesolr_multilingual_stemmer_settings'] = array(
       '#type' => 'fieldset',
       '#title' => t('Stemmer'),
       '#collapsible' => TRUE,
@@ -81,7 +79,7 @@ function apachesolr_multilingual_admin_form($form_state) {
     );
 
     foreach ($custom_stemmer_languages as $id => $language) {
-      $form['apachesolr_multilingual_stemmer_settings']['apachesolr_multilingual_stemmer_' .  $id] = array(
+      $form['apachesolr_multilingual_index_settings']['apachesolr_multilingual_stemmer_settings']['apachesolr_multilingual_stemmer_' .  $id] = array(
         '#type' => 'select',
         '#title' => $language,
         '#options' => array('' => t('No Stemming')) + array_combine($stemmer, $stemmer),
@@ -95,6 +93,7 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#type' => 'fieldset',
     '#title' => t('CLIR'),
     '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
     '#description' => t('<b>Cross-language information retrieval</b>. As a special feature Apache Solr Multilingual could be configured to deal with the translations of nodes and taxonomies on multilingual sites. That means that you can find content in any language no matter which language was used to enter the search phrase.'),
   );
 
