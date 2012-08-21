@@ -180,23 +180,22 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
 function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, &$form_state, $form_id) {
   $environment = apachesolr_environment_load($form['#env_id']);
   $fields = apachesolr_search_get_fields($environment);
-  $selected_languages = variable_get('apachesolr_multilingual_languages', array());
   $types = array('text');
   $defaults = array();
-  foreach ($selected_languages as $langauge) {
-    $types[] = 'text_' . $langauge;
+  foreach (locale_language_list() as $language_id => $language) {
+    $types[] = 'text_' . $language_id;
     // get the current weights
-    $defaults['content_' . $langauge] = '1.0';
-    $defaults['ts_' . $langauge .'_comments'] = '0.5';
-    $defaults['tos_' . $langauge .'_content_extra'] = '0.1';
-    $defaults['label_' . $langauge] = '5.0';
-    $defaults['tos_' . $langauge .'_name'] = '3.0';
-    $defaults['taxonomy_names_' . $langauge] = '2.0';
-    $defaults['tags_' . $langauge .'_h1'] = '5.0';
-    $defaults['tags_' . $langauge .'_h2_h3'] = '3.0';
-    $defaults['tags_' . $langauge .'_h4_h5_h6'] = '2.0';
-    $defaults['tags_' . $langauge .'_inline'] = '1.0';
-    $defaults['tags_' . $langauge .'_a'] = '0';
+    $defaults['content_' . $language_id] = '1.0';
+    $defaults['ts_' . $language_id .'_comments'] = '0.5';
+    $defaults['tos_' . $language_id .'_content_extra'] = '0.1';
+    $defaults['label_' . $language_id] = '5.0';
+    $defaults['tos_' . $language_id .'_name'] = '3.0';
+    $defaults['taxonomy_names_' . $language_id] = '2.0';
+    $defaults['tags_' . $language_id .'_h1'] = '5.0';
+    $defaults['tags_' . $language_id .'_h2_h3'] = '3.0';
+    $defaults['tags_' . $language_id .'_h4_h5_h6'] = '2.0';
+    $defaults['tags_' . $language_id .'_inline'] = '1.0';
+    $defaults['tags_' . $language_id .'_a'] = '0';
   }
 
   $qf = apachesolr_environment_variable_get($environment['env_id'], 'field_bias', $defaults);
