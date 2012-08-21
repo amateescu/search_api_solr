@@ -297,26 +297,19 @@ function apachesolr_multilingual_admin_form($form_state) {
 
 
 function apachesolr_multilingual_admin_form_validate($form, $form_state) {
-  if (!empty($form_state['values']['apachesolr_multilingual_map_language_neutral']) && empty($form_state['values']['apachesolr_multilingual_languages'][$form_state['values']['apachesolr_multilingual_map_language_neutral']])) {
-    form_set_error('apachesolr_multilingual_map_language_neutral', t('You need to map language neutral content to an activated language'));
+  $length_min = $form_state['values']['apachesolr_multilingual_advanced_lengthMin_spell'];
+  $length_max = $form_state['values']['apachesolr_multilingual_advanced_lengthMax_spell'];
+
+  if (!ctype_digit($length_min)) {
+    form_set_error('apachesolr_multilingual_advanced_lengthMin_spell', t('Minimum number of characters needs to be numeric.'));
   }
 
-  $active_languages = locale_language_list();
-  foreach (array_keys($active_languages) as $language) {
-    $length_min = $form_state['values']['apachesolr_multilingual_advanced_lengthMin_spell'];
-    $length_max = $form_state['values']['apachesolr_multilingual_advanced_lengthMax_spell'];
+  if (!ctype_digit($length_max)) {
+    form_set_error('apachesolr_multilingual_advanced_lengthMax_spell', t('Maximum number of characters needs to be numeric.'));
+  }
 
-    if (!ctype_digit($length_min)) {
-      form_set_error('apachesolr_multilingual_advanced_lengthMin_spell', t('Minimum number of characters needs to be numeric.'));
-    }
-
-    if (!ctype_digit($length_max)) {
-      form_set_error('apachesolr_multilingual_advanced_lengthMax_spell', t('Maximum number of characters needs to be numeric.'));
-    }
-
-    if ($length_min < 0 || $length_min > $length_max) {
-      form_set_error('apachesolr_multilingual_advanced_lengthMax_spell', t('Minimum number of characters need to be less than maximum number of characters.'));
-    }
+  if ($length_min < 0 || $length_min > $length_max) {
+    form_set_error('apachesolr_multilingual_advanced_lengthMax_spell', t('Minimum number of characters need to be less than maximum number of characters.'));
   }
 }
 
