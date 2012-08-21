@@ -44,7 +44,7 @@ function apachesolr_multilingual_modify_schema($qp_schema, $solr_version) {
 
     $qp_schema_language_specific
       ->find(':root')->xpath("types/fieldType[@name='text']//filter[@class='solr.LowerCaseFilterFactory']")
-      ->after('<filter class="solr.DictionaryCompoundWordTokenFilterFactory" dictionary="compoundwords' . $language_id . '.txt" />');
+      ->after('<filter class="solr.DictionaryCompoundWordTokenFilterFactory" dictionary="compoundwords_' . $language_id . '.txt" />');
 
     $stemmer = apachesolr_multilingual_get_stemmer($language_id);
     if ($stemmer) {

@@ -568,6 +568,24 @@ function apachesolr_multilingual_modules_disabled($modules) {
 }
 
 /**
+ * Implements hook_apachesolr_confgen_zip_file_alter().
+ */
+function apachesolr_multilingual_apachesolr_confgen_zip_file_alter(&$files, $solr_version) {
+  if (module_exists('apachesolr_confgen_textfiles')) {
+    foreach (locale_language_list() as $language_id => $language) {
+      $files['mapping-ISOLatin1Accent_' . $language_id . '.txt'] = i18n_variable_get('apachesolr_confgen_textfiles_mapping_isolatin1accent_txt', $language_id, variable_get_default('apachesolr_confgen_textfiles_mapping_isolatin1accent_txt'));
+      $files['protwords_' . $language_id . '.txt'] = i18n_variable_get('apachesolr_confgen_textfiles_protwords_txt', $language_id, variable_get_default('apachesolr_confgen_textfiles_protwords_txt'));
+      $files['stopwords_' . $language_id . '.txt'] = i18n_variable_get('apachesolr_confgen_textfiles_stopwords_txt', $language_id, variable_get_default('apachesolr_confgen_textfiles_stopwords_txt'));
+      $files['synonyms_' . $language_id . '.txt'] = i18n_variable_get('apachesolr_confgen_textfiles_synonyms_txt', $language_id, variable_get_default('apachesolr_confgen_textfiles_synonyms_txt'));
+
+      if (strpos($solr_version, '3.') === 0) {
+        $files['mapping-FoldToASCII_' . $language_id . '.txt'] = i18n_variable_get('apachesolr_confgen_textfiles_mapping_foldtoascii_txt', $language_id, variable_get_default('apachesolr_confgen_textfiles_mapping_foldtoascii_txt'));
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_variable_realm_variable_list_alter.
  *
  * Prevents removal of apachesolr_multilingual variables
@@ -575,7 +593,11 @@ function apachesolr_multilingual_modules_disabled($modules) {
  */
 function apachesolr_multilingual_variable_realm_variable_list_alter(&$variables, $realm_name) {
   if ('language' == $realm_name) {
-    $new_variables = array_merge($variables, apachesolr_multilingual_get_i18n_variables());
+    $new_variables = array_merge(
+      $variables,
+      apachesolr_multilingual_get_i18n_variables(),
+      apachesolr_multilingual_get_apachesolr_confgen_textfiles_i18n_variables()
+    );
     $diff = array_diff($new_variables, $variables);
     if (!empty($diff)) {
       foreach ($diff as $name) {
