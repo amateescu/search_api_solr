@@ -379,10 +379,8 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
     (variable_get('apachesolr_multilingual_auto_language_filter_detachable', 0) && empty($_GET['detach-auto-language-filter'])))) {
 
     if (!empty($language->language)) {
-      if (in_array($language->language, $languages)) {
-        $filter_language = $language->language;
-        $query->addFilter('ss_language', $filter_language);
-      }
+      $filter_language = $language->language;
+      $query->addFilter('ss_language', $filter_language);
     }
     elseif (variable_get('apachesolr_multilingual_map_language_neutral', '')) {
       $filter_language = variable_get('apachesolr_multilingual_map_language_neutral', '');
@@ -392,7 +390,7 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
     }
   }
 
-  if ($filter_language && in_array($filter_language, $languages)) {
+  if ($filter_language) {
     foreach ($qf as $index => $field) {
       foreach (array('label_', 'teaser_', 'content_', 'path_alias_', 'ts_', 'tm_', 'tos_', 'tom_', 'tags_') as $prefix) {
         if (strpos($field, $prefix) === 0 && strpos($field, $prefix . $filter_language) !== 0) {
