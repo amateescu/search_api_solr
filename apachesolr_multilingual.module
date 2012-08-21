@@ -534,6 +534,39 @@ function apachesolr_multilingual_get_i18n_variables() {
   return array_keys($list);
 }
 
+function apachesolr_multilingual_get_apachesolr_confgen_textfiles_i18n_variables() {
+  if (!module_exists('apachesolr_confgen_textfiles')) {
+    return array();
+  }
+  module_load_include('inc', 'variable');
+  $list = variable_list_group('apachesolr_confgen_textfiles');
+  return array_keys($list);
+}
+
+/**
+ * Implements hook_modules_enabled().
+ */
+function apachesolr_multilingual_modules_enabled($modules) {
+  if (in_array('apachesolr_confgen_textfiles', $modules)) {
+    module_load_include('install', 'apachesolr_multilingual');
+    apachesolr_multilingual_enable();
+  }
+}
+
+/**
+ * Implements hook_modules_disabled().
+ */
+function apachesolr_multilingual_modules_disabled($modules) {
+  if (in_array('apachesolr_confgen_textfiles', $modules)) {
+    variable_cache_clear();
+    $old_variables = apachesolr_multilingual_get_apachesolr_confgen_textfiles_i18n_variables();
+    $controller = variable_realm_controller('language');
+    $new_variables = $controller->getEnabledVariables();
+    $variables = array_diff($new_variables, $old_variables);
+    $controller->setRealmVariable('list', $variables);
+  }
+}
+
 /**
  * Implements hook_variable_realm_variable_list_alter.
  *

@@ -4,7 +4,6 @@ package = Search Toolkit
 core = "7.x"
 
 dependencies[] = apachesolr
-dependencies[] = apachesolr_confgen_textfiles
 dependencies[] = apachesolr_search
 dependencies[] = facetapi
 dependencies[] = i18n_variable
