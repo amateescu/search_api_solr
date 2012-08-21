@@ -127,6 +127,7 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
       }
 
       if (variable_get('apachesolr_multilingual_index_translations', 0) && in_array('is_tnid', $fields) && !empty($document->is_tnid)) {
+// TODO distinguish between published and unpublished transaltions
         $translations = translation_node_get_translations($document->is_tnid);
         foreach ($translations as $node_stub) {
           if ($node_stub->nid != $document->entity_id) {
