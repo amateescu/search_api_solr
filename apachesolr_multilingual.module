@@ -50,14 +50,13 @@ function apachesolr_multilingual_node_update($node) {
  */
 function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $entity, $entity_type, $env_id) {
   foreach ($documents as $document) {
-    if ('node' == $document->entity_type) {
 
-      if (LANGUAGE_NONE == $document->ss_language) {
-        // Language neutral
-        $document->ss_language = variable_get('apachesolr_multilingual_map_language_neutral', LANGUAGE_NONE);
-      }
+    if (LANGUAGE_NONE == $document->ss_language) {
+      // Language neutral
+      $document->ss_language = variable_get('apachesolr_multilingual_map_language_neutral', LANGUAGE_NONE);
+    }
 
-      $fields = $document->getFieldNames();
+    $fields = $document->getFieldNames();
 //       if (in_array('vid', $fields) && is_array($document->vid)) { // vid is vocabulary id in this case
 //         $term_languages = array($language);
 //         if (module_exists('i18ntaxonomy') && variable_get('apachesolr_multilingual_index_term_translations', 0)) {
@@ -99,35 +98,36 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
 //         }
 //       }
 
-      // use language specific stemming and so on
-      // by copying all fields of type text to
-      // a language specific text field
-      if (in_array('label', $fields)) {
-        $document->{'label_' . $document->ss_language} = $document->label;
-      }
-      if (in_array('teaser', $fields)) {
-        $document->{'teaser_' . $document->ss_language} = $document->teaser;
-      }
-      if (in_array('content', $fields)) {
-        $document->{'content_' . $document->ss_language} = $document->content;
-      }
-      if (in_array('path_alias', $fields)) {
-        $document->{'path_alias_' . $document->ss_language} = $document->path_alias;
-      }
-      foreach ($fields as $field_name) {
-        foreach (array('ts_', 'tm_', 'tos_', 'tom_', 'tags_') as $prefix) {
-          if (strpos($field_name, $prefix) === 0 && !empty($document->{$field_name})) {
-            // search for existing language identifier at second position
-            $tmp = explode('_', $field_name);
-            if ($document->ss_language != $tmp[1]) {
-              $document->{$tmp[0] . '_' . $document->ss_language . drupal_substr($field_name, strlen($tmp[0]))} = $document->{$field_name};
-            }
+    // use language specific stemming and so on
+    // by copying all fields of type text to
+    // a language specific text field
+    if (in_array('label', $fields)) {
+      $document->{'label_' . $document->ss_language} = $document->label;
+    }
+    if (in_array('teaser', $fields)) {
+      $document->{'teaser_' . $document->ss_language} = $document->teaser;
+    }
+    if (in_array('content', $fields)) {
+      $document->{'content_' . $document->ss_language} = $document->content;
+    }
+    if (in_array('path_alias', $fields)) {
+      $document->{'path_alias_' . $document->ss_language} = $document->path_alias;
+    }
+    foreach ($fields as $field_name) {
+      foreach (array('ts_', 'tm_', 'tos_', 'tom_', 'tags_') as $prefix) {
+        if (strpos($field_name, $prefix) === 0 && !empty($document->{$field_name})) {
+          // search for existing language identifier at second position
+          $tmp = explode('_', $field_name);
+          if ($document->ss_language != $tmp[1]) {
+            $document->{$tmp[0] . '_' . $document->ss_language . drupal_substr($field_name, strlen($tmp[0]))} = $document->{$field_name};
           }
         }
       }
+    }
 
+    if ('node' == $document->entity_type) {
       if (variable_get('apachesolr_multilingual_index_translations', 0) && in_array('is_tnid', $fields) && !empty($document->is_tnid)) {
-// TODO distinguish between published and unpublished transaltions
+        // TODO distinguish between published and unpublished translations
         $translations = translation_node_get_translations($document->is_tnid);
         foreach ($translations as $node_stub) {
           if ($node_stub->nid != $document->entity_id) {
@@ -215,7 +215,7 @@ function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, 
           '#type' => 'select',
           '#options' => $weights,
           '#title' => filter_xss(apachesolr_field_name_map($field_name)),
-          '#default_value' => isset($qf[$field_name]) ? $qf[$field_name] : '0',
+          '#default_value' => isset($qf[$field_name]) ? $qf[$field_name] : '1.0',
           '#description' => 'text' == $field->type ? t('Unspecified language: recomandation is set this bias to "Omit"') : '',
         );
       }
@@ -456,76 +456,6 @@ function apachesolr_multilingual_form_search_submit($form, &$form_state) {
   }
 }
 
-
-/**
- * Implements hook_apachesolr_facets().
- */
-function apachesolr_multilingual_apachesolr_facets() {
-  $facets['apachesolr_multilingual_language'] = array(
-    'info' => t('Apache Solr Multilingual: Filter by Language'),
-    'facet_field' => 'language',
-  );
-
-  return $facets;
-}
-
-
-/**
- * Implements hook_block_info().
- */
-function apachesolr_multilingual_block_info() {
-  $module = 'apachesolr_multilingual';
-  $env_id = apachesolr_default_environment();
-  $enabled_facets = facetapi_get_enabled_facets('apachesolr@' . $env_id, $module);
-  $facets = apachesolr_multilingual_apachesolr_facets();
-
-  // Add the blocks
-  $blocks = array();
-  foreach ($enabled_facets as $delta => $facet_info) {
-    if (isset($facets[$delta])) {
-      $blocks[$delta] = $facets[$delta] + array('cache' => DRUPAL_NO_CACHE);
-    }
-  }
-  return $blocks;
-}
-
-/**
- * Implements hook_block_configure().
- */
-function apachesolr_multilingual_block_configure($delta = '') {
-  return apachesolr_facetcount_form('apachesolr_multilingual', $delta);
-}
-
-/**
- * Implements hook_block_save().
- */
-function apachesolr_multilingual_block_save($delta, $edit) {
-  apachesolr_facetcount_save($edit);
-}
-
-
-/**
- * Implements hook_block_view().
- */
-function apachesolr_multilingual_block_view($delta = '') {
-  if (apachesolr_has_searched()) {
-    $response = apachesolr_static_response_cache();
-    if (empty($response)) {
-      return;
-    }
-    $query = apachesolr_current_query();
-    $facets = apachesolr_multilingual_apachesolr_facets();
-
-    if (isset($facets[$delta]) && (!variable_get('apachesolr_multilingual_auto_language_filter', 0)
-      || (variable_get('apachesolr_multilingual_auto_language_filter', 0)
-      && variable_get('apachesolr_multilingual_auto_language_filter_detachable', 0))
-      && (count((array) $response->facet_counts->facet_fields->$facets[$delta]['facet_field']) > 1
-      || strpos($_GET['filters'], 'language:') !== FALSE))) {
-        return apachesolr_facet_block($response, $query, 'apachesolr_multilingual', $delta, t('Filter by language'), 'apachesolr_search_language_name');
-    }
-  }
-}
-
 function apachesolr_multilingual_get_i18n_variables() {
   module_load_include('inc', 'variable');
   $list = variable_list_group('apachesolr_multilingual');
@@ -571,13 +501,13 @@ function apachesolr_multilingual_modules_disabled($modules) {
 function apachesolr_multilingual_apachesolr_confgen_zip_file_alter(&$files, $solr_version) {
   if (module_exists('apachesolr_confgen_textfiles')) {
     foreach (locale_language_list() as $language_id => $language) {
-      $files['mapping-ISOLatin1Accent_' . $language_id . '.txt'] = i18n_variable_get('apachesolr_confgen_textfiles_mapping_isolatin1accent_txt', $language_id, variable_get_default('apachesolr_confgen_textfiles_mapping_isolatin1accent_txt'));
-      $files['protwords_' . $language_id . '.txt'] = i18n_variable_get('apachesolr_confgen_textfiles_protwords_txt', $language_id, variable_get_default('apachesolr_confgen_textfiles_protwords_txt'));
-      $files['stopwords_' . $language_id . '.txt'] = i18n_variable_get('apachesolr_confgen_textfiles_stopwords_txt', $language_id, variable_get_default('apachesolr_confgen_textfiles_stopwords_txt'));
-      $files['synonyms_' . $language_id . '.txt'] = i18n_variable_get('apachesolr_confgen_textfiles_synonyms_txt', $language_id, variable_get_default('apachesolr_confgen_textfiles_synonyms_txt'));
+      $files['mapping-ISOLatin1Accent_' . $language_id . '.txt'] = apachesolr_multilingual_variable_get('apachesolr_confgen_textfiles_mapping_isolatin1accent_txt', $language_id);
+      $files['protwords_' . $language_id . '.txt'] = apachesolr_multilingual_variable_get('apachesolr_confgen_textfiles_protwords_txt', $language_id);
+      $files['stopwords_' . $language_id . '.txt'] = apachesolr_multilingual_variable_get('apachesolr_confgen_textfiles_stopwords_txt', $language_id);
+      $files['synonyms_' . $language_id . '.txt'] = apachesolr_multilingual_variable_get('apachesolr_confgen_textfiles_synonyms_txt', $language_id);
 
       if (strpos($solr_version, '3.') === 0) {
-        $files['mapping-FoldToASCII_' . $language_id . '.txt'] = i18n_variable_get('apachesolr_confgen_textfiles_mapping_foldtoascii_txt', $language_id, variable_get_default('apachesolr_confgen_textfiles_mapping_foldtoascii_txt'));
+        $files['mapping-FoldToASCII_' . $language_id . '.txt'] = apachesolr_multilingual_variable_get('apachesolr_confgen_textfiles_mapping_foldtoascii_txt', $language_id);
       }
     }
   }
@@ -606,4 +536,9 @@ function apachesolr_multilingual_variable_realm_variable_list_alter(&$variables,
       $variables = $new_variables;
     }
   }
+}
+
+
+function apachesolr_multilingual_variable_get($name, $language_id) {
+  return i18n_variable_get($name, $language_id, variable_get_default($name));
 }
