@@ -22,25 +22,25 @@ function apachesolr_multilingual_modify_schema($qp_schema, $solr_version) {
 
     $qp_schema_language_specific
       ->find(':root')->xpath("types/fieldType[@name='text']//filter[@class='solr.StopFilterFactory']")
-      ->attr('ignoreCase', i18n_variable_get('apachesolr_multilingual_advanced_ignoreCase_stopwords', $language_id, variable_get_default('apachesolr_multilingual_advanced_ignoreCase_stopwords')))
+      ->attr('ignoreCase', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_ignoreCase_stopwords', $language_id))
       ->attr('words', 'stopwords_' . $language_id . '.txt');
 
     $qp_schema_language_specific
       ->find(':root')->xpath("types/fieldType[@name='text']/analyzer[@type='index']/filter[@class='solr.WordDelimiterFilterFactory']")
-      ->attr('splitOnCaseChange', i18n_variable_get('apachesolr_multilingual_advanced_splitOnCaseChange_index', $language_id, variable_get_default('apachesolr_multilingual_advanced_splitOnCaseChange_index')))
-      ->attr('splitOnNumerics', i18n_variable_get('apachesolr_multilingual_advanced_splitOnNumerics_index', $language_id, variable_get_default('apachesolr_multilingual_advanced_splitOnNumerics_index')))
-      ->attr('stemEnglishPossessive', i18n_variable_get('apachesolr_multilingual_advanced_stemEnglishPossessive_index', $language_id, variable_get_default('apachesolr_multilingual_advanced_stemEnglishPossessive_index')))
-#      ->attr('generateWordParts', i18n_variable_get('apachesolr_multilingual_advanced_generateWordParts_index', $language_id, variable_get_default('apachesolr_multilingual_advanced_generateWordParts_index')))
-      ->attr('generateNumberParts', i18n_variable_get('apachesolr_multilingual_advanced_generateNumberParts_index', $language_id, variable_get_default('apachesolr_multilingual_advanced_generateNumberParts_index')))
-      ->attr('catenateWords', i18n_variable_get('apachesolr_multilingual_advanced_catenateWords_index', $language_id, variable_get_default('apachesolr_multilingual_advanced_catenateWords_index')))
-      ->attr('catenateNumbers', i18n_variable_get('apachesolr_multilingual_advanced_catenateNumbers_index', $language_id, variable_get_default('apachesolr_multilingual_advanced_catenateNumbers_index')))
-      ->attr('catenateAll', i18n_variable_get('apachesolr_multilingual_advanced_catenateAll_index', $language_id, variable_get_default('apachesolr_multilingual_advanced_catenateAll_index')))
-      ->attr('preserveOriginal', i18n_variable_get('apachesolr_multilingual_preserveOriginal_index', $language_id, variable_get_default('apachesolr_multilingual_preserveOriginal_index')));
+      ->attr('splitOnCaseChange', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_splitOnCaseChange_index', $language_id))
+      ->attr('splitOnNumerics', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_splitOnNumerics_index', $language_id))
+      ->attr('stemEnglishPossessive', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_stemEnglishPossessive_index', $language_id))
+#      ->attr('generateWordParts', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_generateWordParts_index', $language_id))
+      ->attr('generateNumberParts', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_generateNumberParts_index', $language_id))
+      ->attr('catenateWords', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_catenateWords_index', $language_id))
+      ->attr('catenateNumbers', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_catenateNumbers_index', $language_id))
+      ->attr('catenateAll', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_catenateAll_index', $language_id))
+      ->attr('preserveOriginal', apachesolr_multilingual_variable_get('apachesolr_multilingual_preserveOriginal_index', $language_id));
 
     $qp_schema_language_specific
       ->find(':root')->xpath("types/fieldType[@name='text']/analyzer[@type='index']/filter[@class='solr.LengthFilterFactory']")
-      ->attr('min', i18n_variable_get('apachesolr_multilingual_advanced_min_index', $language_id, variable_get_default('apachesolr_multilingual_advanced_min_index')))
-      ->attr('max', i18n_variable_get('apachesolr_multilingual_advanced_max_index', $language_id, variable_get_default('apachesolr_multilingual_advanced_max_index')));
+      ->attr('min', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_min_index', $language_id))
+      ->attr('max', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_max_index', $language_id));
 
     $qp_schema_language_specific
       ->find(':root')->xpath("types/fieldType[@name='text']//filter[@class='solr.LowerCaseFilterFactory']")
@@ -62,24 +62,24 @@ function apachesolr_multilingual_modify_schema($qp_schema, $solr_version) {
     $qp_schema_language_specific
       ->find(':root')->xpath("types/fieldType[@name='text']//filter[@class='solr.SynonymFilterFactory']")
       ->attr('synonyms', 'synonyms_' . $language_id . '.txt')
-      ->attr('ignoreCase', i18n_variable_get('apachesolr_multilingual_advanced_ignoreCase_synonyms', $language_id, variable_get_default('apachesolr_multilingual_advanced_ignoreCase_synonyms')));
+      ->attr('ignoreCase', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_ignoreCase_synonyms', $language_id));
 
     $qp_schema_language_specific
       ->find(':root')->xpath("types/fieldType[@name='text']/analyzer[@type='query']//filter[@class='solr.WordDelimiterFilterFactory']")
-      ->attr('splitOnCaseChange', i18n_variable_get('apachesolr_multilingual_advanced_splitOnCaseChange_query', $language_id, variable_get_default('apachesolr_multilingual_advanced_splitOnCaseChange_query')))
-      ->attr('splitOnNumerics', i18n_variable_get('apachesolr_multilingual_advanced_splitOnNumerics_query', $language_id, variable_get_default('apachesolr_multilingual_advanced_splitOnNumerics_query')))
-      ->attr('stemEnglishPossessive', i18n_variable_get('apachesolr_multilingual_advanced_stemEnglishPossessive_query', $language_id, variable_get_default('apachesolr_multilingual_advanced_stemEnglishPossessive_query')))
-#      ->attr('generateWordParts', i18n_variable_get('apachesolr_multilingual_advanced_generateWordParts_query', $language_id, variable_get_default('apachesolr_multilingual_advanced_generateWordParts_query')))
-      ->attr('generateNumberParts', i18n_variable_get('apachesolr_multilingual_advanced_generateNumberParts_query', $language_id, variable_get_default('apachesolr_multilingual_advanced_generateNumberParts_query')))
-      ->attr('catenateWords', i18n_variable_get('apachesolr_multilingual_advanced_catenateWords_query', $language_id, variable_get_default('apachesolr_multilingual_advanced_catenateWords_query')))
-      ->attr('catenateNumbers', i18n_variable_get('apachesolr_multilingual_advanced_catenateNumbers_query', $language_id, variable_get_default('apachesolr_multilingual_advanced_catenateNumbers_query')))
-      ->attr('catenateAll', i18n_variable_get('apachesolr_multilingual_advanced_catenateAll_query', $language_id, variable_get_default('apachesolr_multilingual_advanced_catenateAll_query')))
-      ->attr('preserveOriginal', i18n_variable_get('apachesolr_multilingual_preserveOriginal_query', $language_id, variable_get_default('apachesolr_multilingual_preserveOriginal_query')));
+      ->attr('splitOnCaseChange', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_splitOnCaseChange_query', $language_id))
+      ->attr('splitOnNumerics', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_splitOnNumerics_query', $language_id))
+      ->attr('stemEnglishPossessive', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_stemEnglishPossessive_query', $language_id))
+#      ->attr('generateWordParts', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_generateWordParts_query', $language_id))
+      ->attr('generateNumberParts', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_generateNumberParts_query', $language_id))
+      ->attr('catenateWords', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_catenateWords_query', $language_id))
+      ->attr('catenateNumbers', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_catenateNumbers_query', $language_id))
+      ->attr('catenateAll', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_catenateAll_query', $language_id))
+      ->attr('preserveOriginal', apachesolr_multilingual_variable_get('apachesolr_multilingual_preserveOriginal_query', $language_id));
 
     $qp_schema_language_specific
       ->find(':root')->xpath("types/fieldType[@name='text']/analyzer[@type='query']/filter[@class='solr.LengthFilterFactory']")
-      ->attr('min', i18n_variable_get('apachesolr_multilingual_advanced_min_query', $language_id, variable_get_default('apachesolr_multilingual_advanced_min_query')))
-      ->attr('max', i18n_variable_get('apachesolr_multilingual_advanced_max_query', $language_id, variable_get_default('apachesolr_multilingual_advanced_max_query')));
+      ->attr('min', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_min_query', $language_id))
+      ->attr('max', apachesolr_multilingual_variable_get('apachesolr_multilingual_advanced_max_query', $language_id));
 
     $qp_schema_language_specific
       ->find(':root')->xpath("types/fieldType[@name='text']")->attr('name', 'text_' . $language_id)

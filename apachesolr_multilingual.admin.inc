@@ -105,6 +105,16 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#element_validate' => array('apachesolr_confgen_validate_reindex'),
   );
 
+  $form['apachesolr_multilingual_clir']['apachesolr_multilingual_index_unpublished_translations'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Index unpublished node translations'),
+    '#default_value' => variable_get('apachesolr_multilingual_index_unpublished_translations', 0),
+    '#description' => t('Index unpublished translations, p.e. machine translations.'),
+    // TODO
+    '#disabled' => TRUE,
+    '#element_validate' => array('apachesolr_confgen_validate_reindex'),
+  );
+
   $form['apachesolr_multilingual_clir']['apachesolr_multilingual_index_term_translations'] = array(
     '#type' => 'checkbox',
     '#title' => t('Index taxonomy term translations'),
