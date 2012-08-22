@@ -165,6 +165,7 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#collapsed' => TRUE,
   );
 
+  // language-specific parameters available for index and query
   $structure = array(
     'WordDelimiterFilterFactory' => array(
       'index' => array(
