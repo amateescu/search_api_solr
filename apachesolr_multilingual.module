@@ -120,8 +120,8 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
           $tmp = explode('_', $field_name);
           if ($document->ss_language != $tmp[1]) {
             // Dynamic fields have to be prefixed by 'i18n_' to distinguish between
-            // language specific dynamic fields and standard dynmaoc fields.
-            // The language suffix is not enough, because someone could define @author mkalkbrenner
+            // language-specific dynamic fields and standard dynamic fields.
+            // The language suffix is not enough, because someone could define a
             // drupal field name like 'de_foo', which matches ts_de_* but not i18n_ts_*
             $document->{'i18n_' . $tmp[0] . '_' . $document->ss_language . drupal_substr($field_name, strlen($tmp[0]))} = $document->{$field_name};
           }
