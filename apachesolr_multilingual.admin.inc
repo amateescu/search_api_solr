@@ -113,7 +113,7 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#type' => 'checkbox',
     '#title' => t('Index unpublished node translations'),
     '#default_value' => variable_get('apachesolr_multilingual_index_unpublished_translations', 0),
-    '#description' => t('Index unpublished translations, p.e. machine translations.'),
+    '#description' => t('Index unpublished translations, e.g. machine translations.'),
     // TODO
     '#disabled' => TRUE,
     '#element_validate' => array('apachesolr_confgen_validate_reindex'),
