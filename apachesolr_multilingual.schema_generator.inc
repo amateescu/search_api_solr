@@ -90,7 +90,7 @@ function apachesolr_multilingual_modify_schema($qp_schema, $solr_version) {
       $name = $dynamic_field->attr('name');
       $dynamic_field
         ->attr('type', 'text_' . $language_id)
-        ->attr('name', preg_replace('/(.*)\*/', '$1' . $language_id . '_*', $name))
+        ->attr('name', preg_replace('/(.*)\*/', 'i18n_$1' . $language_id . '_*', $name))
         ->insertAfter($qp_schema->find(':root')->xpath("fields/dynamicField[@name='$name']"));
     }
 
@@ -99,7 +99,7 @@ function apachesolr_multilingual_modify_schema($qp_schema, $solr_version) {
       $name = $field->attr('name');
       $field
         ->attr('type', 'text_' . $language_id)
-        ->attr('name', $name . '_' . $language_id)
+        ->attr('name', 'i18n_' . $name . '_' . $language_id)
         ->insertAfter($qp_schema->find(':root')->xpath("fields/field[@name='$name']"));
     }
   }
