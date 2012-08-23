@@ -34,34 +34,38 @@ function apachesolr_multilingual_admin_form($form_state) {
     }
   }
 
-  $form['apachesolr_multilingual_query_settings'] = array(
+  $form['vt'] = array(
+    '#type' => 'vertical_tabs',
+  );
+
+  $form['vt']['apachesolr_multilingual_query_settings'] = array(
     '#type' => 'fieldset',
     '#title' => t('Query Settings'),
     '#collapsible' => TRUE,
   );
 
-  $form['apachesolr_multilingual_query_settings']['apachesolr_multilingual_auto_language_filter'] = array(
+  $form['vt']['apachesolr_multilingual_query_settings']['apachesolr_multilingual_auto_language_filter'] = array(
     '#type' => 'checkbox',
     '#title' => t("Limit search to current language by default"),
     '#default_value' => variable_get('apachesolr_multilingual_auto_language_filter', 0),
     '#description' => t("Show only search results that match the current language."),
   );
 
-  $form['apachesolr_multilingual_query_settings']['apachesolr_multilingual_auto_language_filter_detachable'] = array(
+  $form['vt']['apachesolr_multilingual_query_settings']['apachesolr_multilingual_auto_language_filter_detachable'] = array(
     '#type' => 'checkbox',
     '#title' => t("Limit search to current language could be disabled by user"),
     '#default_value' => variable_get('apachesolr_multilingual_auto_language_filter_detachable', 0),
     '#description' => t("Displays a checkbox on search result page to search over all languages if \"Limit search to current language by default\" is active."),
   );
 
-  $form['apachesolr_multilingual_index_settings'] = array(
+  $form['vt']['apachesolr_multilingual_index_settings'] = array(
     '#type' => 'fieldset',
     '#title' => t('Index Settings'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
 
-  $form['apachesolr_multilingual_index_settings']['apachesolr_multilingual_map_language_neutral'] = array(
+  $form['vt']['apachesolr_multilingual_index_settings']['apachesolr_multilingual_map_language_neutral'] = array(
     '#type' => 'radios',
     '#title' => t('Map language neutral'),
     '#options' => array_merge(array(LANGUAGE_NONE => t('No mapping')), $active_languages),
@@ -71,7 +75,7 @@ function apachesolr_multilingual_admin_form($form_state) {
   );
 
   if (!empty($custom_stemmer_languages)) {
-    $form['apachesolr_multilingual_index_settings']['apachesolr_multilingual_stemmer_settings'] = array(
+    $form['vt']['apachesolr_multilingual_index_settings']['apachesolr_multilingual_stemmer_settings'] = array(
       '#type' => 'fieldset',
       '#title' => t('Stemmer'),
       '#collapsible' => TRUE,
@@ -79,7 +83,7 @@ function apachesolr_multilingual_admin_form($form_state) {
     );
 
     foreach ($custom_stemmer_languages as $id => $language) {
-      $form['apachesolr_multilingual_index_settings']['apachesolr_multilingual_stemmer_settings']['apachesolr_multilingual_stemmer_' .  $id] = array(
+      $form['vt']['apachesolr_multilingual_index_settings']['apachesolr_multilingual_stemmer_settings']['apachesolr_multilingual_stemmer_' .  $id] = array(
         '#type' => 'select',
         '#title' => $language,
         '#options' => array('' => t('No Stemming')) + array_combine($stemmer, $stemmer),
@@ -89,7 +93,7 @@ function apachesolr_multilingual_admin_form($form_state) {
     }
   }
 
-  $form['apachesolr_multilingual_clir'] = array(
+  $form['vt']['apachesolr_multilingual_clir'] = array(
     '#type' => 'fieldset',
     '#title' => t('CLIR'),
     '#collapsible' => TRUE,
@@ -97,7 +101,7 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#description' => t('<b>Cross-language information retrieval</b>. As a special feature Apache Solr Multilingual could be configured to deal with the translations of nodes and taxonomies on multilingual sites. That means that you can find content in any language no matter which language was used to enter the search phrase.'),
   );
 
-  $form['apachesolr_multilingual_clir']['apachesolr_multilingual_index_translations'] = array(
+  $form['vt']['apachesolr_multilingual_clir']['apachesolr_multilingual_index_translations'] = array(
     '#type' => 'checkbox',
     '#title' => t('Index node translations'),
     '#default_value' => variable_get('apachesolr_multilingual_index_translations', 0),
@@ -105,7 +109,7 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#element_validate' => array('apachesolr_confgen_validate_reindex'),
   );
 
-  $form['apachesolr_multilingual_clir']['apachesolr_multilingual_index_unpublished_translations'] = array(
+  $form['vt']['apachesolr_multilingual_clir']['apachesolr_multilingual_index_unpublished_translations'] = array(
     '#type' => 'checkbox',
     '#title' => t('Index unpublished node translations'),
     '#default_value' => variable_get('apachesolr_multilingual_index_unpublished_translations', 0),
@@ -115,7 +119,7 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#element_validate' => array('apachesolr_confgen_validate_reindex'),
   );
 
-  $form['apachesolr_multilingual_clir']['apachesolr_multilingual_index_term_translations'] = array(
+  $form['vt']['apachesolr_multilingual_clir']['apachesolr_multilingual_index_term_translations'] = array(
     '#type' => 'checkbox',
     '#title' => t('Index taxonomy term translations'),
     '#default_value' => variable_get('apachesolr_multilingual_index_term_translations', 0),
@@ -124,7 +128,7 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#element_validate' => array('apachesolr_confgen_validate_reindex'),
   );
 
-  $form['apachesolr_multilingual_advanced'] = array(
+  $form['vt']['apachesolr_multilingual_advanced'] = array(
     '#type' => 'fieldset',
     '#title' => t('Advanced Language Settings'),
     '#collapsible' => TRUE,
@@ -133,48 +137,49 @@ function apachesolr_multilingual_admin_form($form_state) {
   );
 
   // language specific stuff
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory'] = array(
+  $form['vt']['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory'] = array(
     '#type' => 'fieldset',
     '#title' => 'WordDelimiterFilterFactory',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
 
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['index'] = array(
+  $form['vt']['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['index'] = array(
     '#type' => 'fieldset',
     '#title' => 'Index',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
 
-  $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['query'] = array(
+  $form['vt']['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['query'] = array(
     '#type' => 'fieldset',
     '#title' => 'Query',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
 
-  $form['apachesolr_multilingual_advanced']['LengthFilterFactory'] = array(
+  $form['vt']['apachesolr_multilingual_advanced']['LengthFilterFactory'] = array(
     '#type' => 'fieldset',
     '#title' => 'LengthFilterFactory',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
 
-  $form['apachesolr_multilingual_advanced']['LengthFilterFactory']['index'] = array(
+  $form['vt']['apachesolr_multilingual_advanced']['LengthFilterFactory']['index'] = array(
     '#type' => 'fieldset',
     '#title' => 'Index',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
 
-  $form['apachesolr_multilingual_advanced']['LengthFilterFactory']['query'] = array(
+  $form['vt']['apachesolr_multilingual_advanced']['LengthFilterFactory']['query'] = array(
     '#type' => 'fieldset',
     '#title' => 'Query',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
 
+  // language-specific parameters available for index and query
   $structure = array(
     'WordDelimiterFilterFactory' => array(
       'index' => array(
@@ -216,14 +221,14 @@ function apachesolr_multilingual_admin_form($form_state) {
   foreach ($structure as $component => $arr) {
     foreach ($arr as $type => $var_names) {
       foreach ($var_names as $var_name) {
-        // example: $form['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['index']['apachesolr_multilingual_advanced_splitOnCaseChange_index']
-        $form['apachesolr_multilingual_advanced'][$component][$type][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
+        // example: $form['vt']['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['index']['apachesolr_multilingual_advanced_splitOnCaseChange_index']
+        $form['vt']['apachesolr_multilingual_advanced'][$component][$type][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
       }
     }
   }
 
 
-  $form['apachesolr_multilingual_advanced']['StopFilterFactory'] = array(
+  $form['vt']['apachesolr_multilingual_advanced']['StopFilterFactory'] = array(
     '#type' => 'fieldset',
     '#title' => 'StopFilterFactory',
     '#collapsible' => TRUE,
@@ -231,11 +236,11 @@ function apachesolr_multilingual_admin_form($form_state) {
   );
 
   $var_name = 'apachesolr_multilingual_advanced_ignoreCase_stopwords';
-  $form['apachesolr_multilingual_advanced']['StopFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
+  $form['vt']['apachesolr_multilingual_advanced']['StopFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
 //    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
 
 
-  $form['apachesolr_multilingual_advanced']['SynonymFilterFactory'] = array(
+  $form['vt']['apachesolr_multilingual_advanced']['SynonymFilterFactory'] = array(
     '#type' => 'fieldset',
     '#title' => 'SynonymFilterFactory',
     '#collapsible' => TRUE,
@@ -243,11 +248,11 @@ function apachesolr_multilingual_admin_form($form_state) {
   );
 
   $var_name = 'apachesolr_multilingual_advanced_ignoreCase_synonyms';
-  $form['apachesolr_multilingual_advanced']['SynonymFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
+  $form['vt']['apachesolr_multilingual_advanced']['SynonymFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
 //    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
 
 
-  $form['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'] = array(
+  $form['vt']['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'] = array(
     '#type' => 'fieldset',
     '#title' => 'Spell LengthFilterFactory',
     '#collapsible' => TRUE,
@@ -255,11 +260,11 @@ function apachesolr_multilingual_admin_form($form_state) {
   );
 
   $var_name = 'apachesolr_multilingual_advanced_lengthMin_spell';
-  $form['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
+  $form['vt']['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
 //      '#element_validate' => array('apachesolr_confgen_validate_new_config'),
 
   $var_name = 'apachesolr_multilingual_advanced_lengthMax_spell';
-  $form['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
+  $form['vt']['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
   //'#element_validate' => array('apachesolr_confgen_validate_new_config'),
 
 
