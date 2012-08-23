@@ -469,7 +469,10 @@ function apachesolr_multilingual_get_apachesolr_confgen_textfiles_i18n_variables
     return array();
   }
   module_load_include('inc', 'variable');
-  $list = variable_list_group('apachesolr_confgen_textfiles');
+  $list = array_diff(
+    variable_list_group('apachesolr_confgen_textfiles'),
+    array('apachesolr_confgen_textfiles_admin_extra_html')
+  );
   return array_keys($list);
 }
 
