@@ -344,8 +344,9 @@ function apachesolr_multilingual_get_stemmer($language_id = NULL) {
   if (array_key_exists($language_id, $available_stemmers)) {
     return $available_stemmers[$language_id];
   }
-
-  return variable_get('apachesolr_multilingual_stemmer_' .  $language_id, '');
+  else {
+    return '';
+  }
 }
 
 /**

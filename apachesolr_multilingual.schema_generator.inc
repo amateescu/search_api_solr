@@ -46,11 +46,11 @@ function apachesolr_multilingual_modify_schema($qp_schema, $solr_version) {
       ->find(':root')->xpath("types/fieldType[@name='text']//filter[@class='solr.LowerCaseFilterFactory']")
       ->after('<filter class="solr.DictionaryCompoundWordTokenFilterFactory" dictionary="compoundwords_' . $language_id . '.txt" />');
 
-    $stemmer = apachesolr_multilingual_get_stemmer($language_id);
-    if ($stemmer) {
+    $stemmer_language = apachesolr_multilingual_variable_get('apachesolr_multilingual_stemmer_language', $language_id);
+    if (!empty($stemmer_language) && $stemmer_language != '-none-') {
       $qp_schema_language_specific
         ->find(':root')->xpath("types/fieldType[@name='text']//filter[@class='solr.SnowballPorterFilterFactory']")
-        ->attr('language', $stemmer)
+        ->attr('language', $stemmer_language)
         ->attr('protected', 'protwords_' . $language_id . '.txt');
     }
     else {

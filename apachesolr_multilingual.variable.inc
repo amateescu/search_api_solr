@@ -18,6 +18,15 @@ function apachesolr_multilingual_variable_group_info() {
  * Implements hook_variable_info().
  */
 function apachesolr_multilingual_variable_info($options) {
+
+  $variables['apachesolr_multilingual_stemmer_language'] = array(
+    'type' => 'string',
+    'title' => t('Stemmer Language'),
+    'default' => '',
+    'description' => t('Please select the language to be used by the Porter stemmer.'),
+    'group' => 'apachesolr_multilingual',
+  );
+
   $variables['apachesolr_multilingual_advanced_splitOnCaseChange_query'] =
   $variables['apachesolr_multilingual_advanced_splitOnCaseChange_index'] = array(
     'type' => 'boolean',
