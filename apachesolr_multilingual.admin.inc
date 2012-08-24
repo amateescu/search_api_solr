@@ -289,9 +289,9 @@ function apachesolr_multilingual_admin_form_validate($form, $form_state) {
  */
 function _apachesolr_multilingual_variable_definition_to_form_element($name) {
   module_load_include('form.inc', 'variable');
-  $variable = variable_get_info($name, $options);
+  $variable = variable_get_info($name);
 
-  return variable_form_element($variable, $options);
+  return variable_form_element($variable);
 }
 
 
