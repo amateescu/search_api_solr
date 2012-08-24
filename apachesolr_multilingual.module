@@ -439,7 +439,7 @@ function apachesolr_multilingual_form_apachesolr_search_custom_page_search_form_
     $form['basic']['apachesolr_search']['detach_auto_language_filter'] = array(
       '#type' => $lang_filter ? 'hidden' : 'checkbox',
       '#title' => t('Search all languages'),
-      '#default_value' => isset($_GET['detach-auto-language-filter']),
+      '#default_value' => (int) isset($_GET['detach-auto-language-filter']),
     );
 
     $form['#submit'] = array_merge(array('apachesolr_multilingual_form_search_submit'), $form['#submit']);
