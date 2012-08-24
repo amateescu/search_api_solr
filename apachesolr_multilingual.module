@@ -555,3 +555,57 @@ function apachesolr_multilingual_variable_realm_variable_list_alter(&$variables,
 function apachesolr_multilingual_variable_get($name, $language_id) {
   return i18n_variable_get($name, $language_id, variable_get_default($name));
 }
+
+
+/**
+ * Implements hook_variable_update().
+ */
+function apachesolr_multilingual_variable_update($name, $value, $old_value, $options) {
+  switch ($name) {
+    case 'apachesolr_multilingual_map_language_neutral':
+    case 'apachesolr_multilingual_index_translations':
+    case 'apachesolr_multilingual_index_unpublished_translations':
+    case 'apachesolr_multilingual_index_term_translations':
+    case 'apachesolr_multilingual_clir':  // TODO: Check
+      apachesolr_confgen_validate_reindex($name, $value, $old_value);
+      break;
+    // index settings that require installing a new config
+    case 'apachesolr_multilingual_advanced_splitOnCaseChange_index':
+    case 'apachesolr_multilingual_advanced_splitOnNumerics_index':
+    case 'apachesolr_multilingual_advanced_stemEnglishPossessive_index':
+    case 'apachesolr_multilingual_advanced_generateWordParts_index':
+    case 'apachesolr_multilingual_advanced_generateNumberParts_index':
+    case 'apachesolr_multilingual_advanced_catenateWords_index':
+    case 'apachesolr_multilingual_advanced_catenateNumbers_index':
+    case 'apachesolr_multilingual_advanced_catenateAll_index':
+    case 'apachesolr_multilingual_advanced_preserveOriginal_index':
+    case 'apachesolr_multilingual_advanced_min_index':
+    case 'apachesolr_multilingual_advanced_max_index':
+
+    // query settings that require installing a new config
+    case 'apachesolr_multilingual_advanced_splitOnCaseChange_query':
+    case 'apachesolr_multilingual_advanced_splitOnNumerics_query':
+    case 'apachesolr_multilingual_advanced_stemEnglishPossessive_query':
+    case 'apachesolr_multilingual_advanced_generateWordParts_query':
+    case 'apachesolr_multilingual_advanced_generateNumberParts_query':
+    case 'apachesolr_multilingual_advanced_catenateWords_query':
+    case 'apachesolr_multilingual_advanced_catenateNumbers_query':
+    case 'apachesolr_multilingual_advanced_catenateAll_query':
+    case 'apachesolr_multilingual_advanced_preserveOriginal_query':
+    case 'apachesolr_multilingual_advanced_min_query':
+    case 'apachesolr_multilingual_advanced_max_query':
+
+    case 'apachesolr_multilingual_advanced_ignoreCase_stopwords':
+    case 'apachesolr_multilingual_advanced_ignoreCase_synonyms':
+    case 'apachesolr_multilingual_advanced_lengthMin_spell':
+    case 'apachesolr_multilingual_advanced_lengthMax_spell':
+      apachesolr_confgen_validate_new_config($name, $value, $old_value);
+      break;
+  }
+  if (strpos($name, 'apachesolr_multilingual_stemmer_') === 0) {
+    // TODO: Check
+    apachesolr_confgen_validate_reindex($name, $value, $old_value);
+  }
+}
+
+

@@ -130,7 +130,7 @@ function apachesolr_multilingual_variable_info($options) {
     'type' => 'boolean',
     'title' => t('ignoreCase', array(), $options),
     'default' => TRUE,
-    'description' => t('Causes to ignore the case of tokens when comparing to the stopword list.'),
+    'description' => t('Causes Solr to ignore the case of tokens when comparing to the stopword list.'),
     'group' => 'apachesolr_multilingual',
   );
 
