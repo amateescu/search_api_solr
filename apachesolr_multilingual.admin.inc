@@ -71,7 +71,6 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#options' => array_merge(array(LANGUAGE_NONE => t('No mapping')), $active_languages),
     '#default_value' => variable_get('apachesolr_multilingual_map_language_neutral', LANGUAGE_NONE),
     '#description' => t('Select a language to treat content marked as language neutral. Language neutral will not occur as filter option any more.'),
-    '#element_validate' => array('apachesolr_confgen_validate_reindex'),
   );
 
   if (!empty($custom_stemmer_languages)) {
@@ -106,7 +105,6 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#title' => t('Index node translations'),
     '#default_value' => variable_get('apachesolr_multilingual_index_translations', 0),
     '#description' => t('All translations of a node will be added to the node itself.'),
-    '#element_validate' => array('apachesolr_confgen_validate_reindex'),
   );
 
   $form['vt']['apachesolr_multilingual_clir']['apachesolr_multilingual_index_unpublished_translations'] = array(
@@ -116,7 +114,6 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#description' => t('Index unpublished translations, e.g. machine translations.'),
     // TODO
     '#disabled' => TRUE,
-    '#element_validate' => array('apachesolr_confgen_validate_reindex'),
   );
 
   $form['vt']['apachesolr_multilingual_clir']['apachesolr_multilingual_index_term_translations'] = array(
@@ -125,7 +122,6 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#default_value' => variable_get('apachesolr_multilingual_index_term_translations', 0),
     '#description' => t('Index translations of the taxonomy terms. Requires module Taxonomy Translation which is part of !link.', array('!link' => l(t('Internationalization'), 'http://drupal.org/project/i18n'))),
     '#disabled' => !module_exists('i18ntaxonomy'),
-    '#element_validate' => array('apachesolr_confgen_validate_reindex'),
   );
 
   $form['vt']['apachesolr_multilingual_advanced'] = array(
@@ -237,7 +233,6 @@ function apachesolr_multilingual_admin_form($form_state) {
 
   $var_name = 'apachesolr_multilingual_advanced_ignoreCase_stopwords';
   $form['vt']['apachesolr_multilingual_advanced']['StopFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
-//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
 
 
   $form['vt']['apachesolr_multilingual_advanced']['SynonymFilterFactory'] = array(
@@ -249,7 +244,6 @@ function apachesolr_multilingual_admin_form($form_state) {
 
   $var_name = 'apachesolr_multilingual_advanced_ignoreCase_synonyms';
   $form['vt']['apachesolr_multilingual_advanced']['SynonymFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
-//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
 
 
   $form['vt']['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'] = array(
@@ -261,51 +255,9 @@ function apachesolr_multilingual_admin_form($form_state) {
 
   $var_name = 'apachesolr_multilingual_advanced_lengthMin_spell';
   $form['vt']['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
-//      '#element_validate' => array('apachesolr_confgen_validate_new_config'),
 
   $var_name = 'apachesolr_multilingual_advanced_lengthMax_spell';
   $form['vt']['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
-  //'#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
-
-
-  // 'apachesolr_multilingual_advanced_splitOnCaseChange_index';
-  //    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
-  // 'apachesolr_multilingual_advanced_splitOnNumerics_index';
-//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
-  //$name = 'apachesolr_multilingual_advanced_stemEnglishPossessive_index';
-//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
-//  $name = 'apachesolr_multilingual_advanced_generateWordParts_index';
-//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
-  //'apachesolr_multilingual_advanced_generateNumberParts_index'] = array(
-    //'#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
-
- // 'apachesolr_multilingual_advanced_catenateWords_index'
- //   '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
-  //'apachesolr_multilingual_advanced_catenateNumbers_index'
-//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
-  //'apachesolr_multilingual_advanced_catenateAll_index'] = array(
-  //  '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
- //'apachesolr_multilingual_advanced_preserveOriginal_index'] = array(
-//    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
-
-
-  //['apachesolr_multilingual_advanced_min_index'] = array(
-  //  '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
-  // 'apachesolr_multilingual_advanced_max_index'] = array(
-  //    '#element_validate' => array('apachesolr_confgen_validate_new_config'),
-
-
 
   return system_settings_form($form);
 }
