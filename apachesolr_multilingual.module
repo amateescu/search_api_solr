@@ -276,8 +276,8 @@ function apachesolr_multilingual_apachesolr_field_name_map_alter(&$map) {
  */
 function apachesolr_multilingual_menu() {
 
-  $items['admin/config/search/apachesolr/multilingual'] = array(
-    'title' => 'Multilingual',
+  $items['admin/config/search/apachesolr/confgen/multilingual'] = array(
+    'title' => 'Multilingual Settings',
     'weight' => 0,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('apachesolr_multilingual_admin_form'),
