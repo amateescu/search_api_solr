@@ -344,8 +344,9 @@ function apachesolr_multilingual_get_stemmer($language_id = NULL) {
   if (array_key_exists($language_id, $available_stemmers)) {
     return $available_stemmers[$language_id];
   }
-
-  return variable_get('apachesolr_multilingual_stemmer_' .  $language_id, '');
+  else {
+    return '';
+  }
 }
 
 /**
@@ -566,7 +567,7 @@ function apachesolr_multilingual_variable_update($name, $value, $old_value, $opt
     case 'apachesolr_multilingual_index_translations':
     case 'apachesolr_multilingual_index_unpublished_translations':
     case 'apachesolr_multilingual_index_term_translations':
-    case 'apachesolr_multilingual_clir':  // TODO: Check
+    case 'apachesolr_multilingual_clir':
       apachesolr_confgen_validate_reindex($name, $value, $old_value);
       break;
     // index settings that require installing a new config
@@ -599,12 +600,9 @@ function apachesolr_multilingual_variable_update($name, $value, $old_value, $opt
     case 'apachesolr_multilingual_advanced_ignoreCase_synonyms':
     case 'apachesolr_multilingual_advanced_lengthMin_spell':
     case 'apachesolr_multilingual_advanced_lengthMax_spell':
+    case 'apachesolr_multilingual_stemmer':
       apachesolr_confgen_validate_new_config($name, $value, $old_value);
       break;
-  }
-  if (strpos($name, 'apachesolr_multilingual_stemmer_') === 0) {
-    // TODO: Check
-    apachesolr_confgen_validate_reindex($name, $value, $old_value);
   }
 }
 
