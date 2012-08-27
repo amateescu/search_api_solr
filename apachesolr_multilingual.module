@@ -447,7 +447,7 @@ function apachesolr_multilingual_form_apachesolr_search_custom_page_search_form_
       }
     }
 
-    $form['basic']['apachesolr_search']['detach_auto_language_filter'] = array(
+    $form['basic']['detach_auto_language_filter'] = array(
       '#type' => $lang_filter ? 'hidden' : 'checkbox',
       '#title' => t('Search all languages'),
       '#default_value' => (int) isset($_GET['detach-auto-language-filter']),
@@ -465,7 +465,6 @@ function apachesolr_multilingual_form_search_submit($form, &$form_state) {
   $fv = $form_state['values'];
   if (!empty($fv['get'])) {
     $get = json_decode($fv['get'], TRUE);
-
     if (!empty($fv['detach_auto_language_filter'])) {
       $get['detach-auto-language-filter'] = '1';
     }
