@@ -58,7 +58,7 @@ function apachesolr_multilingual_variable_info($options) {
   $variables['apachesolr_multilingual_advanced_generateWordParts_index'] = array(
     'type' => 'boolean',
     'title' => t('generateWordParts', array(), $options),
-    'default_value' => TRUE,
+    'default' => TRUE,
     'description' => t('Causes parts of words to be generated.<br />"PowerShot" => "Power" "Shot" (if splitOnCaseChange=1)<br />"Power-Shot" => "Power" "Shot"'),
     'group' => 'apachesolr_multilingual',
   );
