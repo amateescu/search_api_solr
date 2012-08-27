@@ -276,8 +276,8 @@ function apachesolr_multilingual_apachesolr_field_name_map_alter(&$map) {
  */
 function apachesolr_multilingual_menu() {
 
-  $items['admin/config/search/apachesolr/multilingual'] = array(
-    'title' => 'Multilingual',
+  $items['admin/config/search/apachesolr/confgen/multilingual'] = array(
+    'title' => 'Multilingual Settings',
     'weight' => 0,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('apachesolr_multilingual_admin_form'),
@@ -571,35 +571,35 @@ function apachesolr_multilingual_variable_update($name, $value, $old_value, $opt
       apachesolr_confgen_validate_reindex($name, $value, $old_value);
       break;
     // index settings that require installing a new config
-    case 'apachesolr_multilingual_advanced_splitOnCaseChange_index':
-    case 'apachesolr_multilingual_advanced_splitOnNumerics_index':
-    case 'apachesolr_multilingual_advanced_stemEnglishPossessive_index':
-    case 'apachesolr_multilingual_advanced_generateWordParts_index':
-    case 'apachesolr_multilingual_advanced_generateNumberParts_index':
-    case 'apachesolr_multilingual_advanced_catenateWords_index':
-    case 'apachesolr_multilingual_advanced_catenateNumbers_index':
-    case 'apachesolr_multilingual_advanced_catenateAll_index':
-    case 'apachesolr_multilingual_advanced_preserveOriginal_index':
-    case 'apachesolr_multilingual_advanced_min_index':
-    case 'apachesolr_multilingual_advanced_max_index':
+    case 'apachesolr_multilingual_splitOnCaseChange_index':
+    case 'apachesolr_multilingual_splitOnNumerics_index':
+    case 'apachesolr_multilingual_stemEnglishPossessive_index':
+    case 'apachesolr_multilingual_generateWordParts_index':
+    case 'apachesolr_multilingual_generateNumberParts_index':
+    case 'apachesolr_multilingual_catenateWords_index':
+    case 'apachesolr_multilingual_catenateNumbers_index':
+    case 'apachesolr_multilingual_catenateAll_index':
+    case 'apachesolr_multilingual_preserveOriginal_index':
+    case 'apachesolr_multilingual_min_index':
+    case 'apachesolr_multilingual_max_index':
 
     // query settings that require installing a new config
-    case 'apachesolr_multilingual_advanced_splitOnCaseChange_query':
-    case 'apachesolr_multilingual_advanced_splitOnNumerics_query':
-    case 'apachesolr_multilingual_advanced_stemEnglishPossessive_query':
-    case 'apachesolr_multilingual_advanced_generateWordParts_query':
-    case 'apachesolr_multilingual_advanced_generateNumberParts_query':
-    case 'apachesolr_multilingual_advanced_catenateWords_query':
-    case 'apachesolr_multilingual_advanced_catenateNumbers_query':
-    case 'apachesolr_multilingual_advanced_catenateAll_query':
-    case 'apachesolr_multilingual_advanced_preserveOriginal_query':
-    case 'apachesolr_multilingual_advanced_min_query':
-    case 'apachesolr_multilingual_advanced_max_query':
+    case 'apachesolr_multilingual_splitOnCaseChange_query':
+    case 'apachesolr_multilingual_splitOnNumerics_query':
+    case 'apachesolr_multilingual_stemEnglishPossessive_query':
+    case 'apachesolr_multilingual_generateWordParts_query':
+    case 'apachesolr_multilingual_generateNumberParts_query':
+    case 'apachesolr_multilingual_catenateWords_query':
+    case 'apachesolr_multilingual_catenateNumbers_query':
+    case 'apachesolr_multilingual_catenateAll_query':
+    case 'apachesolr_multilingual_preserveOriginal_query':
+    case 'apachesolr_multilingual_min_query':
+    case 'apachesolr_multilingual_max_query':
 
-    case 'apachesolr_multilingual_advanced_ignoreCase_stopwords':
-    case 'apachesolr_multilingual_advanced_ignoreCase_synonyms':
-    case 'apachesolr_multilingual_advanced_lengthMin_spell':
-    case 'apachesolr_multilingual_advanced_lengthMax_spell':
+    case 'apachesolr_multilingual_ignoreCase_stopwords':
+    case 'apachesolr_multilingual_ignoreCase_synonyms':
+    case 'apachesolr_multilingual_lengthMin_spell':
+    case 'apachesolr_multilingual_lengthMax_spell':
     case 'apachesolr_multilingual_stemmer':
       apachesolr_confgen_validate_new_config($name, $value, $old_value);
       break;

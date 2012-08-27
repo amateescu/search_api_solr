@@ -170,37 +170,37 @@ function apachesolr_multilingual_admin_form($form_state) {
   $structure = array(
     'WordDelimiterFilterFactory' => array(
       'index' => array(
-        'apachesolr_multilingual_advanced_splitOnCaseChange_index',
-        'apachesolr_multilingual_advanced_splitOnNumerics_index',
-        'apachesolr_multilingual_advanced_stemEnglishPossessive_index',
-        'apachesolr_multilingual_advanced_generateWordParts_index',
-        'apachesolr_multilingual_advanced_generateNumberParts_index',
-        'apachesolr_multilingual_advanced_catenateWords_index',
-        'apachesolr_multilingual_advanced_catenateNumbers_index',
-        'apachesolr_multilingual_advanced_catenateAll_index',
-        'apachesolr_multilingual_advanced_preserveOriginal_index',
+        'apachesolr_multilingual_splitOnCaseChange_index',
+        'apachesolr_multilingual_splitOnNumerics_index',
+        'apachesolr_multilingual_stemEnglishPossessive_index',
+        'apachesolr_multilingual_generateWordParts_index',
+        'apachesolr_multilingual_generateNumberParts_index',
+        'apachesolr_multilingual_catenateWords_index',
+        'apachesolr_multilingual_catenateNumbers_index',
+        'apachesolr_multilingual_catenateAll_index',
+        'apachesolr_multilingual_preserveOriginal_index',
       ),
       'query' => array(
-        'apachesolr_multilingual_advanced_splitOnCaseChange_query',
-        'apachesolr_multilingual_advanced_splitOnNumerics_query',
-        'apachesolr_multilingual_advanced_stemEnglishPossessive_query',
-        'apachesolr_multilingual_advanced_generateWordParts_query',
-        'apachesolr_multilingual_advanced_generateNumberParts_query',
-        'apachesolr_multilingual_advanced_catenateWords_query',
-        'apachesolr_multilingual_advanced_catenateNumbers_query',
-        'apachesolr_multilingual_advanced_catenateAll_query',
-        'apachesolr_multilingual_advanced_preserveOriginal_query',
+        'apachesolr_multilingual_splitOnCaseChange_query',
+        'apachesolr_multilingual_splitOnNumerics_query',
+        'apachesolr_multilingual_stemEnglishPossessive_query',
+        'apachesolr_multilingual_generateWordParts_query',
+        'apachesolr_multilingual_generateNumberParts_query',
+        'apachesolr_multilingual_catenateWords_query',
+        'apachesolr_multilingual_catenateNumbers_query',
+        'apachesolr_multilingual_catenateAll_query',
+        'apachesolr_multilingual_preserveOriginal_query',
         ),
 
     ),
     'LengthFilterFactory' => array(
       'index' => array(
-        'apachesolr_multilingual_advanced_min_index',
-        'apachesolr_multilingual_advanced_max_index',
+        'apachesolr_multilingual_min_index',
+        'apachesolr_multilingual_max_index',
       ),
       'query' => array(
-        'apachesolr_multilingual_advanced_min_query',
-        'apachesolr_multilingual_advanced_max_query',
+        'apachesolr_multilingual_min_query',
+        'apachesolr_multilingual_max_query',
       ),
     )
   );
@@ -208,7 +208,7 @@ function apachesolr_multilingual_admin_form($form_state) {
   foreach ($structure as $component => $arr) {
     foreach ($arr as $type => $var_names) {
       foreach ($var_names as $var_name) {
-        // example: $form['vt']['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['index']['apachesolr_multilingual_advanced_splitOnCaseChange_index']
+        // example: $form['vt']['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['index']['apachesolr_multilingual_splitOnCaseChange_index']
         $form['vt']['apachesolr_multilingual_advanced'][$component][$type][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
       }
     }
@@ -222,7 +222,7 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#collapsed' => TRUE,
   );
 
-  $var_name = 'apachesolr_multilingual_advanced_ignoreCase_stopwords';
+  $var_name = 'apachesolr_multilingual_ignoreCase_stopwords';
   $form['vt']['apachesolr_multilingual_advanced']['StopFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
 
 
@@ -233,7 +233,7 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#collapsed' => TRUE,
   );
 
-  $var_name = 'apachesolr_multilingual_advanced_ignoreCase_synonyms';
+  $var_name = 'apachesolr_multilingual_ignoreCase_synonyms';
   $form['vt']['apachesolr_multilingual_advanced']['SynonymFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
 
 
@@ -244,10 +244,10 @@ function apachesolr_multilingual_admin_form($form_state) {
     '#collapsed' => TRUE,
   );
 
-  $var_name = 'apachesolr_multilingual_advanced_lengthMin_spell';
+  $var_name = 'apachesolr_multilingual_lengthMin_spell';
   $form['vt']['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
 
-  $var_name = 'apachesolr_multilingual_advanced_lengthMax_spell';
+  $var_name = 'apachesolr_multilingual_lengthMax_spell';
   $form['vt']['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'][$var_name] = _apachesolr_multilingual_variable_definition_to_form_element($var_name);
 
   return system_settings_form($form);
@@ -255,19 +255,19 @@ function apachesolr_multilingual_admin_form($form_state) {
 
 
 function apachesolr_multilingual_admin_form_validate($form, $form_state) {
-  $length_min = $form_state['values']['apachesolr_multilingual_advanced_lengthMin_spell'];
-  $length_max = $form_state['values']['apachesolr_multilingual_advanced_lengthMax_spell'];
+  $length_min = $form_state['values']['apachesolr_multilingual_lengthMin_spell'];
+  $length_max = $form_state['values']['apachesolr_multilingual_lengthMax_spell'];
 
   if (!ctype_digit($length_min)) {
-    form_set_error('apachesolr_multilingual_advanced_lengthMin_spell', t('Minimum number of characters needs to be numeric.'));
+    form_set_error('apachesolr_multilingual_lengthMin_spell', t('Minimum number of characters needs to be numeric.'));
   }
 
   if (!ctype_digit($length_max)) {
-    form_set_error('apachesolr_multilingual_advanced_lengthMax_spell', t('Maximum number of characters needs to be numeric.'));
+    form_set_error('apachesolr_multilingual_lengthMax_spell', t('Maximum number of characters needs to be numeric.'));
   }
 
   if ($length_min < 0 || $length_min > $length_max) {
-    form_set_error('apachesolr_multilingual_advanced_lengthMax_spell', t('Minimum number of characters need to be less than maximum number of characters.'));
+    form_set_error('apachesolr_multilingual_lengthMax_spell', t('Minimum number of characters need to be less than maximum number of characters.'));
   }
 }
 
