@@ -355,18 +355,9 @@ function apachesolr_multilingual_get_stemmer($language_id = NULL) {
 function apachesolr_multilingual_apachesolr_query_alter($query) {
   global $language;
 
-  $languages = variable_get('apachesolr_multilingual_languages', array());
+  $languages = locale_language_list();
 
   $qf = $query->getParam('qf');
-  foreach ($qf as $index => $field) {
-    if (strpos($field, 'content') === 0) {
-      list($field_name, $boost) = explode('^', $field);
-      // Normed fields tend to have a lower score. Multiplying by 40 is
-      // a rough attempt to bring the score in line with fields that are
-      // not normed.
-      $qf[$index] = $field_name . '^' . (40.0 * $boost);
-    }
-  }
 
   $filter_language = '';
 
@@ -393,29 +384,48 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
     }
   }
 
-  if ($filter_language) {
-    foreach ($qf as $index => $field) {
-      foreach (array('label_', 'teaser_', 'content_', 'path_alias_', 'ts_', 'tm_', 'tos_', 'tom_', 'tags_') as $prefix) {
-        if (strpos($field, $prefix) === 0 && strpos($field, 'i18n_' . $prefix . $filter_language) !== 0) {
-          // don't search fields defined for different languages
-          unset($qf[$index]);
+  foreach ($qf as $index => $field) {
+    if (strpos($field, 'i18n_content') === 0) {
+      list($field_name, $boost) = explode('^', $field);
+      // Normed fields tend to have a lower score. Multiplying by 40 is
+      // a rough attempt to bring the score in line with fields that are
+      // not normed.
+      $qf[$index] = $field_name . '^' . (40.0 * $boost);
+    }
+    else {
+      foreach (array('label', 'teaser', 'content', 'path_alias', 'ts', 'tm', 'tos', 'tom', 'tags') as $prefix) {
+        if (strpos($field, $prefix) === 0) {
+          if ($filter_language) {
+            // replace common query field by language-specific one
+            $qf[$index] = str_replace($prefix, 'i18n_' . $prefix . '_' . $filter_language, $field);
+          }
+          else {
+            // replace common query field by all language-specific ones
+            unset($qf[$index]);
+            foreach (array_keys($languages) as $language_id) {
+              $qf[] = str_replace($prefix, 'i18n_' . $prefix . '_' . $language_id, $field);
+            }
+          }
           break;
         }
       }
     }
-    $query->replaceParam('qf', $qf);
+  }
 
+  $query->replaceParam('qf', $qf);
+
+  if ($filter_language) {
     // use language specfic fields for keyword highlighting in search result snippets
     $query->replaceParam('hl.fl', 'i18n_content_' . $filter_language);
     $query->addParam('f.i18n_content_' . $filter_language .'.hl.alternateField', 'i18n_teaser_' . $filter_language);
 
+    // TODO language-specific spell-checking
 //     if (variable_get('apachesolr_search_spellcheck', FALSE) && array_key_exists('spell_' . $filter_language, $fields)) {
 //       $params['spellcheck.dictionary'] = 'spellchecker_' . $filter_language;
 //     }
   }
   else {
-    // FIXME
-    // search all fields?
+    // multiple language-specific highlighters are not supported by solr at the moment
   }
 }
 
