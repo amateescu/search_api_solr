@@ -443,9 +443,34 @@ function apachesolr_multilingual_variable_update($name, $value, $old_value, $opt
     case 'apachesolr_multilingual_index_unpublished_translations':
     case 'apachesolr_multilingual_index_term_translations':
     case 'apachesolr_multilingual_clir':
-      apachesolr_confgen_validate_reindex($name, $value, $old_value);
+      apachesolr_multilingual_message_reindex($name, $value, $old_value, $options);
       break;
   }
 }
 
+/**
+ * Shows a hint to the user that he has to reindex the content
+ */
+function apachesolr_multilingual_message_reindex($name, $value, $old_value, $options) {
+  static $msg_sent = FALSE;
 
+  if (!$msg_sent) {
+    if ($value != $old_value) {
+      $info = variable_get_info($name);
+      if (is_null($info)) {
+        // ignore for now
+        // drupal_set_message(t('Error: Unknown variable @varname.', array('@varname' => $name)), 'error');
+      }
+      else {
+        drupal_set_message(
+          t(
+            'Changing "%title" requires you to !link_reindex your content.',
+            array('%title' => $info['title'] . (array_key_exists('key', $options) ? ' (' . $options['key']. ')' : ''), '!link_reindex' => l(t('re-index'), 'admin/config/search/apachesolr'))
+          ),
+          'warning'
+        );
+        $msg_sent = TRUE;
+      }
+    }
+  }
+}

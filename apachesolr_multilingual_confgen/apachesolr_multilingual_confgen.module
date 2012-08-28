@@ -216,7 +216,7 @@ function apachesolr_multilingual_confgen_variable_update($name, $value, $old_val
     case 'apachesolr_multilingual_lengthMin_spell':
     case 'apachesolr_multilingual_lengthMax_spell':
     case 'apachesolr_multilingual_stemmer':
-      apachesolr_confgen_validate_new_config($name, $value, $old_value);
+      apachesolr_confgen_message_new_config($name, $value, $old_value, $options);
       break;
   }
 }
