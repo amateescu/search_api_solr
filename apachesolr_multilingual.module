@@ -393,7 +393,11 @@ function apachesolr_multilingual_form_apachesolr_search_custom_page_search_form_
       '#default_value' => (int) isset($_GET['detach-auto-language-filter']),
     );
 
-    $form['#submit'] = array_merge(array('apachesolr_multilingual_form_search_submit'), $form['#submit']);
+    if (!isset($form['#submit']) || !is_array($form['#submit'])) {
+      $form['#submit'] = array();
+    }
+
+    $form['#submit'] = array_merge(array('apachesolr_multilingual_apachesolr_search_custom_page_search_form_submit'), $form['#submit']);
   }
 }
 
@@ -401,7 +405,7 @@ function apachesolr_multilingual_form_apachesolr_search_custom_page_search_form_
 /**
  * @see apachesolr_multilingual_form_search_form_alter()
  */
-function apachesolr_multilingual_form_search_submit($form, &$form_state) {
+function apachesolr_multilingual_apachesolr_search_custom_page_search_form_submit($form, &$form_state) {
   $fv = $form_state['values'];
   if (!empty($fv['get'])) {
     $get = json_decode($fv['get'], TRUE);
