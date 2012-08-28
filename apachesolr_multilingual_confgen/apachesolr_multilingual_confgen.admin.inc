@@ -19,7 +19,6 @@
  * @return void
  */
 function apachesolr_multilingual_confgen_admin_form($form_state) {
-  $active_languages = locale_language_list();
   $variable_language = variable_realm_params('language');
 
   $form['vt'] = array(

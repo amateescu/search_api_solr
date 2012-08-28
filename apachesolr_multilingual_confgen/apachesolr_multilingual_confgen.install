@@ -15,6 +15,16 @@ function apachesolr_multilingual_confgen_enable() {
   $old_variables = $controller->getEnabledVariables();
   $variables = array_merge($old_variables, $new_variables);
   $controller->setRealmVariable('list', $variables);
+
+  $path = drupal_get_path('module', 'apachesolr_multilingual_confgen') .'/res/';
+  $active_languages = locale_language_list();
+  foreach (array_keys($active_languages) as $language_id) {
+    if (i18n_variable_get('apachesolr_confgen_textfiles_stopwords_txt', $language_id) === NULL
+        && file_exists($path . 'stopwords_' . $language_id . '.txt')) {
+      i18n_variable_set('apachesolr_confgen_textfiles_stopwords_txt',
+        file_get_contents($path . 'stopwords_' . $language_id . '.txt'), $language_id);
+    }
+  }
 }
 
 /**
