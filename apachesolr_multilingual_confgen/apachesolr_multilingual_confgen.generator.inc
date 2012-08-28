@@ -12,7 +12,7 @@
  */
 
 
-function apachesolr_multilingual_modify_schema($qp_schema, $solr_version) {
+function apachesolr_multilingual_confgen_modify_schema($qp_schema, $solr_version) {
   foreach (locale_language_list() as $language_id => $language) {
     $qp_schema_language_specific = apachesolr_confgen_clone_qp($qp_schema);
 
@@ -106,6 +106,6 @@ function apachesolr_multilingual_modify_schema($qp_schema, $solr_version) {
 }
 
 
-function apachesolr_multilingual_modify_solrconfig($qp_solrconfig, $solr_version) {
+function apachesolr_multilingual_confgen_modify_solrconfig($qp_solrconfig, $solr_version) {
   // TODO spell checker
 }

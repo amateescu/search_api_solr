@@ -276,77 +276,17 @@ function apachesolr_multilingual_apachesolr_field_name_map_alter(&$map) {
  */
 function apachesolr_multilingual_menu() {
 
-  $items['admin/config/search/apachesolr/confgen/multilingual'] = array(
-    'title' => 'Multilingual Settings',
+  $items['admin/config/search/apachesolr/multilingual'] = array(
+    'title' => 'Multilingual',
     'weight' => 0,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('apachesolr_multilingual_admin_form'),
     'file' => 'apachesolr_multilingual.admin.inc',
-    'access arguments'   => array('administer search'),
+    'access arguments' => array('administer search'),
     'type' => MENU_LOCAL_TASK,
   );
 
   return $items;
-}
-
-
-/**
- * Implements hook_apachesolr_confgen_schema_alter().
- */
-function apachesolr_multilingual_apachesolr_confgen_schema_alter($qp, $solr_version) {
-  module_load_include('inc', 'apachesolr_multilingual', 'apachesolr_multilingual.schema_generator');
-  apachesolr_multilingual_modify_schema($qp, $solr_version);
-}
-
-
-/**
- * Implements hook_apachesolr_confgen_solrconfig_alter().
- */
-function apachesolr_multilingual_apachesolr_confgen_solrconfig_alter($qp, $solr_version) {
-  module_load_include('inc', 'apachesolr_multilingual', 'apachesolr_multilingual.schema_generator');
-  apachesolr_multilingual_modify_solrconfig($qp, $solr_version);
-}
-
-/**
- * Helper function that returns the name of a stemmer
- * if available
- *
- * @param string
- *   the language id
- *
- * @return string
- *   the name of the stemmer
- */
-function apachesolr_multilingual_get_stemmer($language_id = NULL) {
-  static $available_stemmers = array(
-    'da' => 'Danish',
-    'nl' => 'Dutch',
-    'en' => 'English',
-    'fi' => 'Finnish',
-    'fr' => 'French',
-    'de' => 'German',
-    'it' => 'Italian',
-    'nn' => 'Norwegian',
-    'nb' => 'Norwegian',
-    'pt-br' => 'Portuguese',
-    'pt-pt' => 'Portuguese',
-    'ro' => 'Romanian',
-    'ru' => 'Russian',
-    'es' => 'Spanish',
-    'sv' => 'Swedish',
-    'tr' => 'Turkish',
-  );
-
-  if (is_null($language_id)) {
-    return $available_stemmers;
-  }
-
-  if (array_key_exists($language_id, $available_stemmers)) {
-    return $available_stemmers[$language_id];
-  }
-  else {
-    return '';
-  }
 }
 
 /**
@@ -476,96 +416,22 @@ function apachesolr_multilingual_form_search_submit($form, &$form_state) {
   }
 }
 
-function apachesolr_multilingual_get_i18n_variables() {
-  module_load_include('inc', 'variable');
-  $list = variable_list_group('apachesolr_multilingual');
-  return array_keys($list);
-}
-
-function apachesolr_multilingual_get_apachesolr_confgen_textfiles_i18n_variables() {
-  if (!module_exists('apachesolr_confgen_textfiles')) {
-    return array();
-  }
-  module_load_include('inc', 'variable');
-  $list = array_diff(
-    variable_list_group('apachesolr_confgen_textfiles'),
-    array('apachesolr_confgen_textfiles_admin_extra_html')
-  );
-  return array_keys($list);
-}
-
-/**
- * Implements hook_modules_enabled().
- */
-function apachesolr_multilingual_modules_enabled($modules) {
-  if (in_array('apachesolr_confgen_textfiles', $modules)) {
-    module_load_include('install', 'apachesolr_multilingual');
-    apachesolr_multilingual_enable();
-  }
-}
-
-/**
- * Implements hook_modules_disabled().
- */
-function apachesolr_multilingual_modules_disabled($modules) {
-  if (in_array('apachesolr_confgen_textfiles', $modules)) {
-    variable_cache_clear();
-    $old_variables = apachesolr_multilingual_get_apachesolr_confgen_textfiles_i18n_variables();
-    $controller = variable_realm_controller('language');
-    $new_variables = $controller->getEnabledVariables();
-    $variables = array_diff($new_variables, $old_variables);
-    $controller->setRealmVariable('list', $variables);
-  }
-}
-
-/**
- * Implements hook_apachesolr_confgen_zip_file_alter().
- */
-function apachesolr_multilingual_apachesolr_confgen_zip_file_alter(&$files, $solr_version) {
-  if (module_exists('apachesolr_confgen_textfiles')) {
-    foreach (locale_language_list() as $language_id => $language) {
-      $files['compoundwords_' . $language_id . '.txt'] = apachesolr_multilingual_variable_get('apachesolr_confgen_textfiles_compoundwords_txt', $language_id);
-      $files['mapping-ISOLatin1Accent_' . $language_id . '.txt'] = apachesolr_multilingual_variable_get('apachesolr_confgen_textfiles_mapping_isolatin1accent_txt', $language_id);
-      $files['protwords_' . $language_id . '.txt'] = apachesolr_multilingual_variable_get('apachesolr_confgen_textfiles_protwords_txt', $language_id);
-      $files['stopwords_' . $language_id . '.txt'] = apachesolr_multilingual_variable_get('apachesolr_confgen_textfiles_stopwords_txt', $language_id);
-      $files['synonyms_' . $language_id . '.txt'] = apachesolr_multilingual_variable_get('apachesolr_confgen_textfiles_synonyms_txt', $language_id);
-
-      if (strpos($solr_version, '3.') === 0) {
-        $files['mapping-FoldToASCII_' . $language_id . '.txt'] = apachesolr_multilingual_variable_get('apachesolr_confgen_textfiles_mapping_foldtoascii_txt', $language_id);
-      }
-    }
-  }
-}
-
-/**
- * Implements hook_variable_realm_variable_list_alter.
- *
- * Prevents removal of apachesolr_multilingual variables
- * from the list of multilingual variables.
- */
-function apachesolr_multilingual_variable_realm_variable_list_alter(&$variables, $realm_name) {
-  if ('language' == $realm_name) {
-    $new_variables = array_merge(
-      $variables,
-      apachesolr_multilingual_get_i18n_variables(),
-      apachesolr_multilingual_get_apachesolr_confgen_textfiles_i18n_variables()
-    );
-    $diff = array_diff($new_variables, $variables);
-    if (!empty($diff)) {
-      foreach ($diff as $name) {
-        $info = variable_get_info($name);
-        drupal_set_message(t('Variable %title has been declared as multilingual by Apache Solr Multilingual and cannot be removed from the list of multilingual variables.', array('%title' => $info['title'])), 'error');
-      }
-
-      $variables = $new_variables;
-    }
-  }
-}
-
 function apachesolr_multilingual_variable_get($name, $language_id) {
   return i18n_variable_get($name, $language_id, variable_get_default($name));
 }
 
+/**
+ * A shorthand for variable_get_info and variable_form_element
+ *
+ * @param string $name
+ * @return Array The generated form element
+ */
+function apachesolr_multilingual_variable_definition_to_form_element($name) {
+  module_load_include('form.inc', 'variable');
+  $variable = variable_get_info($name);
+
+  return variable_form_element($variable);
+}
 
 /**
  * Implements hook_variable_update().
@@ -578,39 +444,6 @@ function apachesolr_multilingual_variable_update($name, $value, $old_value, $opt
     case 'apachesolr_multilingual_index_term_translations':
     case 'apachesolr_multilingual_clir':
       apachesolr_confgen_validate_reindex($name, $value, $old_value);
-      break;
-    // index settings that require installing a new config
-    case 'apachesolr_multilingual_splitOnCaseChange_index':
-    case 'apachesolr_multilingual_splitOnNumerics_index':
-    case 'apachesolr_multilingual_stemEnglishPossessive_index':
-    case 'apachesolr_multilingual_generateWordParts_index':
-    case 'apachesolr_multilingual_generateNumberParts_index':
-    case 'apachesolr_multilingual_catenateWords_index':
-    case 'apachesolr_multilingual_catenateNumbers_index':
-    case 'apachesolr_multilingual_catenateAll_index':
-    case 'apachesolr_multilingual_preserveOriginal_index':
-    case 'apachesolr_multilingual_min_index':
-    case 'apachesolr_multilingual_max_index':
-
-    // query settings that require installing a new config
-    case 'apachesolr_multilingual_splitOnCaseChange_query':
-    case 'apachesolr_multilingual_splitOnNumerics_query':
-    case 'apachesolr_multilingual_stemEnglishPossessive_query':
-    case 'apachesolr_multilingual_generateWordParts_query':
-    case 'apachesolr_multilingual_generateNumberParts_query':
-    case 'apachesolr_multilingual_catenateWords_query':
-    case 'apachesolr_multilingual_catenateNumbers_query':
-    case 'apachesolr_multilingual_catenateAll_query':
-    case 'apachesolr_multilingual_preserveOriginal_query':
-    case 'apachesolr_multilingual_min_query':
-    case 'apachesolr_multilingual_max_query':
-
-    case 'apachesolr_multilingual_ignoreCase_stopwords':
-    case 'apachesolr_multilingual_ignoreCase_synonyms':
-    case 'apachesolr_multilingual_lengthMin_spell':
-    case 'apachesolr_multilingual_lengthMax_spell':
-    case 'apachesolr_multilingual_stemmer':
-      apachesolr_confgen_validate_new_config($name, $value, $old_value);
       break;
   }
 }

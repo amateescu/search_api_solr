@@ -1,0 +1,35 @@
+<?php
+
+/**
+ * Implements hook_enable().
+ *
+ * Register multilingual variables provided by Apache Solr Multilingual
+ */
+function apachesolr_multilingual_confgen_enable() {
+  variable_cache_clear();
+  $new_variables = array_merge(
+    apachesolr_multilingual_confgen_get_i18n_variables(),
+    apachesolr_multilingual_confgen_get_apachesolr_confgen_textfiles_i18n_variables()
+  );
+  $controller = variable_realm_controller('language');
+  $old_variables = $controller->getEnabledVariables();
+  $variables = array_merge($old_variables, $new_variables);
+  $controller->setRealmVariable('list', $variables);
+}
+
+/**
+ * Implements hook_disable().
+ *
+ * Un-register multilingual variables provided by Apache Solr Multilingual
+ */
+function apachesolr_multilingual_confgen_disable() {
+  variable_cache_clear();
+  $old_variables = array_merge(
+    apachesolr_multilingual_confgen_get_i18n_variables(),
+    apachesolr_multilingual_confgen_get_apachesolr_confgen_textfiles_i18n_variables()
+  );
+  $controller = variable_realm_controller('language');
+  $new_variables = $controller->getEnabledVariables();
+  $variables = array_diff($new_variables, $old_variables);
+  $controller->setRealmVariable('list', $variables);
+}

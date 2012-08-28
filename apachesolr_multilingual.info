@@ -11,5 +11,4 @@ dependencies[] = locale
 
 files[] = apachesolr_multilingual.admin.inc
 files[] = apachesolr_multilingual.module
-files[] = apachesolr_multilingual.schema_generator.inc
 files[] = apachesolr_multilingual.variable.inc

@@ -1,0 +1,12 @@
+name = Apache Solr Multilingual Confgen
+description = Apache Solr Config Generator Add-On for Multilingual and non-English search with Solr
+package = Search Toolkit
+core = "7.x"
+
+dependencies[] = apachesolr_multilingual
+dependencies[] = apachesolr_confgen
+
+files[] = apachesolr_multilingual_confgen.admin.inc
+files[] = apachesolr_multilingual_confgen.module
+files[] = apachesolr_multilingual_confgen.generator.inc
+files[] = apachesolr_multilingual_confgen.variable.inc
