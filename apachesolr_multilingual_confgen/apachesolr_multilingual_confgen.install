@@ -23,6 +23,7 @@ function apachesolr_multilingual_confgen_enable() {
   $active_languages = locale_language_list();
   $textfiles = array(
     'apachesolr_confgen_textfiles_stopwords_txt' => 'stopwords',
+    'apachesolr_confgen_textfiles_compoundwords_txt' => 'compoundwords',
     'apachesolr_confgen_textfiles_mapping_isolatin1accent_txt' => 'mapping-ISOLatin1Accent',
   );
   foreach ($textfiles as $var_name => $base_name) {

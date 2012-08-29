@@ -46,6 +46,13 @@ function apachesolr_multilingual_confgen_modify_schema($qp_schema, $solr_version
       ->find(':root')->xpath("types/fieldType[@name='text']//filter[@class='solr.LowerCaseFilterFactory']")
       ->after('<filter class="solr.DictionaryCompoundWordTokenFilterFactory" dictionary="compoundwords_' . $language_id . '.txt" />');
 
+    $qp_schema_language_specific
+      ->find(':root')->xpath("types/fieldType[@name='text']//filter[@class='solr.DictionaryCompoundWordTokenFilterFactory']")
+      ->attr('minWordSize', apachesolr_multilingual_variable_get('apachesolr_multilingual_minWordSize', $language_id))
+      ->attr('minSubwordSize', apachesolr_multilingual_variable_get('apachesolr_multilingual_minSubwordSize', $language_id))
+      ->attr('maxSubwordSize', apachesolr_multilingual_variable_get('apachesolr_multilingual_maxSubwordSize', $language_id))
+      ->attr('onlyLongestMatch', apachesolr_multilingual_variable_get('apachesolr_multilingual_onlyLongestMatch', $language_id));
+
     $stemmer_language = apachesolr_multilingual_variable_get('apachesolr_multilingual_stemmer_language', $language_id);
     if (!empty($stemmer_language) && $stemmer_language != '-none-') {
       $qp_schema_language_specific

@@ -117,7 +117,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
 
   $variables['apachesolr_multilingual_min_query'] =
   $variables['apachesolr_multilingual_min_index'] = array(
-    'type' => 'string',
+    'type' => 'number',
     'title' => t('min', array(), $options),
     'default' => '2',
     'description' => t('TODO'),
@@ -126,7 +126,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
 
   $variables['apachesolr_multilingual_max_query'] =
   $variables['apachesolr_multilingual_max_index'] = array(
-    'type' => 'string',
+    'type' => 'number',
     'title' => t('max', array(), $options),
     'default' => '100',
     'description' => t('TODO'),
@@ -154,8 +154,9 @@ function apachesolr_multilingual_confgen_variable_info($options) {
   );
 
 
+
   $variables['apachesolr_multilingual_lengthMin_spell'] = array(
-    'type' => 'string',
+    'type' => 'number',
     'title' => t('min', array(), $options),
     'default' => '4',
     'description' => t('Minimum number of characters to add a word to a spell checker.'),
@@ -163,10 +164,45 @@ function apachesolr_multilingual_confgen_variable_info($options) {
   );
 
   $variables['apachesolr_multilingual_lengthMax_spell'] = array(
-    'type' => 'string',
+    'type' => 'number',
     'title' => t('max', array(), $options),
     'default' => '20',
     'description' => t('Maximum number of characters to add a word to a spell checker.'),
+    'group' => 'apachesolr_multilingual_confgen',
+  );
+
+
+
+
+  $variables['apachesolr_multilingual_minWordSize'] = array(
+    'type' => 'number',
+    'title' => t('minWordSize', array(), $options),
+    'default' => '5',
+    'description' => t('TODO'),
+    'group' => 'apachesolr_multilingual_confgen',
+  );
+
+  $variables['apachesolr_multilingual_minSubwordSize'] = array(
+    'type' => 'number',
+    'title' => t('minSubwordSize', array(), $options),
+    'default' => '4',
+    'description' => t('TODO'),
+    'group' => 'apachesolr_multilingual_confgen',
+  );
+
+  $variables['apachesolr_multilingual_maxSubwordSize'] = array(
+    'type' => 'number',
+    'title' => t('maxSubwordSize', array(), $options),
+    'default' => '15',
+    'description' => t('TODO'),
+    'group' => 'apachesolr_multilingual_confgen',
+  );
+
+  $variables['apachesolr_multilingual_onlyLongestMatch'] = array(
+    'type' => 'boolean',
+    'title' => t('onlyLongestMatch', array(), $options),
+    'default' => TRUE,
+    'description' => t('TODO'),
     'group' => 'apachesolr_multilingual_confgen',
   );
 

@@ -182,6 +182,26 @@ function apachesolr_multilingual_confgen_admin_form($form_state) {
   $var_name = 'apachesolr_multilingual_lengthMax_spell';
   $form['vt']['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'][$var_name] = apachesolr_multilingual_variable_definition_to_form_element($var_name);
 
+
+  $form['vt']['apachesolr_multilingual_advanced']['DictionaryCompoundWordTokenFilterFactory'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'DictionaryCompoundWordTokenFilterFactory',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $var_name = 'apachesolr_multilingual_minWordSize';
+  $form['vt']['apachesolr_multilingual_advanced']['DictionaryCompoundWordTokenFilterFactory'][$var_name] = apachesolr_multilingual_variable_definition_to_form_element($var_name);
+
+  $var_name = 'apachesolr_multilingual_minSubwordSize';
+  $form['vt']['apachesolr_multilingual_advanced']['DictionaryCompoundWordTokenFilterFactory'][$var_name] = apachesolr_multilingual_variable_definition_to_form_element($var_name);
+
+  $var_name = 'apachesolr_multilingual_maxSubwordSize';
+  $form['vt']['apachesolr_multilingual_advanced']['DictionaryCompoundWordTokenFilterFactory'][$var_name] = apachesolr_multilingual_variable_definition_to_form_element($var_name);
+
+  $var_name = 'apachesolr_multilingual_onlyLongestMatch';
+  $form['vt']['apachesolr_multilingual_advanced']['DictionaryCompoundWordTokenFilterFactory'][$var_name] = apachesolr_multilingual_variable_definition_to_form_element($var_name);
+
   return system_settings_form($form);
 }
 
