@@ -39,6 +39,10 @@ function apachesolr_multilingual_admin_form($form_state) {
   $form['vt']['apachesolr_multilingual_query_settings'][$var_name] =
     apachesolr_multilingual_variable_definition_to_form_element($var_name);
 
+  $var_name = 'apachesolr_multilingual_show_language_undefined_results';
+  $form['vt']['apachesolr_multilingual_query_settings'][$var_name] =
+    apachesolr_multilingual_variable_definition_to_form_element($var_name);
+
   $form['vt']['apachesolr_multilingual_index_settings'] = array(
     '#type' => 'fieldset',
     '#title' => t('Index Settings'),

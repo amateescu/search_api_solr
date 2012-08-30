@@ -9,6 +9,7 @@ Apache Solr Multilingual 7.x-1.0-alpha1, 2012-xx-xx
 [        ] mkalkbrenner: fixed package
 [#1721946] xurubo93: Error in apachesolr_multilingual_form_apachesolr_search_bias_form_alter
 [        ] mkalkbrenner: moved textfile settings to Apache Solr Config Generator module
+[#1271680] jessehs, mkalkbrenner: Make occurance of language neutral nodes in search result configurable
 [        ] mkalkbrenner, cspitzlay: complete rewrite!
 
 

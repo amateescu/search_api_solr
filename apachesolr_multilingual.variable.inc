@@ -35,6 +35,14 @@ function apachesolr_multilingual_variable_info($options) {
     'group' => 'apachesolr_multilingual',
   );
 
+  $variables['apachesolr_multilingual_show_language_undefined_results'] = array(
+    'type' => 'boolean',
+    'title' => t('Show language neutral/undefined results by default', array(), $options),
+    'default' => FALSE,
+    'description' => t('Show language neutral/undefined results on search result page if "%limit_search" is active.', array('%limit_search' => t('Show only search results that match the current language.', array(), $options)), $options),
+    'group' => 'apachesolr_multilingual',
+  );
+
   $variables['apachesolr_multilingual_map_language_neutral'] = array(
     'type' => 'string',
     'title' => t('Map language neutral', array(), $options),

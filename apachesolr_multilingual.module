@@ -308,17 +308,20 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
   }
 
 
-  if (!$filter_language && variable_get('apachesolr_multilingual_auto_language_filter', 0) &&
-    (!variable_get('apachesolr_multilingual_auto_language_filter_detachable', 0) ||
-    (variable_get('apachesolr_multilingual_auto_language_filter_detachable', 0) && empty($_GET['detach-auto-language-filter'])))) {
+  if (!$filter_language && variable_get_value('apachesolr_multilingual_auto_language_filter') &&
+    (!variable_get_value('apachesolr_multilingual_auto_language_filter_detachable') ||
+    (variable_get_value('apachesolr_multilingual_auto_language_filter_detachable') && empty($_GET['detach-auto-language-filter'])))) {
 
     if (!empty($language->language)) {
       $filter_language = $language->language;
-      $query->addFilter('ss_language', $filter_language);
-    }
-    elseif (variable_get('apachesolr_multilingual_map_language_neutral', '')) {
-      $filter_language = variable_get('apachesolr_multilingual_map_language_neutral', '');
-      if ($filter_language) {
+      if (variable_get_value('apachesolr_multilingual_show_language_undefined_results')) {
+        $subquery = apachesolr_drupal_query('Multilingual Language Limit');
+        $subquery->addFilter('ss_language', $filter_language);
+        $subquery->addFilter('ss_language', LANGUAGE_NONE);
+        $subquery->operator = 'OR'; // that's the default, but this way it's readable
+        $query->addFilterSubQuery($subquery);
+      }
+      else {
         $query->addFilter('ss_language', $filter_language);
       }
     }
