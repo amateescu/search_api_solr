@@ -31,7 +31,7 @@ function apachesolr_multilingual_variable_info($options) {
     'type' => 'boolean',
     'title' => t('Limit search to current language could be disabled by user', array(), $options),
     'default' => FALSE,
-    'description' => t('Displays a checkbox on search result page to search over all languages if "%limit_search" is active.', array('%limit_search' => t('Show only search results that match the current language.', array(), $options)), $options),
+    'description' => t('Displays a checkbox on search result page to search over all languages if "%limit_search" is active.', array('%limit_search' => t('Limit search to current language by default', array(), $options)), $options),
     'group' => 'apachesolr_multilingual',
   );
 
@@ -39,7 +39,7 @@ function apachesolr_multilingual_variable_info($options) {
     'type' => 'boolean',
     'title' => t('Show language neutral/undefined results by default', array(), $options),
     'default' => FALSE,
-    'description' => t('Show language neutral/undefined results on search result page if "%limit_search" is active.', array('%limit_search' => t('Show only search results that match the current language.', array(), $options)), $options),
+    'description' => t('Show language neutral/undefined results on search result page if "%limit_search" is active.', array('%limit_search' => t('Limit search to current language by default', array(), $options)), $options),
     'group' => 'apachesolr_multilingual',
   );
 
