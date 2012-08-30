@@ -138,6 +138,14 @@ function apachesolr_multilingual_confgen_modules_disabled($modules) {
  */
 function apachesolr_multilingual_confgen_multilingual_settings_changed() {
   apachesolr_multiligual_confgen_register_multilingual_variables();
+
+  drupal_set_message(
+    t(
+      'Multilingual settings have been changed. Maybe you have to !link_download a new set of configuration files, to update your solr configuration and to restart your solr server.',
+      array('!link_download' => l(t('download'), 'admin/config/search/apachesolr/confgen'))
+    ),
+    'warning'
+  );
 }
 
 function apachesolr_multiligual_confgen_register_multilingual_variables() {
