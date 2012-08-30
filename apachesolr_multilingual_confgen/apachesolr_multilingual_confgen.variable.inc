@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ *  TODO
+ */
+
+/**
  * Implements hook_variable_group_info().
  */
 function apachesolr_multilingual_confgen_variable_group_info() {

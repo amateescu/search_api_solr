@@ -41,10 +41,10 @@ function apachesolr_multilingual_confgen_admin_form($form_state) {
   $default = apachesolr_multilingual_variable_get($var_name, $variable_language);
   $form['vt']['apachesolr_multilingual_stemmer_settings'][$var_name] = array(
     '#type' => 'select',
-    '#title' => $variable_info['title'],
+    '#title' => check_plain($variable_info['title']),
     '#options' => $stemmer_options,
     '#default_value' => !empty($default) ? $default : apachesolr_multilingual_confgen_get_stemmer($variable_language),
-    '#description' => $variable_info['description'],
+    '#description' => filter_xss($variable_info['description']),
   );
 
   $form['vt']['apachesolr_multilingual_advanced'] = array(

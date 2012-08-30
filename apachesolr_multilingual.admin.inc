@@ -54,10 +54,10 @@ function apachesolr_multilingual_admin_form($form_state) {
   $variable_info = variable_get_info($var_name);
   $form['vt']['apachesolr_multilingual_index_settings'][$var_name] = array(
     '#type' => 'radios',
-    '#title' => $variable_info['title'],
+    '#title' => check_plain($variable_info['title']),
     '#options' => array_merge(array(LANGUAGE_NONE => t('No mapping')), $active_languages),
     '#default_value' => variable_get_default($var_name),
-    '#description' => $variable_info['description'],
+    '#description' => filter_xss($variable_info['description']),
   );
 
   $form['vt']['apachesolr_multilingual_clir'] = array(

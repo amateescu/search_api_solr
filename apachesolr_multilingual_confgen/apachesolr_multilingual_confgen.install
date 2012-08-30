@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ *  TODO
+ */
+
+/**
  * Implements hook_enable().
  *
  * Register multilingual variables provided by Apache Solr Multilingual

@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ *  TODO
+ */
+
+/**
  * Implements hook_enable().
  */
 function apachesolr_multilingual_enable() {

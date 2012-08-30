@@ -165,7 +165,7 @@ function apachesolr_multiligual_confgen_register_multilingual_variables() {
   $controller->setRealmVariable('list', $variables);
 
   // set default values for multilingual variables if not already modified
-  $path = drupal_get_path('module', 'apachesolr_multilingual_confgen') .'/res/';
+  $path = drupal_get_path('module', 'apachesolr_multilingual_confgen') . '/res/';
   $active_languages = locale_language_list();
   foreach ($apachesolr_confgen_textfiles_i18n_variables as $var_name => $var_info) {
     foreach (array_keys($active_languages) as $language_id) {
@@ -189,7 +189,7 @@ function apachesolr_multilingual_confgen_apachesolr_confgen_zip_file_alter(&$fil
 }
 
 /**
- * Implements hook_variable_realm_variable_list_alter.
+ * Implements hook_variable_realm_variable_list_alter().
  *
  * Prevents removal of apachesolr_multilingual variables
  * from the list of multilingual variables.
