@@ -6,34 +6,7 @@
  * Register multilingual variables provided by Apache Solr Multilingual
  */
 function apachesolr_multilingual_confgen_enable() {
-  variable_cache_clear();
-
-  // register variables as multilingual variables
-  $new_variables = array_merge(
-    apachesolr_multilingual_confgen_get_i18n_variables(),
-    apachesolr_multilingual_confgen_get_apachesolr_confgen_textfiles_i18n_variables()
-  );
-  $controller = variable_realm_controller('language');
-  $old_variables = $controller->getEnabledVariables();
-  $variables = array_merge($old_variables, $new_variables);
-  $controller->setRealmVariable('list', $variables);
-
-  // set default values for multilingual variables if not already modified
-  $path = drupal_get_path('module', 'apachesolr_multilingual_confgen') .'/res/';
-  $active_languages = locale_language_list();
-  $textfiles = array(
-    'apachesolr_confgen_textfiles_stopwords_txt' => 'stopwords',
-    'apachesolr_confgen_textfiles_compoundwords_txt' => 'compoundwords',
-    'apachesolr_confgen_textfiles_mapping_isolatin1accent_txt' => 'mapping-ISOLatin1Accent',
-  );
-  foreach ($textfiles as $var_name => $base_name) {
-    foreach (array_keys($active_languages) as $language_id) {
-      if (i18n_variable_get($var_name, $language_id) === NULL
-          && file_exists($path . $base_name . '_' . $language_id . '.txt')) {
-        i18n_variable_set($var_name, file_get_contents($path . $base_name . '_' . $language_id . '.txt'), $language_id);
-      }
-    }
-  }
+  apachesolr_multiligual_confgen_register_multilingual_variables();
 }
 
 /**
