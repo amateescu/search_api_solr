@@ -336,15 +336,26 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
       $qf[$index] = $field_name . '^' . (40.0 * $boost);
     }
     else {
+      $mapping_language = variable_get_value('apachesolr_multilingual_map_language_neutral');
       foreach (array('label', 'teaser', 'content', 'path_alias', 'ts', 'tm', 'tos', 'tom', 'tags') as $prefix) {
         if (strpos($field, $prefix) === 0) {
           if ($filter_language) {
+            if (variable_get_value('apachesolr_multilingual_show_language_undefined_results')) {
+              if (LANGUAGE_NONE == $mapping_language) {
+                $qf[] = $qf[$index];
+              }
+              elseif ($mapping_language != $filter_language) {
+                $qf[] = str_replace($prefix, 'i18n_' . $prefix . '_' . $mapping_language, $field);
+              }
+            }
             // replace common query field by language-specific one
             $qf[$index] = str_replace($prefix, 'i18n_' . $prefix . '_' . $filter_language, $field);
           }
           else {
-            // replace common query field by all language-specific ones
-            unset($qf[$index]);
+            if (!variable_get_value('apachesolr_multilingual_show_language_undefined_results') || LANGUAGE_NONE != $mapping_language) {
+              unset($qf[$index]);
+            }
+            // add all language-specific query fields
             foreach (array_keys($languages) as $language_id) {
               $qf[] = str_replace($prefix, 'i18n_' . $prefix . '_' . $language_id, $field);
             }
