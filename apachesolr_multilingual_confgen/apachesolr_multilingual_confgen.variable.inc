@@ -30,7 +30,8 @@ function apachesolr_multilingual_confgen_variable_info($options) {
     'default' => '',
     'description' => t('Please select the language to be used by the Porter stemmer.'),
     'group' => 'apachesolr_multilingual_confgen',
-    'solr_version_dependent' => TRUE,
+    // TODO
+    // 'solr_version_dependent' => TRUE,
   );
 
   $variables['apachesolr_multilingual_splitOnCaseChange_query'] =
