@@ -10,9 +10,11 @@
  */
 function apachesolr_multilingual_enable() {
   variable_set('apachesolr_search_protected_query_parameters',
-    array_merge(
-      variable_get('apachesolr_search_protected_query_parameters', array()),
-      array('detach-auto-language-filter')
+    array_flip(
+      array_merge(
+        array_flip(variable_get('apachesolr_search_protected_query_parameters', array())),
+        array_flip(array('detach-auto-language-filter'))
+      )
     )
   );
 }
