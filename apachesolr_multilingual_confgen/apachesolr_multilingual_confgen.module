@@ -54,6 +54,19 @@ function apachesolr_multilingual_confgen_variable_realm_info() {
   return $realm;
 }
 
+function apachesolr_multilingual_confgen_variable_get($name, $language_id, $solr_version = '1.4.x') {
+  $value = variable_realm_get('langauge_solr_version', $language_id . ':' . $solr_version, $name, /* default */ NULL);
+  if (NULL === $value) {
+    $value = variable_realm_get('language', $language_id, $name, variable_get_default($name));
+  }
+
+  $info = variable_get_info($name);
+  if ('boolean' == $info['type']) {
+    return $value ? 'true' : 'false';
+  }
+  return $value;
+}
+
 /**
  * Implements hook_apachesolr_confgen_schema_alter().
  */
@@ -210,7 +223,7 @@ function apachesolr_multiligual_confgen_unregister_multilingual_variables($old_v
 function apachesolr_multilingual_confgen_apachesolr_confgen_zip_file_alter(&$files, $solr_version) {
   foreach (apachesolr_multilingual_confgen_get_apachesolr_confgen_textfiles_i18n_variables() as $var_name => $var_info) {
     foreach (locale_language_list() as $language_id => $language) {
-      $files[basename($var_info['title'], '.txt') . '_' . $language_id . '.txt'] = apachesolr_multilingual_variable_get($var_name, $language_id);
+      $files[basename($var_info['title'], '.txt') . '_' . $language_id . '.txt'] = apachesolr_multilingual_confgen_variable_get($var_name, $language_id);
     }
   }
 }

@@ -434,10 +434,6 @@ function apachesolr_multilingual_apachesolr_search_custom_page_search_form_submi
   }
 }
 
-function apachesolr_multilingual_variable_get($name, $language_id) {
-  return i18n_variable_get($name, $language_id, variable_get_default($name));
-}
-
 /**
  * A shorthand for variable_get_info and variable_form_element
  *

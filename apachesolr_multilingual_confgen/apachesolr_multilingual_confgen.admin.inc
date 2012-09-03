@@ -38,7 +38,7 @@ function apachesolr_multilingual_confgen_admin_form($form_state) {
   $stemmer_options = array_combine($available_stemmers, array_map('t', $available_stemmers));
   asort($stemmer_options);
   $stemmer_options = array_merge(array('-none-' => t('(No stemming)')), $stemmer_options);
-  $default = apachesolr_multilingual_variable_get($var_name, $variable_language);
+  $default = apachesolr_multilingual_confgen_variable_get($var_name, $variable_language);
   $form['vt']['apachesolr_multilingual_stemmer_settings'][$var_name] = array(
     '#type' => 'select',
     '#title' => check_plain($variable_info['title']),
