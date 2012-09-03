@@ -36,6 +36,25 @@ function apachesolr_multilingual_confgen_menu_alter(&$items) {
 }
 
 /**
+ * Implements hook_variable_realm_info().
+ */
+function apachesolr_multilingual_confgen_variable_realm_info() {
+  $realm['langauge_solr_version'] = array(
+    'title' => t('Language + Solr Version'),
+    'weight' => 200,
+    'controller class' => 'VariableRealmUnionController',
+    'union' => array('language', 'solr_version'),
+    'select' => FALSE,
+    'variable name' => t('multilingual and solr version dependent'),
+    'variable class' => 'multilingual-solr-version-dependent',
+    'form settings' => TRUE,
+    'form switcher' => TRUE,
+  );
+
+  return $realm;
+}
+
+/**
  * Implements hook_apachesolr_confgen_schema_alter().
  */
 function apachesolr_multilingual_confgen_apachesolr_confgen_schema_alter($qp, $solr_version) {
@@ -123,12 +142,9 @@ function apachesolr_multilingual_confgen_modules_enabled($modules) {
  */
 function apachesolr_multilingual_confgen_modules_disabled($modules) {
   if (in_array('apachesolr_confgen_textfiles', $modules)) {
-    variable_cache_clear();
-    $old_variables = array_keys(apachesolr_multilingual_confgen_get_apachesolr_confgen_textfiles_i18n_variables());
-    $controller = variable_realm_controller('language');
-    $new_variables = $controller->getEnabledVariables();
-    $variables = array_diff($new_variables, $old_variables);
-    $controller->setRealmVariable('list', $variables);
+    apachesolr_multiligual_confgen_unregister_multilingual_variables(
+      apachesolr_multilingual_confgen_get_apachesolr_confgen_textfiles_i18n_variables()
+    );
   }
 }
 
@@ -173,6 +189,19 @@ function apachesolr_multiligual_confgen_register_multilingual_variables() {
       }
     }
   }
+
+  foreach (apachesolr_multilingual_confgen_get_i18n_variables() as $var_name => $var_info) {
+    // TODO read defaults from property files
+  }
+}
+
+
+function apachesolr_multiligual_confgen_unregister_multilingual_variables($old_variables) {
+  variable_cache_clear();
+  $controller = variable_realm_controller('language');
+  $new_variables = $controller->getEnabledVariables();
+  $variables = array_diff($new_variables, array_keys($old_variables));
+  $controller->setRealmVariable('list', $variables);
 }
 
 /**
