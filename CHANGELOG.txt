@@ -1,4 +1,4 @@
-Apache Solr Multilingual 7.x-1.0-alpha1, 2012-xx-xx
+Apache Solr Multilingual 7.x-1.0-alpha1, 2012-09-03
 ---------------------------------------------------
 [        ] mkalkbrenner: declared querypath dependency
 [#1185196] pfrenssen, andymantell: Call to undefined function apachesolr_default_server()
