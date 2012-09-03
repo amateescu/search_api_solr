@@ -61,7 +61,7 @@ function apachesolr_multilingual_confgen_variable_get($name, $language_id, $solr
   }
 
   $info = variable_get_info($name);
-  if ('boolean' == $info['type']) {
+  if ('boolean' == $info['type'] && 'string' == $info['solr_format']) {
     return $value ? 'true' : 'false';
   }
   return $value;
@@ -203,8 +203,21 @@ function apachesolr_multiligual_confgen_register_multilingual_variables() {
     }
   }
 
+  $available_stemmers = apachesolr_multilingual_confgen_get_stemmer();
+
   foreach (apachesolr_multilingual_confgen_get_i18n_variables() as $var_name => $var_info) {
-    // TODO read defaults from property files
+    foreach (array_keys(locale_language_list()) as $language_id) {
+      if (i18n_variable_get($var_name, $language_id) === NULL) {
+        // TODO replace that switch by reading defaults from property files
+        switch ($var_name) {
+          case 'apachesolr_multilingual_stemmer_language':
+            if (array_key_exists($language_id, $available_stemmers)) {
+              i18n_variable_set($var_name, $available_stemmers[$language_id], $language_id);
+            }
+            break;
+        }
+      }
+    }
   }
 }
 
