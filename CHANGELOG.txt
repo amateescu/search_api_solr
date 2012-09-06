@@ -1,3 +1,8 @@
+Apache Solr Multilingual 7.x-1.0-alpha2, 2012-xx-xx
+---------------------------------------------------
+[        ] mkalkbrenner: added config buttons to module page
+
+
 Apache Solr Multilingual 7.x-1.0-alpha1, 2012-09-03
 ---------------------------------------------------
 [        ] mkalkbrenner: declared querypath dependency

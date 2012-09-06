@@ -3,6 +3,8 @@ description = Multilingual and non-English search with Solr
 package = Search Toolkit
 core = "7.x"
 
+configure = admin/config/search/apachesolr/multilingual
+
 dependencies[] = apachesolr
 dependencies[] = apachesolr_search
 dependencies[] = facetapi

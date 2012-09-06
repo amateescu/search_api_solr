@@ -3,6 +3,8 @@ description = Apache Solr Config Generator Add-On for Multilingual and non-Engli
 package = Search Toolkit
 core = "7.x"
 
+configure = admin/config/search/apachesolr/confgen/multilingual
+
 dependencies[] = apachesolr_multilingual
 dependencies[] = apachesolr_confgen
 
