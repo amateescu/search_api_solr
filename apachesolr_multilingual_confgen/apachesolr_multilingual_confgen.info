@@ -12,3 +12,4 @@ files[] = apachesolr_multilingual_confgen.admin.inc
 files[] = apachesolr_multilingual_confgen.module
 files[] = apachesolr_multilingual_confgen.generator.inc
 files[] = apachesolr_multilingual_confgen.variable.inc
+files[] = tests/solr_multilingual.test
