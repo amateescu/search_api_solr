@@ -393,11 +393,14 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
 function apachesolr_multilingual_form_apachesolr_search_custom_page_search_form_alter(&$form, $form_state) {
   if (variable_get('apachesolr_multilingual_auto_language_filter', 0) && variable_get('apachesolr_multilingual_auto_language_filter_detachable', 0)) {
     $lang_filter = FALSE;
-
     foreach ($_GET as $key => $value) {
-      if (strpos($key, 'f[') === 0 && strpos($value, 'ss_language:') === 0) {
-        $lang_filter = TRUE;
-        break;
+      if ('f' == $key && is_array($value)) {
+        foreach ($value as $filter) {
+          if (strpos($filter, 'ss_language:') === 0) {
+            $lang_filter = TRUE;
+            break;
+          }
+        }
       }
     }
 
