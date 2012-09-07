@@ -1,5 +1,6 @@
-Apache Solr Multilingual 7.x-1.0-alpha2, 2012-09-03
+Apache Solr Multilingual 7.x-1.0-alpha2, 2012-xx-xx
 ---------------------------------------------------
+[        ] mkalkbrenner: added config buttons to module page
 [        ] mkalkbrenner: fixed switch for 'detach_auto_language_filter' depending on language facet
 
 
