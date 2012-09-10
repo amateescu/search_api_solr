@@ -83,10 +83,12 @@ class DrupalSolrMultilingualConfigTestCase extends AbstractDrupalSolrOnlineWebTe
       $filesdir . '/*'
     );
 
-    $this->assertTrue($this->solr->ping(), "Verify solr server started with multilingual configuration");
-    $response = $this->solr->search("*:*", array('qt' => 'standard'));
-    $response = $response->response;
-    $this->assertEqual($response->numFound, 0, "There should not be any documents in the index");
+    if ($this->solr_available) { // workaround for drupal.org test bot
+      $this->assertTrue($this->solr->ping(), "Verify solr server started with multilingual configuration");
+      $response = $this->solr->search("*:*", array('qt' => 'standard'));
+      $response = $response->response;
+      $this->assertEqual($response->numFound, 0, "There should not be any documents in the index");
+    }
 
     unset($filesdir);
   }
