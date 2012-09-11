@@ -55,7 +55,7 @@ function apachesolr_multilingual_confgen_admin_form($form_state) {
     '#description' => t('Advanced settings for every language. If there are missing some languages here you have to activate them above and save this form first.'),
   );
 
-  // language specific stuff
+  // language-specific stuff
   $form['vt']['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory'] = array(
     '#type' => 'fieldset',
     '#title' => 'WordDelimiterFilterFactory',
