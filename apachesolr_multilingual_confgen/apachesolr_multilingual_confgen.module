@@ -39,7 +39,7 @@ function apachesolr_multilingual_confgen_menu_alter(&$items) {
  * Implements hook_variable_realm_info().
  */
 function apachesolr_multilingual_confgen_variable_realm_info() {
-  $realm['langauge_solr_version'] = array(
+  $realm['language_solr_version'] = array(
     'title' => t('Language + Solr Version'),
     'weight' => 200,
     'controller class' => 'VariableRealmUnionController',
@@ -55,7 +55,7 @@ function apachesolr_multilingual_confgen_variable_realm_info() {
 }
 
 function apachesolr_multilingual_confgen_variable_get($name, $language_id, $solr_version = '1.4.x') {
-  $value = variable_realm_get('langauge_solr_version', $language_id . ':' . $solr_version, $name, /* default */ NULL);
+  $value = variable_realm_get('language_solr_version', $language_id . ':' . $solr_version, $name, /* default */ NULL);
   if (NULL === $value) {
     $value = variable_realm_get('language', $language_id, $name, variable_get_default($name));
   }
