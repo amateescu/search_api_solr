@@ -1,5 +1,9 @@
 <?php
 
+/*
+ * @file Test file for the multilingual indexing and search.
+*/
+
 class DrupalSolrMultilingualConfigTestCase extends AbstractDrupalSolrOnlineWebTestCase {
 
   public static function getInfo() {
@@ -67,7 +71,7 @@ class DrupalSolrMultilingualConfigTestCase extends AbstractDrupalSolrOnlineWebTe
     $language_ids[] = '';
 
     foreach ($assert_multilingual_files as $file_name) {
-      foreach($language_ids as $language_id) {
+      foreach ($language_ids as $language_id) {
         if (!empty($language_id)) {
           $file_name = str_replace('.txt', '_' . $language_id . '.txt', $file_name);
         }
