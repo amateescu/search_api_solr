@@ -5,28 +5,7 @@
  *  TODO
  */
 
-/**
- * Implements hook_enable().
- */
-function apachesolr_multilingual_enable() {
-  variable_set('apachesolr_search_protected_query_parameters',
-    array_flip(
-      array_merge(
-        array_flip(variable_get('apachesolr_search_protected_query_parameters', array())),
-        array_flip(array('detach-auto-language-filter'))
-      )
-    )
-  );
-}
-
-/**
- * Implements hook_disable().
- */
-function apachesolr_multilingual_disable() {
-  variable_set('apachesolr_search_protected_query_parameters',
-    array_diff(
-      variable_get('apachesolr_search_protected_query_parameters', array()),
-      array('detach-auto-language-filter')
-    )
-  );
+function apachesolr_multilingual_update_7100(&$sandbox) {
+  // delete a variable that has been used in 7.x-1.0-alpha1
+  variable_del('apachesolr_search_protected_query_parameters');
 }

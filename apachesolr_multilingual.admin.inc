@@ -13,10 +13,9 @@
 
 
 /**
- * Implemtens hook_form().
+ * Implements hook_form().
  *
  * @param $form_state
- * @return void
  */
 function apachesolr_multilingual_admin_form($form_state) {
   $active_languages = locale_language_list();
