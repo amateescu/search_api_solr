@@ -52,7 +52,7 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
   foreach ($documents as $document) {
 
     if (LANGUAGE_NONE == $document->ss_language) {
-      // Language neutral
+      // language-neutral
       $document->ss_language = variable_get('apachesolr_multilingual_map_language_neutral', LANGUAGE_NONE);
     }
 
@@ -98,9 +98,9 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
 //         }
 //       }
 
-    // use language specific stemming and so on
+    // use language-specific stemming and so on
     // by copying all fields of type text to
-    // a language specific text field
+    // a language-specific text field
     if (in_array('label', $fields)) {
       $document->{'i18n_label_' . $document->ss_language} = $document->label;
     }
@@ -139,9 +139,9 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
               $translation_document = new ApacheSolrDocument();
               apachesolr_index_node_solr_document($translation_document, $translation_node, 'node', $env_id);
               $translation_fields = $translation_document->getFieldNames();
-              // use language specific stemming and so on
+              // use language-specific stemming and so on
               // by copying all fields of type text to
-              // a language specific text field
+              // a language-specific text field
               if (in_array('label', $translation_fields)) {
                 $document->{'i18n_label_' . $translation_document->ss_language} = $translation_document->label;
               }
