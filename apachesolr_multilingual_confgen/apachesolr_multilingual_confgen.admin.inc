@@ -13,10 +13,9 @@
 
 
 /**
- * Implemtens hook_form().
+ * Implements hook_form().
  *
  * @param $form_state
- * @return void
  */
 function apachesolr_multilingual_confgen_admin_form($form_state) {
   $variable_language = variable_realm_params('language');
