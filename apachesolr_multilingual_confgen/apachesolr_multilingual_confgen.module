@@ -117,8 +117,13 @@ function apachesolr_multilingual_confgen_get_stemmer($language_id = NULL) {
   if (is_null($language_id)) {
     return $available_stemmers;
   }
-
-  if (array_key_exists($language_id, $available_stemmers)) {
+  elseif (!is_string($language_id)) {
+    // Some language detection functions return FALSE in some cases.
+    // Instead of forcing everyone to not call this function in such a case
+    // we handle it gracefully here.
+    return '';
+  }
+  elseif (array_key_exists($language_id, $available_stemmers)) {
     return $available_stemmers[$language_id];
   }
   else {

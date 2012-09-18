@@ -1,9 +1,10 @@
-Apache Solr Multilingual 7.x-1.0-alpha2, 2012-09-14
+Apache Solr Multilingual 7.x-1.0-alpha2, 2012-09-18
 ---------------------------------------------------
 [        ] mkalkbrenner: added config buttons to module page
 [        ] mkalkbrenner: fixed switch for 'detach_auto_language_filter' depending on language facet
 [        ] mkalkbrenner: added basic test case
 [#1759004] mkalkbrenner: removed variable apachesolr_search_protected_query_parameters
+[#1787668] bart.hanssens, mkalkbrenner: Warning: array_key_exists() in apachesolr_multilingual_confgen.module
 
 
 Apache Solr Multilingual 7.x-1.0-alpha1, 2012-09-03
