@@ -87,6 +87,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       'excerpt' => FALSE,
       'retrieve_data' => FALSE,
       'highlight_data' => FALSE,
+      'http_method' => Apache_Solr_Service::METHOD_POST,
     );
 
     $form['host'] = array(
@@ -160,6 +161,17 @@ class SearchApiSolrService extends SearchApiAbstractService {
     // perspective, having to check both probably makes sense.)
     $form['advanced']['highlight_data']['#states']['invisible']
         [':input[name="options[form][advanced][retrieve_data]"]']['checked'] = FALSE;
+
+    $form['advanced']['http_method'] = array(
+      '#type' => 'select',
+      '#title' => t('HTTP method'),
+      '#description' => t('The HTTP method to use for sending queries. Usually, POST will work fine in all cases.'),
+      '#default_value' => $options['http_method'],
+      '#options' => array(
+        Apache_Solr_Service::METHOD_POST => 'POST',
+        Apache_Solr_Service::METHOD_GET => 'GET',
+      ),
+    );
 
     return $form;
   }
@@ -576,7 +588,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $this->connect();
       drupal_alter('search_api_solr_query', $call_args, $query);
       $this->preQuery($call_args, $query);
-      $response = $this->solr->search($keys, $offset, $limit, $params);
+
+      // Retrieve http method from server options.
+      $http_method = !empty($this->options['http_method']) ? $this->options['http_method'] : Apache_Solr_Service::METHOD_POST;
+      $response = $this->solr->search($keys, $offset, $limit, $params, $http_method);
       $time_query_done = microtime(TRUE);
 
       if ($response->getHttpStatus() != 200) {
@@ -1435,7 +1450,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
         'params' => &$params,
       );
       drupal_alter('search_api_solr_multi_query', $call_args, $query);
-      $response = $this->solr->search($keys, $offset, $limit, $params);
+
+      // Retrieve http method from server options.
+      $http_method = !empty($this->options['http_method']) ? $this->options['http_method'] : Apache_Solr_Service::METHOD_POST;
+      $response = $this->solr->search($keys, $offset, $limit, $params, $http_method);
       $time_query_done = microtime(TRUE);
 
       if ($response->getHttpStatus() != 200) {
