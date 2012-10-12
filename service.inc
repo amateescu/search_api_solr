@@ -88,6 +88,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
       'retrieve_data' => FALSE,
       'highlight_data' => FALSE,
       'http_method' => Apache_Solr_Service::METHOD_POST,
+      'autocorrect_spell' => TRUE,
+      'autocorrect_suggest_words' => TRUE,
     );
 
     $form['host'] = array(
@@ -173,6 +175,27 @@ class SearchApiSolrService extends SearchApiAbstractService {
       ),
     );
 
+    if (module_exists('search_api_autocomplete')) {
+      $form['advanced']['autocomplete'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Autocomplete'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+      );
+      $form['advanced']['autocomplete']['autocorrect_spell'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Use spellcheck for autocomplete suggestions'),
+        '#description' => t('If activated, spellcheck suggestions ("Did you mean") will be included in the autocomplete suggestions. Since the used dictionary contains words from all indexes, this might lead to leaking of sensitive data, depending on your setup.'),
+        '#default_value' => $options['autocorrect_spell'],
+      );
+      $form['advanced']['autocomplete']['autocorrect_suggest_words'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Suggest additional words'),
+        '#description' => t('If activated and the user enters a complete word, Solr will suggest additional words the user wants to search, which are often found (not searched!) together. This has been known to lead to strange results in some configurations – if you see inappropriate additional-word suggestions, you might want to deactivate this option.'),
+        '#default_value' => $options['autocorrect_suggest_words'],
+      );
+    }
+
     return $form;
   }
 
@@ -188,7 +211,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
     // unnecessary dependency on internal implementation.)
     $values += $values['http'];
     $values += $values['advanced'];
-    unset($values['http'], $values['advanced']);
+    $values += $values['autocomplete'];
+    unset($values['http'], $values['advanced'], $values['autocomplete']);
     // Highlighting retrieved data only makes sense when we retrieve data.
     $values['highlight_data'] &= $values['retrieve_data'];
 
@@ -1193,14 +1217,9 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $fq[] = 'index_id:' . $index->machine_name;
 
     // Autocomplete magic
-    if (!array_diff($index->getFulltextFields(), $search_fields)) {
-      $facet_fields = array('spell');
-    }
-    else {
-      $facet_fields = array();
-      foreach ($search_fields as $f) {
-        $facet_fields[] = $fields[$f];
-      }
+    $facet_fields = array();
+    foreach ($search_fields as $f) {
+      $facet_fields[] = $fields[$f];
     }
 
     $limit = $query->getOption('limit', 10);
@@ -1213,28 +1232,26 @@ class SearchApiSolrService extends SearchApiAbstractService {
       'facet.prefix' => $incomp,
       'facet.limit' => $limit * 5,
       'facet.mincount' => 1,
-      'spellcheck' => 'true',
+      'spellcheck' => (!isset($this->options['autocorrect_spell']) || $this->options['autocorrect_spell']) ? 'true' : 'false',
       'spellcheck.count' => 1,
-      'start' => 0,
-      'rows' => 0,
     );
     $call_args = array(
       'query'  => &$keys,
-      'offset' => &$offset,
-      'limit'  => &$limit,
+      'offset' => 0,
+      'limit'  => 0,
       'params' => &$params,
     );
     if ($this->request_handler) {
       $this->setRequestHandler($this->request_handler, $call_args);
     }
-
-    for ($i = 0; $i < 2; ++$i) {
+    $second_pass = !isset($this->options['autocorrect_suggest_words']) || $this->options['autocorrect_suggest_words'];
+    for ($i = 0; $i < ($second_pass ? 2 : 1); ++$i) {
       try {
         // Send search request
         $this->connect();
         drupal_alter('search_api_solr_query', $call_args, $query);
         $this->preQuery($call_args, $query);
-        $response = $this->solr->search($keys, $offset, $limit, $params);
+        $response = $this->solr->search($keys, 0, 0, $params);
 
         if ($response->getHttpStatus() != 200) {
           watchdog('search_api_solr', 'The Solr server responded with status code @status: @msg.',
@@ -1250,10 +1267,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
           }
           $corrected = str_ireplace(array_keys($replace), array_values($replace), $user_input);
           if ($corrected != $user_input) {
-            $suggestions[] = array(
+            array_unshift($suggestions, array(
               'prefix' => t('Did you mean') . ':',
               'user_input' => $corrected,
-            );
+            ));
           }
         }
 
@@ -1262,7 +1279,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
           foreach ($response->facet_counts->facet_fields as $terms) {
             foreach ($terms as $term => $count) {
               if (isset($matches[$term])) {
-                $matches[$term] += $count;
+                // If we just add the result counts, we can easily get over the
+                // total number of results if terms appear in multiple fields.
+                // Therefore, we just take the highest value from any field.
+                $matches[$term] = max($matches[$term], $count);
               }
               else {
                 $matches[$term] = $count;
@@ -1321,7 +1341,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         break;
       }
       // Change parameters for second query.
-      unset($params['facet.prefix'], $params['spellcheck']);
+      unset($params['facet.prefix']);
       $keys = trim ($keys . ' ' . $incomplete_key);
     }
 
