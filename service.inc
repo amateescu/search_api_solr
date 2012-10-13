@@ -295,7 +295,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         $this->solr->deleteByQuery("index_id:" . $id);
       }
       catch (Exception $e) {
-        watchdog('search_api_solr', t("An error occurred while deleting an index' data: @msg.", array('@msg' => $e->getMessage())));
+        watchdog_exception('search_api_solr', $e, "%type while deleting an index's data: !message in %function (line %line of %file).");
       }
     }
   }
@@ -324,7 +324,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         $ret[] = $id;
       }
       catch (Exception $e) {
-        watchdog('search_api_solr', t('An error occurred while indexing @type with ID @id: @msg.', array('@type' => $index->item_type, '@id' => $id, '@msg' => $e->getMessage())), NULL, WATCHDOG_WARNING);
+        watchdog_exception('search_api_solr', $e, "%type while indexing @type with ID @id: !message in %function (line %line of %file).", array('@type' => $index->item_type, '@id' => $id), WATCHDOG_WARNING);
       }
     }
 
@@ -344,7 +344,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
           array('@status' => $response->getHttpStatus(), '@msg' => $response->getHttpStatusMessage())));
     }
     catch (Exception $e) {
-      watchdog('search_api_solr', t('An error occurred while indexing: @msg.', array('@msg' => $e->getMessage())), NULL, WATCHDOG_ERROR);
+      watchdog_exception('search_api_solr', $e, "%type while indexing: !message in %function (line %line of %file).");
     }
     return array();
   }
@@ -1261,9 +1261,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         $response = $this->solr->search($keys, 0, 0, $params);
 
         if ($response->getHttpStatus() != 200) {
-          watchdog('search_api_solr', 'The Solr server responded with status code @status: @msg.',
-              array('@status' => $response->getHttpStatus(), '@msg' => $response->getHttpStatusMessage()),
-              WATCHDOG_WARNING, 'admin/config/search/search_api/server/' . $this->server->machine_name);
+          watchdog('search_api_solr', 'The Solr server responded with status code @status: @msg.', array('@status' => $response->getHttpStatus(), '@msg' => $response->getHttpStatusMessage()), WATCHDOG_WARNING, 'admin/config/search/search_api/server/' . $this->server->machine_name);
           return array();
         }
 
@@ -1341,7 +1339,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         }
       }
       catch (Exception $e) {
-        watchdog('search_api_solr', check_plain($e->getMessage()), NULL, WATCHDOG_WARNING);
+        watchdog_exception('search_api_solr', $e, "%type during autocomplete Solr query: !message in %function (line %line of %file).", array(), WATCHDOG_WARNING);
       }
 
       if (count($suggestions) >= $limit) {
