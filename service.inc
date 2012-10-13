@@ -449,6 +449,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
   }
 
   /**
+   * Delete items from an index on this server.
+   *
    * This method has a custom, Solr-specific extension:
    * If $ids is a string other than "all", it is treated as a Solr query. All
    * items matching that Solr query are then deleted. If $index is additionally
@@ -457,28 +459,33 @@ class SearchApiSolrService extends SearchApiAbstractService {
    * called in this fashion.
    */
   public function deleteItems($ids = 'all', SearchApiIndex $index = NULL) {
-    $this->connect();
-    if ($index) {
-      $index_id = $index->machine_name;
-      if (is_array($ids)) {
-        $solr_ids = array();
-        foreach ($ids as $id) {
-          $solr_ids[] = $this->createId($index_id, $id);
+    try {
+      $this->connect();
+      if ($index) {
+        $index_id = $index->machine_name;
+        if (is_array($ids)) {
+          $solr_ids = array();
+          foreach ($ids as $id) {
+            $solr_ids[] = $this->createId($index_id, $id);
+          }
+          $this->solr->deleteByMultipleIds($solr_ids);
         }
-        $this->solr->deleteByMultipleIds($solr_ids);
-      }
-      elseif ($ids == 'all') {
-        $this->solr->deleteByQuery("index_id:" . $index_id);
+        elseif ($ids == 'all') {
+          $this->solr->deleteByQuery("index_id:" . $index_id);
+        }
+        else {
+          $this->solr->deleteByQuery("index_id:" . $index_id . ' (' . $ids . ')');
+        }
       }
       else {
-        $this->solr->deleteByQuery("index_id:" . $index_id . ' (' . $ids . ')');
+        $q = $ids == 'all' ? '*:*' : $ids;
+        $this->solr->deleteByQuery($q);
       }
+      $this->scheduleCommit();
     }
-    else {
-      $q = $ids == 'all' ? '*:*' : $ids;
-      $this->solr->deleteByQuery($q);
+    catch(Exception $e) {
+      watchdog_exception('search_api_solr', $e, '%type while deleting items from server @server: !message in %function (line %line of %file).', array('@server' => $this->server->name));
     }
-    $this->scheduleCommit();
   }
 
   public function search(SearchApiQueryInterface $query) {
