@@ -1,4 +1,3 @@
-
 Solr search
 -----------
 
@@ -28,7 +27,8 @@ Regarding third-party features, the following are supported:
 
 - search_api_autocomplete
   Introduced by module: search_api_autocomplete
-  Lets you add autocompletion capabilities to search forms on the site.
+  Lets you add autocompletion capabilities to search forms on the site. (See
+  also "Hidden variables" below for Solr-specific customization.)
 - search_api_facets
   Introduced by module: search_api_facets
   Allows you to create facetted searches for dynamically filtering search
@@ -69,6 +69,14 @@ you simply set all fields that should be searched to type "Fulltext" (but don't
 check "Indexed"), add the "Fulltext field" data alter callback and only index
 the newly added field named "Fulltext".
 
+Hidden variables
+----------------
+
+- search_api_solr_autocomplete_max_occurrences (default: 0.9)
+  By default, keywords that occur in more than 90% of results are ignored for
+  autocomplete suggestions. This setting lets you modify that behaviour by
+  providing your own ratio. Use 1 or greater to use all suggestions.
+
 Customizing your Solr server
 ----------------------------
 
@@ -89,6 +97,5 @@ Developers
 ----------
 
 The SearchApiSolrService class has a few custom extensions, documented with its
-code. Methods of note are:
-- deleteItems()
-- ping()
+code. Methods of note are deleteItems(), which treats the first argument
+differently in certain cases, and the methods at the end of service.inc.

@@ -1303,11 +1303,15 @@ class SearchApiSolrService extends SearchApiAbstractService {
               }
             }
 
-            // Don't suggest terms that are too frequent (in > 90% of results).
-            $max_occurence = $response->response->numFound * 0.9;
-            foreach ($matches as $match => $count) {
-              if ($count > $max_occurence) {
-                unset($matches[$match]);
+            // Don't suggest terms that are too frequent (by default in more
+            // than 90% of results).
+            $result_count = $response->response->numFound;
+            $max_occurrences = $result_count * variable_get('search_api_solr_autocomplete_max_occurrences', 0.9);
+            if (($max_occurrences >= 1 || $i > 0) && $max_occurrences < $result_count) {
+              foreach ($matches as $match => $count) {
+                if ($count > $max_occurrences) {
+                  unset($matches[$match]);
+                }
               }
             }
 

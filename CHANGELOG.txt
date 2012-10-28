@@ -1,5 +1,7 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1425910 by drunken monkey, mh86: Added setting for maximum occurence
+  threshold in autocomplete.
 - #1691132 by drunken monkey, David Stosik: Fixed calls to watchdog().
 - #1588130 by regilero, David Stosik, drunken monkey: Fixed error handling.
 - #1805720 by drunken monkey: Added additional options and improvements for the
