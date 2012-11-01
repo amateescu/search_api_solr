@@ -211,7 +211,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     // unnecessary dependency on internal implementation.)
     $values += $values['http'];
     $values += $values['advanced'];
-    $values += $values['autocomplete'];
+    $values += !empty($values['autocomplete']) ? $values['autocomplete'] : array();
     unset($values['http'], $values['advanced'], $values['autocomplete']);
     // Highlighting retrieved data only makes sense when we retrieve data.
     $values['highlight_data'] &= $values['retrieve_data'];
