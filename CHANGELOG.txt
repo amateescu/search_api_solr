@@ -1,3 +1,8 @@
+Apache Solr Multilingual 7.x-1.0-beta1, 2012-11-xx
+---------------------------------------------------
+[#1301252] mkalkbrenner: index nodes translated using entity_translation
+
+
 Apache Solr Multilingual 7.x-1.0-alpha2, 2012-09-18
 ---------------------------------------------------
 [        ] mkalkbrenner: added config buttons to module page
