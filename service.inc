@@ -370,7 +370,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
    *
    * @see SearchApiSolrService::search()
    */
-  protected function getFieldNames(SearchApiIndex $index, $reset = FALSE) {
+  public function getFieldNames(SearchApiIndex $index, $reset = FALSE) {
     if (!isset($this->fieldNames[$index->machine_name]) || $reset) {
       // This array maps "local property name" => "solr doc property name".
       $ret = array(
