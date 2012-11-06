@@ -33,6 +33,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
     'duration' => 'i',
     'boolean' => 'b',
     'uri' => 's',
+    'location' => 'loc',
+    'geohash' => 'geohash',
   );
 
   /**
@@ -227,6 +229,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
       'search_api_mlt',
       'search_api_multi',
       'search_api_spellcheck',
+      'search_api_data_type_location',
+      'search_api_data_type_geohash',
     ));
     return isset($supported[$feature]);
   }
@@ -381,6 +385,15 @@ class SearchApiSolrService extends SearchApiAbstractService {
         // Generate a field name; this corresponds with naming conventions in
         // our schema.xml
         $type = $field['type'];
+
+        // Use the real type of the field if the server supports this type.
+        if (isset($field['real_type'])) {
+          $custom_type = search_api_extract_inner_type($field['real_type']);
+          if ($this->supportsFeature('search_api_data_type_' . $custom_type)) {
+            $type = $field['real_type'];
+          }
+        }
+
         $inner_type = search_api_extract_inner_type($type);
         $pref = isset(self::$type_prefixes[$inner_type]) ? self::$type_prefixes[$inner_type] : '';
         if ($pref != 't') {
