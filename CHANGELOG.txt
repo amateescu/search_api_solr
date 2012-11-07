@@ -1,5 +1,7 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1815348 by drunken monkey: Fixed queryMultiple() to not use item ID as the
+  array key.
 - #1789204 by Steven Jones: Added way to easily alter the fl parameter.
 - #1744250 by mollux, dasjo: Added support for location based search.
 - #1813670 by guillaumev: Fixed check for autocomplete configuration in form.

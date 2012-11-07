@@ -1507,13 +1507,18 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $results = array();
       $results['result count'] = $response->response->numFound;
       $results['results'] = array();
-      foreach ($response->response->docs as $doc) {
-        $doc->id = $doc->item_id;
-        unset($doc->item_id);
-        foreach ($doc as $k => $v) {
-          $result[$k] = $v;
+      $tmp = array();
+      foreach ($response->response->docs as $id => $doc) {
+        $result = array(
+          'id' => $doc->item_id,
+          'index_id' => $doc->index_id,
+          'score' => $doc->score,
+        );
+        $excerpt = $this->getExcerpt($response, $id, $tmp, array());
+        if ($excerpt) {
+          $result['excerpt'] = $excerpt;
         }
-        $results['results'][$doc->id] = $result;
+        $results['results'][$id] = $result;
       }
 
       // Extract facets
