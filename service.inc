@@ -24,8 +24,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
    * @var array
    */
   protected static $type_prefixes = array(
-    'text' => 't',
-    'tokens' => 't',
+    'text' => 'tm',
+    'tokens' => 'tm',
     'string' => 's',
     'integer' => 'i',
     'decimal' => 'f',
@@ -379,7 +379,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         'search_api_item_id' => 'item_id',
       );
 
-      // Add the names of any "fields" configured on the index.
+      // Add the names of any fields configured on the index.
       $fields = (isset($index->options['fields']) ? $index->options['fields'] : array());
       foreach ($fields as $key => $field) {
         // Generate a field name; this corresponds with naming conventions in
@@ -396,7 +396,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
         $inner_type = search_api_extract_inner_type($type);
         $pref = isset(self::$type_prefixes[$inner_type]) ? self::$type_prefixes[$inner_type] : '';
-        if ($pref != 't') {
+        if ($pref != 'tm') {
           $pref .= $type == $inner_type ? 's' : 'm';
         }
         $name = $pref . '_' . $key;
@@ -523,9 +523,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $qf = array();
     foreach ($search_fields as $f) {
       $boost = '';
-      if ($this->request_handler != 'standard') {
-        $boost = isset($index_fields[$f]['boost']) ? '^' . $index_fields[$f]['boost'] : '';
-      }
+      $boost = isset($index_fields[$f]['boost']) ? '^' . $index_fields[$f]['boost'] : '';
       $qf[] = $fields[$f] . $boost;
     }
 
@@ -538,36 +536,19 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $sort = array();
     foreach ($query->getSort() as $f => $order) {
       $f = $fields[$f];
+      if (substr($f, 0, 3) == 'ss_') {
+        $f = 'sort_' . substr($f, 3);
+      }
       $order = strtolower($order);
       $sort[] = "$f $order";
     }
 
     // Get facet fields
-    $facets = $query->getOption('search_api_facets') ? $query->getOption('search_api_facets') : array();
+    $facets = $query->getOption('search_api_facets', array());
     $facet_params = $this->getFacetParams($facets, $fields, $fq);
 
     // Handle highlighting
-    if (!empty($this->options['excerpt'])) {
-      $highlight_params['hl'] = 'true';
-      $highlight_params['hl.snippets'] = 3;
-    }
-    if (!empty($this->options['highlight_data'])) {
-      $excerpt = !empty($highlight_params);
-      $highlight_params['hl'] = 'true';
-      $highlight_params['hl.fl'] = 't_*';
-      $highlight_params['hl.snippets'] = 1;
-      $highlight_params['hl.fragsize'] = 0;
-      if ($excerpt) {
-        // If we also generate a "normal" excerpt, set the settings for the
-        // "spell" field (which we use to generate the excerpt) back to the
-        // default values from solrconfig.xml.
-        $highlight_params['f.spell.hl.snippets'] = 3;
-        $highlight_params['f.spell.hl.fragsize'] = 70;
-        // It regrettably doesn't seem to be possible to set hl.fl to several
-        // values, if one contains wild cards (i.e., "t_*,spell" wouldn't work).
-        $highlight_params['hl.fl'] = '*';
-      }
-    }
+    $highlight_params = $this->getHighlightParams($query);
 
     // Handle More Like This query
     $mlt = $query->getOption('search_api_mlt');
@@ -583,7 +564,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         }
       }
       $mlt_params['mlt.fl'] = implode(',', $mlt_fl);
-      $keys = 'id:' . $index->machine_name . '-' . $mlt['id'];
+      $keys = 'id:' . SearchApiSolrConnection::phrase($this->createId($index->machine_name, $mlt['id']));
     }
 
     // Set defaults
@@ -595,9 +576,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
     // Collect parameters
     $params = array(
+      'fl' => 'item_id,score',
       'qf' => $qf,
+      'fq' => $fq,
     );
-    $params['fq'] = $fq;
     if ($sort) {
       $params['sort'] = implode(', ', $sort);
     }
@@ -666,8 +648,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       return $results;
     }
     catch (Exception $e) {
-      throw new SearchApiException(t('An error occurred while trying to search with Solr: @msg.',
-          array('@msg' => $e->getMessage())));
+      throw new SearchApiException(t('An error occurred while trying to search with Solr: @msg.', array('@msg' => $e->getMessage())));
     }
   }
 
@@ -814,7 +795,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $extract_facets = ($extract_facets ? $extract_facets : array());
 
       foreach ($extract_facets as $delta => $info) {
-        $field = $this->getFacetField($fields[$info['field']]);
+        $field = $fields[$info['field']];
         if (!empty($facet_fields->$field)) {
           $min_count = $info['min_count'];
           $terms = $facet_fields->$field;
@@ -868,16 +849,6 @@ class SearchApiSolrService extends SearchApiAbstractService {
   }
 
   /**
-   * Return the facet field corresponding to a normal Solr field name.
-   *
-   * In the default configuration, string fields have additional fields
-   * specifically for facetting purposes, prefixed with an additional 'f_'.
-   */
-  protected function getFacetField($field) {
-    return ($field[0] == 's') ? 'f_' . $field : $field;
-  }
-
-  /**
    * Flatten a keys array into a single search string.
    *
    * @param array $keys
@@ -903,9 +874,6 @@ class SearchApiSolrService extends SearchApiAbstractService {
           // If this is a negated OR expression, we can't just use nested keys
           // as-is, but have to put them into parantheses.
           if ($or && $neg) {
-            if (empty($this->request_handler) || $this->request_handler == 'dismax') {
-              $this->request_handler = 'standard';
-            }
             $subkeys = "($subkeys)";
           }
           $k[] = $subkeys;
@@ -921,28 +889,20 @@ class SearchApiSolrService extends SearchApiAbstractService {
       return '';
     }
 
-    // Normally, we use the "dismax" request handler, as it yields the best
-    // results for simple queries (only single terms, phrases or simple
-    // negation). In more complex cases, we have to switch to the "standard"
-    // handler, which offers complex syntax. This is guided by the "#negation"
-    // and "#conjunction" settings. Results of the following form will be
-    // returned:
+    // Formatting the keys into a Solr query can be a bit complex. The following
+    // code will produce that look like this:
     //
-    // #conjunction | #negation | handler  | return value
+    // #conjunction | #negation | return value
     // ----------------------------------------------------------------
-    // AND          | FALSE     | dismax   | A B C
-    // AND          | TRUE      | standard | -(A B C)
-    // OR           | FALSE     | standard | ((A) OR (B) OR (C))
-    // OR           | TRUE      | dismax   | -A -B -C
+    // AND          | FALSE     | A B C
+    // AND          | TRUE      | -(A B C)
+    // OR           | FALSE     | ((A) OR (B) OR (C))
+    // OR           | TRUE      | -A -B -C
 
     // If there was just a single, unnested key, we can ignore all this.
     if (count($k) == 1 && empty($nested_expressions)) {
       $k = reset($k);
       return $neg ? "-$k" : $k;
-    }
-
-    if ($or != $neg && (empty($this->request_handler) || $this->request_handler == 'dismax')) {
-      $this->request_handler = 'standard';
     }
 
     if ($or) {
@@ -1051,7 +1011,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         continue;
       }
       // String fields have their own corresponding facet fields.
-      $field = $this->getFacetField($fields[$info['field']]);
+      $field = $fields[$info['field']];
       // Check for the "or" operator.
       if (isset($info['operator']) && $info['operator'] === 'or') {
         // Remember that filters for this field should be tagged.
@@ -1096,6 +1056,44 @@ class SearchApiSolrService extends SearchApiAbstractService {
   }
 
   /**
+   * Helper method for creating the highlighting parameters.
+   *
+   * (The $query parameter currently isn't used and only here for the potential
+   * sake of subclasses.)
+   */
+  protected function getHighlightParams(SearchApiQueryInterface $query) {
+    $highlight_params = array();
+
+    if (!empty($this->options['excerpt']) || !empty($this->options['highlight_data'])) {
+      $highlight_params['hl'] = 'true';
+      $highlight_params['hl.fl'] = 'spell';
+      $highlight_params['hl.simple.pre'] = '[HIGHLIGHT]';
+      $highlight_params['hl.simple.post'] = '[/HIGHLIGHT]';
+      $highlight_params['hl.snippets'] = 3;
+      $highlight_params['hl.fragsize'] = 70;
+      $highlight_params['hl.mergeContiguous'] = 'true';
+    }
+
+    if (!empty($this->options['highlight_data'])) {
+      $highlight_params['hl.fl'] = 't_*';
+      $highlight_params['hl.snippets'] = 1;
+      $highlight_params['hl.fragsize'] = 0;
+      if (!empty($this->options['excerpt'])) {
+        // If we also generate a "normal" excerpt, set the settings for the
+        // "spell" field (which we use to generate the excerpt) back to the
+        // above values.
+        $highlight_params['f.spell.hl.snippets'] = 3;
+        $highlight_params['f.spell.hl.fragsize'] = 70;
+        // It regrettably doesn't seem to be possible to set hl.fl to several
+        // values, if one contains wild cards (i.e., "t_*,spell" wouldn't work).
+        $highlight_params['hl.fl'] = '*';
+      }
+    }
+
+    return $highlight_params;
+  }
+
+  /**
    * Helper method for setting the request handler, and making necessary
    * adjustments to the request parameters.
    *
@@ -1112,24 +1110,15 @@ class SearchApiSolrService extends SearchApiAbstractService {
    *   this method.
    */
   protected function setRequestHandler($handler, array &$call_args) {
-    if ($handler == 'dismax') {
-      return TRUE;
-    }
-    if ($handler == 'standard') {
-      $keys = &$call_args['query'];
-      $params = &$call_args['params'];
-      $params['qt'] = $handler;
-      $k = $keys;
-      $fields = $params['qf'];
-      unset($params['qf']);
-      $keys = implode(":($k) OR ", array_map(array('SearchApiSolrConnection', 'escapeFieldName'), $fields)) . ":($k)";
+    if ($handler == 'pinkPony') {
+      $call_args['params']['qt'] = $handler;
       return TRUE;
     }
     return FALSE;
   }
 
   /**
-   * Empty method to allow subclassed to apply custom changes before the query
+   * Empty method to allow subclasses to apply custom changes before the query
    * is sent to Solr. Works exactly like hook_search_api_solr_query_alter().
    *
    * @param array $call_args
@@ -1453,6 +1442,9 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $sort = array();
     foreach ($query->getSort() as $f => $order) {
       $f = $solr_fields[$f];
+      if (substr($f, 0, 3) == 'ss_') {
+        $f = 'sort_' . substr($f, 3);
+      }
       $order = strtolower($order);
       $sort[] = "$f $order";
     }
