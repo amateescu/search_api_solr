@@ -1,5 +1,6 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1828260 by drunken monkey: Fixed filtering by index in multi-index searches.
 - #1509380 by drunken monkey: Adopt common config files.
 - #1815348 by drunken monkey: Fixed queryMultiple() to not use item ID as the
   array key.

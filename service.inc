@@ -1438,6 +1438,13 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $filter = $query->getFilter();
     $fq = $this->createFilterQueries($filter, $solr_fields, $fields);
 
+    // Restrict search to searched indexes.
+    $index_filter = array();
+    foreach ($query->getIndexes() as $index_id => $index) {
+      $index_filter[] = 'index_id:' . SearchApiSolrConnection::phrase($index_id);
+    }
+    $fq[] = implode(' OR ', $index_filter);
+
     // Extract sort
     $sort = array();
     foreach ($query->getSort() as $f => $order) {
