@@ -7,7 +7,6 @@ configure = admin/config/search/apachesolr/multilingual
 
 dependencies[] = apachesolr
 dependencies[] = apachesolr_search
-dependencies[] = facetapi
 dependencies[] = i18n_variable
 dependencies[] = locale
 
