@@ -61,58 +61,85 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
       continue;
     }
 
-    if ('node' == $entity_type) {
-      if (module_exists('entity_translation') && entity_translation_enabled($entity_type)) {
-        $entity_info = entity_get_info($entity_type);
-        $translations_key = $entity_info['entity keys']['translations'];
-        $original_langcode = $entity->language;
-        $additional_documents_langcodes = array();
-        foreach ($entity->{$translations_key}->data as $langcode => $entity_translation) {
-          if ($langcode != $original_langcode) {
-            $additional_documents_langcodes[$langcode] = $langcode;
-            if (variable_get('apachesolr_multilingual_index_translations', 0)) {
-              $entity->language = $langcode;
-              apachesolr_multilingual_index_node_translation($document, $entity, $env_id);
-              $entity->language = $original_langcode;
-            }
-          }
-        }
-        foreach ($additional_documents_langcodes as $langcode) {
-          if (!array_key_exists($document->id, $documents)) {
-            $id = $document->id . '/' . $langcode;
-            $additional_documents = array();
-            $additional_documents[$id] = clone $document;
-            $additional_documents[$id]->id = $id;
-            $original_langcode = $entity->language;
-            $entity->language = $langcode;
-            apachesolr_index_node_solr_document($additional_documents[$id], $entity, $entity_type, $env_id);
-            apachesolr_multilingual_apachesolr_index_documents_alter($additional_documents, $entity, $entity_type, $env_id);
-            $entity->language = $original_langcode;
-            foreach ($additional_documents as $key => $additional_document) {
-              $documents[$key] = $additional_document;
-            }
-          }
-        }
-      }
+    switch ($entity_type) {
+      case 'node':
+        if (module_exists('entity_translation')
+          && entity_translation_enabled($entity_type)
+          && entity_translation_enabled_bundle($entity_type, $entity->type)) {
 
-      if (variable_get('apachesolr_multilingual_index_translations', 0) &&
-        in_array('is_tnid', $fields) && !empty($document->is_tnid)) {
-        // TODO distinguish between published and unpublished translations
-        $translations = translation_node_get_translations($document->is_tnid);
-        foreach ($translations as $node_stub) {
-          if ($node_stub->nid != $document->entity_id) {
-            if ($translation_node = node_load($node_stub->nid)) {
-              apachesolr_multilingual_index_node_translation($document, $translation_node, $env_id);
-              // TODO is it possible to combine node and entity translation?
+          /////////////////////
+          // entity translation
+          /////////////////////
+
+          $entity_info = entity_get_info($entity_type);
+          $translations_key = $entity_info['entity keys']['translations'];
+          $original_langcode = $entity->language;
+          $additional_documents_langcodes = array();
+          foreach ($entity->{$translations_key}->data as $langcode => $entity_translation) {
+            if ($langcode != $original_langcode) {
+              $additional_documents_langcodes[$langcode] = $langcode;
+              if (variable_get('apachesolr_multilingual_index_translations', 0)) {
+                // Temporarily switch the language context for apachesolr_index_node_solr_document(),
+                // which is not aware of entity_translation.
+                $entity->language = $langcode;
+                apachesolr_multilingual_index_node_translation($document, $entity, $env_id);
+                $entity->language = $original_langcode;
+              }
+            }
+          }
+          // Create an index entry for each language to node has been translated to.
+          // The id gets a language suffix to be unique.
+          foreach ($additional_documents_langcodes as $langcode) {
+            // Prevent endless recursion if language specific document has been created already.
+            if (!array_key_exists($document->id, $documents)) {
+              $id = $document->id . '/' . $langcode;
+              $additional_documents = array();
+              $additional_documents[$id] = clone $document;
+              $additional_documents[$id]->id = $id;
+              // Temporarily switch the language context for apachesolr_index_node_solr_document(),
+              // which is not aware of entity_translation.
+              $original_langcode = $entity->language;
+              $entity->language = $langcode;
+              apachesolr_index_node_solr_document($additional_documents[$id], $entity, $entity_type, $env_id);
+              // Recursive call to deal with 'apachesolr_multilingual_index_translations' aka CLIR, see above and below
+              apachesolr_multilingual_apachesolr_index_documents_alter($additional_documents, $entity, $entity_type, $env_id);
+              $entity->language = $original_langcode;
+              foreach ($additional_documents as $key => $additional_document) {
+                $documents[$key] = $additional_document;
+              }
             }
           }
         }
-      }
+        elseif (variable_get('apachesolr_multilingual_index_translations', 0)
+          && in_array('is_tnid', $fields) && !empty($document->is_tnid)) {
+
+          ////////////////////////////////////////////
+          // node translation, aka content translation
+          ////////////////////////////////////////////
+
+          // TODO distinguish between published and unpublished translations
+          $translations = translation_node_get_translations($document->is_tnid);
+          foreach ($translations as $node_stub) {
+            if ($node_stub->nid != $document->entity_id) {
+              if ($translation_node = node_load($node_stub->nid)) {
+                apachesolr_multilingual_index_node_translation($document, $translation_node, $env_id);
+                // TODO is it possible to combine node and entity translation?
+              }
+            }
+          }
+        }
+        break;
+
+      default:
+        watchdog('Apache Solr', t('Apache Solr Multilingual does not fully support indexing entities of type %type.', array('%type' => $entity_type)), NULL, WATCHDOG_NOTICE);
     }
 
-    $document->addField('sm_language', $document->ss_language);
+    apachesolr_multilingual_copy_common_to_i18n_fields($document, $document);
+  }
+}
 
-    $fields = $document->getFieldNames();
+function apachesolr_multilingual_copy_common_to_i18n_fields($src_document, $dst_document) {
+  $fields = $src_document->getFieldNames();
 
 //       if (in_array('vid', $fields) && is_array($document->vid)) { // vid is vocabulary id in this case
 //         $term_languages = array($language);
@@ -155,70 +182,43 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
 //         }
 //       }
 
-    // use language-specific stemming and so on
-    // by copying all fields of type text to
-    // a language-specific text field
-    if (in_array('label', $fields)) {
-      $document->{'i18n_label_' . $document->ss_language} = $document->label;
-    }
-    if (in_array('teaser', $fields)) {
-      $document->{'i18n_teaser_' . $document->ss_language} = $document->teaser;
-    }
-    if (in_array('content', $fields)) {
-      $document->{'i18n_content_' . $document->ss_language} = $document->content;
-    }
-    if (in_array('path_alias', $fields)) {
-      $document->{'i18n_path_alias_' . $document->ss_language} = $document->path_alias;
-    }
-    foreach ($fields as $field_name) {
-      foreach (array('ts_', 'tm_', 'tos_', 'tom_', 'tags_') as $prefix) {
-        if (strpos($field_name, $prefix) === 0 && !empty($document->{$field_name})) {
-          // search for existing language identifier at second position
-          $tmp = explode('_', $field_name);
-          if ($document->ss_language != $tmp[1]) {
-            // Dynamic fields have to be prefixed with 'i18n_' to distinguish between
-            // language-specific dynamic fields and standard dynamic fields.
-            // The language suffix is not enough, because someone could define a
-            // drupal field name like 'de_foo', which matches ts_de_* but not i18n_ts_*
-            $document->{'i18n_' . $tmp[0] . '_' . $document->ss_language . drupal_substr($field_name, drupal_strlen($tmp[0]))} = $document->{$field_name};
-          }
+  // use language-specific stemming and so on
+  // by copying all fields of type text to
+  // a language-specific text field
+  if (in_array('label', $fields)) {
+    $dst_document->{'i18n_label_' . $src_document->ss_language} = $src_document->label;
+  }
+  if (in_array('teaser', $fields)) {
+    $dst_document->{'i18n_teaser_' . $src_document->ss_language} = $src_document->teaser;
+  }
+  if (in_array('content', $fields)) {
+    $dst_document->{'i18n_content_' . $src_document->ss_language} = $src_document->content;
+  }
+  if (in_array('path_alias', $fields)) {
+    $dst_document->{'i18n_path_alias_' . $src_document->ss_language} = $src_document->path_alias;
+  }
+  foreach ($fields as $field_name) {
+    foreach (array('ts_', 'tm_', 'tos_', 'tom_', 'tags_') as $prefix) {
+      if (strpos($field_name, $prefix) === 0 && !empty($src_document->{$field_name})) {
+        // search for existing language identifier at second position
+        $tmp = explode('_', $field_name);
+        if ($src_document->ss_language != $tmp[1]) {
+          // Dynamic fields have to be prefixed with 'i18n_' to distinguish between
+          // language-specific dynamic fields and standard dynamic fields.
+          // The language suffix is not enough, because someone could define a
+          // drupal field name like 'de_foo', which matches ts_de_* but not i18n_ts_*
+          $dst_document->{'i18n_' . $tmp[0] . '_' . $src_document->ss_language . drupal_substr($field_name, drupal_strlen($tmp[0]))} = $src_document->{$field_name};
         }
       }
     }
   }
+  $dst_document->addField('sm_language', $src_document->ss_language);
 }
 
 function apachesolr_multilingual_index_node_translation($document, $translation_node, $env_id) {
   $translation_document = new ApacheSolrDocument();
   apachesolr_index_node_solr_document($translation_document, $translation_node, 'node', $env_id);
-  $translation_fields = $translation_document->getFieldNames();
-  // use language-specific stemming and so on
-  // by copying all fields of type text to
-  // a language-specific text field
-  if (in_array('label', $translation_fields)) {
-    $document->{'i18n_label_' . $translation_document->ss_language} = $translation_document->label;
-  }
-  if (in_array('teaser', $translation_fields)) {
-    $document->{'i18n_teaser_' . $translation_document->ss_language} = $translation_document->teaser;
-  }
-  if (in_array('content', $translation_fields)) {
-    $document->{'i18n_content_' . $translation_document->ss_language} = $translation_document->content;
-  }
-  if (in_array('path_alias', $translation_fields)) {
-    $document->{'i18n_path_alias_' . $translation_document->ss_language} = $translation_document->path_alias;
-  }
-  foreach ($translation_fields as $field_name) {
-    foreach (array('ts_', 'tm_', 'tos_', 'tom_', 'tags_') as $prefix) {
-      if (strpos($field_name, $prefix) === 0 && !empty($translation_document->{$field_name})) {
-        // search for existing language identifier at second position
-        $tmp = explode('_', $field_name);
-        if ($translation_document->ss_language != $tmp[1]) {
-          $document->{'i18n_' . $tmp[0] . '_' . $translation_document->ss_language . drupal_substr($field_name, drupal_strlen($tmp[0]))} = $translation_document->{$field_name};
-        }
-      }
-    }
-  }
-  $document->addField('sm_language', $translation_document->ss_language);
+  apachesolr_multilingual_copy_common_to_i18n_fields($translation_document, $document);
 }
 
 /**
@@ -267,7 +267,7 @@ function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, 
           '#options' => $weights,
           '#title' => filter_xss(apachesolr_field_name_map($field_name)),
           '#default_value' => isset($qf[$field_name]) ? $qf[$field_name] : '1.0',
-          '#description' => filter_xss(('text' == $field->type) ? t('Unspecified language: recomandation is set this bias to "Omit"') : ''),
+          '#description' => filter_xss(('text' == $field->type) ? t('Unspecified language: recommendation is set this bias to "Omit"') : ''),
         );
       }
     }
