@@ -140,7 +140,7 @@ function apachesolr_multilingual_confgen_admin_form($form_state) {
     foreach ($arr as $type => $var_names) {
       foreach ($var_names as $var_name) {
         // example: $form['vt']['apachesolr_multilingual_advanced']['WordDelimiterFilterFactory']['index']['apachesolr_multilingual_splitOnCaseChange_index']
-        $form['vt']['apachesolr_multilingual_advanced'][$component][$type][$var_name] = apachesolr_multilingual_variable_definition_to_form_element($var_name);
+        $form['vt']['apachesolr_multilingual_advanced'][$component][$type][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
       }
     }
   }
@@ -154,7 +154,7 @@ function apachesolr_multilingual_confgen_admin_form($form_state) {
   );
 
   $var_name = 'apachesolr_multilingual_ignoreCase_stopwords';
-  $form['vt']['apachesolr_multilingual_advanced']['StopFilterFactory'][$var_name] = apachesolr_multilingual_variable_definition_to_form_element($var_name);
+  $form['vt']['apachesolr_multilingual_advanced']['StopFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
 
 
   $form['vt']['apachesolr_multilingual_advanced']['SynonymFilterFactory'] = array(
@@ -165,7 +165,7 @@ function apachesolr_multilingual_confgen_admin_form($form_state) {
   );
 
   $var_name = 'apachesolr_multilingual_ignoreCase_synonyms';
-  $form['vt']['apachesolr_multilingual_advanced']['SynonymFilterFactory'][$var_name] = apachesolr_multilingual_variable_definition_to_form_element($var_name);
+  $form['vt']['apachesolr_multilingual_advanced']['SynonymFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
 
 
   $form['vt']['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'] = array(
@@ -176,10 +176,10 @@ function apachesolr_multilingual_confgen_admin_form($form_state) {
   );
 
   $var_name = 'apachesolr_multilingual_lengthMin_spell';
-  $form['vt']['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'][$var_name] = apachesolr_multilingual_variable_definition_to_form_element($var_name);
+  $form['vt']['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
 
   $var_name = 'apachesolr_multilingual_lengthMax_spell';
-  $form['vt']['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'][$var_name] = apachesolr_multilingual_variable_definition_to_form_element($var_name);
+  $form['vt']['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
 
 
   $form['vt']['apachesolr_multilingual_advanced']['DictionaryCompoundWordTokenFilterFactory'] = array(
@@ -190,16 +190,16 @@ function apachesolr_multilingual_confgen_admin_form($form_state) {
   );
 
   $var_name = 'apachesolr_multilingual_minWordSize';
-  $form['vt']['apachesolr_multilingual_advanced']['DictionaryCompoundWordTokenFilterFactory'][$var_name] = apachesolr_multilingual_variable_definition_to_form_element($var_name);
+  $form['vt']['apachesolr_multilingual_advanced']['DictionaryCompoundWordTokenFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
 
   $var_name = 'apachesolr_multilingual_minSubwordSize';
-  $form['vt']['apachesolr_multilingual_advanced']['DictionaryCompoundWordTokenFilterFactory'][$var_name] = apachesolr_multilingual_variable_definition_to_form_element($var_name);
+  $form['vt']['apachesolr_multilingual_advanced']['DictionaryCompoundWordTokenFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
 
   $var_name = 'apachesolr_multilingual_maxSubwordSize';
-  $form['vt']['apachesolr_multilingual_advanced']['DictionaryCompoundWordTokenFilterFactory'][$var_name] = apachesolr_multilingual_variable_definition_to_form_element($var_name);
+  $form['vt']['apachesolr_multilingual_advanced']['DictionaryCompoundWordTokenFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
 
   $var_name = 'apachesolr_multilingual_onlyLongestMatch';
-  $form['vt']['apachesolr_multilingual_advanced']['DictionaryCompoundWordTokenFilterFactory'][$var_name] = apachesolr_multilingual_variable_definition_to_form_element($var_name);
+  $form['vt']['apachesolr_multilingual_advanced']['DictionaryCompoundWordTokenFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
 
   return system_settings_form($form);
 }

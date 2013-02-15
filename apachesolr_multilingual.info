@@ -7,9 +7,6 @@ configure = admin/config/search/apachesolr/multilingual
 
 dependencies[] = apachesolr
 dependencies[] = apachesolr_search
-dependencies[] = i18n_variable
 dependencies[] = locale
 
-files[] = apachesolr_multilingual.admin.inc
 files[] = apachesolr_multilingual.module
-files[] = apachesolr_multilingual.variable.inc

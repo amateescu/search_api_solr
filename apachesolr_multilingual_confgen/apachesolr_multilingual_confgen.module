@@ -311,3 +311,16 @@ function apachesolr_multilingual_confgen_variable_update($name, $value, $old_val
       break;
   }
 }
+
+/**
+ * A shorthand for variable_get_info and variable_form_element
+ *
+ * @param string $name
+ * @return Array The generated form element
+ */
+function apachesolr_multilingual_confgen_variable_definition_to_form_element($name) {
+  module_load_include('form.inc', 'variable');
+  $variable = variable_get_info($name);
+
+  return variable_form_element($variable);
+}
