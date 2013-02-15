@@ -658,3 +658,18 @@ function apachesolr_multilingual_environment_add_defaults(&$environment) {
         ),
     );
 }
+
+/**
+ * Implements hook_multilingual_settings_changed().
+ */
+function apachesolr_multilingual_multilingual_settings_changed() {
+  if (!module_exists('apachesolr_multilingual_confgen')) {
+    drupal_set_message(
+      t(
+        'Multilingual settings have been changed. Maybe you have to create a new set of configuration files, to update your solr configuration and to restart your solr server.',
+        array('!link_download' => l(t('download'), 'admin/config/search/apachesolr/confgen'))
+      ),
+      'warning'
+    );
+  }
+}
