@@ -111,7 +111,7 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
           }
         }
         elseif (variable_get('apachesolr_multilingual_index_translations', 0)
-          && in_array('is_tnid', $fields) && !empty($document->is_tnid)) {
+          && !empty($document->is_tnid)) {
 
           ////////////////////////////////////////////
           // node translation, aka content translation
