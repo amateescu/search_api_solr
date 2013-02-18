@@ -332,7 +332,8 @@ function apachesolr_multilingual_apachesolr_field_name_map_alter(&$map) {
 function apachesolr_multilingual_apachesolr_query_alter($query) {
   global $language;
 
-  $search_page = apachesolr_search_page_load($query->getSearchPageId());
+  $context = $query->getContext();
+  $search_page = apachesolr_search_page_load($context['page_id']);
 
   $languages = locale_language_list();
 
