@@ -51,7 +51,7 @@ function apachesolr_multilingual_confgen_admin_form($form_state) {
     '#title' => t('Advanced Language Settings'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-    '#description' => t('Advanced settings for every language. If there are missing some languages here you have to activate them above and save this form first.'),
+    '#description' => t('Advanced settings for every language. If there are missing some languages here you have to activate them first.'),
   );
 
   // language-specific stuff
@@ -168,20 +168,6 @@ function apachesolr_multilingual_confgen_admin_form($form_state) {
   $form['vt']['apachesolr_multilingual_advanced']['SynonymFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
 
 
-  $form['vt']['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'] = array(
-    '#type' => 'fieldset',
-    '#title' => 'Spell LengthFilterFactory',
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
-
-  $var_name = 'apachesolr_multilingual_lengthMin_spell';
-  $form['vt']['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
-
-  $var_name = 'apachesolr_multilingual_lengthMax_spell';
-  $form['vt']['apachesolr_multilingual_advanced']['SpellLengthFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
-
-
   $form['vt']['apachesolr_multilingual_advanced']['DictionaryCompoundWordTokenFilterFactory'] = array(
     '#type' => 'fieldset',
     '#title' => 'DictionaryCompoundWordTokenFilterFactory',
@@ -200,6 +186,106 @@ function apachesolr_multilingual_confgen_admin_form($form_state) {
 
   $var_name = 'apachesolr_multilingual_onlyLongestMatch';
   $form['vt']['apachesolr_multilingual_advanced']['DictionaryCompoundWordTokenFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
+
+  $form['vt']['apachesolr_multilingual_spell'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Spell Check'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#description' => t('Advanced spell check settings for every language. If there are missing some languages here you have to activate them first.'),
+  );
+
+  // language-specific stuff
+  $form['vt']['apachesolr_multilingual_spell']['WordDelimiterFilterFactory'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'WordDelimiterFilterFactory',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['vt']['apachesolr_multilingual_spell']['LengthFilterFactory'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'LengthFilterFactory',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  // language-specific parameters available for index and query
+  $structure = array(
+    'WordDelimiterFilterFactory' => array(
+      'apachesolr_multilingual_splitOnCaseChange_spell',
+      'apachesolr_multilingual_splitOnNumerics_spell',
+      'apachesolr_multilingual_stemEnglishPossessive_spell',
+      'apachesolr_multilingual_generateWordParts_spell',
+      'apachesolr_multilingual_generateNumberParts_spell',
+      'apachesolr_multilingual_catenateWords_spell',
+      'apachesolr_multilingual_catenateNumbers_spell',
+      'apachesolr_multilingual_catenateAll_spell',
+      'apachesolr_multilingual_preserveOriginal_spell',
+    ),
+  );
+
+  foreach ($structure as $component => $var_names) {
+    foreach ($var_names as $var_name) {
+      $form['vt']['apachesolr_multilingual_spell'][$component][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
+    }
+  }
+
+
+  $form['vt']['apachesolr_multilingual_spell']['StopFilterFactory'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'StopFilterFactory',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $var_name = 'apachesolr_multilingual_ignoreCase_stopwords_spell';
+  $form['vt']['apachesolr_multilingual_spell']['StopFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
+
+
+  $form['vt']['apachesolr_multilingual_spell']['LengthFilterFactory'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'LengthFilterFactory',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $var_name = 'apachesolr_multilingual_lengthMin_spell';
+  $form['vt']['apachesolr_multilingual_spell']['LengthFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
+
+  $var_name = 'apachesolr_multilingual_lengthMax_spell';
+  $form['vt']['apachesolr_multilingual_spell']['LengthFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
+
+
+  $form['vt']['apachesolr_multilingual_spell']['DictionaryCompoundWordTokenFilterFactory'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'DictionaryCompoundWordTokenFilterFactory',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $var_name = 'apachesolr_multilingual_minWordSize_spell';
+  $form['vt']['apachesolr_multilingual_spell']['DictionaryCompoundWordTokenFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
+
+  $var_name = 'apachesolr_multilingual_minSubwordSize_spell';
+  $form['vt']['apachesolr_multilingual_spell']['DictionaryCompoundWordTokenFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
+
+  $var_name = 'apachesolr_multilingual_maxSubwordSize_spell';
+  $form['vt']['apachesolr_multilingual_spell']['DictionaryCompoundWordTokenFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
+
+  $var_name = 'apachesolr_multilingual_onlyLongestMatch_spell';
+  $form['vt']['apachesolr_multilingual_spell']['DictionaryCompoundWordTokenFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
+
+
+  $form['vt']['apachesolr_multilingual_spell']['LowerCaseFilterFactory'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'LowerCaseFilterFactory',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $var_name = 'apachesolr_multilingual_lowerCase_spell';
+  $form['vt']['apachesolr_multilingual_spell']['LowerCaseFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
 
   return system_settings_form($form);
 }

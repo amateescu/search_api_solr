@@ -34,6 +34,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
     // 'solr_version_dependent' => TRUE,
   );
 
+  $variables['apachesolr_multilingual_splitOnCaseChange_spell'] =
   $variables['apachesolr_multilingual_splitOnCaseChange_query'] =
   $variables['apachesolr_multilingual_splitOnCaseChange_index'] = array(
     'type' => 'boolean',
@@ -44,6 +45,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
     'group' => 'apachesolr_multilingual_confgen',
   );
 
+  $variables['apachesolr_multilingual_splitOnNumerics_spell'] =
   $variables['apachesolr_multilingual_splitOnNumerics_query'] =
   $variables['apachesolr_multilingual_splitOnNumerics_index'] = array(
     'type' => 'boolean',
@@ -54,6 +56,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
     'group' => 'apachesolr_multilingual_confgen',
   );
 
+  $variables['apachesolr_multilingual_stemEnglishPossessive_spell'] =
   $variables['apachesolr_multilingual_stemEnglishPossessive_query'] =
   $variables['apachesolr_multilingual_stemEnglishPossessive_index'] = array(
     'type' => 'boolean',
@@ -64,6 +67,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
     'group' => 'apachesolr_multilingual_confgen',
   );
 
+  $variables['apachesolr_multilingual_generateWordParts_spell'] =
   $variables['apachesolr_multilingual_generateWordParts_query'] =
   $variables['apachesolr_multilingual_generateWordParts_index'] = array(
     'type' => 'boolean',
@@ -74,6 +78,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
     'group' => 'apachesolr_multilingual_confgen',
   );
 
+  $variables['apachesolr_multilingual_generateNumberParts_spell'] =
   $variables['apachesolr_multilingual_generateNumberParts_query'] =
   $variables['apachesolr_multilingual_generateNumberParts_index'] = array(
     'type' => 'boolean',
@@ -84,6 +89,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
     'group' => 'apachesolr_multilingual_confgen',
   );
 
+  $variables['apachesolr_multilingual_catenateWords_spell'] =
   $variables['apachesolr_multilingual_catenateWords_query'] =
   $variables['apachesolr_multilingual_catenateWords_index'] = array(
     'type' => 'boolean',
@@ -94,6 +100,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
     'group' => 'apachesolr_multilingual_confgen',
   );
 
+  $variables['apachesolr_multilingual_catenateNumbers_spell'] =
   $variables['apachesolr_multilingual_catenateNumbers_query'] =
   $variables['apachesolr_multilingual_catenateNumbers_index'] = array(
     'type' => 'boolean',
@@ -104,6 +111,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
     'group' => 'apachesolr_multilingual_confgen',
   );
 
+  $variables['apachesolr_multilingual_catenateAll_spell'] =
   $variables['apachesolr_multilingual_catenateAll_query'] =
   $variables['apachesolr_multilingual_catenateAll_index'] = array(
     'type' => 'boolean',
@@ -114,6 +122,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
     'group' => 'apachesolr_multilingual_confgen',
   );
 
+  $variables['apachesolr_multilingual_preserveOriginal_spell'] =
   $variables['apachesolr_multilingual_preserveOriginal_query'] =
   $variables['apachesolr_multilingual_preserveOriginal_index'] = array(
     'type' => 'boolean',
@@ -151,6 +160,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
 
 
 
+  $variables['apachesolr_multilingual_ignoreCase_stopwords_spell'] =
   $variables['apachesolr_multilingual_ignoreCase_stopwords'] = array(
     'type' => 'boolean',
     'solr_format' => 'string',
@@ -190,7 +200,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
   );
 
 
-
+  $variables['apachesolr_multilingual_minWordSize_spell'] =
   $variables['apachesolr_multilingual_minWordSize'] = array(
     'type' => 'number',
     'title' => t('minWordSize', array(), $options),
@@ -199,6 +209,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
     'group' => 'apachesolr_multilingual_confgen',
   );
 
+  $variables['apachesolr_multilingual_minSubwordSize_spell'] =
   $variables['apachesolr_multilingual_minSubwordSize'] = array(
     'type' => 'number',
     'title' => t('minSubwordSize', array(), $options),
@@ -207,6 +218,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
     'group' => 'apachesolr_multilingual_confgen',
   );
 
+  $variables['apachesolr_multilingual_maxSubwordSize_spell'] =
   $variables['apachesolr_multilingual_maxSubwordSize'] = array(
     'type' => 'number',
     'title' => t('maxSubwordSize', array(), $options),
@@ -215,10 +227,19 @@ function apachesolr_multilingual_confgen_variable_info($options) {
     'group' => 'apachesolr_multilingual_confgen',
   );
 
+  $variables['apachesolr_multilingual_onlyLongestMatch_spell'] =
   $variables['apachesolr_multilingual_onlyLongestMatch'] = array(
     'type' => 'boolean',
     'solr_format' => 'string',
     'title' => t('onlyLongestMatch', array(), $options),
+    'default' => TRUE,
+    'description' => t('TODO'),
+    'group' => 'apachesolr_multilingual_confgen',
+  );
+
+  $variables['apachesolr_multilingual_lowerCase_spell'] = array(
+    'type' => 'boolean',
+    'title' => t('lowerCase', array(), $options),
     'default' => TRUE,
     'description' => t('TODO'),
     'group' => 'apachesolr_multilingual_confgen',
