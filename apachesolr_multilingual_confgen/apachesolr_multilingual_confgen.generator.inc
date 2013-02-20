@@ -224,7 +224,7 @@ function apachesolr_multilingual_confgen_modify_solrconfig($qp_solrconfig, $solr
 
     $fields = $spellcheck->branch()->find('str[name="field"]');
     foreach ($fields as $field) {
-      $field->text($field->text() . '_' . $language_id);
+      $field->text('i18n_spell_' . $language_id);
     }
 
     $spellcheck_index_dirs = $spellcheck->branch()->find('str[name="spellcheckIndexDir"]');

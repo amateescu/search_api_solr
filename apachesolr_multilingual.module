@@ -335,9 +335,6 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
   $search_page = apachesolr_search_page_load($context['page_id']);
 
   $languages = apachesolr_multilingual_language_list();
-
-  $qf = $query->getParam('qf');
-
   $filter_language = '';
 
   // REVIEW We assume that a user is not able to select two different languages as filter
@@ -365,6 +362,11 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
       }
     }
   }
+  #var_dump($filter_language);
+  $qf = $query->getParam('qf');
+  #var_dump($qf);
+  $environment = apachesolr_multilingual_environment_load($query->solr('getId'));
+  $mapping_language = $environment['conf']['apachesolr_multilingual_index_settings']['apachesolr_multilingual_map_language_neutral'];
 
   foreach ($qf as $index => $field) {
     if (strpos($field, 'i18n_content') === 0) {
@@ -375,8 +377,6 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
       $qf[$index] = $field_name . '^' . (40.0 * $boost);
     }
     else {
-      $environment = apachesolr_multilingual_environment_load($query->solr('getId'));
-      $mapping_language = $environment['conf']['apachesolr_multilingual_index_settings']['apachesolr_multilingual_map_language_neutral'];
       foreach (array('label', 'teaser', 'content', 'path_alias', 'ts', 'tm', 'tos', 'tom', 'tags') as $prefix) {
         if (strpos($field, $prefix) === 0) {
           if ($filter_language) {
@@ -412,12 +412,7 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
     // use language specfic fields for keyword highlighting in search result snippets
     $query->replaceParam('hl.fl', 'i18n_content_' . $filter_language);
     $query->addParam('f.i18n_content_' . $filter_language . '.hl.alternateField', 'i18n_teaser_' . $filter_language);
-
-    // TODO language-specific spell-checking
-//     if (variable_get('apachesolr_search_spellcheck', FALSE) && array_key_exists('spell_' . $filter_language, $fields)) {
-//       $params['spellcheck.dictionary'] = 'spellchecker_' . $filter_language;
-//     }
-  }
+   }
   else {
     // multiple language-specific highlighters are not supported by solr at the moment
   }
@@ -682,4 +677,85 @@ function apachesolr_multilingual_language_list() {
   $languages = locale_language_list();
   ksort($languages, SORT_ASC & SORT_STRING);
   return $languages;
+}
+
+/**
+ *
+ * Modify the build array for any search output build by Apache Solr
+ * This includes core and custom pages and makes it very easy to modify both
+ * of them at once
+ *
+ * @param array $build
+ * @param array $search_page
+ */
+function apachesolr_multilingual_apachesolr_search_page_alter(array &$build, array $search_page) {
+  $languages = apachesolr_multilingual_language_list();
+
+  if (apachesolr_has_searched($search_page['env_id'])) {
+    $query = apachesolr_current_query($search_page['env_id']);
+    // REVIEW We assume that a user is not able to select two different languages as filter
+    $language_filters = $query->getFilters('ss_language');
+    $filter_language = '';
+    if (!empty($language_filters)) {
+      $filter_language = $language_filters[0]['#value'];
+    }
+    #var_dump($language_filters, $filter_language);
+    // Retrieve suggestion
+    $suggestions = apachesolr_multilingual_get_search_suggestions($search_page['env_id'], $filter_language);
+    if (!empty($suggestions)) {
+      $build['suggestions']['#links'] = array();
+      foreach ($suggestions as $language_id => $suggestion) {
+        $build['suggestions']['#links'][] = ($filter_language ? '' : $languages[$language_id] . ': ') .
+          l($suggestion, $search_page['search_path'] . '/' . $suggestion);
+      }
+    }
+  }
+}
+
+/**
+ * Retrieve all of the suggestions that were given after a certain search
+ * Mostly copied from @see apachesolrsearch_get_search_suggestions();
+ * @return array()
+ */
+function apachesolr_multilingual_get_search_suggestions($env_id, $language = '') {
+  $suggestions_output = array();
+  if (apachesolr_has_searched($env_id)) {
+    $query = apachesolr_current_query($env_id);
+    $keyword = $query->getParam('q');
+    $searcher = $query->getSearcher();
+    $response = apachesolr_static_response_cache($searcher);
+    $language_ids = array_keys(apachesolr_multilingual_language_list());
+    foreach ($language_ids as $language_id) {
+      $response->data = preg_replace('@"spellcheck"@', '"spellcheck_' . $language_id . '"', $response->data, 1);
+    }
+    $result = json_decode($response->data);
+    if (is_object($result)) {
+      foreach ($result as $key => $value) {
+        $response->$key = $value;
+      }
+    }
+    // Get spellchecker suggestions into an array.
+    foreach ($language_ids as $language_id) {
+      if ($language && $language != $language_id) {
+        #continue;
+      }
+      if (!empty($response->{'spellcheck_' . $language_id}->suggestions)) {
+        $suggestions = get_object_vars($response->{'spellcheck_' . $language_id}->suggestions);
+        if ($suggestions) {
+          $replacements = array();
+          // Get the original query and retrieve all words with suggestions.
+          foreach ($suggestions as $word => $value) {
+            $replacements[$word] = $value->suggestion[0];
+          }
+          // Replace the keyword with the suggested keyword.
+          $suggested_keyword = strtr($keyword, $replacements);
+          // Show only if suggestion is different than current query.
+          if ($keyword != $suggested_keyword) {
+            $suggestions_output[$language_id] = $suggested_keyword;
+          }
+        }
+      }
+    }
+  }
+  return $suggestions_output;
 }
