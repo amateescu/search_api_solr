@@ -215,10 +215,26 @@ function apachesolr_multilingual_confgen_modify_solrconfig($qp_solrconfig, $solr
   foreach (apachesolr_multilingual_language_list() as $language_id => $language) {
     $qp_solrconfig_language_specific = apachesolr_confgen_clone_qp($qp_solrconfig);
 
-    $qp_solrconfig_language_specific
-      ->find(':root')->xpath("types/fieldType[@name='text']//filter[@class='solr.StopFilterFactory']")
-      ->attr('ignoreCase', apachesolr_multilingual_confgen_variable_get('apachesolr_multilingual_ignoreCase_stopwords', $language_id))
-      ->attr('words', 'stopwords_' . $language_id . '.txt');
+    $spellcheck = $qp_solrconfig_language_specific
+      ->find(':root searchComponent[name="spellcheck"]')
+      ->attr('name', 'spellcheck_' . $language_id);
 
+    $query_analyzer_field_type = $spellcheck->branch()->find('str[name="queryAnalyzerFieldType"]');
+    $query_analyzer_field_type->text($query_analyzer_field_type->text() . '_' . $language_id);
+
+    $fields = $spellcheck->branch()->find('str[name="field"]');
+    foreach ($fields as $field) {
+      $field->text($field->text() . '_' . $language_id);
+    }
+
+    $spellcheck_index_dirs = $spellcheck->branch()->find('str[name="spellcheckIndexDir"]');
+    foreach ($spellcheck_index_dirs as $spellcheck_index_dir) {
+      $spellcheck_index_dir->text($spellcheck_index_dir->text() . '_' . $language_id);
+    }
+
+    $spellcheck->insertBefore($qp_solrconfig->find(':root searchComponent[name="spellcheck"]'));
+
+    $qp_solrconfig->find(':root requestHandler[name="drupal"] arr[name="last-components"] str:last-child')
+      ->before('<str>spellcheck_' . $language_id . '</str>');
   }
 }
