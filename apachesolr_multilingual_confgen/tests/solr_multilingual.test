@@ -67,7 +67,7 @@ class DrupalSolrMultilingualConfigTestCase extends AbstractDrupalSolrOnlineWebTe
       'synonyms.txt',
     );
 
-    $language_ids = array_keys(language_list());
+    $language_ids = array_keys(apachesolr_multilingual_language_list());
     $language_ids[] = '';
 
     foreach ($assert_multilingual_files as $file_name) {

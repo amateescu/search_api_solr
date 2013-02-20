@@ -243,7 +243,7 @@ function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, 
   $fields = apachesolr_search_get_fields($environment);
   $types = array('text');
   $defaults = array();
-  foreach (locale_language_list() as $language_id => $language) {
+  foreach (array_keys(apachesolr_multilingual_language_list()) as $language_id) {
     $types[] = 'text_' . $language_id;
     // get the current weights
     $defaults['i18n_content_' . $language_id] = '1.0';
@@ -300,8 +300,7 @@ function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, 
  * Implements hook_apachesolr_field_name_map_alter().
  */
 function apachesolr_multilingual_apachesolr_field_name_map_alter(&$map) {
-  $active_languages = locale_language_list();
-  foreach ($active_languages as $language => $language_name) {
+  foreach (apachesolr_multilingual_language_list() as $language => $language_name) {
     $map['i18n_content_' . $language] = $language_name . ': ' . t('The full, rendered content (e.g. the rendered node body)');
     $map['i18n_ts_' . $language . '_comments'] = $language_name . ': ' . t('The rendered comments associated with a node');
     $map['i18n_tos_' . $language . '_content_extra'] = $language_name . ': ' . t('Extra rendered content or keywords');
@@ -335,7 +334,7 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
   $context = $query->getContext();
   $search_page = apachesolr_search_page_load($context['page_id']);
 
-  $languages = locale_language_list();
+  $languages = apachesolr_multilingual_language_list();
 
   $qf = $query->getParam('qf');
 
@@ -540,7 +539,7 @@ function apachesolr_multilingual_search_page_settings_form_submit($form, &$form_
  * @param $form_state
  */
 function apachesolr_multilingual_form_apachesolr_environment_edit_form_alter(&$form, &$form_state, $form_id) {
-  $active_languages = locale_language_list();
+  $active_languages = apachesolr_multilingual_language_list();
   $environment = apachesolr_multilingual_environment_load($form['env_id']['#default_value']);
 
   $form['conf']['apachesolr_multilingual_index_settings'] = array(
@@ -673,4 +672,14 @@ function apachesolr_multilingual_multilingual_settings_changed() {
       'warning'
     );
   }
+}
+
+/**
+ * Wrapper for locale_language_list() to ensure an alphabetical order of
+ * languages. That's important for the spellcheck.
+ */
+function apachesolr_multilingual_language_list() {
+  $languages = locale_language_list();
+  ksort($languages, SORT_ASC & SORT_STRING);
+  return $languages;
 }

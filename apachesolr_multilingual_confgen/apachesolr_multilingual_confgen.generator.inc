@@ -13,7 +13,7 @@
 
 
 function apachesolr_multilingual_confgen_modify_schema($qp_schema, $solr_version) {
-  foreach (locale_language_list() as $language_id => $language) {
+  foreach (apachesolr_multilingual_language_list() as $language_id => $language) {
     $qp_schema_language_specific = apachesolr_confgen_clone_qp($qp_schema);
 
     // type text
@@ -138,27 +138,73 @@ function apachesolr_multilingual_confgen_modify_schema($qp_schema, $solr_version
 
     // add language specific types and fields to schema
 
-    foreach (array('text', 'textSpell') as $type) {
+    // If a find() returns zero matches, then a subsequent find()
+    // will also return zero matches, even if that find has a selector like :root.
+    // The reason for this is that the QueryPathCssEventHandler does not set the
+    // root of the document tree if it cannot find any elements from which to
+    // determine what the root is.
+    // The workaround is to use top() to select the root element again.
+
+    $types = array('text', 'textSpell');
+    $names = array();
+
+    foreach ($types as $type) {
       $qp_schema_language_specific
-        ->find(':root')->xpath("types/fieldType[@name='$type']")->attr('name', $type . '_' . $language_id)
+        ->find(':root types fieldType[name="' . $type . '"]')->attr('name', $type . '_' . $language_id)
         ->insertAfter($qp_schema->find(':root')->xpath("types/fieldType[@name='$type']"));
 
-      $dynamic_fields = $qp_schema_language_specific->find(':root')->xpath("fields/dynamicField[@type='$type']");
+      $fields = $qp_schema_language_specific->branch()->find(':root fields field[type="' . $type . '"]');
+      $qp_schema_language_specific->top(); // workaround, see above
+      foreach ($fields as $field) {
+        $name = $field->attr('name');
+        $names[$name] = 'field';
+        $field
+          ->attr('type', $type . '_' . $language_id)
+          ->attr('name', 'i18n_' . $name . '_' . $language_id)
+          ->insertAfter($qp_schema->find(':root')->xpath("fields/field[@name='$name']"));
+      }
+
+      $dynamic_fields = $qp_schema_language_specific->branch()->find(':root fields dynamicField[type="' . $type . '"]');
+      $qp_schema_language_specific->top(); // workaround, see above
       foreach ($dynamic_fields as $dynamic_field) {
         $name = $dynamic_field->attr('name');
+        $names[$name] = 'dynamicField';
         $dynamic_field
           ->attr('type', $type . '_' . $language_id)
           ->attr('name', preg_replace('/(.*)\*/', 'i18n_$1' . $language_id . '_*', $name))
           ->insertAfter($qp_schema->find(':root')->xpath("fields/dynamicField[@name='$name']"));
       }
+    }
 
-      $fields = $qp_schema_language_specific->find(':root')->xpath("fields/field[@type='$type']");
-      foreach ($fields as $field) {
-        $name = $field->attr('name');
-        $field
-          ->attr('type', $type . '_' . $language_id)
-          ->attr('name', 'i18n_' . $name . '_' . $language_id)
-          ->insertAfter($qp_schema->find(':root')->xpath("fields/field[@name='$name']"));
+    foreach (array_keys($names) as $name) {
+      $copy_fields = $qp_schema_language_specific->branch()->find(':root fields copyField[source="' . $name . '"]');
+      $qp_schema_language_specific->top(); // workaround, see above
+      foreach ($copy_fields as $copy_field) {
+        $dest_original = $dest = $copy_field->attr('dest');
+        foreach ($names as $field_name => $field_type) {
+          if ('dynamicField' == $field_type && strpos($dest, trim($field_name, '*')) === 0) {
+            $dest_original = $field_name;
+          }
+        }
+        // The type of the destination field needs to be verified in the original schema,
+        // because the type in $qp_schema_language_specific has been renamed already.
+        $dest_fields = $qp_schema->branch()->find(':root fields field[name="' . $dest_original . '"]');
+        $qp_schema->top(); // workaround, see above
+        $do_copy = FALSE;
+        foreach ($dest_fields as $dest_field) {
+          if (in_array($dest_field->attr('type'), $types)) {
+            // Only add additional copy fields if the destination is of
+            // a multilingual text type.
+            $do_copy = TRUE;
+            break;
+          }
+        }
+        if ($do_copy) {
+          $copy_field
+            ->attr('source', 'i18n_' . $name . '_' . $language_id)
+            ->attr('dest', 'i18n_' . $dest . '_' . $language_id)
+            ->insertAfter($qp_schema->find(':root')->xpath("fields/copyField[@source='$name' and @dest='$dest']"));
+        }
       }
     }
   }
@@ -166,7 +212,7 @@ function apachesolr_multilingual_confgen_modify_schema($qp_schema, $solr_version
 
 
 function apachesolr_multilingual_confgen_modify_solrconfig($qp_solrconfig, $solr_version) {
-  foreach (locale_language_list() as $language_id => $language) {
+  foreach (apachesolr_multilingual_language_list() as $language_id => $language) {
     $qp_solrconfig_language_specific = apachesolr_confgen_clone_qp($qp_solrconfig);
 
     $qp_solrconfig_language_specific

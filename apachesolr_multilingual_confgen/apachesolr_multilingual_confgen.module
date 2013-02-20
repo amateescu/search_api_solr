@@ -61,7 +61,7 @@ function apachesolr_multilingual_confgen_variable_get($name, $language_id, $solr
   }
 
   $info = variable_get_info($name);
-  if ('boolean' == $info['type'] && 'string' == $info['solr_format']) {
+  if ('boolean' == $info['type'] && array_key_exists('solr_format', $info) && 'string' == $info['solr_format']) {
     return $value ? 'true' : 'false';
   }
   return $value;
@@ -200,7 +200,7 @@ function apachesolr_multiligual_confgen_register_multilingual_variables() {
   // set default values for multilingual variables if not already modified
   $path = drupal_get_path('module', 'apachesolr_multilingual_confgen') . '/res/';
   foreach ($apachesolr_confgen_textfiles_i18n_variables as $var_name => $var_info) {
-    foreach (array_keys(locale_language_list()) as $language_id) {
+    foreach (array_keys(apachesolr_multilingual_language_list()) as $language_id) {
       if (i18n_variable_get($var_name, $language_id) === NULL
           && file_exists($path . basename($var_info['title'], '.txt') . '_' . $language_id . '.txt')) {
         i18n_variable_set($var_name, file_get_contents($path . basename($var_info['title'], '.txt') . '_' . $language_id . '.txt'), $language_id);
@@ -211,7 +211,7 @@ function apachesolr_multiligual_confgen_register_multilingual_variables() {
   $available_stemmers = apachesolr_multilingual_confgen_get_stemmer();
 
   foreach (apachesolr_multilingual_confgen_get_i18n_variables() as $var_name => $var_info) {
-    foreach (array_keys(locale_language_list()) as $language_id) {
+    foreach (array_keys(apachesolr_multilingual_language_list()) as $language_id) {
       if (i18n_variable_get($var_name, $language_id) === NULL) {
         // TODO replace that switch by reading defaults from property files
         switch ($var_name) {
@@ -240,7 +240,7 @@ function apachesolr_multiligual_confgen_unregister_multilingual_variables($old_v
  */
 function apachesolr_multilingual_confgen_apachesolr_confgen_zip_file_alter(&$files, $solr_version) {
   foreach (apachesolr_multilingual_confgen_get_apachesolr_confgen_textfiles_i18n_variables() as $var_name => $var_info) {
-    foreach (locale_language_list() as $language_id => $language) {
+    foreach (apachesolr_multilingual_language_list() as $language_id => $language) {
       $files[basename($var_info['title'], '.txt') . '_' . $language_id . '.txt'] = apachesolr_multilingual_confgen_variable_get($var_name, $language_id);
     }
   }
