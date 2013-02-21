@@ -143,6 +143,7 @@ function apachesolr_multilingual_confgen_get_apachesolr_confgen_textfiles_i18n_v
   module_load_include('inc', 'variable');
   $variables = variable_list_group('apachesolr_confgen_textfiles');
   unset($variables['apachesolr_confgen_textfiles_admin_extra_html']);
+  unset($variables['apachesolr_confgen_textfiles_solrcore_properties']);
   return $variables;
 }
 

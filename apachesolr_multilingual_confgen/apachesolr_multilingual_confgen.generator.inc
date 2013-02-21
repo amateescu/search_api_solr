@@ -234,7 +234,7 @@ function apachesolr_multilingual_confgen_modify_solrconfig($qp_solrconfig, $solr
 
     $spellcheck->insertBefore($qp_solrconfig->find(':root searchComponent[name="spellcheck"]'));
 
-    $qp_solrconfig->find(':root requestHandler[name="drupal"] arr[name="last-components"] str:last-child')
+    $qp_solrconfig->find(':root requestHandler[default="true"] arr[name="last-components"] str:last-child')
       ->before('<str>spellcheck_' . $language_id . '</str>');
   }
 }
