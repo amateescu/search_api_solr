@@ -1,4 +1,4 @@
-name = Apache Solr Multilingual Confgen
+name = Apache Solr Multilingual Config Generator
 description = Apache Solr Config Generator Add-On for Multilingual and non-English search with Solr
 package = Search Toolkit
 core = "7.x"
