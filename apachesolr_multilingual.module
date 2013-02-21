@@ -244,7 +244,7 @@ function apachesolr_multilingual_index_node_translation($document, $translation_
 function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, &$form_state, $form_id) {
   $environment = apachesolr_multilingual_environment_load($form['#env_id']);
   $fields = apachesolr_search_get_fields($environment);
-  $types = array('text');
+  $unspecified_types = $types = array('text', 'text_und');
   $defaults = array();
   foreach (array_keys(apachesolr_multilingual_language_list()) as $language_id) {
     $types[] = 'text_' . $language_id;
@@ -263,24 +263,17 @@ function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, 
   }
 
   $qf = apachesolr_environment_variable_get($environment['env_id'], 'field_bias', $defaults);
-  $weights = drupal_map_assoc(array('21.0', '13.0', '8.0', '5.0', '3.0', '2.0', '1.0', '0.8', '0.5', '0.3', '0.2', '0.1'));
-  $weights['0'] = t('Omit');
   if (!$qf) {
     $qf = $defaults;
   }
   if ($fields) {
     foreach ($fields as $field_name => $field) {
-      // Only indexed feids are searchable.
-      if ($field->schema{0} == 'I') {
-        // We use filter_xss to make sure links are allowed
-        $form['field_bias'][$field_name] = array(
-          '#access' => in_array($field->type, $types),
-          '#type' => 'select',
-          '#options' => $weights,
-          '#title' => filter_xss(apachesolr_field_name_map($field_name)),
-          '#default_value' => isset($qf[$field_name]) ? $qf[$field_name] : '1.0',
-          '#description' => filter_xss(('text' == $field->type) ? t('Unspecified language: recommendation is set this bias to "Omit"') : ''),
-        );
+      // Only indexed fields are searchable.
+      if (in_array($field->type, $types) && $field->schema{0} == 'I') {
+        $form['field_bias'][$field_name]['#access'] = TRUE;
+        $form['field_bias'][$field_name]['#default_value'] = isset($qf[$field_name]) ? $qf[$field_name] : '0';
+        $form['field_bias'][$field_name]['#description'] = in_array($field->type, $unspecified_types) ?
+          t('Unspecified language: recommendation is set this bias to "Omit"') : '';
       }
     }
 
@@ -289,8 +282,8 @@ function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, 
     foreach ($defaults as $field_name => $weight) {
       $form['field_bias'][$field_name] = array(
         '#type' => 'select',
-        '#options' => $weights,
-        '#title' => check_plain(apachesolr_field_name_map($field_name)),
+        '#options' => $form['field_bias']['content']['#options'],
+        '#title' => filter_xss(apachesolr_field_name_map($field_name)),
         '#default_value' => isset($qf[$field_name]) ? $qf[$field_name] : $defaults[$field_name],
       );
     }
@@ -358,6 +351,7 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
     $custom_settings = $search_page['settings']['custom_settings'];
     $filter_languages = &drupal_static('apachesolr_multilingual_filter_languages_' . $context['page_id']);
     $filter_languages = apachesolr_multilingual_get_language_filters_by_query($query);
+    $languages = apachesolr_multilingual_language_list();
 
     if (empty($filter_languages) && $custom_settings['apachesolr_multilingual_auto_language_filter'] &&
       (!$custom_settings['apachesolr_multilingual_auto_language_filter_detachable'] ||
@@ -381,39 +375,45 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
     $qf = $query->getParam('qf');
 
     foreach ($qf as $index => $field) {
-      if (strpos($field, 'i18n_content') === 0) {
-        list($field_name, $boost) = explode('^', $field);
-        // Normed fields tend to have a lower score. Multiplying by 40 is
-        // a rough attempt to bring the score in line with fields that are
-        // not normed.
-        $qf[$index] = $field_name . '^' . (40.0 * $boost);
-      }
-
-      if (strpos($field, 'i18n_') === 0
-        && !empty($filter_languages)
-      ) {
-        $remove = TRUE;
-        foreach ($filter_languages as $filter_language) {
-          if (preg_match('@_' . $filter_language . '(^|_|$)@', $field)) {
-            $remove = FALSE;
-            break;
-          }
+      if (strpos($field, 'i18n_') === 0) {
+        // @see apachesolr_search_add_boost_params()
+        // We have to apply the same logic here to language specific fields.
+        if (strpos($field, 'i18n_content') === 0 || strpos($field, 'i18n_ts_') === 0 || strpos($field, 'i18n_tm_') === 0) {
+          list($field_name, $boost) = explode('^', $field);
+          // Normed fields tend to have a lower score. Multiplying by 40 is
+          // a rough attempt to bring the score in line with fields that are
+          // not normed.
+          $qf[$index] = $field_name . '^' . sprintf('%.1F', 40.0 * $boost);
         }
-        if ($remove) {
-          unset($qf[$index]);
+
+        if (!empty($filter_languages)) {
+          $remove = TRUE;
+          foreach ($filter_languages as $filter_language) {
+            if (preg_match('@_' . $filter_language . '(\^|_)@', $field)) {
+              $remove = FALSE;
+              break;
+            }
+          }
+          if ($remove) {
+            unset($qf[$index]);
+          }
         }
       }
     }
 
     $query->replaceParam('qf', $qf);
 
-    if (1 == count($filter_languages)) {
-      // use language specfic fields for keyword highlighting in search result snippets
-      $query->replaceParam('hl.fl', 'i18n_content_' . $filter_languages[0]);
-      $query->addParam('f.i18n_content_' . $filter_languages[0] . '.hl.alternateField', 'i18n_teaser_' . $filter_languages[0]);
-     }
-    else {
-      // multiple language-specific highlighters are not supported by solr at the moment
+    // Add the teaser to the result fields, because apachesolr_search_run()
+    // won't do it anymore if highlighting parameters are set here.
+    $query->addParam('fl', 'teaser');
+
+    foreach (array_keys($languages) as $language_id) {
+      if (!empty($filter_languages) && !in_array($language_id, $filter_languages)) {
+        continue;
+      }
+      $query->addParam('hl.fl', 'i18n_content_' . $language_id);
+      $query->addParam('f.' . 'i18n_content_' . $language_id . '.hl.alternateField', 'i18n_teaser_' . $language_id);
+      $query->addParam('hl.fl', 'i18n_ts_' . $language_id . '_comments');
     }
   }
 }
@@ -699,15 +699,19 @@ function apachesolr_multilingual_language_list() {
  */
 function apachesolr_multilingual_apachesolr_search_page_alter(array &$build, array $search_page) {
   if (apachesolr_has_searched($search_page['env_id'])) {
-    $languages = apachesolr_multilingual_language_list();
-    $filter_languages = &drupal_static('apachesolr_multilingual_filter_languages_' . $search_page['page_id']);
-    // Retrieve suggestion
-    $suggestions = apachesolr_multilingual_get_search_suggestions($search_page['env_id'], $filter_languages);
-    if (!empty($suggestions)) {
-      $build['suggestions']['#links'] = array();
-      foreach ($suggestions as $language_id => $suggestion) {
-        $build['suggestions']['#links'][] = (1 == count($filter_languages) ? '' : $languages[$language_id] . ': ') .
-          l($suggestion, $search_page['search_path'] . '/' . $suggestion);
+    $environment = apachesolr_multilingual_environment_load($search_page['env_id']);
+    $settings = $environment['conf']['apachesolr_multilingual_index_settings'];
+    if ($settings['apachesolr_multilingual_index']) {
+      $languages = apachesolr_multilingual_language_list();
+      $filter_languages = &drupal_static('apachesolr_multilingual_filter_languages_' . $search_page['page_id']);
+      // Retrieve suggestion
+      $suggestions = apachesolr_multilingual_get_search_suggestions($search_page['env_id'], $filter_languages);
+      if (!empty($suggestions)) {
+        $build['suggestions']['#links'] = array();
+        foreach ($suggestions as $language_id => $suggestion) {
+          $build['suggestions']['#links'][] = (1 == count($filter_languages) ? '' : $languages[$language_id] . ': ') .
+            l($suggestion, $search_page['search_path'] . '/' . $suggestion);
+        }
       }
     }
   }

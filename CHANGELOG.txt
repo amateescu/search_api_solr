@@ -1,6 +1,10 @@
-Apache Solr Multilingual 7.x-1.0-beta1, 2012-11-xx
+Apache Solr Multilingual 7.x-1.0-beta1, 2013-xx-xx
 ---------------------------------------------------
 [#1301252] mkalkbrenner: index nodes translated using entity_translation
+[        ] mkalkbrenner: fixed bug that caused to much results after saving bias form
+[        ] mkalkbrenner: support multiple environments and search pages
+[        ] mkalkbrenner: multilingual spellcheck
+[        ] mkalkbrenner: multilingual search result highlighting
 
 
 Apache Solr Multilingual 7.x-1.0-alpha2, 2012-09-18
