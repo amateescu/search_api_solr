@@ -108,20 +108,27 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
             foreach ($additional_documents_langcodes as $langcode) {
               // Prevent endless recursion if language specific document has been created already.
               if (!array_key_exists($document->id, $documents)) {
-                $id = $document->id . '/' . $langcode;
-                $additional_documents = array();
-                $additional_documents[$id] = clone $document;
-                $additional_documents[$id]->id = $id;
                 // Temporarily switch the language context for apachesolr_index_node_solr_document(),
                 // which is not aware of entity_translation.
                 $original_langcode = $entity->language;
                 $entity->language = $langcode;
                 $language_content = $languages[$langcode];
+
+                $id = $document->id . '/' . $langcode;
+                $additional_documents = array();
+                $additional_documents[$id] = clone $document;
+                $basic_fields = _apachesolr_index_process_entity_get_document($entity, $entity_type);
+                foreach ($basic_fields->getFieldNames() as $field) {
+                  $additional_documents[$id]->$field = $basic_fields->$field;
+                }
+                $additional_documents[$id]->id = $id;
                 apachesolr_index_node_solr_document($additional_documents[$id], $entity, $entity_type, $env_id);
                 // Recursive call to deal with 'apachesolr_multilingual_index_translations' aka CLIR, see above and below
                 apachesolr_multilingual_apachesolr_index_documents_alter($additional_documents, $entity, $entity_type, $env_id);
+
                 $entity->language = $original_langcode;
                 $language_content = $languages[$original_langcode];
+
                 foreach ($additional_documents as $key => $additional_document) {
                   $documents[$key] = $additional_document;
                 }
