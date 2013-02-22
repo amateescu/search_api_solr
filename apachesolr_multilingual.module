@@ -60,6 +60,9 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
   $settings = $environment['conf']['apachesolr_multilingual_index_settings'];
   if ($settings['apachesolr_multilingual_index']) {
 
+    global $language_content;
+    $languages = language_list();
+
     foreach ($documents as $document) {
 
       if (LANGUAGE_NONE == $document->ss_language) {
@@ -93,8 +96,10 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
                   // Temporarily switch the language context for apachesolr_index_node_solr_document(),
                   // which is not aware of entity_translation.
                   $entity->language = $langcode;
+                  $language_content = $languages[$langcode];
                   apachesolr_multilingual_index_node_translation($document, $entity, $env_id);
                   $entity->language = $original_langcode;
+                  $language_content = $languages[$original_langcode];
                 }
               }
             }
@@ -111,10 +116,12 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
                 // which is not aware of entity_translation.
                 $original_langcode = $entity->language;
                 $entity->language = $langcode;
+                $language_content = $languages[$langcode];
                 apachesolr_index_node_solr_document($additional_documents[$id], $entity, $entity_type, $env_id);
                 // Recursive call to deal with 'apachesolr_multilingual_index_translations' aka CLIR, see above and below
                 apachesolr_multilingual_apachesolr_index_documents_alter($additional_documents, $entity, $entity_type, $env_id);
                 $entity->language = $original_langcode;
+                $language_content = $languages[$original_langcode];
                 foreach ($additional_documents as $key => $additional_document) {
                   $documents[$key] = $additional_document;
                 }
