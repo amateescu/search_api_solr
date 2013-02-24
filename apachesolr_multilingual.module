@@ -123,6 +123,11 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
                 }
                 $additional_documents[$id]->id = $id;
                 apachesolr_index_node_solr_document($additional_documents[$id], $entity, $entity_type, $env_id);
+
+                if (module_exists('title')) {
+                  $additional_documents[$id]->label = apachesolr_clean_text(title_entity_label($entity, 'node', $langcode));
+                }
+
                 // Recursive call to deal with 'apachesolr_multilingual_index_translations' aka CLIR, see above and below
                 apachesolr_multilingual_apachesolr_index_documents_alter($additional_documents, $entity, $entity_type, $env_id);
 
