@@ -498,6 +498,7 @@ function apachesolr_multilingual_form_apachesolr_search_page_settings_form_alter
 
   $form['apachesolr_multilingual_query_settings'] = array(
     '#type' => 'fieldset',
+    '#tree' => TRUE,
     '#title' => t('Multilingual Query Settings'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
@@ -535,16 +536,7 @@ function apachesolr_multilingual_search_page_settings_form_validate($form, &$for
  * Processes apachesolr_search_page_settings_form form submissions.
  */
 function apachesolr_multilingual_search_page_settings_form_submit($form, &$form_state) {
-  if (empty($form_state['search_page_custom_settings'])) {
-    $form_state['search_page_custom_settings'] = array();
-  }
-
-  $form_state['search_page_custom_settings'] +=
-    array(
-      'apachesolr_multilingual_auto_language_filter' => $form_state['values']['apachesolr_multilingual_auto_language_filter'],
-      'apachesolr_multilingual_auto_language_filter_detachable' => $form_state['values']['apachesolr_multilingual_auto_language_filter_detachable'],
-      'apachesolr_multilingual_show_language_undefined_results' => $form_state['values']['apachesolr_multilingual_show_language_undefined_results'],
-    );
+  $form_state['values']['advanced'] += $form_state['values']['apachesolr_multilingual_query_settings'];
 }
 
 /**
