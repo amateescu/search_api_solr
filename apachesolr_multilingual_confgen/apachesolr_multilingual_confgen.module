@@ -257,8 +257,8 @@ function apachesolr_multilingual_confgen_variable_realm_variable_list_alter(&$va
   if ('language' == $realm_name) {
     $new_variables = array_merge(
       $variables,
-      apachesolr_multilingual_confgen_get_i18n_variables(),
-      apachesolr_multilingual_confgen_get_apachesolr_confgen_textfiles_i18n_variables()
+      array_keys(apachesolr_multilingual_confgen_get_i18n_variables()),
+      array_keys(apachesolr_multilingual_confgen_get_apachesolr_confgen_textfiles_i18n_variables())
     );
     $diff = array_diff($new_variables, $variables);
     if (!empty($diff)) {
