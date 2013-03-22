@@ -103,6 +103,12 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
                 }
               }
             }
+
+            if (module_exists('title')) {
+              // Always override the title / label if title module is active.
+              $document->label = apachesolr_clean_text(title_entity_label($entity, 'node', $document->ss_language));
+            }
+
             // Create an index entry for each language to node has been translated to.
             // The id gets a language suffix to be unique.
             foreach ($additional_documents_langcodes as $langcode) {
@@ -129,11 +135,7 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
 
                 apachesolr_index_node_solr_document($additional_documents[$id], $entity, $entity_type, $env_id);
 
-                if (module_exists('title')) {
-                  $additional_documents[$id]->label = apachesolr_clean_text(title_entity_label($entity, 'node', $langcode));
-                }
-
-                // Recursive call to deal with 'apachesolr_multilingual_index_translations' aka CLIR, see above and below
+                // Recursive call to deal with 'apachesolr_multilingual_index_translations' aka CLIR and title field, see above and below
                 apachesolr_multilingual_apachesolr_index_documents_alter($additional_documents, $entity, $entity_type, $env_id);
 
                 $entity->language = $original_langcode;
