@@ -248,7 +248,6 @@ function apachesolr_multilingual_copy_common_to_i18n_fields($src_document, $dst_
       }
     }
   }
-  $dst_document->addField('sm_language', $src_document->ss_language);
 }
 
 function apachesolr_multilingual_index_node_translation($document, $translation_node, $env_id) {
@@ -358,6 +357,21 @@ function apachesolr_multilingual_get_language_filters_by_query($query) {
       apachesolr_multilingual_get_language_filters_by_query($sub_query));
   }
   return array_unique($filter_languages);
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ *
+ * Move apachesolr_multilingual_apachesolr_query_alter() to the end of the
+ * list because we haveto wait if someone limits the query to a specific
+ * language.
+ */
+function apachesolr_multilingual_module_implements_alter(&$implementations, $hook) {
+  if ('apachesolr_query_alter' == $hook) {
+    $group = $implementations['apachesolr_multilingual'];
+    unset($implementations['apachesolr_multilingual']);
+    $implementations['apachesolr_multilingual'] = $group;
+  }
 }
 
 /**
