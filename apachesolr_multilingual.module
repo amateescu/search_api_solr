@@ -124,9 +124,9 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
                 $additional_documents = array();
                 $additional_documents[$id] = clone $document;
 
-                $basic_fields = reset(
-                  apachesolr_multilingual_entity_to_documents_delegate($entity, $entity_type, $env_id)
-                );
+                $tmp_documents = apachesolr_multilingual_entity_to_documents_delegate($entity, $entity_type, $env_id);
+                $basic_fields = reset($tmp_documents);
+                
                 foreach ($basic_fields->getFieldNames() as $field) {
                   $additional_documents[$id]->$field = $basic_fields->$field;
                 }
