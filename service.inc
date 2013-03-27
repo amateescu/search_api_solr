@@ -1458,7 +1458,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
     // Get facet fields
     $facets = $query->getOption('search_api_facets') ? $query->getOption('search_api_facets') : array();
-    $facet_params = $this->getFacetParams($facets, $solr_fields);
+    $facet_params = $this->getFacetParams($facets, $solr_fields, $fq);
 
     // Set defaults
     if (!$keys) {
