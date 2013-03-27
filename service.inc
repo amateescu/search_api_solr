@@ -1525,7 +1525,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         $results['search_api_facets'] = array();
         $facet_fields = $response->facet_counts->facet_fields;
         foreach ($facets as $delta => $info) {
-          $field = $this->getFacetField($solr_fields[$info['field']]);
+          $field = $solr_fields[$info['field']];
           if (!empty($facet_fields->$field)) {
             $min_count = $info['min_count'];
             $terms = $facet_fields->$field;
