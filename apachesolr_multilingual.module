@@ -126,7 +126,7 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
 
                 $tmp_documents = apachesolr_multilingual_entity_to_documents_delegate($entity, $entity_type, $env_id);
                 $basic_fields = reset($tmp_documents);
-                
+
                 foreach ($basic_fields->getFieldNames() as $field) {
                   $additional_documents[$id]->$field = $basic_fields->$field;
                 }
@@ -627,7 +627,7 @@ function apachesolr_multilingual_form_apachesolr_environment_edit_form_alter(&$f
 }
 
 function apachesolr_multilingual_environment_edit_form_submit($form, &$form_state) {
-  $environment = apachesolr_multilingual_environment_load($form['env_id']);
+  $environment = apachesolr_multilingual_environment_load($form['env_id']['#default_value']);
   $reindex = FALSE;
 
   if ($form_state['values']['conf']['apachesolr_multilingual_index_settings']['apachesolr_multilingual_map_language_neutral'] !=
