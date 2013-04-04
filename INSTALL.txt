@@ -1,39 +1,3 @@
-Prerequisite:
-- Java 6 or higher
-
-Steps necessary:
-- Download Solr PHP client
-- Setting up Solr
-
-Download Solr PHP client
-------------------------
-
-This module uses an external PHP library for communicating with Solr servers. Go
-to [1] and download version r60 of this library. (The older version r22 is also
-still supported, but this might change in the future.)
-
-[1] http://code.google.com/p/solr-php-client/downloads/list
-
-Afterwards, unpack this archive to Drupal's libraries folder, so the directory
-tree looks like this:
-
-DRUPAL_ROOT/sites/all/libraries/
-  |- SolrPhpClient
-     |- Apache/
-     |- ChangeLog
-     ...
-
-The library should then be found by the module.
-
-Note: If you have the Libraries API [2] module installed, you can also place the
-library into any other directory recognized by the Libraries API, e.g.
-(depending on the module version):
-- DRUPAL_ROOT/libraries
-- DRUPAL_ROOT/profiles/PROFILE/libraries
-- DRUPAL_ROOT/sites/CONF_DIR/libraries
-
-[2] http://drupal.org/project/libraries
-
 Setting up Solr
 ---------------
 
@@ -44,6 +8,9 @@ If you want to use a hosted solution, a number of companies are listed on the
 module's project page [3]. Otherwise, please follow the instructions below.
 
 [3] http://drupal.org/project/search_api_solr
+
+As a pre-requisite for running your own Solr server, you'll need Java 6 or
+higher.
 
 Download the latest version of Solr 3.x from [4] and unpack the archive
 somewhere outside of your web server's document tree.
@@ -58,6 +25,10 @@ For small websites, using the example application, located in $SOLR/example/,
 usually suffices. In any case, you can use it for developing andd testing. The
 following instructions will assume you are using the example application,
 otherwise you should be able to substitute the corresponding paths.
+
+CAUTION! For production sites, it is vital that you somehow prevent outside
+access to the Solr server. Otherwise, attackers could read, corrupt or delete
+all your indexed data. Using the example server WON'T prevent this by default.
 
 Before starting the Solr server you will have to make sure it uses the proper
 configuration files. These are located in the solr-conf/ directory in this

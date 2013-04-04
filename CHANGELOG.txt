@@ -1,5 +1,9 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1846254 by drunken monkey: Removed the SolrPhpClient dependency.
+- #1934450 by jwilson3, jlapp: Fixed reference to removed method
+  getFacetField().
+- #1900644 by Deciphered: Fixed facet handling for multi-index searches.
 - #1897386 by drunken monkey, NIck_vh: Update the common schema.
 
 Search API Solr search 1.0, RC 3 (01/06/2013):
