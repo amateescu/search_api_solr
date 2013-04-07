@@ -48,6 +48,11 @@ Regarding third-party features, the following are supported:
 - search_api_spellcheck
   Introduced by module: search_api_spellcheck
   Gives the option to display automatic spellchecking for searches.
+- search_api_data_type_location
+  Introduced by module: search_api_location
+  Lets you index, filter and sort on location fields. Note, however, that only
+  single-valued fields are currently supported for Solr 3.x, and that the option
+  isn't supported at all in Solr 1.4.
 
 If you feel some service option is missing, or have other ideas for improving
 this implementation, please file a feature request in the project's issue queue,

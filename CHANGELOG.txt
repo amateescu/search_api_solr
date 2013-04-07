@@ -1,5 +1,7 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1744250 by mollux, drunken monkey, das-peter: Added support for
+  location-based searches.
 - #1846254 by drunken monkey: Removed the SolrPhpClient dependency.
 - #1934450 by jwilson3, jlapp: Fixed reference to removed method
   getFacetField().

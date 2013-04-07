@@ -575,13 +575,13 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
     // Extract sort.
     $sort = array();
-    foreach ($query->getSort() as $f => $order) {
-      $f = $fields[$f];
+    foreach ($query->getSort() as $field => $order) {
+      $f = $fields[$field];
       if (substr($f, 0, 3) == 'ss_') {
         $f = 'sort_' . substr($f, 3);
       }
       $order = strtolower($order);
-      $sort[] = "$f $order";
+      $sort[$field] = "$f $order";
     }
 
     // Get facet fields.
@@ -608,6 +608,83 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $id = $this->createId($index->machine_name, $mlt['id']);
       $id = call_user_func(array($this->connection_class, 'phrase'), $id);
       $keys = 'id:' . $id;
+    }
+
+    // Handle spatial filters.
+    if ($spatials = $query->getOption('search_api_location')) {
+      foreach ($spatials as $i => $spatial) {
+        if (empty($spatial['field']) || empty($spatial['lat']) || empty($spatial['lon'])) {
+          continue;
+        }
+
+        unset($radius);
+        $field = $fields[$spatial['field']];
+        $escaped_field = SearchApiSolrConnection::escapeFieldName($field);
+        $point = ((float) $spatial['lat']) . ',' . ((float) $spatial['lon']);
+
+        // Prepare the filter settings.
+        if (isset($spatial['radius'])) {
+          $radius = (float) $spatial['radius'];
+        }
+        $spatial_method = 'geofilt';
+        if (isset($spatial['method']) && in_array($spatial['method'], array('geofilt', 'bbox'))) {
+          $spatial_method = $spatial['method'];
+        }
+
+        // Change the fq facet ranges to the correct fq.
+        foreach ($fq as $key => $value) {
+          // If the fq consists only of a filter on this field, replace it with
+          // a range.
+          $preg_field = preg_quote($escaped_field, '/');
+          if (preg_match('/^' . $preg_field . ':\["?(\*|\d+(?:\.\d+)?)"? TO "?(\*|\d+(?:\.\d+)?)"?\]$/', $value, $m)) {
+            unset($fq[$key]);
+            if (is_numeric($lower = trim($m[1], '"')) && $lower) {
+              // Sadly, this doesn't work. We usually don't need lower bounds,
+              // though (our facetting implementation doesn't create them, so it
+              // should be fine to ignore this for now.
+              //$fq[] = "-{!$spatial_method pt=$point sfield=$field d=$lower}";
+            }
+            if (is_numeric($upper = trim($m[2], '"'))) {
+              // Make the radius tighter accordingly.
+              $radius = isset($radius) ? min($radius, $upper) : $upper;
+            }
+          }
+        }
+
+        // If either a radius was given in the option, or a filter was
+        // encountered, set a filter for the lowest value.
+        if (isset($radius)) {
+          $fq[] = "{!$spatial_method pt=$point sfield=$field d=$radius}";
+        }
+
+        // Change sort on the field, if set.
+        if (isset($sort[$spatial['field']])) {
+          $sort[$spatial['field']] = str_replace($field, "geodist($field,$point)", $sort[$spatial['field']]);
+        }
+
+        // Change the facet parameters for spatial fields to return distance
+        // facets.
+        if (!empty($facets)) {
+          if (!empty($facet_params['facet.field'])) {
+            $facet_params['facet.field'] = array_diff($facet_params['facet.field'], array($field));
+          }
+          foreach ($facets as $delta => $facet) {
+            if ($facet['field'] != $spatial['field']) {
+              continue;
+            }
+            $steps = $facet['limit'] > 0 ? $facet['limit'] : 5;
+            $step = (isset($radius) ? $radius : 100) / $steps;
+            for ($k = $steps - 1; $k > 0; --$k) {
+              $distance = $step * $k;
+              $key = "spatial-$delta-$distance";
+              $facet_params['facet.query'][] = "{!$spatial_method pt=$point sfield=$field d=$distance key=$key}";
+            }
+            foreach (array('limit', 'mincount', 'missing') as $setting) {
+              unset($facet_params["f.$field.facet.$setting"]);
+            }
+          }
+        }
+      }
     }
 
     // Set defaults.
@@ -641,6 +718,9 @@ class SearchApiSolrService extends SearchApiAbstractService {
     }
     if (!empty($mlt_params['mlt.fl'])) {
       $params += $mlt_params;
+    }
+    if (!empty($spatial_params)) {
+      $params += $spatial_params;
     }
     if (!empty($this->options['retrieve_data'])) {
       $params['fl'] = '*,score';
@@ -826,15 +906,19 @@ class SearchApiSolrService extends SearchApiAbstractService {
    *   An array describing facets that apply to the current results.
    */
   protected function extractFacets(SearchApiQueryInterface $query, $response) {
+    $facets = array();
+
+    if (!isset($response->facet_counts)) {
+      return $facets;
+    }
+
+    $index = $query->getIndex();
+    $fields = $this->getFieldNames($index);
+
+    $extract_facets = $query->getOption('search_api_facets', array());
+
     if (isset($response->facet_counts->facet_fields)) {
-      $index = $query->getIndex();
-      $fields = $this->getFieldNames($index);
-
-      $facets = array();
       $facet_fields = $response->facet_counts->facet_fields;
-
-      $extract_facets = $query->getOption('search_api_facets');
-      $extract_facets = ($extract_facets ? $extract_facets : array());
 
       foreach ($extract_facets as $delta => $info) {
         $field = $fields[$info['field']];
@@ -886,8 +970,30 @@ class SearchApiSolrService extends SearchApiAbstractService {
         }
       }
 
-      return $facets;
     }
+
+    if (isset($response->facet_counts->facet_queries)) {
+      if ($spatials = $query->getOption('search_api_location')) {
+        $queries = array();
+        foreach ($response->facet_counts->facet_queries as $key => $count) {
+          if (!preg_match('/^spatial-(.*)-(\d+(?:\.\d+)?)$/', $key, $m)) {
+            continue;
+          }
+          if (empty($extract_facets[$m[1]])) {
+            continue;
+          }
+          $facet = $extract_facets[$m[1]];
+          if ($count >= $facet['min_count']) {
+            $facets[$m[1]][] = array(
+              'filter' => "[* {$m[2]}]",
+              'count' => $count,
+            );
+          }
+        }
+      }
+    }
+
+    return $facets;
   }
 
   /**
