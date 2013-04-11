@@ -124,7 +124,7 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
                 $additional_documents = array();
                 $additional_documents[$id] = clone $document;
 
-                $tmp_documents = apachesolr_multilingual_entity_to_documents_delegate($entity, $entity_type, $env_id);
+                $tmp_documents = apachesolr_convert_entity_to_documents($entity, $entity_type, $env_id);
                 $basic_fields = reset($tmp_documents);
 
                 foreach ($basic_fields->getFieldNames() as $field) {
@@ -803,62 +803,6 @@ function apachesolr_multilingual_get_search_suggestions($env_id, $filter_languag
     }
   }
   return $suggestions_output;
-}
-
-/**
- * TODO this function should be moved to apachesolr.index.inc by simply isolating the code from apachesolr_index_entity_to_documents
- *
- * @param $entity
- * @param $entity_type
- * @param $env_id
- * @return array
- */
-function apachesolr_multilingual_entity_to_documents_delegate($entity, $entity_type, $env_id) {
-  list($entity_id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-
-  // Create a new document, and do the bare minimum on it.
-  $document = _apachesolr_index_process_entity_get_document($entity, $entity_type);
-
-  //Get the callback array to add stuff to the document
-  $callbacks = apachesolr_entity_get_callback($entity_type, 'document callback', $bundle);
-  $documents = array();
-  foreach ($callbacks as $callback) {
-    // Call a type-specific callback to add stuff to the document.
-    $documents = array_merge($documents, $callback($document, $entity, $entity_type, $env_id));
-  }
-
-  //do this for all possible documents that were returned by the callbacks
-  foreach ($documents as $document) {
-    // Call an all-entity hook to add stuff to the document.
-    module_invoke_all('apachesolr_index_document_build', $document, $entity, $entity_type, $env_id);
-
-    // Call a type-specific hook to add stuff to the document.
-    module_invoke_all('apachesolr_index_document_build_' . $entity_type, $document, $entity, $env_id);
-
-    // Final processing to ensure that the document is properly structured.
-    // All records must have a label field, which is used for user-friendly labeling.
-    if (empty($document->label)) {
-      $document->label = '';
-    }
-
-    // All records must have a "content" field, which is used for fulltext indexing.
-    // If we don't have one, enter an empty value.  This does mean that the entity
-    // will not be fulltext searchable.
-    if (empty($document->content)) {
-      $document->content = '';
-    }
-
-    // All records must have a "teaser" field, which is used for abbreviated
-    // displays when no highlighted text is available.
-    if (empty($document->teaser)) {
-      $document->teaser = truncate_utf8($document->content, 300, TRUE);
-    }
-
-    // Add additional indexing based on the body of each record.
-    apachesolr_index_add_tags_to_document($document, $document->content);
-  }
-
-  return $documents;
 }
 
 /**
