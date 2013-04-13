@@ -7,6 +7,7 @@ Apache Solr Multilingual 7.x-1.0-beta1, 2013-xx-xx
 [        ] mkalkbrenner: multilingual search result highlighting
 [        ] mkalkbrenner: support title module
 [#1954302] mkalkbrenner: Isolate some re-usable code from apachesolr_index_entity_to_documents().
+[        ] mkalkbrenner: fixed endless recursion caused by #1954302
 
 
 Apache Solr Multilingual 7.x-1.0-alpha2, 2012-09-18
