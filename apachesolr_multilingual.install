@@ -6,6 +6,26 @@
  */
 
 /**
+ * Implements hook_enable().
+ *
+ * Set variable "apachesolr_service_class" to
+ * "DrupalApacheSolrMultilingualService" to support multilingual spell checking.
+ */
+function apachesolr_multilingual_enable() {
+  variable_set('apachesolr_service_class', 'DrupalApacheSolrMultilingualService');
+}
+
+/**
+ * Implements hook_disable().
+ *
+ * Set variable "apachesolr_service_class" back to default.
+ */
+function apachesolr_multilingual_disable() {
+  // Deleting the variable will reset it to default.
+  variable_del('apachesolr_service_class');
+}
+
+/**
  * Remove obsolete variable 'apachesolr_search_protected_query_parameters'.
  */
 function apachesolr_multilingual_update_7100(&$sandbox) {
