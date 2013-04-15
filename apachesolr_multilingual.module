@@ -518,48 +518,51 @@ function apachesolr_multilingual_apachesolr_search_custom_page_search_form_submi
  * @param $form_state
  */
 function apachesolr_multilingual_form_apachesolr_search_page_settings_form_alter(&$form, &$form_state, $form_id) {
-  $search_page_settings = $form['search_page']['#value']['settings'];
-  if (empty($search_page_settings['custom_settings'])) {
-    $search_page_settings['custom_settings'] = array();
-  }
-  $search_page_settings['custom_settings'] +=
-    array(
-      'apachesolr_multilingual_auto_language_filter' => 1,
-      'apachesolr_multilingual_auto_language_filter_detachable' => 0,
-      'apachesolr_multilingual_show_language_undefined_results' => 0,
+  $environment = apachesolr_multilingual_environment_load($form['search_page']['#value']['env_id']);
+  if (array_key_exists('apachesolr_multilingual_index_settings', $environment['conf'])
+    && $environment['conf']['apachesolr_multilingual_index_settings']['apachesolr_multilingual_index'])
+  {
+    $search_page_settings = $form['search_page']['#value']['settings'];
+    // Add multilingual defaults.
+    $search_page_settings +=
+      array(
+        'apachesolr_multilingual_auto_language_filter' => 1,
+        'apachesolr_multilingual_auto_language_filter_detachable' => 0,
+        'apachesolr_multilingual_show_language_undefined_results' => 0,
+      );
+
+    $form['apachesolr_multilingual_query_settings'] = array(
+      '#type' => 'fieldset',
+      '#tree' => TRUE,
+      '#title' => t('Multilingual Query Settings'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
     );
 
-  $form['apachesolr_multilingual_query_settings'] = array(
-    '#type' => 'fieldset',
-    '#tree' => TRUE,
-    '#title' => t('Multilingual Query Settings'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
+    $form['apachesolr_multilingual_query_settings']['apachesolr_multilingual_auto_language_filter'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Limit search to current language by default'),
+      '#default_value' => $search_page_settings['apachesolr_multilingual_auto_language_filter'],
+      '#description' => t('Show only search results that match the current language.'),
+    );
 
-  $form['apachesolr_multilingual_query_settings']['apachesolr_multilingual_auto_language_filter'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Limit search to current language by default'),
-    '#default_value' => $search_page_settings['custom_settings']['apachesolr_multilingual_auto_language_filter'],
-    '#description' => t('Show only search results that match the current language.'),
-  );
+    $form['apachesolr_multilingual_query_settings']['apachesolr_multilingual_auto_language_filter_detachable'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Limit search to current language could be disabled by user'),
+      '#default_value' => $search_page_settings['apachesolr_multilingual_auto_language_filter_detachable'],
+      '#description' => t('Displays a checkbox on search result page to search over all languages if "%limit_search" is active.', array('%limit_search' => t('Limit search to current language by default'))),
+    );
 
-  $form['apachesolr_multilingual_query_settings']['apachesolr_multilingual_auto_language_filter_detachable'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Limit search to current language could be disabled by user'),
-    '#default_value' => $search_page_settings['custom_settings']['apachesolr_multilingual_auto_language_filter_detachable'],
-    '#description' => t('Displays a checkbox on search result page to search over all languages if "%limit_search" is active.', array('%limit_search' => t('Limit search to current language by default'))),
-  );
+    $form['apachesolr_multilingual_query_settings']['apachesolr_multilingual_show_language_undefined_results'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Show language-neutral/undefined results by default'),
+      '#default_value' => $search_page_settings['apachesolr_multilingual_show_language_undefined_results'],
+      '#description' => t('Show language-neutral/undefined results on search result page if "%limit_search" is active.', array('%limit_search' => t('Limit search to current language by default'))),
+    );
 
-  $form['apachesolr_multilingual_query_settings']['apachesolr_multilingual_show_language_undefined_results'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Show language-neutral/undefined results by default'),
-    '#default_value' => $search_page_settings['custom_settings']['apachesolr_multilingual_show_language_undefined_results'],
-    '#description' => t('Show language-neutral/undefined results on search result page if "%limit_search" is active.', array('%limit_search' => t('Limit search to current language by default'))),
-  );
-
-  array_unshift($form['#validate'], 'apachesolr_multilingual_search_page_settings_form_validate');
-  array_unshift($form['#submit'], 'apachesolr_multilingual_search_page_settings_form_submit');
+    array_unshift($form['#validate'], 'apachesolr_multilingual_search_page_settings_form_validate');
+    array_unshift($form['#submit'], 'apachesolr_multilingual_search_page_settings_form_submit');
+  }
 }
 
 function apachesolr_multilingual_search_page_settings_form_validate($form, &$form_state) {
