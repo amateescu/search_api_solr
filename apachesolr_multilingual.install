@@ -5,7 +5,18 @@
  *  TODO
  */
 
+/**
+ * Remove obsolete variable 'apachesolr_search_protected_query_parameters'.
+ */
 function apachesolr_multilingual_update_7100(&$sandbox) {
   // delete a variable that has been used in 7.x-1.0-alpha1
   variable_del('apachesolr_search_protected_query_parameters');
+}
+
+/**
+ * Set variable "apachesolr_service_class" to
+ * "DrupalApacheSolrMultilingualService" to support multilingual spell checking.
+ */
+function apachesolr_multilingual_update_7101(&$sandbox) {
+  variable_set('apachesolr_service_class', 'DrupalApacheSolrMultilingualService');
 }

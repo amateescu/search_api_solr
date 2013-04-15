@@ -9,4 +9,4 @@ dependencies[] = apachesolr
 dependencies[] = apachesolr_search
 dependencies[] = locale
 
-files[] = apachesolr_multilingual.module
+files[] = DrupalApacheSolrMultilingualService.php

@@ -772,25 +772,8 @@ function apachesolr_multilingual_get_search_suggestions($env_id, $filter_languag
     $query = apachesolr_current_query($env_id);
     $keyword = $query->getParam('q');
     $searcher = $query->getSearcher();
-    // TODO that should better be handled by apachesolr itself. See http://drupal.org/node/1924448
     $response = apachesolr_static_response_cache($searcher);
-    // @see http://wiki.apache.org/solr/SolJSON
-    // "Using a JSON object (essentially a map or hash) for a NamedList results
-    // in the loss of some information."
-    // That's the reason why the multiple language specific spell check results
-    // get lost during json_decode(), because they are all named "spellcheck".
-    // Therefor we rename the the language specific spell checks and
-    // json_decode() twice.
     $language_ids = array_keys(apachesolr_multilingual_language_list());
-    foreach ($language_ids as $language_id) {
-      $response->data = preg_replace('@"spellcheck"@', '"spellcheck_' . $language_id . '"', $response->data, 1);
-    }
-    $result = json_decode($response->data);
-    if (is_object($result)) {
-      foreach ($result as $key => $value) {
-        $response->$key = $value;
-      }
-    }
     // Get spellchecker suggestions into an array.
     foreach ($language_ids as $language_id) {
       if (!empty($filter_languages) && !in_array($language_id, $filter_languages)) {
