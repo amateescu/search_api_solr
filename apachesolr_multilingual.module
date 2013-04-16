@@ -400,7 +400,7 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
   if ($settings['apachesolr_multilingual_index']) {
 
     $search_page = apachesolr_search_page_load($context['page_id']);
-    $custom_settings = $search_page['settings']['custom_settings'];
+    $custom_settings = $search_page['settings'];
     $filter_languages = &drupal_static('apachesolr_multilingual_filter_languages_' . $context['page_id']);
     $filter_languages = apachesolr_multilingual_get_language_filters_by_query($query);
     $languages = apachesolr_multilingual_language_list();
@@ -478,9 +478,9 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
  * @param $form_state
  */
 function apachesolr_multilingual_form_apachesolr_search_custom_page_search_form_alter(&$form, $form_state) {
-  if ($form['#search_page']['settings']['custom_settings']['apachesolr_multilingual_auto_language_filter']) {
+  if ($form['#search_page']['settings']['apachesolr_multilingual_auto_language_filter']) {
     $form['basic']['detach_auto_language_filter'] = array(
-      '#type' => $form['#search_page']['settings']['custom_settings']['apachesolr_multilingual_auto_language_filter_detachable'] ? 'checkbox' : 'hidden',
+      '#type' => $form['#search_page']['settings']['apachesolr_multilingual_auto_language_filter_detachable'] ? 'checkbox' : 'hidden',
       '#title' => t('Search all languages'),
       '#default_value' => (int) isset($_GET['detach-auto-language-filter']),
     );
