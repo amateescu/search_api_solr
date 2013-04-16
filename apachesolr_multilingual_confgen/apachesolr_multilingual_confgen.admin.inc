@@ -18,7 +18,8 @@
  * @param $form_state
  */
 function apachesolr_multilingual_confgen_admin_form($form_state) {
-  $variable_language = variable_realm_params('language');
+  module_load_include('form.inc', 'variable_realm');
+  $variable_language = variable_realm_form_key_current('language');
 
   $form['vt'] = array(
     '#type' => 'vertical_tabs',
