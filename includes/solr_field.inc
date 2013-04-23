@@ -59,16 +59,6 @@ class SearchApiSolrField {
   }
 
   /**
-   * Gets the raw information of the field.
-   *
-   * @return object
-   *   A field metadata object.
-   */
-  public function getRaw() {
-    return $this->field;
-  }
-
-  /**
    * Gets the type of the Solr field, according to the Solr schema.
    *
    * Note that field types like "text", "boolean", and "date" are conventions,
