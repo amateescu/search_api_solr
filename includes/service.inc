@@ -701,9 +701,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     if (isset($options['offset'])) {
       $params['start'] = $options['offset'];
     }
-    if (isset($options['limit'])) {
-      $params['rows'] = $options['limit'];
-    }
+    $params['rows'] = isset($options['limit']) ? $options['limit'] : 1000000;
     if ($sort) {
       $params['sort'] = implode(', ', $sort);
     }
