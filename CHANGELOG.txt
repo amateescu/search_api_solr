@@ -1,5 +1,6 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1978600 by chaby: Fixed hook_requirements() for install phase.
 - #1976930 by drunken monkey: Fixed duplicate method in SearchApiSolrField.
 
 Search API Solr search 1.0, RC 4 (04/22/2013):

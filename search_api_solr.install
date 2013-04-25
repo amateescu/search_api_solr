@@ -15,6 +15,8 @@ function search_api_solr_schema() {
  * Implements hook_requirements().
  */
 function search_api_solr_requirements($phase) {
+  $ret = array();
+
   if ($phase == 'runtime') {
     $servers = search_api_server_load_multiple(FALSE, array('class' => 'search_api_solr_service', 'enabled' => TRUE));
     $count = 0;
@@ -48,9 +50,9 @@ function search_api_solr_requirements($phase) {
       $ret['search_api_solr']['description'] = format_plural($count, 'The Solr server could be reached.', 'All @count Solr servers could be reached.');
       $ret['search_api_solr']['severity'] = REQUIREMENT_OK;
     }
-
-    return $ret;
   }
+
+  return $ret;
 }
 
 /**
