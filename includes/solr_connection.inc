@@ -809,7 +809,7 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
       $rawPost = "<$type$waitSearcher />";
     }
     else {
-      $softCommit = ' softCommit="' . $this->soft_commit . '"' ? 'true' : '';
+      $softCommit = ($this->soft_commit) ?  ' softCommit="true"' : '';
       $rawPost = "<$type$waitSearcher$softCommit />";
     }
 
