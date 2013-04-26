@@ -11,6 +11,7 @@ Apache Solr Multilingual 7.x-1.0-beta1, 2013-xx-xx
 [#1924448] mkalkbrenner: introduced DrupalApacheSolrMultilingualService class to solve multilingual spell checking in a more efficient way.
 [        ] mkalkbrenner: disable multilingual search page settings if corresponding environment is not multilingual
 [#1971244] jongagne, mkalkbrenner: The default language displayed for the stemmer language select form is incorrect
+[        ] mkalkbrenner: improved handling of German Umlauts for Solr 1.x and 3.x
 
 
 Apache Solr Multilingual 7.x-1.0-alpha2, 2012-09-18
