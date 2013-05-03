@@ -614,13 +614,13 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
   /**
    * Implements SearchApiSolrConnectionInterface::escape().
    */
-  public static function escape($value) {
+  public static function escape($value, $version = 0) {
     $replacements = array();
 
     $specials = array('+', '-', '&&', '||', '!', '(', ')', '{', '}', '[', ']', '^', '"', '~', '*', '?', ':', "\\");
     // Solr 4.x introduces regular expressions, making the slash also a special
     // character.
-    if ($this->getSolrVersion() >= 4) {
+    if ($version >= 4) {
       $specials[] = '/';
     }
 

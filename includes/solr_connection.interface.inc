@@ -263,11 +263,13 @@ interface SearchApiSolrConnectionInterface {
    *
    * @param string $value
    *   The string to escape.
+   * @param string $version
+   *   An integer representing major solr version release.
    *
    * @return string
    *   An escaped string suitable for passing to Solr.
    */
-  static public function escape($value);
+  public static function escape($value, $version = 0);
 
   /**
    * Escapes a string that should be included in a Solr phrase.
@@ -280,7 +282,7 @@ interface SearchApiSolrConnectionInterface {
    * @return string
    *   An escaped string suitable for passing to Solr.
    */
-  static public function escapePhrase($value);
+  public static function escapePhrase($value);
 
   /**
    * Converts a string to a Solr phrase.
@@ -291,7 +293,7 @@ interface SearchApiSolrConnectionInterface {
    * @return string
    *   A phrase string suitable for passing to Solr.
    */
-  static public function phrase($value);
+  public static function phrase($value);
 
   /**
    * Escapes a Search API field name for passing to Solr.
