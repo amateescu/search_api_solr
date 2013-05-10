@@ -251,6 +251,8 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
   /**
    * Sets whether this connection will use soft commits when comitting.
    *
+   * Note that this setting only has any effect when using Solr 4.x or higher.
+   *
    * @param $soft_commit
    *   TRUE if soft commits should be used, FALSE otherwise. Default is FALSE.
    */
@@ -260,6 +262,8 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
 
   /**
    * Tells whether this connection will use soft commits when comitting.
+   *
+   * Note that this setting only has any effect when using Solr 4.x or higher.
    *
    * @return
    *   TRUE if soft commits will be used, FALSE otherwise.
