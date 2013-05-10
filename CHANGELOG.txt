@@ -1,4 +1,4 @@
-Apache Solr Multilingual 7.x-1.0-beta1, 2013-xx-xx
+Apache Solr Multilingual 7.x-1.0-beta1, 2013-05-10
 ---------------------------------------------------
 [#1301252] mkalkbrenner: index nodes translated using entity_translation
 [        ] mkalkbrenner: fixed bug that caused to much results after saving bias form
