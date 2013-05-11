@@ -925,15 +925,18 @@ class SearchApiSolrService extends SearchApiAbstractService {
           $terms = $facet_fields->$field;
           if ($info['missing']) {
             // We have to correctly incorporate the "_empty_" term.
-            // This will ensure that the term with the least results is dropped, if the limit would be exceeded.
-            if (isset($terms->_empty_) && $terms->_empty_ < $min_count) {
-              unset($terms->_empty_);
-            }
-            else {
-              $terms = (array) $terms;
-              arsort($terms);
-              if (count($terms) > $info['limit']) {
-                array_pop($terms);
+            // This will ensure that the term with the least results is dropped,
+            // if the limit would be exceeded.
+            if (isset($terms->_empty_)) {
+              if ($terms->_empty_ < $min_count) {
+                unset($terms->_empty_);
+              }
+              else {
+                $terms = (array) $terms;
+                arsort($terms);
+                if ($info['limit'] > 0 && count($terms) > $info['limit']) {
+                  array_pop($terms);
+                }
               }
             }
           }
@@ -944,22 +947,29 @@ class SearchApiSolrService extends SearchApiAbstractService {
           $type = isset($index->options['fields'][$info['field']]['type']) ? $index->options['fields'][$info['field']]['type'] : 'string';
           foreach ($terms as $term => $count) {
             if ($count >= $min_count) {
-              if ($type == 'boolean') {
+              if ($term === '_empty_') {
+                $term = '!';
+              }
+              elseif ($type == 'boolean') {
                 if ($term == 'true') {
-                  $term = 1;
+                  $term = '"1"';
                 }
                 elseif ($term == 'false') {
-                  $term = 0;
+                  $term = '"0"';
                 }
               }
               elseif ($type == 'date') {
-                $term = isset($term) ? strtotime($term) : NULL;
+                $term = $term ? '"' . strtotime($term) . '"' : NULL;
               }
-              $term = $term === '_empty_' ? '!' : '"' . $term . '"';
-              $facets[$delta][] = array(
-                'filter' => $term,
-                'count' => $count,
-              );
+              else {
+                $term = "\"$term\"";
+              }
+              if ($term) {
+                $facets[$delta][] = array(
+                  'filter' => $term,
+                  'count' => $count,
+                );
+              }
             }
           }
           if (empty($facets[$delta])) {
@@ -1637,23 +1647,54 @@ class SearchApiSolrService extends SearchApiAbstractService {
           $terms = $facet_fields->$field;
           if ($info['missing']) {
             // We have to correctly incorporate the "_empty_" term.
-            // This will ensure that the term with the least results is dropped, if the limit would be exceeded.
-            $terms = (array) $terms;
-            arsort($terms);
-            if (count($terms) > $info['limit']) {
-              array_pop($terms);
+            // This will ensure that the term with the least results is dropped,
+            // if the limit would be exceeded.
+            if (isset($terms->_empty_)) {
+              if ($terms->_empty_ < $min_count) {
+                unset($terms->_empty_);
+              }
+              else {
+                $terms = (array) $terms;
+                arsort($terms);
+                if ($info['limit'] > 0 && count($terms) > $info['limit']) {
+                  array_pop($terms);
+                }
+              }
             }
           }
+          elseif (isset($terms->_empty_)) {
+            $terms = clone $terms;
+            unset($terms->_empty_);
+          }
+          $type = isset($index->options['fields'][$info['field']]['type']) ? $index->options['fields'][$info['field']]['type'] : 'string';
           foreach ($terms as $term => $count) {
             if ($count >= $min_count) {
-              $term = $term == '_empty_' ? '!' : '"' . $term . '"';
-              $results['search_api_facets'][$delta][] = array(
-                'filter' => $term,
-                'count' => $count,
-              );
+              if ($term === '_empty_') {
+                $term = '!';
+              }
+              elseif ($type == 'boolean') {
+                if ($term == 'true') {
+                  $term = '"1"';
+                }
+                elseif ($term == 'false') {
+                  $term = '"0"';
+                }
+              }
+              elseif ($type == 'date') {
+                $term = $term ? '"' . strtotime($term) . '"' : NULL;
+              }
+              else {
+                $term = "\"$term\"";
+              }
+              if ($term) {
+                $results['search_api_facets'][$delta][] = array(
+                  'filter' => $term,
+                  'count' => $count,
+                );
+              }
             }
           }
-          if (empty($results['search_api_facets'][$delta]) || count($results['search_api_facets'][$delta]) <= 1) {
+          if (empty($results['search_api_facets'][$delta])) {
             unset($results['search_api_facets'][$delta]);
           }
         }
