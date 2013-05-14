@@ -25,6 +25,50 @@ interface SearchApiSolrConnectionInterface {
   public function ping($timeout = 2);
 
   /**
+   * Sets whether this connection will use soft commits when comitting.
+   *
+   * Note that this setting only has any effect when using Solr 4.x or higher.
+   *
+   * @param $soft_commit
+   *   TRUE if soft commits should be used, FALSE otherwise. Default is FALSE.
+   */
+  public function setSoftCommit($soft_commit);
+
+  /**
+   * Tells whether this connection will use soft commits when comitting.
+   *
+   * Note that this setting only has any effect when using Solr 4.x or higher.
+   *
+   * @return
+   *   TRUE if soft commits will be used, FALSE otherwise.
+   */
+  public function getSoftCommit();
+
+  /**
+   * Set the stream context to use for requests to the Solr server.
+   *
+   * Must be a valid stream context as created by stream_context_create(). By
+   * default, no special stream context will be used.
+   *
+   * @param resource|null $stream_context
+   *   A valid  stream context as created by stream_context_create(). Or NULL to
+   *   use the default behavior.
+   */
+  public function setStreamContext($stream_context);
+
+  /**
+   * Returns the stream context to use for requests to the Solr server.
+   *
+   * By default, no special stream context will be used and this method will
+   * return NULL.
+   *
+   * @return resource|null
+   *   A valid  stream context as created by stream_context_create(). Or NULL if
+   *   the default behavior is used.
+   */
+  public function getStreamContext();
+
+  /**
    * Gets information about the Solr Core.
    *
    * @return array

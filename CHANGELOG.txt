@@ -1,5 +1,7 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1990422 by populist, drunken monkey: Added support for custom stream contexts
+  for HTTP requests.
 - #1957890 by drunken monkey, jwilson3: Fixed several bugs for facets.
 - #1676224 by dasjo, morningtime, drunken monkey: Added support for Solr 4.x.
 - #1985522 by chaby: Fixed use of instance method in static escape() method.
