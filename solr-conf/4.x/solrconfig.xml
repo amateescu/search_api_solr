@@ -880,6 +880,14 @@
     </lst>
   </requestHandler>
 
+  <!-- A minimal query type for doing luene queries -->
+  <requestHandler name="standard" class="solr.SearchHandler">
+    <lst name="defaults">
+      <str name="echoParams">explicit</str>
+      <bool name="omitHeader">true</bool>
+    </lst>
+  </requestHandler>
+
   <!-- XML Update Request Handler.
 
        http://wiki.apache.org/solr/UpdateXmlMessages
@@ -1360,8 +1368,8 @@
                  default="true"
                  class="solr.highlight.HtmlFormatter">
         <lst name="defaults">
-          <str name="hl.simple.pre"><![CDATA[<em>]]></str>
-          <str name="hl.simple.post"><![CDATA[</em>]]></str>
+          <str name="hl.simple.pre"><![CDATA[<strong>]]></str>
+          <str name="hl.simple.post"><![CDATA[</strong>]]></str>
         </lst>
       </formatter>
 
@@ -1584,7 +1592,7 @@
         <!-- a spellchecker built from a field of the main index -->
         <lst name="spellchecker">
           <str name="name">default</str>
-          <str name="field">content</str>
+          <str name="field">spell</str>
           <str name="spellcheckIndexDir">spellchecker</str>
           <str name="buildOnOptimize">true</str>
         </lst>
