@@ -67,7 +67,9 @@ Please consider that, since Solr handles tokenizing, stemming and other
 preprocessing tasks, activating any preprocessors in a search index' settings is
 usually not needed or even cumbersome. If you are adding an index to a Solr
 server you should therefore then disable all processors which handle such
-classic preprocessing tasks.
+classic preprocessing tasks. Enabling the HTML filter can be useful, though, as
+the default config files included in this module don't handle stripping out HTML
+tags.
 
 Also, due to the way Solr works, using a single field for fulltext searching
 will result in the smallest index size and best search performance, as well as

@@ -1,5 +1,6 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1190462 by drunken monkey: Documented that enabling HTML filter makes sense.
 - #1986284 by drunken monkey: Updated common configs to the latest version.
 - #1990422 by populist, drunken monkey: Added support for custom stream contexts
   for HTTP requests.
