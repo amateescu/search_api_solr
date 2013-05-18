@@ -1,5 +1,6 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1549244 by cferthorney, drunken monkey: Added SSL Support for Solr servers.
 
 Search API Solr search 1.0, RC 5 (05/17/2013):
 ----------------------------------------------

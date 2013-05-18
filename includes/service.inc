@@ -84,7 +84,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
   public function configurationForm(array $form, array &$form_state) {
     if ($this->options) {
       // Editing this server
-      $url = 'http://' . $this->options['host'] . ':' . $this->options['port'] . $this->options['path'];
+      $url = $this->options['scheme'] . '://' . $this->options['host'] . ':' . $this->options['port'] . $this->options['path'];
       $form['server_description'] = array(
         '#type' => 'item',
         '#title' => t('Solr server URI'),
@@ -93,6 +93,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     }
 
     $options = $this->options + array(
+      'scheme' => 'http',
       'host' => 'localhost',
       'port' => '8983',
       'path' => '/solr',
@@ -104,6 +105,17 @@ class SearchApiSolrService extends SearchApiAbstractService {
       'http_method' => 'POST',
       'autocorrect_spell' => TRUE,
       'autocorrect_suggest_words' => TRUE,
+    );
+
+    $form['scheme'] = array(
+      '#type' => 'select',
+      '#title' => t('HTTP protocol'),
+      '#description' => t('The HTTP protocol to use for sending queries.'),
+      '#default_value' => $options['scheme'],
+      '#options' => array(
+        'http' => 'http',
+        'https' => 'https',
+      ),
     );
 
     $form['host'] = array(
@@ -263,7 +275,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $output = '';
     $options = $this->options;
 
-    $url = 'http://' . $options['host'] . ':' . $options['port'] . $options['path'];
+    $url = $options['scheme'] . '://' . $options['host'] . ':' . $options['port'] . $options['path'];
     $output .= "<dl>\n  <dt>";
     $output .= t('Solr server URI');
     $output .= "</dt>\n  <dd>";
