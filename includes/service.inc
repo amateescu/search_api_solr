@@ -264,6 +264,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       'search_api_spellcheck',
       'search_api_data_type_location',
       'search_api_data_type_geohash',
+      'search_api_grouping',
     ));
     return isset($supported[$feature]);
   }
@@ -699,6 +700,68 @@ class SearchApiSolrService extends SearchApiAbstractService {
       }
     }
 
+    // Handle field collapsing / grouping.
+    $grouping = $query->getOption('search_api_grouping');
+    if (!empty($grouping['use_grouping'])) {
+      $group_params['group'] = 'true';
+      // We always want the number of groups returned so that we get pagers done
+      // right.
+      $group_params['group.ngroups'] = 'true';
+      if (!empty($grouping['truncate'])) {
+        $group_params['group.truncate'] = 'true';
+      }
+      if (!empty($grouping['group_facet'])) {
+        $group_params['group.facet'] = 'true';
+      }
+      $this->connect();
+      $version = $this->solr->getSolrVersion();
+      foreach ($grouping['fields'] as $collapse_field) {
+        $type = $index_fields[$collapse_field]['type'];
+        // Only single-valued fields are supported.
+        if ($version < 4) {
+          // For Solr 3.x, only string and boolean fields are supported.
+          if (search_api_is_list_type($type) || !search_api_is_text_type($type, array('string', 'boolean', 'uri'))) {
+            $warnings[] = t('Grouping is not supported for field @field. ' .
+                'Only single-valued fields of type "String", "Boolean" or "URI" are supported.',
+                array('@field' => $index_fields[$collapse_field]['name']));
+            continue;
+          }
+        }
+        else {
+          if (search_api_is_list_type($type) || search_api_is_text_type($type)) {
+            $warnings[] = t('Grouping is not supported for field @field. ' .
+                'Only single-valued fields not indexed as "Fulltext" are supported.',
+                array('@field' => $index_fields[$collapse_field]['name']));
+            continue;
+          }
+        }
+        $group_params['group.field'][] = $fields[$collapse_field];
+      }
+      if (empty($group_params['group.field'])) {
+        unset($group_params);
+      }
+      else {
+        if (!empty($grouping['group_sort'])) {
+          foreach ($grouping['group_sort'] as $group_sort_field => $order) {
+            if (isset($fields[$group_sort_field])) {
+              $f = $fields[$group_sort_field];
+              if (substr($f, 0, 3) == 'ss_') {
+                $f = 'sort_' . substr($f, 3);
+              }
+              $order = strtolower($order);
+              $group_params['group.sort'][] = $f . ' ' . $order;
+            }
+          }
+          if (!empty($group_params['group.sort'])) {
+            $group_params['group.sort'] = implode(', ', $group_params['group.sort']);
+          }
+        }
+        if (!empty($grouping['group_limit']) && ($grouping['group_limit'] != 1)) {
+          $group_params['group.limit'] = $grouping['group_limit'];
+        }
+      }
+    }
+
     // Set defaults.
     if (!$keys) {
       $keys = NULL;
@@ -729,8 +792,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
     if (!empty($mlt_params['mlt.fl'])) {
       $params += $mlt_params;
     }
-    if (!empty($spatial_params)) {
-      $params += $spatial_params;
+    if (!empty($group_params)) {
+      $params += $group_params;
     }
     if (!empty($this->options['retrieve_data'])) {
       $params['fl'] = '*,score';
@@ -759,6 +822,11 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
       // Extract results.
       $results = $this->extractResults($query, $response);
+
+      // Add warnings, if present.
+      if (!empty($warnings)) {
+        $results['warnings'] = isset($results['warnings']) ? array_merge($warnings, $results['warnings']) : $warnings;
+      }
 
       // Extract facets.
       if ($facets = $this->extractFacets($query, $response)) {
@@ -806,14 +874,35 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $results['results'] = array();
     // In some rare cases (e.g., MLT query with nonexistent ID) the response
     // will be NULL.
-    if (!isset($response->response)) {
+    if (!isset($response->response) && !isset($response->grouped)) {
       $results['result count'] = 0;
       return $results;
     }
-    $results['result count'] = $response->response->numFound;
+
+    // If field collapsing has been enabled for this query, we need to process
+    // the results differently.
+    $grouping = $query->getOption('search_api_grouping');
+    if (!empty($grouping['use_grouping']) && !empty($response->grouped)) {
+      $docs = array();
+      $results['result count'] = 0;
+      foreach ($grouping['fields'] as $field) {
+        if (!empty($response->grouped->{$fields[$field]})) {
+          $results['result count'] += $response->grouped->{$fields[$field]}->ngroups;
+          foreach ($response->grouped->{$fields[$field]}->groups as $group) {
+            foreach ($group->doclist->docs as $doc) {
+              $docs[] = $doc;
+            }
+          }
+        }
+      }
+    }
+    else {
+      $results['result count'] = $response->response->numFound;
+      $docs = $response->response->docs;
+    }
 
     // Add each search result to the results array.
-    foreach ($response->response->docs as $doc) {
+    foreach ($docs as $doc) {
       // Blank result array.
       $result = array(
         'id' => NULL,

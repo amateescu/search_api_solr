@@ -53,12 +53,18 @@ Regarding third-party features, the following are supported:
   Lets you index, filter and sort on location fields. Note, however, that only
   single-valued fields are currently supported for Solr 3.x, and that the option
   isn't supported at all in Solr 1.4.
+- search_api_grouping
+  Introduced by module: search_api_grouping [3]
+  Lets you group search results based on indexed fields. For further information
+  see the FieldCollapsing documentation in the solr wiki [4].
 
 If you feel some service option is missing, or have other ideas for improving
 this implementation, please file a feature request in the project's issue queue,
-at [3].
+at [5].
 
-[3] http://drupal.org/project/issues/search_api_solr
+[3] http://drupal.org/sandbox/daspeter/1783280
+[4] http://wiki.apache.org/solr/FieldCollapsing
+[5] http://drupal.org/project/issues/search_api_solr
 
 Specifics
 ---------
