@@ -153,7 +153,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $form['http']['http_pass'] = array(
       '#type' => 'password',
       '#title' => t('Password'),
-      '#default_value' => $options['http_pass'],
+      '#description' => t('If this field is left blank and the HTTP username is filled out, the current password will not be changed.'),
     );
 
     $form['advanced'] = array(
@@ -244,8 +244,17 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $values += $values['advanced'];
     $values += !empty($values['autocomplete']) ? $values['autocomplete'] : array();
     unset($values['http'], $values['advanced'], $values['autocomplete']);
+
     // Highlighting retrieved data only makes sense when we retrieve data.
     $values['highlight_data'] &= $values['retrieve_data'];
+
+    // For password fields, there is no default value, they're empty by default.
+    // Therefore we ignore empty submissions if the user didn't change either.
+    if ($values['http_pass'] === ''
+        && isset($this->options['http_user'])
+        && $values['http_user'] === $this->options['http_user']) {
+      $values['http_pass'] = $this->options['http_pass'];
+    }
 
     parent::configurationFormSubmit($form, $values, $form_state);
   }

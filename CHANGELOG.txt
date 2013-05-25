@@ -1,5 +1,7 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1884312 by drunken monkey, mvc: Fixed resetting of HTTP password upon
+  re-saving of the configuration form.
 - #1957774 by drunken monkey: Fixed displayed link to local Solr servers.
 - #1721262 by Steven Jones, das-peter, drunken monkey: Added field collapsing
   support.
