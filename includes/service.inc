@@ -84,11 +84,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
   public function configurationForm(array $form, array &$form_state) {
     if ($this->options) {
       // Editing this server
-      $url = $this->options['scheme'] . '://' . $this->options['host'] . ':' . $this->options['port'] . $this->options['path'];
       $form['server_description'] = array(
         '#type' => 'item',
         '#title' => t('Solr server URI'),
-        '#description' => l($url, $url),
+        '#description' => $this->getServerLink(),
       );
     }
 
@@ -276,11 +275,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $output = '';
     $options = $this->options;
 
-    $url = $options['scheme'] . '://' . $options['host'] . ':' . $options['port'] . $options['path'];
     $output .= "<dl>\n  <dt>";
     $output .= t('Solr server URI');
     $output .= "</dt>\n  <dd>";
-    $output .= l($url, $url);
+    $output .= $this->getServerLink();
     $output .= '</dd>';
     if ($options['http_user']) {
       $output .= "\n  <dt>";
@@ -294,6 +292,21 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $output .= "\n</dl>";
 
     return $output;
+  }
+
+  /**
+   * Returns a link to the Solr server, if the necessary options are set.
+   */
+  public function getServerLink() {
+    if (!$this->options) {
+      return '';
+    }
+    $host = $this->options['host'];
+    if ($host == 'localhost' && !empty($_SERVER['SERVER_NAME'])) {
+      $host = $_SERVER['SERVER_NAME'];
+    }
+    $url = $this->options['scheme'] . '://' . $host . ':' . $this->options['port'] . $this->options['path'];
+    return l($url, $url);
   }
 
   /**

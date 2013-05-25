@@ -1,5 +1,6 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1957774 by drunken monkey: Fixed displayed link to local Solr servers.
 - #1721262 by Steven Jones, das-peter, drunken monkey: Added field collapsing
   support.
 - #1549244 by cferthorney, drunken monkey: Added SSL Support for Solr servers.
