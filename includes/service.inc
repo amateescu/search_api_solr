@@ -258,12 +258,12 @@ class SearchApiSolrService extends SearchApiAbstractService {
       'search_api_autocomplete',
       'search_api_facets',
       'search_api_facets_operator_or',
+      'search_api_grouping',
       'search_api_mlt',
       'search_api_multi',
       'search_api_spellcheck',
       'search_api_data_type_location',
       'search_api_data_type_geohash',
-      'search_api_grouping',
     ));
     return isset($supported[$feature]);
   }
