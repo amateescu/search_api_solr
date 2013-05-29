@@ -1896,7 +1896,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
    */
   public function setConnectionClass($class) {
     $this->connection_class = $class;
-    unset($this->solr);
+    $this->solr = NULL;
   }
 
   /**

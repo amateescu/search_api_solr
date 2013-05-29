@@ -1,5 +1,6 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #2007214 by drunken monkey: Fixed unsetting of object properties.
 - #1884312 by drunken monkey, mvc: Fixed resetting of HTTP password upon
   re-saving of the configuration form.
 - #1957774 by drunken monkey: Fixed displayed link to local Solr servers.

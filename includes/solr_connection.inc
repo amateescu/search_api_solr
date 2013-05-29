@@ -716,7 +716,7 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
    */
   public function setBaseUrl($url) {
     $this->base_url = $url;
-    unset($this->update_url);
+    $this->update_url = NULL;
   }
 
   /**
