@@ -584,6 +584,9 @@ class SearchApiSolrService extends SearchApiAbstractService {
     // Get field information.
     $index = $query->getIndex();
     $fields = $this->getFieldNames($index);
+    // Get Solr connection.
+    $this->connect();
+    $version = $this->solr->getSolrVersion();
 
     // Extract keys.
     $keys = $query->getKeys();
@@ -633,6 +636,11 @@ class SearchApiSolrService extends SearchApiAbstractService {
       // The fields to look for similarities in.
       $mlt_fl = array();
       foreach($mlt['fields'] as $f) {
+        // Solr 4 has a bug which results in numeric and date fields not being
+        // supported in MLT queries.
+        if ($version == 4 && in_array($fields[$f][0], array('i', 'f', 'd'))) {
+          continue;
+        }
         $mlt_fl[] = $fields[$f];
         // For non-text fields, set minimum word length to 0.
         if (isset($index->options['fields'][$f]['type']) && !search_api_is_text_type($index->options['fields'][$f]['type'])) {
@@ -735,8 +743,6 @@ class SearchApiSolrService extends SearchApiAbstractService {
       if (!empty($grouping['group_facet'])) {
         $group_params['group.facet'] = 'true';
       }
-      $this->connect();
-      $version = $this->solr->getSolrVersion();
       foreach ($grouping['fields'] as $collapse_field) {
         $type = $index_fields[$collapse_field]['type'];
         // Only single-valued fields are supported.
@@ -835,7 +841,6 @@ class SearchApiSolrService extends SearchApiAbstractService {
     try {
       // Send search request.
       $time_processing_done = microtime(TRUE);
-      $this->connect();
       drupal_alter('search_api_solr_query', $call_args, $query);
       $this->preQuery($call_args, $query);
 
