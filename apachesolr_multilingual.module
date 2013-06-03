@@ -401,6 +401,7 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
 
     $search_page = apachesolr_search_page_load($context['page_id']);
     $custom_settings = $search_page['settings'];
+    apachesolr_multilingual_search_page_settings_add_defaults($custom_settings);
     $filter_languages = &drupal_static('apachesolr_multilingual_filter_languages_' . $context['page_id']);
     $filter_languages = apachesolr_multilingual_get_language_filters_by_query($query);
     $languages = apachesolr_multilingual_language_list();
@@ -479,6 +480,7 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
  */
 function apachesolr_multilingual_form_apachesolr_search_custom_page_search_form_alter(&$form, $form_state) {
   if ($form['#search_page']['settings']['apachesolr_multilingual_auto_language_filter']) {
+    apachesolr_multilingual_search_page_settings_add_defaults($form['#search_page']['settings']);
     $form['basic']['detach_auto_language_filter'] = array(
       '#type' => $form['#search_page']['settings']['apachesolr_multilingual_auto_language_filter_detachable'] ? 'checkbox' : 'hidden',
       '#title' => t('Search all languages'),
@@ -524,12 +526,7 @@ function apachesolr_multilingual_form_apachesolr_search_page_settings_form_alter
   {
     $search_page_settings = $form['search_page']['#value']['settings'];
     // Add multilingual defaults.
-    $search_page_settings +=
-      array(
-        'apachesolr_multilingual_auto_language_filter' => 1,
-        'apachesolr_multilingual_auto_language_filter_detachable' => 0,
-        'apachesolr_multilingual_show_language_undefined_results' => 0,
-      );
+    apachesolr_multilingual_search_page_settings_add_defaults($search_page_settings);
 
     $form['apachesolr_multilingual_query_settings'] = array(
       '#type' => 'fieldset',
@@ -573,6 +570,16 @@ function apachesolr_multilingual_search_page_settings_form_validate($form, &$for
  */
 function apachesolr_multilingual_search_page_settings_form_submit($form, &$form_state) {
   $form_state['values']['advanced'] += $form_state['values']['apachesolr_multilingual_query_settings'];
+}
+
+function apachesolr_multilingual_search_page_settings_add_defaults(&$search_page_settings) {
+  // Add multilingual defaults.
+  $search_page_settings +=
+    array(
+      'apachesolr_multilingual_auto_language_filter' => 1,
+      'apachesolr_multilingual_auto_language_filter_detachable' => 0,
+      'apachesolr_multilingual_show_language_undefined_results' => 0,
+    );
 }
 
 /**
