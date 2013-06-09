@@ -70,9 +70,9 @@ this implementation, please file a feature request in the project's issue queue,
 at [7].
 
 [4] https://drupal.org/node/2004596
-[5] http://drupal.org/sandbox/daspeter/1783280
+[5] https://drupal.org/sandbox/daspeter/1783280
 [6] http://wiki.apache.org/solr/FieldCollapsing
-[7] http://drupal.org/project/issues/search_api_solr
+[7] https://drupal.org/project/issues/search_api_solr
 
 Specifics
 ---------

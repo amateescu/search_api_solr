@@ -6,16 +6,18 @@ For this, you can either purchase a server from a web Solr hosts or set up your
 own Solr server on your web server (if you have the necessary rights to do so).
 If you want to use a hosted solution, a number of companies are listed on the
 module's project page [1]. Otherwise, please follow the instructions below.
+A more detailed set of instructions is available at [2].
 
-[1] http://drupal.org/project/search_api_solr
+[1] https://drupal.org/project/search_api_solr
+[2] https://drupal.org/node/1999310
 
 As a pre-requisite for running your own Solr server, you'll need Java 6 or
 higher.
 
-Download the latest version of Solr 4.x from [2] and unpack the archive
+Download the latest version of Solr 4.x from [3] and unpack the archive
 somewhere outside of your web server's document tree.
 
-[2] http://www.apache.org/dyn/closer.cgi/lucene/solr/
+[3] http://www.apache.org/dyn/closer.cgi/lucene/solr/
 
 This module also supports Solr 1.4 and 3.x. For better performance and more
 features, 4.x should be used, though. 1.4 is discouraged altogether, as several
@@ -41,14 +43,23 @@ module, in a sub-directory according to the Solr version you are using. Copy all
 the files from that directory into Solr's configuration directory
 ($SOLR/example/solr/collection1/conf/ in case of the 4.x example application),
 after backing up all files that would be overwritten.
+
+NOTE: The mapping-ISOLatin1Accent.txt is only included in the module for
+completeness' sake, as it is required to start the Solr server. It will be
+usually advisable to just use the file of the example application in this case,
+though, as it contains really useful definitions, while the file provided with
+this module is empty, apart from some documentation. For licensing reasons, it
+is not possible for us to include the definitions in the example config file in
+the copy this module provides.
+ 
 You can then start Solr. For the example application, go to $SOLR/example/ and
 issue the following command (assuming Java is correctly installed):
 
 java -jar start.jar &
 
-Afterwards, go to [3] in your web browser to ensure Solr is running correctly.
+Afterwards, go to [4] in your web browser to ensure Solr is running correctly.
 
-[3] http://localhost:8983/solr/#/
+[4] http://localhost:8983/solr/#/
 
 You can then enable this module and create a new server, using the "Solr search"
 service class. Enter the hostname, port and path corresponding to your Solr
