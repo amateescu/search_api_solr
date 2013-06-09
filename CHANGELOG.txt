@@ -1,5 +1,6 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1919572 by chaby: Fixed indexing of geohashes.
 - #2004596 by drunken monkey: Fixed "More Like This" for Solr 4.x.
 - #2007214 by drunken monkey: Fixed unsetting of object properties.
 - #1884312 by drunken monkey, mvc: Fixed resetting of HTTP password upon

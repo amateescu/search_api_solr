@@ -45,7 +45,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     'boolean' => 'b',
     'uri' => 's',
     'location' => 'loc',
-    'geohash' => 'geohash',
+    'geohash' => 'geo',
   );
 
   /**
