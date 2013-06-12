@@ -1,6 +1,7 @@
 Apache Solr Multilingual 7.x-1.0-beta2, 2013-xx-xx
 ---------------------------------------------------
 [        ] mkalkbrenner: fixed notices caused by missing default values for search pages until search page edit form has been saved
+[#2017065] promes: Underscore missing in test for module_exists('i18ntaxonomy')
 
 
 Apache Solr Multilingual 7.x-1.0-beta1, 2013-05-10

@@ -193,7 +193,7 @@ function apachesolr_multilingual_copy_common_to_i18n_fields($src_document, $dst_
 
 //       if (in_array('vid', $fields) && is_array($document->vid)) { // vid is vocabulary id in this case
 //         $term_languages = array($language);
-//         if (module_exists('i18ntaxonomy') && variable_get('apachesolr_multilingual_index_term_translations', 0)) {
+//         if (module_exists('i18n_taxonomy') && variable_get('apachesolr_multilingual_index_term_translations', 0)) {
 //           $term_languages = variable_get('apachesolr_multilingual_languages', array());
 //         }
 //         foreach ($term_languages as $term_language) {
@@ -201,7 +201,7 @@ function apachesolr_multilingual_copy_common_to_i18n_fields($src_document, $dst_
 //             $vids = array_unique($document->vid);
 //             $terms = array();
 //             foreach ($vids as $vid) {
-//               if (module_exists('i18ntaxonomy')) {
+//               if (module_exists('i18n_taxonomy')) {
 //                 $tmp = '';
 //                 if (in_array('im_vid_' . $vid, $fields)) {
 //                   foreach ($document->{'im_vid_' . $vid} as $tid) {
@@ -216,7 +216,7 @@ function apachesolr_multilingual_copy_common_to_i18n_fields($src_document, $dst_
 //                 }
 //               }
 //               else {
-//                 // module i18ntaxonomy isn't installed
+//                 // module i18n_taxonomy isn't installed
 //                 // in this case we simply copy the terms
 //                 if (in_array('ts_vid_' . $vid . '_names', $fields)) {
 //                   $terms[] = $document->{'ts_vid_' . $vid . '_names'};
@@ -640,7 +640,7 @@ function apachesolr_multilingual_form_apachesolr_environment_edit_form_alter(&$f
     '#title' => t('Index taxonomy term translations'),
     '#default_value' => $environment['conf']['apachesolr_multilingual_index_settings']['apachesolr_multilingual_clir']['apachesolr_multilingual_index_term_translations'],
     '#description' => t('Index translations of the taxonomy terms. Requires module Taxonomy Translation which is part of !link.', array('!link' => l(t('Internationalization'), 'http://drupal.org/project/i18n'))),
-    '#disabled' => !module_exists('i18ntaxonomy'),
+    '#disabled' => !module_exists('i18n_taxonomy'),
   );
 
   array_unshift($form['actions']['save']['#submit'], 'apachesolr_multilingual_environment_edit_form_submit');
