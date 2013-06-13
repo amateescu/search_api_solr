@@ -573,6 +573,9 @@ function apachesolr_multilingual_search_page_settings_form_submit($form, &$form_
 }
 
 function apachesolr_multilingual_search_page_settings_add_defaults(&$search_page_settings) {
+  if (!$search_page_settings) {
+    $search_page_settings = array();
+  }
   // Add multilingual defaults.
   $search_page_settings +=
     array(
