@@ -479,8 +479,8 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
  * @param $form_state
  */
 function apachesolr_multilingual_form_apachesolr_search_custom_page_search_form_alter(&$form, $form_state) {
+  apachesolr_multilingual_search_page_settings_add_defaults($form['#search_page']['settings']);
   if ($form['#search_page']['settings']['apachesolr_multilingual_auto_language_filter']) {
-    apachesolr_multilingual_search_page_settings_add_defaults($form['#search_page']['settings']);
     $form['basic']['detach_auto_language_filter'] = array(
       '#type' => $form['#search_page']['settings']['apachesolr_multilingual_auto_language_filter_detachable'] ? 'checkbox' : 'hidden',
       '#title' => t('Search all languages'),
