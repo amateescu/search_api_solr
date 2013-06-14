@@ -1344,8 +1344,15 @@ class SearchApiSolrService extends SearchApiAbstractService {
    *
    * (The $query parameter currently isn't used and only here for the potential
    * sake of subclasses.)
+   *
+   * @param SearchApiQueryInterface|SearchApiMultiQueryInterface $query
+   *   The query object, either for a normal Search API query or a multi-index
+   *   query.
+   *
+   * @return array
+   *   An array of parameters to be added to the Solr search request.
    */
-  protected function getHighlightParams(SearchApiQueryInterface $query) {
+  protected function getHighlightParams($query) {
     $highlight_params = array();
 
     if (!empty($this->options['excerpt']) || !empty($this->options['highlight_data'])) {
@@ -1704,6 +1711,9 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $facets = $query->getOption('search_api_facets') ? $query->getOption('search_api_facets') : array();
     $facet_params = $this->getFacetParams($facets, $solr_fields, $fq);
 
+    // Handle highlighting.
+    $highlight_params = $this->getHighlightParams($query);
+
     // Set defaults
     if (!$keys) {
       $keys = NULL;
@@ -1727,6 +1737,9 @@ class SearchApiSolrService extends SearchApiAbstractService {
     }
     if (!empty($facet_params['facet.field'])) {
       $params += $facet_params;
+    }
+    if (!empty($highlight_params)) {
+      $params += $highlight_params;
     }
 
     // Retrieve http method from server options.
@@ -1757,7 +1770,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
         'index_id' => $doc->index_id,
         'score' => $doc->score,
       );
-      $excerpt = $this->getExcerpt($response, $id, $tmp, array());
+      $solr_id = $this->createId($doc->index_id, $result['id']);
+      $excerpt = $this->getExcerpt($response, $solr_id, $tmp, array());
       if ($excerpt) {
         $result['excerpt'] = $excerpt;
       }

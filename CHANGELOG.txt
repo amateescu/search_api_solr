@@ -1,5 +1,6 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #2008034 by bdecarne: Fixed highlighting in multi-index searches.
 
 Search API Solr search 1.0 (06/09/2013):
 ----------------------------------------
