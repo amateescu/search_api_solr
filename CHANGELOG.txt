@@ -1,5 +1,6 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1970652 by jsteggink: Fixed highlighting for text fields.
 - #2016169 by tomdearden, drunken monkey: Fixed parsing of facets on
   multi-valued fields.
 - #2008034 by bdecarne: Fixed highlighting in multi-index searches.
