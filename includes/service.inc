@@ -1006,9 +1006,9 @@ class SearchApiSolrService extends SearchApiAbstractService {
     }
     if (!empty($this->options['highlight_data'])) {
       foreach ($field_mapping as $search_api_property => $solr_property) {
-        if (substr($solr_property, 0, 2) == 'tm_' && !empty($response->highlighting->$id->$solr_property)) {
+        if (substr($solr_property, 0, 3) == 'tm_' && !empty($response->highlighting->$id->$solr_property)) {
           // Contrary to above, we here want to preserve HTML, so we just
-          // replace the [HIGHLIGHT] tags with the appropriate format here.
+          // replace the [HIGHLIGHT] tags with the appropriate format.
           $fields[$search_api_property] = $this->formatHighlighting($response->highlighting->$id->$solr_property);
         }
       }
@@ -1017,7 +1017,15 @@ class SearchApiSolrService extends SearchApiAbstractService {
     return $output;
   }
 
-
+  /**
+   * Changes highlighting tags from our custom, HTML-safe ones to HTML.
+   *
+   * @param string|array $snippet
+   *   The snippet(s) to format.
+   *
+   * @return string|array
+   *   The snippet(s), properly formatted as HTML.
+   */
   protected function formatHighlighting($snippet) {
     return preg_replace('#\[(/?)HIGHLIGHT\]#', '<$1strong>', $snippet);
   }
