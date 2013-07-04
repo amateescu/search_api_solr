@@ -1,5 +1,7 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #2027843 by fago, drunken monkey: Made the Solr response available as part of
+  the search results.
 - #1834614 by drunken monkey: Fixed date fields in MLT queries.
 - #1970652 by jsteggink: Fixed highlighting for text fields.
 - #2016169 by tomdearden, drunken monkey: Fixed parsing of facets on

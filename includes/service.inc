@@ -900,6 +900,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
     // Set up the results array.
     $results = array();
     $results['results'] = array();
+    // Keep a copy of the response in the results so it's possible to extract
+    // further useful information out of it, if necessary.
+    $results['search_api_solr_response'] = $response;
+
     // In some rare cases (e.g., MLT query with nonexistent ID) the response
     // will be NULL.
     if (!isset($response->response) && !isset($response->grouped)) {
