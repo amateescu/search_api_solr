@@ -1,5 +1,6 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #2034719 by fago: Added raw term to autocompletion response.
 - #2027843 by fago, drunken monkey: Made the Solr response available as part of
   the search results.
 - #1834614 by drunken monkey: Fixed date fields in MLT queries.

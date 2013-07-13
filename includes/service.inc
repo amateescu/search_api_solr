@@ -1615,12 +1615,14 @@ class SearchApiSolrService extends SearchApiAbstractService {
               if (drupal_strtolower(substr($term, 0, $incomp_length)) == $incomp) {
                 $suggestions[] = array(
                   'suggestion_suffix' => substr($term, $incomp_length),
+                  'term' => $term,
                   'results' => $count,
                 );
               }
               else {
                 $suggestions[] = array(
                   'suggestion_suffix' => ' ' . $term,
+                  'term' => $term,
                   'results' => $count,
                 );
               }
