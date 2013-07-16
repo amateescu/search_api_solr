@@ -1,12 +1,12 @@
-Apache Solr Multilingual 7.x-1.0-beta2, 2013-xx-xx
----------------------------------------------------
+Apache Solr Multilingual 7.x-1.0-beta2, 2013-07-16
+--------------------------------------------------
 [        ] mkalkbrenner: fixed notices caused by missing default values for search pages until search page edit form has been saved
 [#2017065] promes: Underscore missing in test for module_exists('i18ntaxonomy')
 [        ] mkalkbrenner: language filter needs to act on $language_content instead $language
 
 
 Apache Solr Multilingual 7.x-1.0-beta1, 2013-05-10
----------------------------------------------------
+--------------------------------------------------
 [#1301252] mkalkbrenner: index nodes translated using entity_translation
 [        ] mkalkbrenner: fixed bug that caused to much results after saving bias form
 [        ] mkalkbrenner: support multiple environments and search pages
