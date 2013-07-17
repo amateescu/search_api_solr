@@ -1187,7 +1187,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     }
 
     // Formatting the keys into a Solr query can be a bit complex. The following
-    // code will produce that look like this:
+    // code will produce filters that look like this:
     //
     // #conjunction | #negation | return value
     // ----------------------------------------------------------------
@@ -1199,17 +1199,17 @@ class SearchApiSolrService extends SearchApiAbstractService {
     // If there was just a single, unnested key, we can ignore all this.
     if (count($k) == 1 && empty($nested_expressions)) {
       $k = reset($k);
-      return $neg ? "-$k" : $k;
+      return $neg ? "*:* AND -$k" : $k;
     }
 
     if ($or) {
       if ($neg) {
-        return '-' . implode(' -', $k);
+        return '*:* AND -' . implode(' AND -', $k);
       }
       return '((' . implode(') OR (', $k) . '))';
     }
     $k = implode(' ', $k);
-    return $neg ? "-($k)" : $k;
+    return $neg ? "*:* AND -($k)" : $k;
   }
 
   /**
@@ -1250,13 +1250,13 @@ class SearchApiSolrService extends SearchApiAbstractService {
   protected function createFilterQuery($field, $value, $operator, $field_info) {
     $field = call_user_func(array($this->connection_class, 'escapeFieldName'), $field);
     if ($value === NULL) {
-      return ($operator == '=' ? '-' : '') . "$field:[* TO *]";
+      return ($operator == '=' ? '*:* AND -' : '') . "$field:[* TO *]";
     }
     $value = trim($value);
     $value = $this->formatFilterValue($value, search_api_extract_inner_type($field_info['type']));
     switch ($operator) {
       case '<>':
-        return "-($field:$value)";
+        return "*:* AND -($field:$value)";
       case '<':
         return "$field:{* TO $value}";
       case '<=':
