@@ -1960,4 +1960,29 @@ class SearchApiSolrService extends SearchApiAbstractService {
     return $this->solr->getFields($num_terms);
   }
 
+  /**
+   * Retrieves a config file or file list from the Solr server.
+   *
+   * Uses the admin/file request handler.
+   *
+   * @param string|null $file
+   *   (optional) The name of the file to retrieve. If the file is a directory,
+   *   the directory contents are instead listed and returned. NULL represents
+   *   the root config directory.
+   *
+   * @return object
+   *  A HTTP response object containing either the file contents or a file list.
+   */
+  public function getFile($file = NULL) {
+    $this->connect();
+
+    $file_servlet_name = constant($this->connection_class . '::FILE_SERVLET');
+
+    $params['contentType'] = 'text/xml;charset=utf-8';
+    if ($file) {
+      $params['file'] = $file;
+    }
+    return $this->solr->makeServletRequest($file_servlet_name, $params);
+  }
+
 }

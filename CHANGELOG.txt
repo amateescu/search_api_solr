@@ -1,5 +1,7 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #2010818 by kenorb, drunken monkey: Added new Files tab showing all used solr
+  config files.
 - #2042201 by klausi: Fixed timeouts while optimizing Solr server.
 - #2034719 by fago: Added raw term to autocompletion response.
 - #2027843 by fago, drunken monkey: Made the Solr response available as part of
