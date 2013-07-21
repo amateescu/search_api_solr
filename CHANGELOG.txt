@@ -1,5 +1,8 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+
+Search API Solr search 1.1 (07/21/2013):
+----------------------------------------
 - #1957730 by drunken monkey: Fixed filter query strings for negated filters.
 - #2010818 by kenorb, drunken monkey: Added new Files tab showing all used solr
   config files.
