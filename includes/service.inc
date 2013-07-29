@@ -434,8 +434,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
   /**
    * Create a list of all indexed field names mapped to their Solr field names.
    *
-   * The special fields "search_api_id", "search_api_relevance", and "id" are
-   * also included. Any Solr fields that exist on search results are mapped back
+   * The special fields "search_api_id" and "search_api_relevance" are also
+   * included. Any Solr fields that exist on search results are mapped back to
    * to their local field names in the final result set.
    *
    * @see SearchApiSolrService::search()
@@ -444,9 +444,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
     if (!isset($this->fieldNames[$index->machine_name]) || $reset) {
       // This array maps "local property name" => "solr doc property name".
       $ret = array(
-        'search_api_id' => 'ss_search_api_id',
+        'search_api_id' => 'item_id',
         'search_api_relevance' => 'score',
-        'search_api_item_id' => 'item_id',
       );
 
       // Add the names of any fields configured on the index.
@@ -961,7 +960,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       // We can find the item id and score in the special 'search_api_*'
       // properties. Mappings are provided for these properties in
       // SearchApiSolrService::getFieldNames().
-      $result['id'] = $result['fields']['search_api_item_id'];
+      $result['id'] = $result['fields']['search_api_id'];
       $result['score'] = $result['fields']['search_api_relevance'];
 
       $solr_id = $this->createId($index->machine_name, $result['id']);
@@ -1663,7 +1662,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $time_method_called = microtime(TRUE);
     // Get field information
     $solr_fields = array(
-      'search_api_id' => 'ss_search_api_id',
+      'search_api_id' => 'item_id',
       'search_api_relevance' => 'score',
       'search_api_multi_index' => 'index_id',
     );

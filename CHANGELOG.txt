@@ -1,5 +1,6 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #2045355 by drunken monkey, arpieb: Fixed result mapping of item IDs.
 - #2050157 by izus: Fixed typo in stopwords.txt.
 
 Search API Solr search 1.1 (07/21/2013):
