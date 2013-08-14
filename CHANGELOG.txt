@@ -1,5 +1,6 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #2054373 by drunken monkey: Added the option to use clean field identifiers.
 - #1992806 by drunken monkey: Documented problems with Solr 4.3+.
 - #2045355 by drunken monkey, arpieb: Fixed result mapping of item IDs.
 - #2050157 by izus: Fixed typo in stopwords.txt.

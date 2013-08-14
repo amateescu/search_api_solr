@@ -102,8 +102,35 @@ class SearchApiSolrService extends SearchApiAbstractService {
       'retrieve_data' => FALSE,
       'highlight_data' => FALSE,
       'http_method' => 'POST',
+      // Default to TRUE for new servers, but to FALSE for existing ones.
+      'clean_ids' => $this->options ? FALSE : TRUE,
       'autocorrect_spell' => TRUE,
       'autocorrect_suggest_words' => TRUE,
+    );
+
+    if (!$options['clean_ids']) {
+      if (module_exists('advanced_help')) {
+        $variables['@url']= url('help/search_api_solr/README.txt');
+      }
+      else {
+        $variables['@url']= url(drupal_get_path('module', 'search_api_solr') . '/README.txt');
+      }
+      $description = t('Change Solr field names to be more compatible with advanced features. Doing this leads to re-indexing of all indexes on this server. See <a href="@url">README.txt</a> for details.', $variables);
+      $form['clean_ids_form'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Clean field identifiers'),
+        '#description' => $description,
+        '#collapsible' => TRUE,
+      );
+      $form['clean_ids_form']['submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Switch to clean field identifiers'),
+        '#submit' => array(array($this, 'switchToCleanIds')),
+      );
+    }
+    $form['clean_ids'] = array(
+      '#type' => 'value',
+      '#value' => $options['clean_ids'],
     );
 
     $form['scheme'] = array(
@@ -257,6 +284,37 @@ class SearchApiSolrService extends SearchApiAbstractService {
     }
 
     parent::configurationFormSubmit($form, $values, $form_state);
+  }
+
+  /**
+   * Switches the server to use clean identifiers.
+   *
+   * Used as a submit callback in configurationForm().
+   */
+  public function switchToCleanIds() {
+    $this->options['clean_ids'] = TRUE;
+    $this->server->options = $this->options;
+    $this->server->save();
+    drupal_set_message(t('The Solr server was successfully switched to use clean field identifiers.'));
+
+    $count = 0;
+    $conditions['server'] = $this->server->machine_name;
+    $conditions['enabled'] = 1;
+    foreach (search_api_index_load_multiple(FALSE, $conditions) as $index) {
+      if (!empty($index->options['fields'])) {
+        foreach ($index->options['fields'] as $key => $field) {
+          if (strpos($key, ':') !== FALSE) {
+            $index->reindex();
+            ++$count;
+            break;
+          }
+        }
+      }
+    }
+    if ($count) {
+      $msg = format_plural($count, '1 index was scheduled for re-indexing.', '@count indexes were scheduled for re-indexing.');
+      drupal_set_message($msg);
+    }
   }
 
   /**
@@ -468,7 +526,12 @@ class SearchApiSolrService extends SearchApiAbstractService {
         if ($pref != 'tm') {
           $pref .= $type == $inner_type ? 's' : 'm';
         }
-        $name = $pref . '_' . $key;
+        if (!empty($this->options['clean_ids'])) {
+          $name = $pref . '_' . str_replace(':', '$', $key);
+        }
+        else {
+          $name = $pref . '_' . $key;
+        }
 
         $ret[$key] = $name;
       }
