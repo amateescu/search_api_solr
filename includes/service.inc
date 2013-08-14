@@ -744,28 +744,37 @@ class SearchApiSolrService extends SearchApiAbstractService {
           $preg_field = preg_quote($escaped_field, '/');
           if (preg_match('/^' . $preg_field . ':\["?(\*|\d+(?:\.\d+)?)"? TO "?(\*|\d+(?:\.\d+)?)"?\]$/', $value, $m)) {
             unset($fq[$key]);
-            if (is_numeric($lower = trim($m[1], '"')) && $lower) {
-              // Sadly, this doesn't work. We usually don't need lower bounds,
-              // though (our facetting implementation doesn't create them, so it
-              // should be fine to ignore this for now.
-              //$fq[] = "-{!$spatial_method pt=$point sfield=$field d=$lower}";
+            if ($m[1] && is_numeric($m[1])) {
+              $min_radius = isset($min_radius) ? max($min_radius, $m[1]) : $m[1];
             }
-            if (is_numeric($upper = trim($m[2], '"'))) {
+            if (is_numeric($m[2])) {
               // Make the radius tighter accordingly.
-              $radius = isset($radius) ? min($radius, $upper) : $upper;
+              $radius = isset($radius) ? min($radius, $m[2]) : $m[2];
             }
           }
         }
 
         // If either a radius was given in the option, or a filter was
-        // encountered, set a filter for the lowest value.
-        if (isset($radius)) {
+        // encountered, set a filter for the lowest value. If a lower boundary
+        // was set (too), we can only set a filter for that if the field name
+        // doesn't contains any colons.
+        if (isset($min_radius) && strpos($field, ':') === FALSE) {
+          $upper = isset($radius) ? " u=$radius" : '';
+          $fq[] = "{!frange l=$min_radius$upper}geodist($field,$point)";
+        }
+        elseif (isset($radius)) {
           $fq[] = "{!$spatial_method pt=$point sfield=$field d=$radius}";
         }
 
-        // Change sort on the field, if set.
-        if (isset($sort[$spatial['field']])) {
-          $sort[$spatial['field']] = str_replace($field, "geodist($field,$point)", $sort[$spatial['field']]);
+        // Change sort on the field, if set (and not already changed).
+        if (isset($sort[$spatial['field']]) && substr($sort[$spatial['field']], 0, strlen($field)) === $field) {
+          if (strpos($field, ':') === FALSE) {
+            $sort[$spatial['field']] = str_replace($field, "geodist($field,$point)", $sort[$spatial['field']]);
+          }
+          else {
+            $link = l(t('edit server'), 'admin/config/search/search_api/server/' . $this->server->machine_name . '/edit');
+            watchdog('search_api_solr', 'Location sort on field @field had to be ignored because unclean field identifiers are used.', array('@field' => $spatial['field']), WATCHDOG_WARNING, $link);
+          }
         }
 
         // Change the facet parameters for spatial fields to return distance
@@ -790,6 +799,12 @@ class SearchApiSolrService extends SearchApiAbstractService {
             }
           }
         }
+      }
+    }
+    // Normal sorting on location fields isn't possible.
+    foreach ($sort as $field => $sort_param) {
+      if (substr($sort_param, 0, 3) === 'loc') {
+        unset($sort[$field]);
       }
     }
 

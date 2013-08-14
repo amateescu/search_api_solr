@@ -1,5 +1,7 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #2053553 by drunken monkey, andrewbelcher: Fixed spatial features with clean
+  field identifiers.
 - #2054373 by drunken monkey: Added the option to use clean field identifiers.
 - #1992806 by drunken monkey: Documented problems with Solr 4.3+.
 - #2045355 by drunken monkey, arpieb: Fixed result mapping of item IDs.
