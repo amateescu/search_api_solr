@@ -463,6 +463,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
       }
     }
 
+    // Let other modules alter documents before sending them to solr.
+    drupal_alter('search_api_solr_documents', $documents, $index, $items);
+    $this->alterSolrDocuments($documents, $index, $items);
+
     if (!$documents) {
       return array();
     }
@@ -592,6 +596,25 @@ class SearchApiSolrService extends SearchApiAbstractService {
     else {
       $doc->setField($key, $value);
     }
+  }
+
+  /**
+   * Applies custom modifications to indexed Solr documents.
+   *
+   * This method allows subclasses to easily apply custom changes before the
+   * documents are sent to Solr. The method is empty by default.
+   *
+   * @param array $documents
+   *   An array of SearchApiSolrDocument objects ready to be indexed, generated
+   *   from $items array.
+   * @param SearchApiIndex $index
+   *   The search index for which items are being indexed.
+   * @param array $items
+   *   An array of items being indexed.
+   *
+   * @see hook_search_api_solr_documents_alter()
+   */
+  protected function alterSolrDocuments(array &$documents, SearchApiIndex $index, array $items) {
   }
 
   /**

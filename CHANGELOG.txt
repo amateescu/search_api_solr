@@ -1,5 +1,7 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1246730 by febbraro, maciej.zgadzaj, drunken monkey: Added a way to alter
+  the Solr document when indexing.
 - #2053553 by drunken monkey, andrewbelcher: Fixed spatial features with clean
   field identifiers.
 - #2054373 by drunken monkey: Added the option to use clean field identifiers.
