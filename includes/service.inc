@@ -125,7 +125,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $form['clean_ids_form']['submit'] = array(
         '#type' => 'submit',
         '#value' => t('Switch to clean field identifiers'),
-        '#submit' => array(array($this, 'switchToCleanIds')),
+        '#submit' => array('_search_api_solr_switch_to_clean_ids'),
       );
     }
     $form['clean_ids'] = array(
@@ -284,37 +284,6 @@ class SearchApiSolrService extends SearchApiAbstractService {
     }
 
     parent::configurationFormSubmit($form, $values, $form_state);
-  }
-
-  /**
-   * Switches the server to use clean identifiers.
-   *
-   * Used as a submit callback in configurationForm().
-   */
-  public function switchToCleanIds() {
-    $this->options['clean_ids'] = TRUE;
-    $this->server->options = $this->options;
-    $this->server->save();
-    drupal_set_message(t('The Solr server was successfully switched to use clean field identifiers.'));
-
-    $count = 0;
-    $conditions['server'] = $this->server->machine_name;
-    $conditions['enabled'] = 1;
-    foreach (search_api_index_load_multiple(FALSE, $conditions) as $index) {
-      if (!empty($index->options['fields'])) {
-        foreach ($index->options['fields'] as $key => $field) {
-          if (strpos($key, ':') !== FALSE) {
-            $index->reindex();
-            ++$count;
-            break;
-          }
-        }
-      }
-    }
-    if ($count) {
-      $msg = format_plural($count, '1 index was scheduled for re-indexing.', '@count indexes were scheduled for re-indexing.');
-      drupal_set_message($msg);
-    }
   }
 
   /**
