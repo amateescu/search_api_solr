@@ -393,7 +393,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     if (!is_object($index) || empty($index->read_only)) {
       try {
         $this->connect();
-        $this->solr->deleteByQuery("index_id:" . $id);
+        $this->solr->deleteByQuery("index_id:" . $this->getIndexId($id));
       }
       catch (Exception $e) {
         watchdog_exception('search_api_solr', $e, "%type while deleting an index's data: !message in %function (line %line of %file).");
@@ -407,7 +407,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
   public function indexItems(SearchApiIndex $index, array $items) {
     $documents = array();
     $ret = array();
-    $index_id = $index->machine_name;
+    $index_id = $this->getIndexId($index->machine_name);
     $fields = $this->getFieldNames($index);
 
     foreach ($items as $id => $item) {
@@ -602,7 +602,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     try {
       $this->connect();
       if ($index) {
-        $index_id = $index->machine_name;
+        $index_id = $this->getIndexId($index->machine_name);
         if (is_array($ids)) {
           $solr_ids = array();
           foreach ($ids as $id) {
@@ -637,6 +637,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $this->request_handler = NULL;
     // Get field information.
     $index = $query->getIndex();
+    $index_id = $this->getIndexId($index->machine_name);
     $fields = $this->getFieldNames($index);
     // Get Solr connection.
     $this->connect();
@@ -663,7 +664,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     // Extract filters.
     $filter = $query->getFilter();
     $fq = $this->createFilterQueries($filter, $fields, $index->options['fields']);
-    $fq[] = 'index_id:' . $index->machine_name;
+    $fq[] = 'index_id:' . $index_id;
 
     // Extract sort.
     $sort = array();
@@ -703,7 +704,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         }
       }
       $mlt_params['mlt.fl'] = implode(',', $mlt_fl);
-      $id = $this->createId($index->machine_name, $mlt['id']);
+      $id = $this->createId($index_id, $mlt['id']);
       $id = call_user_func(array($this->connection_class, 'phrase'), $id);
       $keys = 'id:' . $id;
     }
@@ -1033,7 +1034,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $result['id'] = $result['fields']['search_api_id'];
       $result['score'] = $result['fields']['search_api_relevance'];
 
-      $solr_id = $this->createId($index->machine_name, $result['id']);
+      $index_id = $this->getIndexId($index->machine_name);
+      $solr_id = $this->createId($index_id, $result['id']);
       $excerpt = $this->getExcerpt($response, $solr_id, $result['fields'], $fields);
       if ($excerpt) {
         $result['excerpt'] = $excerpt;
@@ -1578,7 +1580,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
     // Extract filters
     $fq = $this->createFilterQueries($query->getFilter(), $fields, $index->options['fields']);
-    $fq[] = 'index_id:' . $index->machine_name;
+    $fq[] = 'index_id:' . $this->getIndexId($index->machine_name);
 
     // Autocomplete magic
     $facet_fields = array();
@@ -1741,11 +1743,11 @@ class SearchApiSolrService extends SearchApiAbstractService {
         'type' => 'string',
       ),
     );
-    foreach ($query->getIndexes() as $index_id => $index) {
+    foreach ($query->getIndexes() as $index) {
       if (empty($index->options['fields'])) {
         continue;
       }
-      $prefix = $index_id . ':';
+      $prefix = $this->getIndexId($index->machine_name) . ':';
       foreach ($this->getFieldNames($index) as $field => $key) {
         if (!isset($solr_fields[$field])) {
           $solr_fields[$prefix . $field] = $key;
@@ -1775,7 +1777,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
     // Restrict search to searched indexes.
     $index_filter = array();
-    foreach ($query->getIndexes() as $index_id => $index) {
+    foreach ($query->getIndexes() as $index) {
+      $index_id = $this->getIndexId($index->machine_name);
       $index_filter[] = 'index_id:' . call_user_func(array($this->connection_class, 'phrase'), $index_id);
     }
     $fq[] = implode(' OR ', $index_filter);
@@ -2054,4 +2057,23 @@ class SearchApiSolrService extends SearchApiAbstractService {
     return $this->solr->makeServletRequest($file_servlet_name, $params);
   }
 
+  /**
+   * Prefixes an index ID as configured.
+   *
+   * Prepends both a global and/or a per-index prefix to the index ID, if they
+   * are set.
+   *
+   * @param string $machine_name
+   *   The index's machine name.
+   *
+   * @return string
+   *   The prefixed machine name.
+   */
+  protected function getIndexId($machine_name) {
+    // Prepend per-index prefix.
+    $id = variable_get('search_api_solr_index_prefix_' . $machine_name, '') . $machine_name;
+    // Prepend environment prefix.
+    $id = variable_get('search_api_solr_index_prefix', '') . $id;
+    return $id;
+  }
 }

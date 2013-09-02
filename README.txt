@@ -113,6 +113,19 @@ Hidden variables
   By default, keywords that occur in more than 90% of results are ignored for
   autocomplete suggestions. This setting lets you modify that behaviour by
   providing your own ratio. Use 1 or greater to use all suggestions.
+- search_api_solr_index_prefix (default: '')
+  By default, the index ID in the Solr server is the same as the index's machine
+  name in Drupal. This setting will let you specify a prefix for the index IDs
+  on this Drupal installation. Only use alphanumeric characters and underscores.
+  Since changing the prefix makes the currently indexed data inaccessible, you
+  should change this vairable only when no indexes are currently on any Solr
+  servers.
+- search_api_solr_index_prefix_INDEX_ID (default: '')
+  Same as above, but a per-index prefix. Use the index's machine name as
+  INDEX_ID in the variable name. Per-index prefixing is done before the global
+  prefix is added, so the global prefix will come first in the final name:
+  (GLOBAL_PREFIX)(INDEX_PREFIX)(INDEX_ID)
+  The same rules as above apply for setting the prefix.
 
 Customizing your Solr server
 ----------------------------
