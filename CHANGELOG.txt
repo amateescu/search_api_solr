@@ -1,5 +1,7 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #2073441 by drunken monkey: Removed custom uninstall code for deleting
+  dependent servers.
 - #1882190 by corvus_ch, arnested, drunken monkey: Added optional index ID
   prefixes.
 
