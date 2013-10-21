@@ -288,8 +288,8 @@ interface SearchApiSolrConnectionInterface {
    *   documentation). Use arrays for parameter keys used more than once (e.g.,
    *   facet.field).
    * @param string $method
-   *   The HTTP method to use. Must be either "GET" or "POST". Defaults to
-   *   "GET".
+   *   The HTTP method to use. Must be either "GET", "POST" or "AUTO". Defaults
+   *   to "GET".
    *
    * @return object
    *   A response object.

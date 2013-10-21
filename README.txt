@@ -126,6 +126,10 @@ Hidden variables
   prefix is added, so the global prefix will come first in the final name:
   (GLOBAL_PREFIX)(INDEX_PREFIX)(INDEX_ID)
   The same rules as above apply for setting the prefix.
+- search_api_solr_http_get_max_length (default: 4000)
+  The maximum number of bytes that can be handled as an HTTP GET query when
+  HTTP method is AUTO. Typically Solr can handle up to 65355 bytes, but Tomcat
+  and Jetty will error at slightly less than 4096 bytes.
 
 Customizing your Solr server
 ----------------------------

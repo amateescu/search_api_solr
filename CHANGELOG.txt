@@ -1,5 +1,6 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1997702 by ianthomas_uk, drunken monkey: Added "AUTO" mode for HTTP method.
 - #2033913 by drunken monkey: Fixed small error in schema.xml.
 - #2073441 by drunken monkey: Removed custom uninstall code for deleting
   dependent servers.

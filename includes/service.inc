@@ -101,7 +101,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       'excerpt' => FALSE,
       'retrieve_data' => FALSE,
       'highlight_data' => FALSE,
-      'http_method' => 'POST',
+      'http_method' => 'AUTO',
       // Default to TRUE for new servers, but to FALSE for existing ones.
       'clean_ids' => $this->options ? FALSE : TRUE,
       'autocorrect_spell' => TRUE,
@@ -219,9 +219,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $form['advanced']['http_method'] = array(
       '#type' => 'select',
       '#title' => t('HTTP method'),
-      '#description' => t('The HTTP method to use for sending queries. Usually, POST will work fine in all cases.'),
+      '#description' => t('The HTTP method to use for sending queries. GET will often fail with larger queries, while POST should not be cached. AUTO will use GET when possible, and POST for queries that are too large.'),
       '#default_value' => $options['http_method'],
       '#options' => array(
+        'AUTO' => t('AUTO'),
         'POST' => 'POST',
         'GET' => 'GET',
       ),
@@ -898,7 +899,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $params['fl'] = '*,score';
     }
     // Retrieve http method from server options.
-    $http_method = !empty($this->options['http_method']) ? $this->options['http_method'] : 'POST';
+    $http_method = !empty($this->options['http_method']) ? $this->options['http_method'] : 'AUTO';
 
     $call_args = array(
       'query'       => &$keys,
@@ -1603,7 +1604,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       'spellcheck.count' => 1,
     );
     // Retrieve http method from server options.
-    $http_method = !empty($this->options['http_method']) ? $this->options['http_method'] : 'POST';
+    $http_method = !empty($this->options['http_method']) ? $this->options['http_method'] : 'AUTO';
 
     $call_args = array(
       'query'       => &$keys,
@@ -1830,7 +1831,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     }
 
     // Retrieve http method from server options.
-    $http_method = !empty($this->options['http_method']) ? $this->options['http_method'] : 'POST';
+    $http_method = !empty($this->options['http_method']) ? $this->options['http_method'] : 'AUTO';
 
     // Send search request
     $time_processing_done = microtime(TRUE);

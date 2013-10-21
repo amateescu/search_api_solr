@@ -208,8 +208,8 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
    *     information to add basic HTTP authentication to all requests to the
    *     Solr server. Not set by default.
    *   - http_pass: See "http_user".
-   *   - http_method: The HTTP method to use for searches. Can be either "GET"
-   *     or "POST". Defaults to "POST".
+   *   - http_method: The HTTP method to use for searches. Can be either "GET",
+   *     "POST" or "AUTO". Defaults to "POST".
    */
   public function __construct(array $options) {
     $options += array(
@@ -227,7 +227,7 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
     $this->base_url = $options['scheme'] . '://' . $options['host'] . ':' . $options['port'] . $path;
 
     // Make sure we always have a valid method set, default to POST.
-    $this->method = $options['http_method'] == 'GET' ? 'GET' : 'POST';
+    $this->method = in_array($options['http_method'], array('GET', 'AUTO')) ? $options['http_method'] : 'POST';
 
     // Set HTTP Basic Authentication parameter, if login data was set.
     if (strlen($options['http_user']) && strlen($options['http_pass'])) {
@@ -871,6 +871,8 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
 
   /**
    * Implements SearchApiSolrConnectionInterface::search().
+   *
+   * Ignores $method in favor of the option passed at construction time.
    */
   public function search($query = NULL, array $params = array(), $method = 'GET') {
     // Always use JSON. See
@@ -887,15 +889,18 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
     // PHP's built-in http_build_query() doesn't give us the format Solr wants.
     $queryString = $this->httpBuildQuery($params);
 
-    if ($this->method == 'GET') {
+    if ($this->method == 'GET' || $this->method == 'AUTO') {
       $searchUrl = $this->constructUrl(self::SEARCH_SERVLET, array(), $queryString);
-      return $this->sendRawGet($searchUrl);
+      if ($this->method == 'GET' || strlen($searchUrl) <= variable_get('search_api_solr_http_get_max_length', 4000)) {
+        return $this->sendRawGet($searchUrl);
+      }
     }
-    else if ($this->method == 'POST') {
-      $searchUrl = $this->constructUrl(self::SEARCH_SERVLET);
-      $options['data'] = $queryString;
-      $options['headers']['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8';
-      return $this->sendRawPost($searchUrl, $options);
-    }
+
+    // Method is POST, or AUTO with a long query
+    $searchUrl = $this->constructUrl(self::SEARCH_SERVLET);
+    $options['data'] = $queryString;
+    $options['headers']['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8';
+    return $this->sendRawPost($searchUrl, $options);
   }
+
 }
