@@ -429,7 +429,7 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
         }
         $response = $this->sendRawGet($url);
         $this->stats = simplexml_load_string($response->data);
-        if ($this->env_id) {
+        if ($cid) {
           cache_set($cid, $response->data, 'cache_search_api_solr');
         }
       }

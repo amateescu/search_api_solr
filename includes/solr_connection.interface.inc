@@ -71,8 +71,8 @@ interface SearchApiSolrConnectionInterface {
   /**
    * Gets information about the Solr Core.
    *
-   * @return array
-   *   An array with system information.
+   * @return object
+   *   A response object with system information.
    */
   public function getSystemInfo();
 
