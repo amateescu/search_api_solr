@@ -113,6 +113,17 @@ function search_api_solr_search_api_server_update(SearchApiServer $server) {
 }
 
 /**
+ * Implements hook_views_api().
+ */
+function search_api_solr_views_api() {
+  if (module_exists('search_api_views')) {
+    return array(
+      'api' => 3,
+    );
+  }
+}
+
+/**
  * Retrieves a list of all config files of a server.
  *
  * @param SearchApiServer $server
