@@ -1,5 +1,8 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+
+Search API Solr search 1.3 (10/23/2013):
+----------------------------------------
 - #2099683 by drunken monkey: Added support for 'virtual fields' in Views.
 - #1997702 by ianthomas_uk, drunken monkey: Added "AUTO" mode for HTTP method.
 - #2033913 by drunken monkey: Fixed small error in schema.xml.
