@@ -818,14 +818,17 @@ function apachesolr_multilingual_get_search_suggestions($env_id, $filter_languag
  */
 function apachesolr_multilingual_apachesolr_field_mappings_alter(&$mappings, $entity_type) {
 
-  $mappings['node_reference']['indexing_callback'] =
-    'apachesolr_multilingual_nodereference_indexing_callback';
+  $mappings['node_reference']['indexing_callback'] = array(
+    'apachesolr_multilingual_nodereference_indexing_callback',
+  );
 
-  $mappings['user_reference']['indexing_callback'] =
-    'apachesolr_multilingual_userreference_indexing_callback';
+  $mappings['user_reference']['indexing_callback'] = array(
+    'apachesolr_multilingual_userreference_indexing_callback',
+  );
 
-  $mappings['entityreference']['indexing_callback'] =
-    'apachesolr_multilingual_entityreference_indexing_callback';
+  $mappings['entityreference']['indexing_callback'] = array(
+    'apachesolr_multilingual_entityreference_indexing_callback',
+  );
 }
 
 /**
