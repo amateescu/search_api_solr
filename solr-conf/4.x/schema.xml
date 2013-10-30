@@ -363,6 +363,11 @@
     -->
     <field name="id" type="string" indexed="true" stored="true" required="true" />
 
+    <!-- Add Solr Cloud version field as mentioned in
+         http://wiki.apache.org/solr/SolrCloud#Required_Config
+    -->
+    <field name="_version_" type="long" indexed="true" stored="true" multiValued="false"/>
+
     <!-- Search Api specific fields -->
     <!-- item_id contains the entity ID, e.g. a node's nid. -->
     <field name="item_id"  type="string" indexed="true" stored="true" />

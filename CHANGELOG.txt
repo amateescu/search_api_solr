@@ -1,5 +1,6 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #2064377 by Nick_vh: Made configuration files compatible with Solr Cloud.
 - #2107417 by Nick_vh: Fixed config files for Solr 4.5.
 
 Search API Solr search 1.3 (10/23/2013):

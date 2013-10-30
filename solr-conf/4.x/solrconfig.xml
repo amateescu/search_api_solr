@@ -333,6 +333,17 @@
          <arr name="env"> <str>MYVAR=val1</str> </arr>
        </listener>
       -->
+    <!-- Enables a transaction log, currently used for real-time get.
+         "dir" - the target directory for transaction logs, defaults to the
+         solr data directory.  -->
+    <updateLog>
+      <str name="dir">${solr.data.dir:}</str>
+      <!-- if you want to take control of the synchronization you may specify
+           the syncLevel as one of the following where ''flush'' is the default.
+           Fsync will reduce throughput.
+           <str name="syncLevel">flush|fsync|none</str>
+      -->
+    </updateLog>
   </updateHandler>
 
   <!-- IndexReaderFactory
@@ -1018,8 +1029,7 @@
        Admin Handlers - This will register all the standard admin
        RequestHandlers.
     -->
-  <requestHandler name="/admin/"
-                  class="solr.admin.AdminHandlers" />
+  <requestHandler name="/admin/" class="solr.admin.AdminHandlers" />
   <!-- This single handler is equivalent to the following... -->
   <!--
      <requestHandler name="/admin/luke"       class="solr.admin.LukeRequestHandler" />
@@ -1085,6 +1095,18 @@
          <str name="pollInterval">${solr.replication.pollInterval:00:00:60}</str>
        </lst>
      </requestHandler>
+
+  <!-- Realtime get handler, guaranteed to return the latest stored fields of
+       any document, without the need to commit or open a new searcher.  The
+       current implementation relies on the updateLog feature being enabled.
+  -->
+  <requestHandler name="/get" class="solr.RealTimeGetHandler">
+    <lst name="defaults">
+      <str name="omitHeader">true</str>
+      <str name="wt">json</str>
+      <str name="indent">true</str>
+    </lst>
+  </requestHandler>
 
   <!-- Search Components
 
