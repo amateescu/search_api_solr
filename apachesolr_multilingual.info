@@ -5,8 +5,7 @@ core = "7.x"
 
 configure = admin/config/search/apachesolr/multilingual
 
-dependencies[] = apachesolr
-dependencies[] = apachesolr_search
+dependencies[] = apachesolr_search (>=1.5)
 dependencies[] = locale
 
 files[] = DrupalApacheSolrMultilingualService.php

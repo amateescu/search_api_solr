@@ -191,50 +191,8 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
 function apachesolr_multilingual_copy_common_to_i18n_fields($src_document, $dst_document) {
   $fields = $src_document->getFieldNames();
 
-//       if (in_array('vid', $fields) && is_array($document->vid)) { // vid is vocabulary id in this case
-//         $term_languages = array($language);
-//         if (module_exists('i18n_taxonomy') && variable_get('apachesolr_multilingual_index_term_translations', 0)) {
-//           $term_languages = variable_get('apachesolr_multilingual_languages', array());
-//         }
-//         foreach ($term_languages as $term_language) {
-//           if ($term_language) {
-//             $vids = array_unique($document->vid);
-//             $terms = array();
-//             foreach ($vids as $vid) {
-//               if (module_exists('i18n_taxonomy')) {
-//                 $tmp = '';
-//                 if (in_array('im_vid_' . $vid, $fields)) {
-//                   foreach ($document->{'im_vid_' . $vid} as $tid) {
-//                     $term = i18nstrings("taxonomy:term:$tid:name", '', $term_language);
-//                     if (!empty($term)) {
-//                       $tmp .= $term . ' ';
-//                     }
-//                   }
-//                 }
-//                 if (!empty($tmp)) {
-//                   $terms[] = $tmp;
-//                 }
-//               }
-//               else {
-//                 // module i18n_taxonomy isn't installed
-//                 // in this case we simply copy the terms
-//                 if (in_array('ts_vid_' . $vid . '_names', $fields)) {
-//                   $terms[] = $document->{'ts_vid_' . $vid . '_names'};
-//                 }
-//                 // REVIEW see http://drupal.org/node/783924
-//               }
-//             }
-
-//             if ($terms) {
-//               $document->{'taxonomy_names_' . $term_language} = $terms;
-//             }
-//           }
-//         }
-//       }
-
-  // use language-specific stemming and so on
-  // by copying all fields of type text to
-  // a language-specific text field
+  // Use language-specific stemming and so on by copying all fields of type text
+  // to a language-specific text field.
   if (in_array('label', $fields)) {
     $dst_document->{'i18n_label_' . $src_document->ss_language} = $src_document->label;
   }
@@ -248,7 +206,9 @@ function apachesolr_multilingual_copy_common_to_i18n_fields($src_document, $dst_
     $dst_document->{'i18n_path_alias_' . $src_document->ss_language} = $src_document->path_alias;
   }
   foreach ($fields as $field_name) {
-    foreach (array('ts_', 'tm_', 'tos_', 'tom_', 'tags_') as $prefix) {
+    $prefixes = apachesolr_multilingual_get_text_field_prefixes();
+    $prefixes[] = 'tags_';
+    foreach ($prefixes as $prefix) {
       if (strpos($field_name, $prefix) === 0 && !empty($src_document->{$field_name})) {
         // search for existing language identifier at second position
         $tmp = explode('_', $field_name);
@@ -334,27 +294,40 @@ function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, 
  */
 function apachesolr_multilingual_apachesolr_field_name_map_alter(&$map) {
   foreach (apachesolr_multilingual_language_list() as $language => $language_name) {
-    $map['i18n_content_' . $language] = $language_name . ': ' . t('The full, rendered content (e.g. the rendered node body)');
-    $map['i18n_ts_' . $language . '_comments'] = $language_name . ': ' . t('The rendered comments associated with a node');
-    $map['i18n_tos_' . $language . '_content_extra'] = $language_name . ': ' . t('Extra rendered content or keywords');
-    $map['i18n_tos_' . $language . '_name_formatted'] = $language_name . ': ' . t('Author name (Formatted)');
-    $map['i18n_label_' . $language] = $language_name . ': ' . t('Title or label');
-    $map['i18n_teaser_' . $language] = $language_name . ': ' . t('Teaser or preview');
-    $map['i18n_tos_' . $language . '_name'] = $language_name . ': ' . t('Author name');
-    $map['i18n_path_alias_' . $language] = $language_name . ': ' . t('Path alias');
-    $map['i18n_tags_h1_' . $language] = $language_name . ': ' . t('Body text inside H1 tags');
-    $map['i18n_tags_h2_h3_' . $language] = $language_name . ': ' . t('Body text inside H2 or H3 tags');
-    $map['i18n_tags_h4_h5_h6_' . $language] = $language_name . ': ' . t('Body text inside H4, H5, or H6 tags');
-    $map['i18n_tags_inline_' . $language] = $language_name . ': ' . t('Body text in inline tags like EM or STRONG');
-    $map['i18n_tags_a_' . $language] = $language_name . ': ' . t('Body text inside links (A tags)');
-//     if (module_exists('taxonomy')) {
-//      $map['taxonomy_names' => t('All taxonomy term names'),
-//       foreach (taxonomy_get_vocabularies() as $vocab) {
-//         $map['tm_vid_' . $vocab->vid . '_names'] = t('Taxonomy term names only from the %name vocabulary', array('%name' => $vocab->name));
-//         $map['im_vid_' . $vocab->vid] = t('Taxonomy term IDs from the %name vocabulary', array('%name' => $vocab->name));
-//       }
-//     }
-//   }
+    // 'content' => t('The full, rendered content (e.g. the rendered node body)')
+    // 'i18n_content_de' => 'German: ' . t('The full, rendered content (e.g. the rendered node body)')
+    $map['i18n_content_' . $language] = $language_name . ': ' . $map['content'];
+    // For language specific dynamic field i18n_ts_de_* we could not attach the
+    // langcode at the end of the field name.
+    $map['i18n_ts_' . $language . '_comments'] = $language_name . ': ' . $map['ts_comments'];
+    $map['i18n_tos_' . $language . '_content_extra'] = $language_name . ': ' . $map['tos_content_extra'];
+    $map['i18n_tos_' . $language . '_name_formatted'] = $language_name . ': ' . $map['tos_name_formatted'];
+    $map['i18n_label_' . $language] = $language_name . ': ' . $map['label'];
+    $map['i18n_teaser_' . $language] = $language_name . ': ' . $map['teaser'];
+    $map['i18n_tos_' . $language . '_name'] = $language_name . ': ' . $map['tos_name'];
+    $map['i18n_path_alias_' . $language] = $language_name . ': ' . $map['path_alias'];
+    $map['i18n_tags_' . $language . '_h1'] = $language_name . ': ' . $map['tags_h1'];
+    $map['i18n_tags_' . $language . '_h2_h3'] = $language_name . ': ' . $map['tags_h2_h3'];
+    $map['i18n_tags_' . $language . '_h4_h5_h6'] = $language_name . ': ' . $map['tags_h4_h5_h6'];
+    $map['i18n_tags_' . $language . '_inline'] = $language_name . ': ' . $map['tags_inline'];
+    $map['i18n_tags_' . $language . '_a'] = $language_name . ': ' . $map['tags_a'];
+    if (module_exists('taxonomy')) {
+      $map['i18n_taxonomy_names_' . $language] = $language_name . ': ' . $map['taxonomy_names'];
+      foreach (taxonomy_get_vocabularies() as $vocab) {
+        $map['i18n_tm_' . $language . '_vid_' . $vocab->vid . '_names'] = $language_name . ': ' . $map['tm_vid_' . $vocab->vid . '_names'];
+      }
+    }
+    $prefixes = apachesolr_multilingual_get_text_field_prefixes();
+    foreach (apachesolr_entity_fields('node') as $field_nm => $nodefields) {
+      foreach ($nodefields as $field_info) {
+        $name = apachesolr_index_key($field_info);
+        list($prefix, ) = explode('_', $name);
+        if (in_array($prefix, $prefixes)) {
+          // FIXME are 32 chars the max allowed chars?
+          $map['i18n_' . $prefix .'_' . $language . '_' . $field_nm] = $language_name . ': ' . $map[$name];
+        }
+      }
+    }
   }
 }
 
@@ -377,14 +350,21 @@ function apachesolr_multilingual_get_language_filters_by_query($query) {
  * Implements hook_module_implements_alter().
  *
  * Move apachesolr_multilingual_apachesolr_query_alter() to the end of the
- * list because we haveto wait if someone limits the query to a specific
+ * list because we have to wait if someone limits the query to a specific
  * language.
  */
 function apachesolr_multilingual_module_implements_alter(&$implementations, $hook) {
-  if ('apachesolr_query_alter' == $hook) {
+  if (
+    'apachesolr_query_alter' == $hook ||
+    'apachesolr_field_name_map_alter' == $hook
+  ) {
     $group = $implementations['apachesolr_multilingual'];
     unset($implementations['apachesolr_multilingual']);
     $implementations['apachesolr_multilingual'] = $group;
+    // This confusing code turns
+    // array('a' => '', 'apachesolr_multilingual' => '', 'b' => '')
+    // into
+    // array('a' => '', 'b' => '', 'apachesolr_multilingual' => '')
   }
 }
 
@@ -426,19 +406,14 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
     }
 
     $qf = $query->getParam('qf');
-
+    // Per default the 'query fields' contain all language un-specific and
+    // specific fields.
+    // If the query filters by language we have to remove all unnecessary
+    // language specific fields.
+    // For the remaining language specific fields we have to apply the boosts as
+    // apachesolr_search_add_boost_params() will do for the unspecific ones.
     foreach ($qf as $index => $field) {
       if (strpos($field, 'i18n_') === 0) {
-        // @see apachesolr_search_add_boost_params()
-        // We have to apply the same logic here to language specific fields.
-        if (strpos($field, 'i18n_content') === 0 || strpos($field, 'i18n_ts_') === 0 || strpos($field, 'i18n_tm_') === 0) {
-          list($field_name, $boost) = explode('^', $field);
-          // Normed fields tend to have a lower score. Multiplying by 40 is
-          // a rough attempt to bring the score in line with fields that are
-          // not normed.
-          $qf[$index] = $field_name . '^' . sprintf('%.1F', 40.0 * $boost);
-        }
-
         if (!empty($filter_languages)) {
           $remove = TRUE;
           foreach ($filter_languages as $filter_language) {
@@ -449,7 +424,19 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
           }
           if ($remove) {
             unset($qf[$index]);
+            break;
           }
+        }
+
+        // Because apachesolr_search_add_boost_params() does not recognize the
+        // the i18n_* prefix we have to apply the same logic here to add the
+        // extra boost to language specific normed fields.
+        if (strpos($field, 'i18n_content') === 0 || strpos($field, 'i18n_ts_') === 0 || strpos($field, 'i18n_tm_') === 0) {
+          list($field_name, $boost) = explode('^', $field);
+          // Normed fields tend to have a lower score. Multiplying by 40 is
+          // a rough attempt to bring the score in line with fields that are
+          // not normed.
+          $qf[$index] = $field_name . '^' . sprintf('%.1F', 40.0 * $boost);
         }
       }
     }
@@ -829,6 +816,10 @@ function apachesolr_multilingual_apachesolr_field_mappings_alter(&$mappings, $en
   $mappings['entityreference']['indexing_callback'] = array(
     'apachesolr_multilingual_entityreference_indexing_callback',
   );
+
+  $mappings['taxonomy_term_reference']['indexing_callback'] = array(
+    'apachesolr_multilingual_term_reference_indexing_callback',
+  );
 }
 
 /**
@@ -915,7 +906,6 @@ function apachesolr_multilingual_entityreference_indexing_callback($entity, $fie
 
       // Iterates over all references and adds them to the fields.
       foreach ($entity->{$field_name}[$entity->language] as $reference) {
-        #var_dump($reference);
         if ($id = (!empty($reference['target_id'])) ? $reference['target_id'] : FALSE) {
           $fields[] = array(
             'key' => $index_key,
@@ -929,4 +919,102 @@ function apachesolr_multilingual_entityreference_indexing_callback($entity, $fie
     }
   }
   return $fields;
+}
+
+/**
+ * Callback that converts term_reference field into an array
+ *
+ * @param object $node
+ * @param string $field_name
+ * @param string $index_key
+ * @param array $field_info
+ * @return array $fields
+ *   fields that will be indexed for this term reference
+ */
+function apachesolr_multilingual_term_reference_indexing_callback($node, $field_name, $index_key, array $field_info) {
+  // Keep ancestors cached
+  $ancestors = &drupal_static(__FUNCTION__, array());
+
+  $fields = array();
+  $vocab_names = array();
+  if (!empty($node->{$field_name}) && function_exists('taxonomy_get_parents_all')) {
+    $items = array();
+    if (array_key_exists($node->language, $node->$field_name)) {
+      $items = $node->{$field_name}[$node->language];
+    }
+    else {
+      list($lang, $items) = each($node->$field_name);
+    }
+    foreach ($items as $item) {
+      // Triple indexing of tids lets us do efficient searches (on tid)
+      // and do accurate per field or per-vocabulary faceting.
+
+      // By including the ancestors to a term in the index we make
+      // sure that searches for general categories match specific
+      // categories, e.g. Fruit -> apple, a search for fruit will find
+      // content categorized with apple.
+      if (!isset($ancestors[$item['tid']])) {
+        $ancestors[$item['tid']] = taxonomy_get_parents_all($item['tid']);
+      }
+      foreach ($ancestors[$item['tid']] as $ancestor) {
+        // Index parent term against the field. Note that this happens
+        // regardless of whether the facet is set to show as a hierarchy or not.
+        // We would need a separate field if we were to index terms without any
+        // hierarchy at all.
+        // If the term is singular, then we cannot add another value to the
+        // document as the field is single
+        if ($field_info['multiple']) {
+          $fields[] = array(
+            'key' => $index_key,
+            'value' => $ancestor->tid,
+          );
+        }
+        $fields[] = array(
+          'key' => 'tid',
+          'value' => $ancestor->tid,
+        );
+        $fields[] = array(
+          'key' => 'im_vid_' . $ancestor->vid,
+          'value' => $ancestor->tid,
+        );
+        // We index each name as a string for cross-site faceting
+        // using the vocab name rather than vid in field construction.
+        // It's untranslated!
+        $fields[] = array(
+          'key' => 'sm_vid_' . apachesolr_vocab_name($ancestor->vid),
+          'value' => apachesolr_clean_text($ancestor->name),
+        );
+        // Store the translated term for later use.
+        $vocab_names[$ancestor->vid][] = apachesolr_clean_text(
+          function_exists('i18n_taxonomy_term_name') ?
+            i18n_taxonomy_term_name($ancestor, $node->language) :
+            $ancestor->name
+        );
+      }
+    }
+    // Index the term names into a text field for MLT queries and keyword searching.
+    foreach ($vocab_names as $vid => $names) {
+      $fields[] = array(
+        'key' => 'tm_vid_' . $vid . '_names',
+        'value' => implode(' ', $names),
+      );
+    }
+  }
+
+  return $fields;
+}
+
+function apachesolr_multilingual_get_text_field_prefixes() {
+  return array(
+    'ts_', // single text value
+    'tm_', // multiple text values
+    'tos_', // single text-omitNorms value
+    'tom_', // multiple text-omitNorms values
+    'tus_', // single text-unstemmed value
+    'tum_', // multiple text-unstemmed values
+    'tes_', // single text-edgeNgram value
+    'tem_', // multiple text-edgeNgram values
+    'tws_', // single text-whiteSpace value
+    'twm_', // multiple text-whiteSpace values
+  );
 }
