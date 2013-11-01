@@ -424,7 +424,7 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
           }
           if ($remove) {
             unset($qf[$index]);
-            break;
+            continue;
           }
         }
 
