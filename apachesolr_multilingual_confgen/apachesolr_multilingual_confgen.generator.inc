@@ -145,7 +145,8 @@ function apachesolr_multilingual_confgen_modify_schema($qp_schema, $solr_version
     // determine what the root is.
     // The workaround is to use top() to select the root element again.
 
-    $types = array('text', 'textSpell');
+    $types = array_unique(array_values(apachesolr_multilingual_get_dynamic_text_field_prefixes_and_types()));
+    $types[] = 'textSpell';
     $names = array();
 
     foreach ($types as $type) {
@@ -157,6 +158,7 @@ function apachesolr_multilingual_confgen_modify_schema($qp_schema, $solr_version
       $qp_schema_language_specific->top(); // workaround, see above
       foreach ($fields as $field) {
         $name = $field->attr('name');
+
         $names[$name] = 'field';
         $field
           ->attr('type', $type . '_' . $language_id)
@@ -176,11 +178,18 @@ function apachesolr_multilingual_confgen_modify_schema($qp_schema, $solr_version
       }
     }
 
-    foreach (array_keys($names) as $name) {
-      $copy_fields = $qp_schema_language_specific->branch()->find(':root fields copyField[source="' . $name . '"]');
+    foreach ($names as $src_name => $src_type) {
+      $copy_fields = array();
+      if ('dynamicField' == $src_type) {
+        $copy_fields = $qp_schema_language_specific->branch()->find(':root fields copyField[source^="' . trim($src_name, '*') . '"]');
+      }
+      else {
+        $copy_fields = $qp_schema_language_specific->branch()->find(':root fields copyField[source="' . $src_name . '"]');
+      }
       $qp_schema_language_specific->top(); // workaround, see above
       foreach ($copy_fields as $copy_field) {
         $dest_original = $dest = $copy_field->attr('dest');
+        $src_original = $copy_field->attr('source');
         foreach ($names as $field_name => $field_type) {
           if ('dynamicField' == $field_type && strpos($dest, trim($field_name, '*')) === 0) {
             $dest_original = $field_name;
@@ -200,10 +209,16 @@ function apachesolr_multilingual_confgen_modify_schema($qp_schema, $solr_version
           }
         }
         if ($do_copy) {
+          $suffix = '';
+          if (strpos($src_name, '_*') !== FALSE) {
+            // If $src_original is 'tm_vid_*' $suffix becomes '_vid_*'.
+            // If $src_original is 'tm_*' $suffix becomes '_*'.
+            $suffix = str_replace(trim($src_name, '_*'), '', trim($src_original, '_*')) . '_*';
+          }
           $copy_field
-            ->attr('source', 'i18n_' . $name . '_' . $language_id)
+            ->attr('source', 'i18n_' . trim($src_name, '_*') . '_' . $language_id . $suffix)
             ->attr('dest', 'i18n_' . $dest . '_' . $language_id)
-            ->insertAfter($qp_schema->find(':root')->xpath("fields/copyField[@source='$name' and @dest='$dest']"));
+            ->insertAfter($qp_schema->find(':root')->xpath("fields/copyField[@source='$src_original' and @dest='$dest']"));
         }
       }
     }

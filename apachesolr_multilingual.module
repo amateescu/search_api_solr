@@ -206,7 +206,7 @@ function apachesolr_multilingual_copy_common_to_i18n_fields($src_document, $dst_
     $dst_document->{'i18n_path_alias_' . $src_document->ss_language} = $src_document->path_alias;
   }
   foreach ($fields as $field_name) {
-    $prefixes = apachesolr_multilingual_get_text_field_prefixes();
+    $prefixes = array_keys(apachesolr_multilingual_get_dynamic_text_field_prefixes_and_types());
     $prefixes[] = 'tags_';
     foreach ($prefixes as $prefix) {
       if (strpos($field_name, $prefix) === 0 && !empty($src_document->{$field_name})) {
@@ -317,7 +317,7 @@ function apachesolr_multilingual_apachesolr_field_name_map_alter(&$map) {
         $map['i18n_tm_' . $language . '_vid_' . $vocab->vid . '_names'] = $language_name . ': ' . $map['tm_vid_' . $vocab->vid . '_names'];
       }
     }
-    $prefixes = apachesolr_multilingual_get_text_field_prefixes();
+    $prefixes = array_keys(apachesolr_multilingual_get_dynamic_text_field_prefixes_and_types());
     foreach (apachesolr_entity_fields('node') as $field_nm => $nodefields) {
       foreach ($nodefields as $field_info) {
         $name = apachesolr_index_key($field_info);
@@ -1004,17 +1004,18 @@ function apachesolr_multilingual_term_reference_indexing_callback($node, $field_
   return $fields;
 }
 
-function apachesolr_multilingual_get_text_field_prefixes() {
+function apachesolr_multilingual_get_dynamic_text_field_prefixes_and_types() {
   return array(
-    'ts_', // single text value
-    'tm_', // multiple text values
-    'tos_', // single text-omitNorms value
-    'tom_', // multiple text-omitNorms values
-    'tus_', // single text-unstemmed value
-    'tum_', // multiple text-unstemmed values
-    'tes_', // single text-edgeNgram value
-    'tem_', // multiple text-edgeNgram values
-    'tws_', // single text-whiteSpace value
-    'twm_', // multiple text-whiteSpace values
+    // prefix => type
+    'ts_' => 'text', // single text value
+    'tm_' => 'text', // multiple text values
+    'tos_' => 'text', // single text-omitNorms value
+    'tom_' => 'text', // multiple text-omitNorms values
+    'tus_' => 'text_und', // single text-unstemmed value
+    'tum_' => 'text_und', // multiple text-unstemmed values
+    'tes_' => 'edge_n2_kw_text', // single text-edgeNgram value
+    'tem_' => 'edge_n2_kw_text', // multiple text-edgeNgram values
+    'tws_' => 'text_ws', // single text-whiteSpace value
+    'twm_' => 'text_ws', // multiple text-whiteSpace values
   );
 }
