@@ -14,11 +14,12 @@ function search_api_solr_menu() {
     'description' => 'View Solr configuration files.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('search_api_solr_solr_config_form', 5),
-    'access callback' => 'search_api_access_server_files',
+    'access callback' => 'search_api_solr_access_server_files',
     'access arguments' => array(5),
     'file' => 'search_api_solr.admin.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => -1,
+    'context' => MENU_CONTEXT_INLINE | MENU_CONTEXT_PAGE,
   );
 
   return $items;
@@ -256,6 +257,15 @@ function search_api_solr_server_get_files(SearchApiServer $server, $dir_name = N
 }
 
 /**
+ * @deprecated
+ *
+ * @see search_api_solr_access_server_files()
+ */
+function search_api_access_server_files(SearchApiServer $server) {
+  return search_api_solr_access_server_files($server);
+}
+
+/**
  * Access callback for a server's "Files" tab.
  *
  * Grants access if the user has the "administer search_api" permission and the
@@ -267,7 +277,7 @@ function search_api_solr_server_get_files(SearchApiServer $server, $dir_name = N
  * @return bool
  *   TRUE if access should be granted, FALSE otherwise.
  */
-function search_api_access_server_files(SearchApiServer $server) {
+function search_api_solr_access_server_files(SearchApiServer $server) {
   if (!user_access('administer search_api')) {
     return FALSE;
   }
