@@ -124,6 +124,99 @@ function search_api_solr_views_api() {
 }
 
 /**
+ * Retrieves Solr-specific data for available data types.
+ *
+ * Returns the data type information for both the default Search API data types
+ * and custom data types defined by hook_search_api_data_type_info(). Names for
+ * default data types are not included, since they are not relevant to the Solr
+ * service class.
+ *
+ * We're adding some extra Solr field information for the default search api
+ * data types (as well as on behalf of a couple contrib field types). The
+ * extra information we're adding is documented in
+ * search_api_solr_hook_search_api_data_type_info(). You can use the same
+ * additional keys in hook_search_api_data_type_info() to support custom
+ * dynamic fields in your indexes with Solr.
+ *
+ * @param string|null $type
+ *   (optional) A specific type for which the information should be returned.
+ *   Defaults to returning all information.
+ *
+ * @return array|null
+ *   If $type was given, information about that type or NULL if it is unknown.
+ *   Otherwise, an array of all types. The format in both cases is the same as
+ *   for search_api_get_data_type_info().
+ *
+ * @see search_api_get_data_type_info()
+ * @see search_api_solr_hook_search_api_data_type_info()
+ */
+function search_api_solr_get_data_type_info($type = NULL) {
+  $types = &drupal_static(__FUNCTION__);
+
+  if (!isset($types)) {
+    // Grab the stock search_api data types.
+    $types = search_api_get_data_type_info();
+
+    // Add our extras for the default search api fields.
+    $types += array(
+      'text' => array(
+        'prefix' => 'tm',
+        'always multiValued' => TRUE,
+      ),
+      'string' => array(
+        'prefix' => 's',
+      ),
+      'integer' => array(
+        'prefix' => 'i',
+      ),
+      'decimal' => array(
+        'prefix' => 'f',
+      ),
+      'date' => array(
+        'prefix' => 'd',
+      ),
+      'duration' => array(
+        'prefix' => 'i',
+      ),
+      'boolean' => array(
+        'prefix' => 'b',
+      ),
+      'uri' => array(
+        'prefix' => 's',
+      ),
+      'tokens' => array(
+        'prefix' => 'tm',
+        'always multiValued' => TRUE,
+      ),
+    );
+
+    // Extra data type info.
+    $extra_types_info = array(
+      'location' => array(
+        'prefix' => 'loc',
+      ),
+      'geohash' => array(
+        'prefix' => 'geo',
+      ),
+    );
+
+    // For the extra types, only add our extra info if it's already been defined.
+    foreach ($extra_types_info as $key => $info) {
+      if (array_key_exists($key, $types)) {
+        // Merge our extras into the data type info
+        $types[$key] += $info;
+      }
+    }
+  }
+
+  // Return the info.
+  if (isset($type)) {
+    return isset($types[$type]) ? $types[$type] : NULL;
+  }
+  return $types;
+}
+
+/**
  * Retrieves a list of all config files of a server.
  *
  * @param SearchApiServer $server

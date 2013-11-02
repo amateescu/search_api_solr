@@ -1,5 +1,7 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1846860 by andrewbelcher, drclaw, drunken monkey, danielnolde: Added a way
+  to easily define new dynamic field types.
 - #2064377 by Nick_vh: Made configuration files compatible with Solr Cloud.
 - #2107417 by Nick_vh: Fixed config files for Solr 4.5.
 

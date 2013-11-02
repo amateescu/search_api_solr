@@ -27,28 +27,6 @@ class SearchApiSolrService extends SearchApiAbstractService {
   protected $solr;
 
   /**
-   * An array of all recognized types.
-   *
-   * Maps the type names to the prefixes used for identifying them in the Solr
-   * schema.
-   *
-   * @var array
-   */
-  protected static $type_prefixes = array(
-    'text' => 'tm',
-    'tokens' => 'tm',
-    'string' => 's',
-    'integer' => 'i',
-    'decimal' => 'f',
-    'date' => 'd',
-    'duration' => 'i',
-    'boolean' => 'b',
-    'uri' => 's',
-    'location' => 'loc',
-    'geohash' => 'geo',
-  );
-
-  /**
    * Static cache for getFieldNames().
    *
    * @var array
@@ -288,9 +266,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
   }
 
   /**
-   * Overrides SearchApiAbstractService::supportsFeature().
+   * {@inheritdoc}
    */
   public function supportsFeature($feature) {
+    // First, check the features we always support.
     $supported = drupal_map_assoc(array(
       'search_api_autocomplete',
       'search_api_facets',
@@ -302,7 +281,19 @@ class SearchApiSolrService extends SearchApiAbstractService {
       'search_api_data_type_location',
       'search_api_data_type_geohash',
     ));
-    return isset($supported[$feature]);
+    if (isset($supported[$feature])) {
+      return TRUE;
+    }
+
+    // If it is a custom data type, maybe we support it automatically via
+    // search_api_solr_hook_search_api_data_type_info().
+    if (substr($feature, 0, 21) != 'search_api_data_type_') {
+      return FALSE;
+    }
+    $type = substr($feature, 21);
+    $type = search_api_get_data_type_info($type);
+    // We only support it if the "prefix" key is set.
+    return $type && !empty($type['prefix']);
   }
 
   /**
@@ -496,9 +487,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
         }
 
         $inner_type = search_api_extract_inner_type($type);
-        $pref = isset(self::$type_prefixes[$inner_type]) ? self::$type_prefixes[$inner_type] : '';
-        if ($pref != 'tm') {
-          $pref .= $type == $inner_type ? 's' : 'm';
+        $type_info = search_api_solr_get_data_type_info($inner_type);
+        $pref = isset($type_info['prefix']) ? $type_info['prefix']: '';
+        if (empty($type_info['always multiValued'])) {
+          $pref .= ($type == $inner_type) ? 's' : 'm';
         }
         if (!empty($this->options['clean_ids'])) {
           $name = $pref . '_' . str_replace(':', '$', $key);
