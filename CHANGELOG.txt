@@ -5,6 +5,7 @@ Apache Solr Multilingual 7.x-1.0-rc1, 2013-xx-xx
 [        ] mkalkbrenner: fixed translations on filed bias form
 [#1967934] cspitzlay, mkalkbrenner: solr 4 support, requires https://drupal.org/node/2107417
 [        ] mkalkbrenner: added hook_apachesolr_multilingual_index_document_alter()
+[        ] mkalkbrenner: added requirements check for saved field biases
 
 
 Apache Solr Multilingual 7.x-1.0-beta2, 2013-07-16
