@@ -184,6 +184,12 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
       }
 
       apachesolr_multilingual_copy_common_to_i18n_fields($document, $document);
+
+      // Hook to allow modifications of the language specific index document.
+      foreach (module_implements('apachesolr_multilingual_index_document_alter') as $module) {
+        $function = $module . '_apachesolr_multilingual_index_document_alter';
+        $function($document, $document->ss_language, $entity, $entity_type, $env_id);
+      }
     }
   }
 }
