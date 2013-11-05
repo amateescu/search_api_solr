@@ -1888,7 +1888,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
             $terms = clone $terms;
             unset($terms->_empty_);
           }
-          $type = isset($index->options['fields'][$info['field']]['type']) ? search_api_extract_inner_type($index->options['fields'][$info['field']]['type']) : 'string';
+          $type = isset($fields[$info['field']]['type']) ? search_api_extract_inner_type($fields[$info['field']]['type']) : 'string';
           foreach ($terms as $term => $count) {
             if ($count >= $min_count) {
               if ($term === '_empty_') {
