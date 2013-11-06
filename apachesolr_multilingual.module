@@ -1019,8 +1019,14 @@ function apachesolr_multilingual_get_dynamic_text_field_prefixes_and_types() {
     'tom_' => 'text', // multiple text-omitNorms values
     'tus_' => 'text_und', // single text-unstemmed value
     'tum_' => 'text_und', // multiple text-unstemmed values
+    // In addition to the EdgeNGramFilterFactory this text field applies a
+    // LowerCaseFilter. For some languages it makes sense to remove that
+    // LowerCaseFilter.
     'tes_' => 'edge_n2_kw_text', // single text-edgeNgram value
     'tem_' => 'edge_n2_kw_text', // multiple text-edgeNgram values
+    // A text field that only splits on whitespace for exact matching of words.
+    // In addition it applies a LowerCaseFilter. For some languages it makes
+    // sense to remove that LowerCaseFilter.
     'tws_' => 'text_ws', // single text-whiteSpace value
     'twm_' => 'text_ws', // multiple text-whiteSpace values
   );
