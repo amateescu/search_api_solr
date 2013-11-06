@@ -277,37 +277,55 @@ function apachesolr_multilingual_confgen_variable_realm_variable_list_alter(&$va
  */
 function apachesolr_multilingual_confgen_variable_update($name, $value, $old_value, $options) {
   switch ($name) {
-    // index settings that require installing a new config
-    case 'apachesolr_multilingual_splitOnCaseChange_index':
-    case 'apachesolr_multilingual_splitOnNumerics_index':
-    case 'apachesolr_multilingual_stemEnglishPossessive_index':
-    case 'apachesolr_multilingual_generateWordParts_index':
-    case 'apachesolr_multilingual_generateNumberParts_index':
-    case 'apachesolr_multilingual_catenateWords_index':
-    case 'apachesolr_multilingual_catenateNumbers_index':
-    case 'apachesolr_multilingual_catenateAll_index':
-    case 'apachesolr_multilingual_preserveOriginal_index':
-    case 'apachesolr_multilingual_min_index':
-    case 'apachesolr_multilingual_max_index':
-
-    // query settings that require installing a new config
+    case 'apachesolr_multilingual_stemmer_language':
+    case 'apachesolr_multilingual_splitOnCaseChange_spell':
     case 'apachesolr_multilingual_splitOnCaseChange_query':
+    case 'apachesolr_multilingual_splitOnCaseChange_index':
+    case 'apachesolr_multilingual_splitOnNumerics_spell':
     case 'apachesolr_multilingual_splitOnNumerics_query':
+    case 'apachesolr_multilingual_splitOnNumerics_index':
+    case 'apachesolr_multilingual_stemEnglishPossessive_spell':
     case 'apachesolr_multilingual_stemEnglishPossessive_query':
+    case 'apachesolr_multilingual_stemEnglishPossessive_index':
+    case 'apachesolr_multilingual_generateWordParts_spell':
     case 'apachesolr_multilingual_generateWordParts_query':
+    case 'apachesolr_multilingual_generateWordParts_index':
+    case 'apachesolr_multilingual_generateNumberParts_spell':
     case 'apachesolr_multilingual_generateNumberParts_query':
+    case 'apachesolr_multilingual_generateNumberParts_index':
+    case 'apachesolr_multilingual_catenateWords_spell':
     case 'apachesolr_multilingual_catenateWords_query':
+    case 'apachesolr_multilingual_catenateWords_index':
+    case 'apachesolr_multilingual_catenateNumbers_spell':
     case 'apachesolr_multilingual_catenateNumbers_query':
+    case 'apachesolr_multilingual_catenateNumbers_index':
+    case 'apachesolr_multilingual_catenateAll_spell':
     case 'apachesolr_multilingual_catenateAll_query':
+    case 'apachesolr_multilingual_catenateAll_index':
+    case 'apachesolr_multilingual_preserveOriginal_spell':
     case 'apachesolr_multilingual_preserveOriginal_query':
+    case 'apachesolr_multilingual_preserveOriginal_index':
     case 'apachesolr_multilingual_min_query':
+    case 'apachesolr_multilingual_min_index':
     case 'apachesolr_multilingual_max_query':
-
+    case 'apachesolr_multilingual_max_index':
+    case 'apachesolr_multilingual_ignoreCase_stopwords_spell':
     case 'apachesolr_multilingual_ignoreCase_stopwords':
     case 'apachesolr_multilingual_ignoreCase_synonyms':
     case 'apachesolr_multilingual_lengthMin_spell':
     case 'apachesolr_multilingual_lengthMax_spell':
-    case 'apachesolr_multilingual_stemmer':
+    case 'apachesolr_multilingual_minWordSize_spell':
+    case 'apachesolr_multilingual_minWordSize':
+    case 'apachesolr_multilingual_minSubwordSize_spell':
+    case 'apachesolr_multilingual_minSubwordSize':
+    case 'apachesolr_multilingual_maxSubwordSize_spell':
+    case 'apachesolr_multilingual_maxSubwordSize':
+    case 'apachesolr_multilingual_onlyLongestMatch_spell':
+    case 'apachesolr_multilingual_onlyLongestMatch':
+    case 'apachesolr_multilingual_lowerCase_text_ws':
+    case 'apachesolr_multilingual_lowerCase_edge_n2_kw_text':
+    case 'apachesolr_multilingual_lowerCase_spell':
+    case 'apachesolr_multilingual_lowerCase':
       apachesolr_confgen_message_new_config($name, $value, $old_value, $options);
       break;
   }

@@ -49,7 +49,7 @@ function apachesolr_multilingual_confgen_admin_form($form_state) {
 
   $form['vt']['apachesolr_multilingual_advanced'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Advanced Language Settings'),
+    '#title' => t('Advanced Language Settings (@type)', array('@type' => 'text, text_und')),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#description' => t('Advanced settings for every language. If there are missing some languages here you have to activate them first.'),
@@ -169,6 +169,16 @@ function apachesolr_multilingual_confgen_admin_form($form_state) {
   $form['vt']['apachesolr_multilingual_advanced']['SynonymFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
 
 
+  $form['vt']['apachesolr_multilingual_advanced']['LowerCaseFilterFactory'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'LowerCaseFilterFactory',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $var_name = 'apachesolr_multilingual_lowerCase';
+  $form['vt']['apachesolr_multilingual_advanced']['LowerCaseFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
+
   $form['vt']['apachesolr_multilingual_advanced']['DictionaryCompoundWordTokenFilterFactory'] = array(
     '#type' => 'fieldset',
     '#title' => 'DictionaryCompoundWordTokenFilterFactory',
@@ -190,7 +200,7 @@ function apachesolr_multilingual_confgen_admin_form($form_state) {
 
   $form['vt']['apachesolr_multilingual_spell'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Spell Check'),
+    '#title' => t('Spell Check (@type)', array('@type' => 'textSpell')),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#description' => t('Advanced spell check settings for every language. If there are missing some languages here you have to activate them first.'),
@@ -287,6 +297,44 @@ function apachesolr_multilingual_confgen_admin_form($form_state) {
 
   $var_name = 'apachesolr_multilingual_lowerCase_spell';
   $form['vt']['apachesolr_multilingual_spell']['LowerCaseFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
+
+
+  $form['vt']['apachesolr_multilingual_text_ws'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Exact Matching (@type)', array('@type' => 'text_ws')),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#description' => t('Language specific configuration of the text field that only splits on whitespace for exact matching of words. If there are missing some languages here you have to activate them first.'),
+  );
+
+  $form['vt']['apachesolr_multilingual_text_ws']['LowerCaseFilterFactory'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'LowerCaseFilterFactory',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $var_name = 'apachesolr_multilingual_lowerCase_text_ws';
+  $form['vt']['apachesolr_multilingual_text_ws']['LowerCaseFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
+
+
+  $form['vt']['apachesolr_multilingual_edge_n2_kw_text'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Edge N Gram (@type)', array('@type' => 'edge_n2_kw_text')),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#description' => t('Language specific configuration of the text field that is the source for features like auto complete. If there are missing some languages here you have to activate them first.'),
+  );
+
+  $form['vt']['apachesolr_multilingual_edge_n2_kw_text']['LowerCaseFilterFactory'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'LowerCaseFilterFactory',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $var_name = 'apachesolr_multilingual_lowerCase_edge_n2_kw_text';
+  $form['vt']['apachesolr_multilingual_edge_n2_kw_text']['LowerCaseFilterFactory'][$var_name] = apachesolr_multilingual_confgen_variable_definition_to_form_element($var_name);
 
   return system_settings_form($form);
 }

@@ -237,11 +237,14 @@ function apachesolr_multilingual_confgen_variable_info($options) {
     'group' => 'apachesolr_multilingual_confgen',
   );
 
-  $variables['apachesolr_multilingual_lowerCase_spell'] = array(
+  $variables['apachesolr_multilingual_lowerCase_text_ws'] =
+  $variables['apachesolr_multilingual_lowerCase_edge_n2_kw_text'] =
+  $variables['apachesolr_multilingual_lowerCase_spell'] =
+  $variables['apachesolr_multilingual_lowerCase'] = array(
     'type' => 'boolean',
     'title' => t('lowerCase', array(), $options),
     'default' => TRUE,
-    'description' => t('TODO'),
+    'description' => t('Convert all characters to lower case.'),
     'group' => 'apachesolr_multilingual_confgen',
   );
 

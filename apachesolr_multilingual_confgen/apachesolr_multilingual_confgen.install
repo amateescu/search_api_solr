@@ -35,5 +35,13 @@ function apachesolr_multilingual_confgen_disable() {
  * Register spell checker variables
  */
 function apachesolr_multilingual_confgen_update_7100() {
+  // see apachesolr_multilingual_confgen_update_7101()
+  // apachesolr_multiligual_confgen_register_multilingual_variables();
+}
+
+/**
+ * Register lowerCase variables
+ */
+function apachesolr_multilingual_confgen_update_7101() {
   apachesolr_multiligual_confgen_register_multilingual_variables();
 }

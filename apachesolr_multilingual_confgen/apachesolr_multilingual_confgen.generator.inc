@@ -94,6 +94,11 @@ function apachesolr_multilingual_confgen_modify_schema($qp_schema, $solr_version
         ->find(':root')->xpath("types/fieldType[@name='$type']/analyzer[@type='query']/filter[@class='solr.LengthFilterFactory']")
         ->attr('min', apachesolr_multilingual_confgen_variable_get('apachesolr_multilingual_min_query', $language_id))
         ->attr('max', apachesolr_multilingual_confgen_variable_get('apachesolr_multilingual_max_query', $language_id));
+
+      if (!apachesolr_multilingual_confgen_variable_get('apachesolr_multilingual_lowerCase', $language_id)) {
+        $qp_schema_language_specific
+          ->find(':root')->xpath("types/fieldType[@name='$type']//filter[@class='solr.LowerCaseFilterFactory']")->detach();
+      }
     }
 
     // type textSpell
@@ -139,6 +144,15 @@ function apachesolr_multilingual_confgen_modify_schema($qp_schema, $solr_version
       $qp_schema_language_specific
         ->find(':root')->xpath("types/fieldType[@name='textSpell']//filter[@class='solr.LowerCaseFilterFactory']")->detach();
     }
+
+
+    foreach (array('text_ws', 'edge_n2_kw_text') as $type) {
+      if (!apachesolr_multilingual_confgen_variable_get('apachesolr_multilingual_lowerCase_' .  $type, $language_id)) {
+        $qp_schema_language_specific
+          ->find(':root')->xpath("types/fieldType[@name='$type']//filter[@class='solr.LowerCaseFilterFactory']")->detach();
+      }
+    }
+
 
     // add language specific types and fields to schema
 
