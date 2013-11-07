@@ -250,7 +250,14 @@ function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, 
   $unspecified_types = $types = array_unique(array_values(apachesolr_multilingual_get_dynamic_text_field_prefixes_and_types()));
   $defaults = array();
   foreach (array_keys(apachesolr_multilingual_language_list()) as $language_id) {
-    $types[] = 'text_' . $language_id;
+    foreach ($unspecified_types as $type) {
+      if (strpos($type, 'text') === 0) {
+        // Register language specific text types to add all fields based on this
+        // these types to the bias form.
+        $types[] = $type . '_' . $language_id;
+      }
+    }
+
     // get the current weights
     $defaults['i18n_content_' . $language_id] = '1.0';
     $defaults['i18n_ts_' . $language_id . '_comments'] = '0.5';
@@ -269,6 +276,7 @@ function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, 
   if (!$qf) {
     $qf = $defaults;
   }
+  $incomplete = array();
   if ($fields) {
     foreach ($fields as $field_name => $field) {
       // Only indexed fields are searchable.
@@ -276,7 +284,10 @@ function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, 
         $form['field_bias'][$field_name]['#access'] = TRUE;
         $form['field_bias'][$field_name]['#default_value'] = isset($qf[$field_name]) ? $qf[$field_name] : '0';
         $form['field_bias'][$field_name]['#description'] = in_array($field->type, $unspecified_types) ?
-          t('Unspecified language: recommendation is set this bias to "Omit"') : '';
+          t('Unspecified language: recommendation is set this bias to %omit.', array('%omit' => t('Omit'))) : '';
+        if (!isset($qf[$field_name])) {
+          $incomplete[] = $field_name;
+        }
       }
     }
 
@@ -289,9 +300,33 @@ function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, 
         '#title' => filter_xss(apachesolr_field_name_map($field_name)),
         '#default_value' => isset($qf[$field_name]) ? $qf[$field_name] : $defaults[$field_name],
       );
+      if (!isset($qf[$field_name])) {
+        $incomplete[] = $field_name;
+      }
     }
 
     ksort($form['field_bias']);
+
+    if (!empty($incomplete)) {
+      foreach ($incomplete as $field_name) {
+        // This field has never been configured before. Mark the field as
+        // erroneous. This makes it easier to find the field even if we have a
+        // lot of fields in this form.
+        $form['field_bias'][$field_name]['#attributes']['class'][] = 'error';
+        // TODO use a theme function to format this message.
+        $form['field_bias'][$field_name]['#description'] .= ' <span class="error">' . t('This field is new and needs to be configured.') . '</span>';
+      }
+      // The form contains at least one field that has never been configured
+      // before. Display a corresponding message.
+      drupal_set_message(
+        t('This solr index contains new searchable fields. These fields are ignored until you configured and saved the !field_biases.',
+          array('!field_biases' => t('Field biases'))),
+        'warning'
+      );
+    }
+
+    if ($incomplete) {
+    }
   }
 }
 
@@ -945,11 +980,14 @@ function apachesolr_multilingual_term_reference_indexing_callback($node, $field_
   $vocab_names = array();
   if (!empty($node->{$field_name}) && function_exists('taxonomy_get_parents_all')) {
     $items = array();
-    if (array_key_exists($node->language, $node->$field_name)) {
+    if (array_key_exists($node->language, $node->{$field_name}) && is_array($node->{$field_name}[$node->language])) {
       $items = $node->{$field_name}[$node->language];
     }
     else {
-      list($lang, $items) = each($node->$field_name);
+      list($lang, $items) = each($node->{$field_name});
+      if (!is_array($items)) {
+        $items = array();
+      }
     }
     foreach ($items as $item) {
       // Triple indexing of tids lets us do efficient searches (on tid)
@@ -1057,8 +1095,8 @@ function apachesolr_multilingual_requirements($phase) {
           $requirements['apachesolr_multilingual_bias_' . $environment['env_id']] = array(
             'title' => $t('Apache Solr Multilingual'),
             'value' => $t('Missing field bias settings of environment ID %id.', array('%id' => $environment['env_id'])),
-            'description' => $t('This solr index contains new searchable fields. These fields are ignored until you configured and saved the !link.',
-              array('!link' => l($t('Field biases'), '/admin/config/search/apachesolr/env-' . $environment['env_id'] . '/bias'))),
+            'description' => $t('This solr index contains new searchable fields. These fields are ignored until you configured and saved the !field_biases.',
+              array('!field_biases' => l($t('Field biases'), '/admin/config/search/apachesolr/env-' . $environment['env_id'] . '/bias'))),
             'severity' => REQUIREMENT_WARNING,
           );
           $ok = FALSE;
