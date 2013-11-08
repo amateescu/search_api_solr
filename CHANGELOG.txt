@@ -1,5 +1,7 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #2113943 by drunken monkey: Fixed clash in specifying the HTTP method for
+  searches.
 - #2127193 by jlapp: Fixed date field values returned for multi-index searches.
 - #2122155 drunken monkey: Added the "Files" tab to contextual links.
 - #1846860 by andrewbelcher, drclaw, drunken monkey, danielnolde: Added a way

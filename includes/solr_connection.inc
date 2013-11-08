@@ -58,8 +58,10 @@
  */
 
 /**
- * Starting point for the Solr API. Represents a Solr server resource and has
- * methods for pinging, adding, deleting, committing, optimizing and searching.
+ * Represents a Solr server resource.
+ *
+ * Contains methods for pinging, adding, deleting, committing, optimizing and
+ * searching.
  */
 
 class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
@@ -134,13 +136,6 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
   protected $update_url;
 
   /**
-   * The HTTP method to use for search requests.
-   *
-   * @var string
-   */
-  protected $method;
-
-  /**
    * HTTP Basic Authentication header to set for requests to the Solr server.
    *
    * @var string
@@ -208,8 +203,6 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
    *     information to add basic HTTP authentication to all requests to the
    *     Solr server. Not set by default.
    *   - http_pass: See "http_user".
-   *   - http_method: The HTTP method to use for searches. Can be either "GET",
-   *     "POST" or "AUTO". Defaults to "POST".
    */
   public function __construct(array $options) {
     $options += array(
@@ -219,15 +212,11 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
       'path' => 'solr',
       'http_user' => NULL,
       'http_pass' => NULL,
-      'http_method' => 'POST',
     );
     $this->options = $options;
 
     $path = '/' . trim($options['path'], '/') . '/';
     $this->base_url = $options['scheme'] . '://' . $options['host'] . ':' . $options['port'] . $path;
-
-    // Make sure we always have a valid method set, default to POST.
-    $this->method = in_array($options['http_method'], array('GET', 'AUTO')) ? $options['http_method'] : 'POST';
 
     // Set HTTP Basic Authentication parameter, if login data was set.
     if (strlen($options['http_user']) && strlen($options['http_pass'])) {
@@ -813,15 +802,15 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
    *
    * Will be synchronous unless $waitSearcher is set to FALSE.
    *
-   * @param $type
+   * @param string $type
    *   Either "commit" or "optimize".
-   * @param $waitSearcher
+   * @param bool $waitSearcher
    *   (optional) Wait until a new searcher is opened and registered as the main
    *   query searcher, making the changes visible. Defaults to true.
-   * @param $timeout
+   * @param int $timeout
    *   Seconds to wait until timing out with an exception. Defaults to an hour.
    *
-   * @return
+   * @return object
    *   A response object.
    *
    * @throws SearchApiException
@@ -845,7 +834,20 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
   }
 
   /**
-   * Like PHP's built in http_build_query(), but uses rawurlencode() and no [] for repeated params.
+   * Generates an URL-encoded query string.
+   *
+   * Works like PHP's built in http_build_query() (or drupal_http_build_query())
+   * but uses rawurlencode() and no [] for repeated params, to be compatible
+   * with the Java-based servers Solr runs on.
+   *
+   *
+   * @param array $query
+   *   The query parameters which should be set.
+   * @param string $parent
+   *   Internal use only.
+   *
+   * @return string
+   *   A query string to append (after "?") to a URL.
    */
   protected function httpBuildQuery(array $query, $parent = '') {
     $params = array();
@@ -870,9 +872,7 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
   }
 
   /**
-   * Implements SearchApiSolrConnectionInterface::search().
-   *
-   * Ignores $method in favor of the option passed at construction time.
+   * {@inheritdoc}
    */
   public function search($query = NULL, array $params = array(), $method = 'GET') {
     // Always use JSON. See
@@ -889,9 +889,9 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
     // PHP's built-in http_build_query() doesn't give us the format Solr wants.
     $queryString = $this->httpBuildQuery($params);
 
-    if ($this->method == 'GET' || $this->method == 'AUTO') {
+    if ($method == 'GET' || $method == 'AUTO') {
       $searchUrl = $this->constructUrl(self::SEARCH_SERVLET, array(), $queryString);
-      if ($this->method == 'GET' || strlen($searchUrl) <= variable_get('search_api_solr_http_get_max_length', 4000)) {
+      if ($method == 'GET' || strlen($searchUrl) <= variable_get('search_api_solr_http_get_max_length', 4000)) {
         return $this->sendRawGet($searchUrl);
       }
     }
