@@ -63,7 +63,6 @@
  * Contains methods for pinging, adding, deleting, committing, optimizing and
  * searching.
  */
-
 class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
 
   /**
