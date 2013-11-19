@@ -1,5 +1,6 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #2127991 by drunken monkey: Fixed handling of negated fulltext keys.
 - #2113943 by drunken monkey: Fixed clash in specifying the HTTP method for
   searches.
 - #2127193 by jlapp: Fixed date field values returned for multi-index searches.

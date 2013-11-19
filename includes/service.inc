@@ -1256,7 +1256,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     // #conjunction | #negation | return value
     // ----------------------------------------------------------------
     // AND          | FALSE     | A B C
-    // AND          | TRUE      | -(A B C)
+    // AND          | TRUE      | -(A AND B AND C)
     // OR           | FALSE     | ((A) OR (B) OR (C))
     // OR           | TRUE      | -A -B -C
 
@@ -1272,7 +1272,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       }
       return '((' . implode(') OR (', $k) . '))';
     }
-    $k = implode(' ', $k);
+    $k = implode($neg ? ' AND ' : ' ', $k);
     return $neg ? "*:* AND -($k)" : $k;
   }
 
