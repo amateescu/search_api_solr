@@ -164,7 +164,9 @@ function apachesolr_multilingual_confgen_modify_schema($qp_schema, $solr_version
     // The workaround is to use top() to select the root element again.
 
     $types = array_unique(array_values(apachesolr_multilingual_get_dynamic_text_field_prefixes_and_types()));
-    $types[] = 'textSpell';
+    $types[] = 'textSpell'; // i18n_spell_de
+    $types[] = 'sortString'; // i18n_sort_label_de
+
     $names = array();
 
     foreach ($types as $type) {
@@ -211,11 +213,19 @@ function apachesolr_multilingual_confgen_modify_schema($qp_schema, $solr_version
         foreach ($names as $field_name => $field_type) {
           if ('dynamicField' == $field_type && strpos($dest, trim($field_name, '*')) === 0) {
             $dest_original = $field_name;
+            break;
           }
         }
+
         // The type of the destination field needs to be verified in the original schema,
         // because the type in $qp_schema_language_specific has been renamed already.
-        $dest_fields = $qp_schema->branch()->find(':root fields field[name="' . $dest_original . '"]');
+        $dest_fields = array();
+        if ('dynamicField' == $names[$dest_original]) {
+          $dest_fields = $qp_schema->branch()->find(':root fields dynamicField[name^="' . trim($dest_original, '*') . '"]');
+        }
+        else {
+          $dest_fields = $qp_schema->branch()->find(':root fields field[name="' . $dest_original . '"]');
+        }
         $qp_schema->top(); // workaround, see above
         $do_copy = FALSE;
         foreach ($dest_fields as $dest_field) {

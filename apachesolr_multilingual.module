@@ -426,7 +426,6 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
     $filter_languages = &drupal_static('apachesolr_multilingual_filter_languages_' . $context['page_id']);
     $filter_languages = apachesolr_multilingual_get_language_filters_by_query($query);
     $languages = apachesolr_multilingual_language_list();
-
     if (empty($filter_languages) && $custom_settings['apachesolr_multilingual_auto_language_filter'] &&
       (!$custom_settings['apachesolr_multilingual_auto_language_filter_detachable'] ||
         ($custom_settings['apachesolr_multilingual_auto_language_filter_detachable'] && empty($_GET['detach-auto-language-filter'])))) {
