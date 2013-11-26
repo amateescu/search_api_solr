@@ -1,5 +1,5 @@
-Apache Solr Multilingual 7.x-1.0-rc1, 2013-xx-xx
---------------------------------------------------
+Apache Solr Multilingual 7.x-1.0-rc1, 2013-11-26
+------------------------------------------------
 [        ] mkalkbrenner: turned index callbacks into arrays as introduced by apachesolr 7.x-1.5
 [        ] mkalkbrenner: index taxonomy translations
 [        ] mkalkbrenner: fixed translations on filed bias form
