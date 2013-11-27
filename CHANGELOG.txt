@@ -1,3 +1,8 @@
+Apache Solr Multilingual 7.x-1.0-rc2, 2013-xx-xx
+------------------------------------------------
+[#2143705] mkalkbrenner: fixed i18n_sort_* fields
+
+
 Apache Solr Multilingual 7.x-1.0-rc1, 2013-11-26
 ------------------------------------------------
 [        ] mkalkbrenner: turned index callbacks into arrays as introduced by apachesolr 7.x-1.5

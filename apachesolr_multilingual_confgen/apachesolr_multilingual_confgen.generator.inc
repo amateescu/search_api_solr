@@ -208,28 +208,28 @@ function apachesolr_multilingual_confgen_modify_schema($qp_schema, $solr_version
       }
       $qp_schema_language_specific->top(); // workaround, see above
       foreach ($copy_fields as $copy_field) {
-        $dest_original = $dest = $copy_field->attr('dest');
+        $dst_original = $dst = $copy_field->attr('dest');
         $src_original = $copy_field->attr('source');
         foreach ($names as $field_name => $field_type) {
-          if ('dynamicField' == $field_type && strpos($dest, trim($field_name, '*')) === 0) {
-            $dest_original = $field_name;
+          if ('dynamicField' == $field_type && strpos($dst, trim($field_name, '*')) === 0) {
+            $dst_original = $field_name;
             break;
           }
         }
 
         // The type of the destination field needs to be verified in the original schema,
         // because the type in $qp_schema_language_specific has been renamed already.
-        $dest_fields = array();
-        if ('dynamicField' == $names[$dest_original]) {
-          $dest_fields = $qp_schema->branch()->find(':root fields dynamicField[name^="' . trim($dest_original, '*') . '"]');
+        $dst_fields = array();
+        if ('dynamicField' == $names[$dst_original]) {
+          $dst_fields = $qp_schema->branch()->find(':root fields dynamicField[name^="' . trim($dst_original, '*') . '"]');
         }
         else {
-          $dest_fields = $qp_schema->branch()->find(':root fields field[name="' . $dest_original . '"]');
+          $dst_fields = $qp_schema->branch()->find(':root fields field[name="' . $dst_original . '"]');
         }
         $qp_schema->top(); // workaround, see above
         $do_copy = FALSE;
-        foreach ($dest_fields as $dest_field) {
-          if (in_array($dest_field->attr('type'), $types)) {
+        foreach ($dst_fields as $dst_field) {
+          if (in_array($dst_field->attr('type'), $types)) {
             // Only add additional copy fields if the destination is of
             // a multilingual text type.
             $do_copy = TRUE;
@@ -237,16 +237,27 @@ function apachesolr_multilingual_confgen_modify_schema($qp_schema, $solr_version
           }
         }
         if ($do_copy) {
-          $suffix = '';
+          $src_suffix = '';
           if (strpos($src_name, '_*') !== FALSE) {
             // If $src_original is 'tm_vid_*' $suffix becomes '_vid_*'.
             // If $src_original is 'tm_*' $suffix becomes '_*'.
-            $suffix = str_replace(trim($src_name, '_*'), '', trim($src_original, '_*')) . '_*';
+            $src_suffix = str_replace(trim($src_name, '_*'), '', trim($src_original, '_*')) . '_*';
           }
+
+          $dst_suffix = '';
+          if ('dynamicField' == $names[$dst_original]) {
+            // If $src_original is 'tm_vid_*' $suffix becomes '_vid_*'.
+            // If $src_original is 'tm_*' $suffix becomes '_*'.
+            $dst_suffix = str_replace(trim($dst_original, '_*'), '', trim($dst, '_*'));
+            if (strpos($dst, '_*') !== FALSE) {
+              $dst_suffix .= '_*';
+            }
+          }
+
           $copy_field
-            ->attr('source', 'i18n_' . trim($src_name, '_*') . '_' . $language_id . $suffix)
-            ->attr('dest', 'i18n_' . $dest . '_' . $language_id)
-            ->insertAfter($qp_schema->find(':root')->xpath("fields/copyField[@source='$src_original' and @dest='$dest']"));
+            ->attr('source', 'i18n_' . trim($src_name, '_*') . '_' . $language_id . $src_suffix)
+            ->attr('dest', 'i18n_' . trim($dst_original, '_*') . '_' . $language_id . $dst_suffix)
+            ->insertAfter($qp_schema->find(':root')->xpath("fields/copyField[@source='$src_original' and @dest='$dst']"));
         }
       }
     }
