@@ -1,5 +1,7 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #2126281 by drunken monkey: Update error handling according to the latest
+  Search API change.
 - #2127991 by drunken monkey: Fixed handling of negated fulltext keys.
 - #2113943 by drunken monkey: Fixed clash in specifying the HTTP method for
   searches.

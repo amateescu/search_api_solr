@@ -383,12 +383,12 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $id = is_object($index) ? $index->machine_name : $index;
     // Only delete the index's data if the index isn't read-only.
     if (!is_object($index) || empty($index->read_only)) {
+      $this->connect();
       try {
-        $this->connect();
         $this->solr->deleteByQuery("index_id:" . $this->getIndexId($id));
       }
       catch (Exception $e) {
-        watchdog_exception('search_api_solr', $e, "%type while deleting an index's data: !message in %function (line %line of %file).");
+        throw new SearchApiException($e->getMessage());
       }
     }
   }
@@ -592,33 +592,28 @@ class SearchApiSolrService extends SearchApiAbstractService {
    * called in this fashion.
    */
   public function deleteItems($ids = 'all', SearchApiIndex $index = NULL) {
-    try {
-      $this->connect();
-      if ($index) {
-        $index_id = $this->getIndexId($index->machine_name);
-        if (is_array($ids)) {
-          $solr_ids = array();
-          foreach ($ids as $id) {
-            $solr_ids[] = $this->createId($index_id, $id);
-          }
-          $this->solr->deleteByMultipleIds($solr_ids);
+    $this->connect();
+    if ($index) {
+      $index_id = $this->getIndexId($index->machine_name);
+      if (is_array($ids)) {
+        $solr_ids = array();
+        foreach ($ids as $id) {
+          $solr_ids[] = $this->createId($index_id, $id);
         }
-        elseif ($ids == 'all') {
-          $this->solr->deleteByQuery("index_id:" . $index_id);
-        }
-        else {
-          $this->solr->deleteByQuery("index_id:" . $index_id . ' (' . $ids . ')');
-        }
+        $this->solr->deleteByMultipleIds($solr_ids);
+      }
+      elseif ($ids == 'all') {
+        $this->solr->deleteByQuery("index_id:" . $index_id);
       }
       else {
-        $q = $ids == 'all' ? '*:*' : $ids;
-        $this->solr->deleteByQuery($q);
+        $this->solr->deleteByQuery("index_id:" . $index_id . ' (' . $ids . ')');
       }
-      $this->scheduleCommit();
     }
-    catch(SearchApiException $e) {
-      watchdog_exception('search_api_solr', $e, '%type while deleting items from server @server: !message in %function (line %line of %file).', array('@server' => $this->server->name));
+    else {
+      $q = $ids == 'all' ? '*:*' : $ids;
+      $this->solr->deleteByQuery($q);
     }
+    $this->scheduleCommit();
   }
 
   /**
