@@ -61,6 +61,8 @@ function search_api_solr_requirements($phase) {
 function search_api_solr_uninstall() {
   variable_del('search_api_solr_last_optimize');
   variable_del('search_api_solr_autocomplete_max_occurrences');
+  variable_del('search_api_solr_index_prefix');
+  variable_del('search_api_solr_http_get_max_length');
 }
 
 /**
