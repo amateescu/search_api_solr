@@ -2053,8 +2053,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
   /**
    * Prefixes an index ID as configured.
    *
-   * Prepends both a global and/or a per-index prefix to the index ID, if they
-   * are set.
+   * The resulting ID will be a concatenation of the following strings:
+   * - If set, the "search_api_solr_index_prefix" variable.
+   * - If set, the index-specific "search_api_solr_index_prefix_INDEX" variable.
+   * - The index's machine name.
    *
    * @param string $machine_name
    *   The index's machine name.
