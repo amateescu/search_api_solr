@@ -4,6 +4,7 @@ Apache Solr Multilingual 7.x-1.0-rc2, 2013-xx-xx
 [        ] mkalkbrenner: avoid php notices during status check if solr is offline
 [#2147927] stefan.r, mkalkbrenner: Error message when running update hooks with disabled module
 [        ] mkalkbrenner: completed entity translation support for non text fields
+[#2139177] mkalkbrenner: fixed Notice: Undefined index: ss_language in ApacheSolrDocument->__get()
 
 
 Apache Solr Multilingual 7.x-1.0-rc1, 2013-11-26

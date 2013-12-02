@@ -70,6 +70,10 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
     $languages = language_list();
 
     foreach ($documents as $document) {
+      if (!isset($document->ss_language)) {
+        // This document could not be handled by apachesolr_multilingual.
+        continue;
+      }
 
       if (LANGUAGE_NONE == $document->ss_language) {
         // language-neutral
