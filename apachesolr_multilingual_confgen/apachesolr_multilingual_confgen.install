@@ -36,6 +36,7 @@ function apachesolr_multilingual_confgen_disable() {
  */
 function apachesolr_multilingual_confgen_update_7100() {
   // see apachesolr_multilingual_confgen_update_7101()
+  // module_load_include('module', 'apachesolr_multilingual_confgen');
   // apachesolr_multiligual_confgen_register_multilingual_variables();
 }
 
@@ -43,5 +44,6 @@ function apachesolr_multilingual_confgen_update_7100() {
  * Register lowerCase variables
  */
 function apachesolr_multilingual_confgen_update_7101() {
+  module_load_include('module', 'apachesolr_multilingual_confgen');
   apachesolr_multiligual_confgen_register_multilingual_variables();
 }
