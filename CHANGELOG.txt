@@ -1,6 +1,7 @@
 Apache Solr Multilingual 7.x-1.0-rc2, 2013-xx-xx
 ------------------------------------------------
 [#2143705] mkalkbrenner: fixed i18n_sort_* fields
+[        ] mkalkbrenner: avoid php notices during status check if solr is offline
 
 
 Apache Solr Multilingual 7.x-1.0-rc1, 2013-11-26

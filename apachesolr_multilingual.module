@@ -1085,20 +1085,31 @@ function apachesolr_multilingual_requirements($phase) {
   $ok = TRUE;
   foreach ($environments as $environment) {
     $fields = apachesolr_search_get_fields($environment);
-    $field_bias = apachesolr_environment_variable_get($environment['env_id'], 'field_bias', array());
-
-    foreach ($fields as $field_name => $field) {
-      // Only indexed fields are searchable.
-      if (in_array($field->type, $types) && $field->schema{0} == 'I') {
-        if (!array_key_exists($field_name, $field_bias)) {
-          $requirements['apachesolr_multilingual_bias_' . $environment['env_id']] = array(
-            'title' => $t('Apache Solr Multilingual'),
-            'value' => $t('Missing field bias settings of environment ID %id.', array('%id' => $environment['env_id'])),
-            'description' => $t('This solr index contains new searchable fields. These fields are ignored until you configured and saved the !field_biases.',
-              array('!field_biases' => l($t('Field biases'), '/admin/config/search/apachesolr/env-' . $environment['env_id'] . '/bias'))),
-            'severity' => REQUIREMENT_WARNING,
-          );
-          $ok = FALSE;
+    if (!is_array($fields) || empty($fields)) {
+      $requirements['apachesolr_multilingual_bias_' . $environment['env_id']] = array(
+        'title' => $t('Apache Solr Multilingual'),
+        'value' => $t('Field bias settings of environment ID %id could not be verified.', array('%id' => $environment['env_id'])),
+        'description' => $t('Could not establish a connection to this solr index. The field bias settings could not be verified.'),
+        'severity' => REQUIREMENT_ERROR,
+      );
+      $ok = FALSE;
+    }
+    else {
+      $field_bias = apachesolr_environment_variable_get($environment['env_id'], 'field_bias', array());
+      foreach ($fields as $field_name => $field) {
+        // Only indexed fields are searchable.
+        if (in_array($field->type, $types) && $field->schema{0} == 'I') {
+          if (!array_key_exists($field_name, $field_bias)) {
+            $requirements['apachesolr_multilingual_bias_' . $environment['env_id']] = array(
+              'title' => $t('Apache Solr Multilingual'),
+              'value' => $t('Missing field bias settings of environment ID %id.', array('%id' => $environment['env_id'])),
+              'description' => $t('This solr index contains new searchable fields. These fields are ignored until you configured and saved the !field_biases.',
+                array('!field_biases' => l($t('Field biases'), '/admin/config/search/apachesolr/env-' . $environment['env_id'] . '/bias'))),
+              'severity' => REQUIREMENT_WARNING,
+            );
+            $ok = FALSE;
+            break;
+          }
         }
       }
     }
