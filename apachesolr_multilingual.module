@@ -11,6 +11,12 @@
  */
 
 /**
+ * Language code used when mapping language-neutral content to all languages.
+ * Defined by ISO639-2 for "Multilingual".
+ */
+define('APACHESOLR_MULTILINGUAL_MAP_ALL', 'mul');
+
+/**
  * Implements hook_node_insert().
  *
  * @return void
@@ -75,9 +81,24 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
         continue;
       }
 
-      if (LANGUAGE_NONE == $document->ss_language) {
+      $additional_documents_langcodes = array();
+      $reset_entity_language_none = FALSE;
+
+      if (LANGUAGE_NONE == $document->ss_language && LANGUAGE_NONE == $entity->language) {
         // language-neutral
         $document->ss_language = $settings['apachesolr_multilingual_map_language_neutral'];
+
+        if (APACHESOLR_MULTILINGUAL_MAP_ALL == $document->ss_language) {
+          // The language-neutral entity should be mapped to all languages.
+          // Therefor we temporarily "transform" the entity in a language
+          // specific one that has translations.
+          $active_languages = apachesolr_multilingual_language_list();
+          $active_langcodes = array_keys($active_languages);
+          $document->ss_language = $entity->language = array_shift($active_langcodes);
+          array_shift($active_languages);
+          $additional_documents_langcodes = array_combine(array_keys($active_languages), array_keys($active_languages));
+          $reset_entity_language_none = TRUE;
+        }
       }
 
       if (LANGUAGE_NONE == $document->ss_language) {
@@ -98,10 +119,11 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
             $entity_info = entity_get_info($entity_type);
             $translations_key = $entity_info['entity keys']['translations'];
             $original_langcode = $entity->language;
-            $additional_documents_langcodes = array();
+
             foreach ($entity->{$translations_key}->data as $langcode => $entity_translation) {
-              if ($langcode != $original_langcode) {
+              if ($langcode != $original_langcode && LANGUAGE_NONE != $langcode) {
                 $additional_documents_langcodes[$langcode] = $langcode;
+
                 if ($settings['apachesolr_multilingual_clir']['apachesolr_multilingual_index_translations']) {
                   // Temporarily switch the language context for apachesolr_index_node_solr_document(),
                   // which is not aware of entity_translation.
@@ -193,6 +215,10 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
       foreach (module_implements('apachesolr_multilingual_index_document_alter') as $module) {
         $function = $module . '_apachesolr_multilingual_index_document_alter';
         $function($document, $document->ss_language, $entity, $entity_type, $env_id);
+      }
+
+      if ($reset_entity_language_none) {
+        $entity->language = LANGUAGE_NONE;
       }
     }
   }
@@ -642,7 +668,7 @@ function apachesolr_multilingual_form_apachesolr_environment_edit_form_alter(&$f
   $form['conf']['apachesolr_multilingual_index_settings']['apachesolr_multilingual_map_language_neutral'] = array(
     '#type' => 'radios',
     '#title' => t('Map language-neutral'),
-    '#options' => array_merge(array(LANGUAGE_NONE => t('No mapping')), $active_languages),
+    '#options' => array_merge(array(LANGUAGE_NONE => t('No mapping'), APACHESOLR_MULTILINGUAL_MAP_ALL => t('All languages')), $active_languages),
     '#default_value' => $environment['conf']['apachesolr_multilingual_index_settings']['apachesolr_multilingual_map_language_neutral'],
     '#description' => t('Select a language to treat content marked as language-neutral. Language-neutral will not occur as filter option any more.'),
   );

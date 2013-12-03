@@ -5,6 +5,7 @@ Apache Solr Multilingual 7.x-1.0-rc2, 2013-xx-xx
 [#2147927] stefan.r, mkalkbrenner: Error message when running update hooks with disabled module
 [        ] mkalkbrenner: completed entity translation support for non text fields
 [#2139177] mkalkbrenner: fixed Notice: Undefined index: ss_language in ApacheSolrDocument->__get()
+[#2066405] David Lesieur, mvc, mkalkbrenner: Add an option to map language-neutral content to all languages
 
 
 Apache Solr Multilingual 7.x-1.0-rc1, 2013-11-26
