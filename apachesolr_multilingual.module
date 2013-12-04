@@ -112,9 +112,7 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
             && entity_translation_enabled($entity_type)
             && entity_translation_enabled_bundle($entity_type, $entity->type)) {
 
-            /////////////////////
-            // entity translation
-            /////////////////////
+            // Entity Translation.
 
             $entity_info = entity_get_info($entity_type);
             $translations_key = $entity_info['entity keys']['translations'];
@@ -125,6 +123,9 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
                 $additional_documents_langcodes[$langcode] = $langcode;
 
                 if ($settings['apachesolr_multilingual_clir']['apachesolr_multilingual_index_translations']) {
+
+                  // CLIR for Entity Translation.
+
                   // Temporarily switch the language context for apachesolr_index_node_solr_document(),
                   // which is not aware of entity_translation.
                   $entity->language = $langcode;
@@ -188,9 +189,7 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
           elseif ($settings['apachesolr_multilingual_clir']['apachesolr_multilingual_index_translations']
             && !empty($document->is_tnid)) {
 
-            ////////////////////////////////////////////
-            // node translation, aka content translation
-            ////////////////////////////////////////////
+            // CLIR for Node Translation, aka Content Translation.
 
             // TODO distinguish between published and unpublished translations
             $translations = translation_node_get_translations($document->is_tnid);
@@ -198,7 +197,6 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
               if ($node_stub->nid != $document->entity_id) {
                 if ($translation_node = node_load($node_stub->nid)) {
                   apachesolr_multilingual_index_node_translation($document, $translation_node, $env_id);
-                  // TODO is it possible to combine node and entity translation?
                 }
               }
             }
@@ -208,6 +206,8 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
         default:
           watchdog('Apache Solr', t('Apache Solr Multilingual does not fully support indexing entities of type %type.', array('%type' => $entity_type)), NULL, WATCHDOG_NOTICE);
       }
+
+      // Same for Entity Translation and Node Translation, aka Content Translation.
 
       apachesolr_multilingual_copy_common_to_i18n_fields($document, $document);
 
@@ -262,6 +262,7 @@ function apachesolr_multilingual_copy_common_to_i18n_fields($src_document, $dst_
 
 function apachesolr_multilingual_index_node_translation($document, $translation_node, $env_id) {
   $translation_document = new ApacheSolrDocument();
+  $translation_document->ss_language = $translation_node->language;
   apachesolr_index_node_solr_document($translation_document, $translation_node, 'node', $env_id);
   apachesolr_multilingual_copy_common_to_i18n_fields($translation_document, $document);
 }

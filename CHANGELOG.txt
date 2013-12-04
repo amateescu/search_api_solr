@@ -4,8 +4,8 @@ Apache Solr Multilingual 7.x-1.0-rc2, 2013-xx-xx
 [        ] mkalkbrenner: avoid php notices during status check if solr is offline
 [#2147927] stefan.r, mkalkbrenner: Error message when running update hooks with disabled module
 [        ] mkalkbrenner: completed entity translation support for non text fields
-[#2139177] mkalkbrenner: fixed Notice: Undefined index: ss_language in ApacheSolrDocument->__get()
 [#2066405] David Lesieur, mvc, mkalkbrenner: Add an option to map language-neutral content to all languages
+[#2139177] mkalkbrenner: CLIR feature broken when using newer versions of Apache Solr Search Integration module
 
 
 Apache Solr Multilingual 7.x-1.0-rc1, 2013-11-26
