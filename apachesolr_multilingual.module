@@ -679,19 +679,20 @@ function apachesolr_multilingual_form_apachesolr_environment_edit_form_alter(&$f
     '#title' => t('CLIR'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-    '#description' => t('<b>Cross-language information retrieval</b>. As a special feature Apache Solr Multilingual could be configured to deal with the translations of nodes and taxonomies on multilingual sites. That means that you can find content in any language no matter which language was used to enter the search phrase.'),
+    '#description' => filter_xss(t('<strong>Cross-language information retrieval</strong>. As a special feature Apache Solr Multilingual could be configured to provide a simple implementation of CLIR. That means that you can find content in any language it has been translated to, no matter which language was used to enter the search phrase. The standard use case for CLIR is to have only a few good translations, but machine translations for the other languages. See !wikipedia for details.',
+        array('!wikipedia' => l(t('CLIR on Wikipedia'), 'http://en.wikipedia.org/wiki/Cross-language_information_retrieval')))),
   );
 
   $form['conf']['apachesolr_multilingual_index_settings']['apachesolr_multilingual_clir']['apachesolr_multilingual_index_translations'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Index node translations'),
+    '#title' => t('Enable CLIR'),
     '#default_value' => $environment['conf']['apachesolr_multilingual_index_settings']['apachesolr_multilingual_clir']['apachesolr_multilingual_index_translations'],
     '#description' => t('All translations of a node will be added to the node itself.'),
   );
 
   $form['conf']['apachesolr_multilingual_index_settings']['apachesolr_multilingual_clir']['apachesolr_multilingual_index_unpublished_translations'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Index unpublished node translations'),
+    '#title' => t('Index unpublished translations'),
     '#default_value' => $environment['conf']['apachesolr_multilingual_index_settings']['apachesolr_multilingual_clir']['apachesolr_multilingual_index_unpublished_translations'],
     '#description' => t('Index unpublished translations, e.g. machine translations.'),
   );
