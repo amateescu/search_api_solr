@@ -1039,7 +1039,7 @@ function apachesolr_multilingual_requirements($phase) {
   $ok = TRUE;
   foreach ($environments as $environment) {
     $fields = apachesolr_search_get_fields($environment);
-    if (!is_array($fields) || empty($fields)) {
+    if (!is_object($fields) || empty($fields)) {
       $requirements['apachesolr_multilingual_bias_' . $environment['env_id']] = array(
         'title' => $t('Apache Solr Multilingual'),
         'value' => $t('Field bias settings of environment ID %id could not be verified.', array('%id' => $environment['env_id'])),
