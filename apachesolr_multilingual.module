@@ -83,6 +83,8 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
 
       $additional_documents_langcodes = array();
       $reset_entity_language_none = FALSE;
+      $active_languages = apachesolr_multilingual_language_list();
+      $active_langcodes = array_keys($active_languages);
 
       if (LANGUAGE_NONE == $document->ss_language && LANGUAGE_NONE == $entity->language) {
         // language-neutral
@@ -92,9 +94,7 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
           // The language-neutral entity should be mapped to all languages.
           // Therefor we temporarily "transform" the entity in a language
           // specific one that has translations.
-          $active_languages = apachesolr_multilingual_language_list();
-          $active_langcodes = array_keys($active_languages);
-          $document->ss_language = $entity->language = array_shift($active_langcodes);
+          $document->ss_language = $entity->language = $active_langcodes[0];
           array_shift($active_languages);
           $additional_documents_langcodes = array_combine(array_keys($active_languages), array_keys($active_languages));
           $reset_entity_language_none = TRUE;
@@ -117,6 +117,8 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
             $entity_info = entity_get_info($entity_type);
             $translations_key = $entity_info['entity keys']['translations'];
             $original_langcode = $entity->language;
+
+            $document->setField('sm_missing_translations', array_diff($active_langcodes, array_keys($entity->{$translations_key}->data)));
 
             foreach ($entity->{$translations_key}->data as $langcode => $entity_translation) {
               if ($langcode != $original_langcode && LANGUAGE_NONE != $langcode) {
@@ -186,17 +188,28 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
               }
             }
           }
-          elseif ($settings['apachesolr_multilingual_clir']['apachesolr_multilingual_index_translations']
-            && !empty($document->is_tnid)) {
+          else {
 
-            // CLIR for Node Translation, aka Content Translation.
+            // Node Translation, aka Content Translation.
 
-            // TODO distinguish between published and unpublished translations
-            $translations = translation_node_get_translations($document->is_tnid);
-            foreach ($translations as $node_stub) {
-              if ($node_stub->nid != $document->entity_id) {
-                if ($translation_node = node_load($node_stub->nid)) {
-                  apachesolr_multilingual_index_node_translation($document, $translation_node, $env_id);
+            $translations = array();
+
+            if (!empty($document->is_tnid)) {
+              $translations = translation_node_get_translations($document->is_tnid);
+            }
+
+            $document->setField('sm_missing_translations', array_diff($active_langcodes, array_merge(array_keys($translations), array($document->ss_language))));
+
+            if (!empty($translations) && $settings['apachesolr_multilingual_clir']['apachesolr_multilingual_index_translations']) {
+
+              // CLIR for Node Translation, aka Content Translation.
+
+              // TODO distinguish between published and unpublished translations
+              foreach ($translations as $node_stub) {
+                if ($node_stub->nid != $document->entity_id) {
+                  if ($translation_node = node_load($node_stub->nid)) {
+                    apachesolr_multilingual_index_node_translation($document, $translation_node, $env_id);
+                  }
                 }
               }
             }
@@ -528,7 +541,6 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
     }
   }
 }
-
 
 /**
  * Implements hook_form_search_form_alter().
