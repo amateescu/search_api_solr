@@ -277,6 +277,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       'search_api_grouping',
       'search_api_mlt',
       'search_api_multi',
+      'search_api_service_extra',
       'search_api_spellcheck',
       'search_api_data_type_location',
       'search_api_data_type_geohash',
@@ -298,28 +299,124 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
   /**
    * Overrides SearchApiAbstractService::viewSettings().
+   *
+   * Returns an empty string since information is instead added via
+   * getExtraInformation().
    */
   public function viewSettings() {
-    $output = '';
-    $options = $this->options;
+    return '';
+  }
 
-    $output .= "<dl>\n  <dt>";
-    $output .= t('Solr server URI');
-    $output .= "</dt>\n  <dd>";
-    $output .= $this->getServerLink();
-    $output .= '</dd>';
-    if ($options['http_user']) {
-      $output .= "\n  <dt>";
-      $output .= t('Basic HTTP authentication');
-      $output .= "</dt>\n  <dd>";
-      $output .= t('Username: @user', array('@user' => $options['http_user']));
-      $output .= "</dd>\n  <dd>";
-      $output .= t('Password: @pass', array('@pass' => str_repeat('*', strlen($options['http_pass']))));
-      $output .= '</dd>';
+  /**
+   * {@inheritdoc}
+   */
+  public function getExtraInformation() {
+    $info = array();
+
+    $info[] = array(
+      'label' => t('Solr server URI'),
+      'info' => $this->getServerLink(),
+    );
+
+    if ($this->options['http_user']) {
+      $vars = array(
+        '@user' => $this->options['http_user'],
+        '@pass' => str_repeat('*', strlen($this->options['http_pass'])),
+      );
+      $http = t('Username: @user; Password: @pass', $vars);
+      $info[] = array(
+        'label' => t('Basic HTTP authentication'),
+        'info' => $http,
+      );
     }
-    $output .= "\n</dl>";
 
-    return $output;
+    if ($this->server->enabled) {
+      // If the server is enabled, check whether Solr can be reached.
+      $ping = $this->ping();
+      if ($ping) {
+        $msg = t('The Solr server could be reached (latency: @millisecs ms).', array('@millisecs' => $ping * 1000));
+      }
+      else {
+        $msg = t('The Solr server could not be reached. Further data is therefore unavailable.');
+      }
+      $info[] = array(
+        'label' => t('Connection'),
+        'info' => $msg,
+        'status' => $ping ? 'ok' : 'error',
+      );
+
+      if ($ping) {
+        try {
+          // If Solr can be reached, provide more information. This isn't done
+          // often (only when an admin views the server details), so we clear the
+          // cache to get the current data.
+          $this->connect();
+          $this->solr->clearCache();
+          $data = $this->solr->getLuke();
+          if (isset($data->index->numDocs)) {
+            // Collect the stats
+            $stats_summary = $this->solr->getStatsSummary();
+
+            $pending_msg = $stats_summary['@pending_docs'] ? t('(@pending_docs sent but not yet processed)', $stats_summary) : '';
+            $index_msg = $stats_summary['@index_size'] ? t('(@index_size on disk)', $stats_summary) : '';
+            $indexed_message = t('@num items !pending !index_msg', array(
+              '@num' => $data->index->numDocs,
+              '!pending' => $pending_msg,
+              '!index_msg' => $index_msg,
+            ));
+            $info[] = array(
+              'label' => t('Indexed'),
+              'info' => $indexed_message,
+            );
+
+            if (!empty($stats_summary['@deletes_total'])) {
+              $info[] = array(
+                'label' => t('Pending Deletions'),
+                'info' => $stats_summary['@deletes_total'],
+              );
+            }
+
+            $info[] = array(
+              'label' => t('Delay'),
+              'info' => t('@autocommit_time before updates are processed.', $stats_summary),
+            );
+
+            $status = 'ok';
+            if (substr($stats_summary['@schema_version'], 0, 10) == 'search-api') {
+              drupal_set_message(t('Your schema.xml version is too old. Please replace all configuration files with the ones packaged with this module and re-index you data.'), 'error');
+              $status = 'error';
+            }
+            elseif (substr($stats_summary['@schema_version'], 0, 9) != 'drupal-4.') {
+              $variables['@url'] = url(drupal_get_path('module', 'search_api_solr') . '/INSTALL.txt');
+              $message = t('You are using an incompatible schema.xml configuration file. Please follow the instructions in the <a href="@url">INSTALL.txt</a> file for setting up Solr.', $variables);
+              drupal_set_message($message, 'error');
+              $status = 'error';
+            }
+            $info[] = array(
+              'label' => t('Schema'),
+              'info' => $stats_summary['@schema_version'],
+              'status' => $status,
+            );
+
+            if (!empty($stats_summary['@core_name'])) {
+              $info[] = array(
+                'label' => t('Solr Core Name'),
+                'info' => $stats_summary['@core_name'],
+              );
+            }
+          }
+        }
+        catch (SearchApiException $e) {
+          $info[] = array(
+            'label' => t('Additional information'),
+            'info' => t('An error occurred while trying to retrieve additional information from the Solr server: @msg.', array('@msg' => $e->getMessage())),
+            'status' => 'error',
+          );
+        }
+      }
+    }
+
+    return $info;
   }
 
   /**

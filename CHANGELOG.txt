@@ -1,5 +1,7 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #2130827 by drunken monkey: Added additional Solr server information to the
+  Server overview.
 - #2126281 by drunken monkey: Update error handling according to the latest
   Search API change.
 - #2127991 by drunken monkey: Fixed handling of negated fulltext keys.
