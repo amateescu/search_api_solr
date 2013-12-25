@@ -1,5 +1,7 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #2157839 by drunken monkey, Nick_vh: Updated config files to the newest
+  version.
 - #2130827 by drunken monkey: Added additional Solr server information to the
   Server overview.
 - #2126281 by drunken monkey: Update error handling according to the latest
