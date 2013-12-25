@@ -1,3 +1,6 @@
+Search API Solr search 1.x, dev (xx/xx/xxxx):
+---------------------------------------------
+
 Search API Solr search 1.4 (12/25/2013):
 ----------------------------------------
 - #2157839 by drunken monkey, Nick_vh: Updated config files to the newest
