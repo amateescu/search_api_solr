@@ -1,5 +1,7 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #1776534 by drunken monkey, e2thex: Added support for using a Solr server
+  with multiple sites.
 - #2152337 by drunken monkey: Removed confusing "multiple text fields" section
   from README.txt.
 - #2099559 by drunken monkey: Made optimizing the Solr server optional.

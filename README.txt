@@ -134,6 +134,12 @@ Hidden variables
   to "true") will be rebuilt, too.
   - none: No action is executed.
   If an unknown setting is encountered, it is interpreted as "none".
+- search_api_solr_site_hash (default: random)
+  A unique hash specific to the local site, created the first time it is needed.
+  Only change this if you want to display another server's results and you know
+  what you are doing. Old indexed items will be lost when the hash is changed
+  and all items will have to be reindexed. Can only contain alphanumeric
+  characters.
 
 [8] http://wiki.apache.org/solr/UpdateXmlMessages#A.22commit.22_and_.22optimize.22
 

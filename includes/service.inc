@@ -82,16 +82,17 @@ class SearchApiSolrService extends SearchApiAbstractService {
       'http_method' => 'AUTO',
       // Default to TRUE for new servers, but to FALSE for existing ones.
       'clean_ids' => $this->options ? FALSE : TRUE,
+      'site_hash' => $this->options ? FALSE : TRUE,
       'autocorrect_spell' => TRUE,
       'autocorrect_suggest_words' => TRUE,
     );
 
     if (!$options['clean_ids']) {
       if (module_exists('advanced_help')) {
-        $variables['@url']= url('help/search_api_solr/README.txt');
+        $variables['@url'] = url('help/search_api_solr/README.txt');
       }
       else {
-        $variables['@url']= url(drupal_get_path('module', 'search_api_solr') . '/README.txt');
+        $variables['@url'] = url(drupal_get_path('module', 'search_api_solr') . '/README.txt');
       }
       $description = t('Change Solr field names to be more compatible with advanced features. Doing this leads to re-indexing of all indexes on this server. See <a href="@url">README.txt</a> for details.', $variables);
       $form['clean_ids_form'] = array(
@@ -109,6 +110,25 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $form['clean_ids'] = array(
       '#type' => 'value',
       '#value' => $options['clean_ids'],
+    );
+
+    if (!$options['site_hash']) {
+      $description = t('If you want to index content from multiple sites on a single Solr server, you should enable the multi-site compatibility here. Note, however, that this will completely clear all search indexes (from this site) lying on this server. All content will have to be re-indexed.');
+      $form['site_hash_form'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Multi-site compatibility'),
+        '#description' => $description,
+        '#collapsible' => TRUE,
+      );
+      $form['site_hash_form']['submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Turn on multi-site compatibility and clear all indexes'),
+        '#submit' => array('_search_api_solr_switch_to_site_hash'),
+      );
+    }
+    $form['site_hash'] = array(
+      '#type' => 'value',
+      '#value' => $options['site_hash'],
     );
 
     $form['scheme'] = array(
@@ -477,11 +497,21 @@ class SearchApiSolrService extends SearchApiAbstractService {
     if (module_exists('search_api_multi') && module_exists('search_api_views')) {
       views_invalidate_cache();
     }
-    $id = is_object($index) ? $index->machine_name : $index;
+    $index_id = is_object($index) ? $index->machine_name : $index;
     // Only delete the index's data if the index isn't read-only.
     if (!is_object($index) || empty($index->read_only)) {
       $this->connect();
-      $this->solr->deleteByQuery("index_id:" . $this->getIndexId($id));
+      $index_id = $this->getIndexId($index_id);
+      // Since the index ID we use for indexing can contain arbitrary
+      // prefixes, we have to escape it for use in the query.
+      $index_id = call_user_func(array($this->connection_class, 'phrase'), $index_id);
+      $query = "index_id:$index_id";
+      if (!empty($this->options['site_hash'])) {
+        // We don't need to escape the site hash, as that consists only of
+        // alphanumeric characters.
+        $query .= ' hash:' . search_api_solr_site_hash();
+      }
+      $this->solr->deleteByQuery($query);
     }
   }
 
@@ -493,6 +523,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $ret = array();
     $index_id = $this->getIndexId($index->machine_name);
     $fields = $this->getFieldNames($index);
+    $languages = language_list();
+    $base_urls = array();
 
     foreach ($items as $id => $item) {
       $doc = new SearchApiSolrDocument();
@@ -500,6 +532,22 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $doc->setField('index_id', $index_id);
       $doc->setField('item_id', $id);
 
+      // If multi-site compatibility is enabled, add the site hash and
+      // language-specific base URL.
+      if (!empty($this->options['site_hash'])) {
+        $doc->setField('hash', search_api_solr_site_hash());
+        $lang = $item['search_api_language']['value'];
+        if (empty($base_urls[$lang])) {
+          $url_options = array('absolute' => TRUE);
+          if (isset($languages[$lang])) {
+            $url_options['language'] = $languages[$lang];
+          }
+          $base_urls[$lang] = url(NULL, $url_options);
+        }
+        $doc->setField('site', $base_urls[$lang]);
+      }
+
+      // Now add all fields contained in the item, with dynamic fields.
       foreach ($item as $key => $field) {
         // If the field is not known for the index, something weird has
         // happened. We refuse to index the items and hope that the others are
@@ -548,10 +596,14 @@ class SearchApiSolrService extends SearchApiAbstractService {
   /**
    * Creates an ID used as the unique identifier at the Solr server.
    *
-   * This has to consist of both index and item ID.
+   * This has to consist of both index and item ID. Optionally, the site hash is
+   * also included.
+   *
+   * @see search_api_solr_site_hash()
    */
   protected function createId($index_id, $item_id) {
-    return "$index_id-$item_id";
+    $site_hash = !empty($this->options['site_hash']) ? search_api_solr_site_hash() . '-' : '';
+    return "$site_hash$index_id-$item_id";
   }
 
   /**
@@ -693,25 +745,30 @@ class SearchApiSolrService extends SearchApiAbstractService {
    */
   public function deleteItems($ids = 'all', SearchApiIndex $index = NULL) {
     $this->connect();
-    if ($index) {
+    if (is_array($ids)) {
       $index_id = $this->getIndexId($index->machine_name);
-      if (is_array($ids)) {
-        $solr_ids = array();
-        foreach ($ids as $id) {
-          $solr_ids[] = $this->createId($index_id, $id);
-        }
-        $this->solr->deleteByMultipleIds($solr_ids);
+      $solr_ids = array();
+      foreach ($ids as $id) {
+        $solr_ids[] = $this->createId($index_id, $id);
       }
-      elseif ($ids == 'all') {
-        $this->solr->deleteByQuery("index_id:" . $index_id);
-      }
-      else {
-        $this->solr->deleteByQuery("index_id:" . $index_id . ' (' . $ids . ')');
-      }
+      $this->solr->deleteByMultipleIds($solr_ids);
     }
     else {
-      $q = $ids == 'all' ? '*:*' : $ids;
-      $this->solr->deleteByQuery($q);
+      $query = array();
+      if ($index) {
+        $index_id = $this->getIndexId($index->machine_name);
+        $index_id = call_user_func(array($this->connection_class, 'phrase'), $index_id);
+        $query[] = "index_id:$index_id";
+      }
+      if (!empty($this->options['site_hash'])) {
+        // We don't need to escape the site hash, as that consists only of
+        // alphanumeric characters.
+        $query[] = 'hash:' . search_api_solr_site_hash();
+      }
+      if ($ids != 'all') {
+        $query[] = $query ? "($ids)" : $ids;
+      }
+      $this->solr->deleteByQuery($query ? implode(' ', $query) : '*:*');
     }
     $this->scheduleCommit();
   }
@@ -752,7 +809,12 @@ class SearchApiSolrService extends SearchApiAbstractService {
     // Extract filters.
     $filter = $query->getFilter();
     $fq = $this->createFilterQueries($filter, $fields, $index->options['fields']);
-    $fq[] = 'index_id:' . $index_id;
+    $fq[] = 'index_id:' . call_user_func(array($this->connection_class, 'phrase'), $index_id);
+    if (!empty($this->options['site_hash'])) {
+      // We don't need to escape the site hash, as that consists only of
+      // alphanumeric characters.
+      $fq[] = 'hash:' . search_api_solr_site_hash();
+    }
 
     // Extract sort.
     $sort = array();
@@ -1668,7 +1730,13 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
     // Extract filters
     $fq = $this->createFilterQueries($query->getFilter(), $fields, $index->options['fields']);
-    $fq[] = 'index_id:' . $this->getIndexId($index->machine_name);
+    $index_id = $this->getIndexId($index->machine_name);
+    $fq[] = 'index_id:' . call_user_func(array($this->connection_class, 'phrase'), $index_id);
+    if (!empty($this->options['site_hash'])) {
+      // We don't need to escape the site hash, as that consists only of
+      // alphanumeric characters.
+      $fq[] = 'hash:' . search_api_solr_site_hash();
+    }
 
     // Autocomplete magic
     $facet_fields = array();
@@ -1870,6 +1938,11 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $index_filter[] = 'index_id:' . call_user_func(array($this->connection_class, 'phrase'), $index_id);
     }
     $fq[] = implode(' OR ', $index_filter);
+    if (!empty($this->options['site_hash'])) {
+      // We don't need to escape the site hash, as that consists only of
+      // alphanumeric characters.
+      $fq[] = 'hash:' . search_api_solr_site_hash();
+    }
 
     // Extract sort
     $sort = array();
@@ -2166,4 +2239,5 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $id = variable_get('search_api_solr_index_prefix', '') . $id;
     return $id;
   }
+
 }

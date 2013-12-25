@@ -236,6 +236,25 @@ function search_api_solr_get_data_type_info($type = NULL) {
 }
 
 /**
+ * Returns a unique hash for the current site.
+ *
+ * This is used to identify Solr documents from different sites within a single
+ * Solr server.
+ *
+ * @return string
+ *   A unique site hash, containing only alphanumeric characters.
+ */
+function search_api_solr_site_hash() {
+  // Copied from apachesolr_site_hash().
+  if (!($hash = variable_get('search_api_solr_site_hash', FALSE))) {
+    global $base_url;
+    $hash = substr(base_convert(sha1(uniqid($base_url, TRUE)), 16, 36), 0, 6);
+    variable_set('search_api_solr_site_hash', $hash);
+  }
+  return $hash;
+}
+
+/**
  * Retrieves a list of all config files of a server.
  *
  * @param SearchApiServer $server
@@ -343,4 +362,36 @@ function _search_api_solr_switch_to_clean_ids(array $form, array &$form_state) {
     $msg = format_plural($count, '1 index was scheduled for re-indexing.', '@count indexes were scheduled for re-indexing.');
     drupal_set_message($msg);
   }
+}
+
+/**
+ * Switches a server to multi-site compatibility mode.
+ *
+ * Used as a submit callback in SearchApiSolrService::configurationForm().
+ */
+function _search_api_solr_switch_to_site_hash(array $form, array &$form_state) {
+  $server = $form_state['server'];
+
+  try {
+    $conditions['server'] = $server->machine_name;
+    $indexes = search_api_index_load_multiple(FALSE, $conditions);
+    if ($indexes) {
+      foreach ($indexes as $index) {
+        $index->reindex();
+      }
+      $msg = format_plural(count($indexes), '1 index was cleared.', '@count indexes were cleared.');
+      $server->deleteItems('index_id:(' . implode(' ', array_keys($indexes)) . ')');
+      drupal_set_message($msg);
+    }
+  }
+  catch (SearchApiException $e) {
+    $variables = array('@server' => $server->name);
+    watchdog_exception('search_api_solr', $e, '%type while attempting to enable multi-site compatibility mode for Solr server @server: !message in %function (line %line of %file).', $variables);
+    drupal_set_message(t('An error occured while attempting to enable multi-site compatibility mode for Solr server @server. Check the logs for details.', $variables), 'error');
+    return;
+  }
+
+  $server->options['site_hash'] = TRUE;
+  $server->save();
+  drupal_set_message(t('The Solr server was successfully switched to multi-site compatibility mode.'));
 }
