@@ -14,7 +14,14 @@
 function search_api_solr_views_data_alter(array &$data) {
   try {
     foreach (search_api_index_load_multiple(FALSE) as $index) {
-      $server = $index->server();
+      $server = NULL;
+
+      try {
+        $server = $index->server();
+      }
+      catch (SearchApiException $e) {
+        // Just ignore invalid servers and skip the index.
+      }
       if (!$server || empty($server->options['retrieve_data'])) {
         return;
       }

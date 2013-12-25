@@ -129,7 +129,7 @@ interface SearchApiSolrConnectionInterface {
    * @return object
    *  The HTTP response object.
    *
-   * @throws Exception
+   * @throws SearchApiException
    */
   public function makeServletRequest($servlet, array $params = array(), array $options = array());
 
@@ -164,7 +164,7 @@ interface SearchApiSolrConnectionInterface {
    * @return object
    *   A response object.
    *
-   * @throws Exception
+   * @throws SearchApiException
    *   If an error occurs during the service call
    */
   public function update($rawPost, $timeout = FALSE);
@@ -185,7 +185,7 @@ interface SearchApiSolrConnectionInterface {
    * @return object
    *   A response object.
    *
-   * @throws Exception
+   * @throws SearchApiException
    *   If an error occurs during the service call.
    */
   public function addDocuments(array $documents, $overwrite = NULL, $commitWithin = NULL);
@@ -204,7 +204,7 @@ interface SearchApiSolrConnectionInterface {
    * @return object
    *   A response object.
    *
-   * @throws Exception
+   * @throws SearchApiException
    *   If an error occurs during the service call.
    */
   public function commit($waitSearcher = TRUE, $timeout = 3600);
@@ -221,7 +221,7 @@ interface SearchApiSolrConnectionInterface {
    * @return object
    *   A response object.
    *
-   * @throws Exception
+   * @throws SearchApiException
    *   If an error occurs during the service call.
    */
   public function deleteById($id, $timeout = 3600);
@@ -238,7 +238,7 @@ interface SearchApiSolrConnectionInterface {
    * @return object
    *   A response object.
    *
-   * @throws Exception
+   * @throws SearchApiException
    *   If an error occurs during the service call.
    */
   public function deleteByMultipleIds(array $ids, $timeout = 3600);
@@ -254,7 +254,7 @@ interface SearchApiSolrConnectionInterface {
    * @return object
    *   A response object.
    *
-   * @throws Exception
+   * @throws SearchApiException
    *   If an error occurs during the service call.
    */
   public function deleteByQuery($rawQuery, $timeout = 3600);
@@ -273,7 +273,7 @@ interface SearchApiSolrConnectionInterface {
    * @return object
    *   A response object.
    *
-   * @throws Exception
+   * @throws SearchApiException
    *   If an error occurs during the service call.
    */
   public function optimize($waitSearcher = TRUE, $timeout = 3600);
@@ -294,7 +294,7 @@ interface SearchApiSolrConnectionInterface {
    * @return object
    *   A response object.
    *
-   * @throws Exception
+   * @throws SearchApiException
    *   If an error occurs during the service call.
    */
   public function search($query = NULL, array $params = array(), $method = 'GET');

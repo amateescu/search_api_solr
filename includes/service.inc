@@ -481,12 +481,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     // Only delete the index's data if the index isn't read-only.
     if (!is_object($index) || empty($index->read_only)) {
       $this->connect();
-      try {
-        $this->solr->deleteByQuery("index_id:" . $this->getIndexId($id));
-      }
-      catch (Exception $e) {
-        throw new SearchApiException($e->getMessage());
-      }
+      $this->solr->deleteByQuery("index_id:" . $this->getIndexId($id));
     }
   }
 
@@ -500,24 +495,32 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $fields = $this->getFieldNames($index);
 
     foreach ($items as $id => $item) {
-      try {
-        $doc = new SearchApiSolrDocument();
-        $doc->setField('id', $this->createId($index_id, $id));
-        $doc->setField('index_id', $index_id);
-        $doc->setField('item_id', $id);
+      $doc = new SearchApiSolrDocument();
+      $doc->setField('id', $this->createId($index_id, $id));
+      $doc->setField('index_id', $index_id);
+      $doc->setField('item_id', $id);
 
-        foreach ($item as $key => $field) {
-          if (!isset($fields[$key])) {
-            throw new SearchApiException(t('Unknown field @field.', array('@field' => $key)));
-          }
-          $this->addIndexField($doc, $fields[$key], $field['value'], $field['type']);
+      foreach ($item as $key => $field) {
+        // If the field is not known for the index, something weird has
+        // happened. We refuse to index the items and hope that the others are
+        // OK.
+        if (!isset($fields[$key])) {
+          $type = search_api_get_item_type_info($index->item_type);
+          $vars = array(
+            '@field' => $key,
+            '@type' => $type ? $type['name'] : $index->item_type,
+            '@id' => $id,
+          );
+          watchdog('search_api_solr', 'Error while indexing: Unknown field @field set for @type with ID @id.', $vars, WATCHDOG_WARNING);
+          $doc = NULL;
+          break;
         }
+        $this->addIndexField($doc, $fields[$key], $field['value'], $field['type']);
+      }
 
+      if ($doc) {
         $documents[] = $doc;
         $ret[] = $id;
-      }
-      catch (Exception $e) {
-        watchdog_exception('search_api_solr', $e, "%type while indexing @type with ID @id: !message in %function (line %line of %file).", array('@type' => $index->item_type, '@id' => $id), WATCHDOG_WARNING);
       }
     }
 
