@@ -856,7 +856,10 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
 
       // Recurse into children.
       if (is_array($value)) {
-        $params[] = $this->httpBuildQuery($value, $key);
+        $value = $this->httpBuildQuery($value, $key);
+        if ($value) {
+          $params[] = $value;
+        }
       }
       // If a query parameter value is NULL, only append its key.
       elseif (!isset($value)) {
@@ -882,10 +885,40 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
     $params += array(
       'json.nl' => self::NAMED_LIST_FORMAT,
     );
-    if ($query) {
+    if (isset($query)) {
       $params['q'] = $query;
     }
-    // PHP's built-in http_build_query() doesn't give us the format Solr wants.
+
+    // Carry out some performance improvements when no search keys are given.
+    if (!isset($params['q']) || !strlen($params['q'])) {
+      // Without search keys, the qf parameter is useless. We also remove empty
+      // search keys here. (With our normal service class, empty keys won't be
+      // set, but another module using this connection class might do that.)
+      unset($params['q'], $params['qf']);
+
+      // If we have filters set (which will nearly always be the case, since we
+      // have to filter by index), move them to the q.alt parameter where
+      // possible.
+      if (!empty($params['fq'])) {
+        $qalt = array();
+        foreach ($params['fq'] as $i => $fq) {
+          // Tagged filters cannot be moved to q.alt.
+          if ($fq[0] !== '{') {
+            $qalt[] = "($fq)";
+            unset($params['fq'][$i]);
+          }
+        }
+        if ($qalt) {
+          $params['q.alt'] = implode(' ', $qalt);
+        }
+        if (empty($params['fq'])) {
+          unset($params['fq']);
+        }
+      }
+    }
+
+    // Build the HTTP query string. We have our own method for that since PHP's
+    // built-in http_build_query() doesn't give us the format Solr wants.
     $queryString = $this->httpBuildQuery($params);
 
     if ($method == 'GET' || $method == 'AUTO') {
