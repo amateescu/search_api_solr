@@ -1,5 +1,7 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #2152337 by drunken monkey: Removed confusing "multiple text fields" section
+  from README.txt.
 - #2099559 by drunken monkey: Made optimizing the Solr server optional.
 - #2146749 by drunken monkey: Added soft commits as the default for Solr 4.
 - #1773440 by drunken monkey: Added performance improvement for “filter

@@ -86,13 +86,6 @@ classic preprocessing tasks. Enabling the HTML filter can be useful, though, as
 the default config files included in this module don't handle stripping out HTML
 tags.
 
-Also, due to the way Solr works, using a single field for fulltext searching
-will result in the smallest index size and best search performance, as well as
-possibly having other advantages, too. Therefore, if you don't need to search
-different sets of fields in different searches on an index, it is adviced that
-you collect all fields that should be searchable into a single field using the
-“Aggregated fields” data alteration.
-
 Clean field identifiers:
   If your Solr server was created in a module version prior to 1.2, you will get
   the option to switch the server to "Clean field identifiers" (which is default
