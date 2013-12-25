@@ -1,5 +1,6 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #2146749 by drunken monkey: Added soft commits as the default for Solr 4.
 - #1773440 by drunken monkey: Added performance improvement for “filter
   only” queries.
 - #2147573 by drunken monkey: Improved error handling.

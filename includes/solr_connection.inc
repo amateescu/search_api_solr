@@ -182,11 +182,11 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
   /**
    * Flag that denotes whether to use soft commits for Solr 4.x.
    *
-   * Defaults to FALSE.
+   * Defaults to TRUE.
    *
    * @var bool
    */
-  protected $soft_commit = FALSE;
+  protected $soft_commit = TRUE;
 
   /**
    * Implements SearchApiSolrConnectionInterface::__construct().
