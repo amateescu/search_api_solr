@@ -71,15 +71,44 @@ function search_api_solr_help($path, array $arg = array()) {
  * day.
  */
 function search_api_solr_cron() {
-  if (REQUEST_TIME - variable_get('search_api_solr_last_optimize', 0) > 86400) {
+  $action = variable_get('search_api_solr_cron_action', 'spellcheck');
+  // We treat all unknown action settings as "none". However, we turn a blind
+  // eye for Britons and other people who can spell.
+  if (!in_array($action, array('spellcheck', 'optimize', 'optimise'))) {
+    return;
+  }
+  // 86400 seconds is one day. We use slightly less here to allow for some
+  // variation in the request time of the cron run, so that the time of day will
+  // (more or less) stay the same.
+  if (REQUEST_TIME - variable_get('search_api_solr_last_optimize', 0) > 86340) {
     variable_set('search_api_solr_last_optimize', REQUEST_TIME);
     $conditions = array('class' => 'search_api_solr_service', 'enabled' => TRUE);
+    $count = 0;
     foreach (search_api_server_load_multiple(FALSE, $conditions) as $server) {
       try {
-        $server->getSolrConnection()->optimize(FALSE);
+        $solr = $server->getSolrConnection();
+        if ($action != 'spellcheck') {
+          $solr->optimize(FALSE);
+        }
+        else {
+          $params['rows'] = 0;
+          $params['spellcheck'] = 'true';
+          $params['spellcheck.build'] = 'true';
+          $solr->search(NULL, $params);
+        }
+        ++$count;
       }
       catch(SearchApiException $e) {
         watchdog_exception('search_api_solr', $e, '%type while optimizing Solr server @server: !message in %function (line %line of %file).', array('@server' => $server->name));
+      }
+    }
+    if ($count) {
+      $vars['@count'] = $count;
+      if ($action != 'spellcheck') {
+        watchdog('search_api_solr', 'Optimized @count Solr server(s).', $vars, WATCHDOG_INFO);
+      }
+      else {
+        watchdog('search_api_solr', 'Rebuilt spellcheck dictionary on @count Solr server(s).', $vars, WATCHDOG_INFO);
       }
     }
   }

@@ -130,6 +130,19 @@ Hidden variables
   The maximum number of bytes that can be handled as an HTTP GET query when
   HTTP method is AUTO. Typically Solr can handle up to 65355 bytes, but Tomcat
   and Jetty will error at slightly less than 4096 bytes.
+- search_api_solr_cron_action (default: "spellcheck")
+  The Search API Solr Search module can automatically execute some upkeep
+  operations daily during cron runs. This variable determines what particular
+  operation is carried out.
+  - spellcheck: The "default" spellcheck dictionary used by Solr will be rebuilt
+  so that spellchecking reflects the latest index state.
+  - optimize: An "optimize" operation [8] is executed on the Solr server. As a
+  result of this, all spellcheck dictionaries (that have "buildOnOptimize" set
+  to "true") will be rebuilt, too.
+  - none: No action is executed.
+  If an unknown setting is encountered, it is interpreted as "none".
+
+[8] http://wiki.apache.org/solr/UpdateXmlMessages#A.22commit.22_and_.22optimize.22
 
 Customizing your Solr server
 ----------------------------
@@ -138,11 +151,11 @@ The schema.xml and solrconfig.xml files contain extensive comments on how to
 add additional features or modify behaviour, e.g., for adding a language-
 specific stemmer or a stopword list.
 If you are interested in further customizing your Solr server to your needs,
-see the Solr wiki at [8] for documentation. When editing the schema.xml and
+see the Solr wiki at [9] for documentation. When editing the schema.xml and
 solrconfig.xml files, please only edit the copies in the Solr configuration
 directory, not directly the ones provided with this module.
 
-[8] http://wiki.apache.org/solr/
+[9] http://wiki.apache.org/solr/
 
 You'll have to restart your Solr server after making such changes, for them to
 take effect.
