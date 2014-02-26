@@ -40,6 +40,8 @@ function apachesolr_multilingual_node_delete($node) {
  * @return void
  */
 function apachesolr_multilingual_node_update($node) {
+  // If a node is translated using node translation aka content translation
+  // we need to mark all translations as modified.
   if (!empty($node->tnid)) {
     foreach (apachesolr_multilingual_load_all_environments() as $environment) {
       if ($environment['conf']['apachesolr_multilingual_index_settings']['apachesolr_multilingual_clir']['apachesolr_multilingual_index_translations']
@@ -56,6 +58,10 @@ function apachesolr_multilingual_node_update($node) {
       }
     }
   }
+  // For entity translation the deletion of an entiy / node is the only case
+  // requires some special handling. But this is done internally using the
+  // sm_parent_document_id field.
+  // See apachesolr_multilingual_apachesolr_index_documents_alter().
 }
 
 /**
@@ -173,6 +179,9 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
                 }
 
                 $additional_documents[$id]->id = $id;
+                // Add document_id of original language, so that all translations can be deleted together,
+                // when original document is removed. See apachesolr_index_delete_entity_from_index().
+                $additional_documents[$id]->sm_parent_document_id = $document->id;
 
                 apachesolr_index_node_solr_document($additional_documents[$id], $entity, $entity_type, $env_id);
 
