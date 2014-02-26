@@ -58,7 +58,7 @@ function apachesolr_multilingual_node_update($node) {
       }
     }
   }
-  // For entity translation the deletion of an entiy / node is the only case
+  // For entity translation the deletion of an entity / node is the only case
   // requires some special handling. But this is done internally using the
   // sm_parent_document_id field.
   // See apachesolr_multilingual_apachesolr_index_documents_alter().

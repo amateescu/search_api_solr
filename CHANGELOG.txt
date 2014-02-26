@@ -1,4 +1,4 @@
-Apache Solr Multilingual 7.x-1.0, 2014-xx-xx
+Apache Solr Multilingual 7.x-1.0, 2014-02-26
 --------------------------------------------
 [#2150365] mkalkbrenner: Requirement error: Field bias settings of environment ID solr could not be verified.
 [        ] mkalkbrenner: added field sm_missing_translations to multilingual indexes
