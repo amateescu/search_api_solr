@@ -101,6 +101,22 @@ function hook_search_api_solr_multi_query_alter(array &$call_args, SearchApiMult
 }
 
 /**
+ * Lets modules alter the search results returned from a multi-index search.
+ *
+ * @param array $results
+ *   The results array that will be returned for the search.
+ * @param SearchApiMultiQueryInterface $query
+ *   The executed multi-index search query.
+ * @param object $response
+ *   The Solr response object.
+ */
+function hook_search_api_solr_multi_search_results_alter(array &$results, SearchApiMultiQueryInterface $query, $response) {
+  if (isset($response->facet_counts->facet_fields->custom_field)) {
+    // Do something with $results.
+  }
+}
+
+/**
  * Provide Solr dynamic fields as Search API data types.
  *
  * This serves as a placeholder for documenting additional keys for

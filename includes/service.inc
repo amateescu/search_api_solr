@@ -2091,6 +2091,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
       }
     }
 
+    drupal_alter('search_api_solr_multi_search_results', $results, $query, $response);
+
     // Compute performance
     $time_end = microtime(TRUE);
     $results['performance'] = array(

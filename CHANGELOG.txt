@@ -1,5 +1,7 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #2151719 by Derimagia, drunken monkey: Added an alter hook for multi-index
+  search results.
 - #1776534 by drunken monkey, e2thex: Added support for using a Solr server
   with multiple sites.
 - #2152337 by drunken monkey: Removed confusing "multiple text fields" section
