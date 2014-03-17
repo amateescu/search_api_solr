@@ -540,12 +540,22 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
     // won't do it anymore if highlighting parameters are set here.
     $query->addParam('fl', 'teaser');
 
+    $hl_fl_removed = FALSE;
     foreach (array_keys($languages) as $language_id) {
       if (!empty($filter_languages) && !in_array($language_id, $filter_languages)) {
         continue;
       }
+      if (!$hl_fl_removed) {
+        // Remove all language un-specific fields from highlighting before
+        // adding language specific ones.
+        $query->removeParam('hl.fl');
+        $hl_fl_removed = TRUE;
+      }
+
+      // TODO avoid snippets in case of CLIR because these might come from machine translation which should be hidden.
+
       $query->addParam('hl.fl', 'i18n_content_' . $language_id);
-      $query->addParam('f.' . 'i18n_content_' . $language_id . '.hl.alternateField', 'i18n_teaser_' . $language_id);
+      $query->addParam('f.i18n_content_' . $language_id . '.hl.alternateField', 'i18n_teaser_' . $language_id);
       $query->addParam('hl.fl', 'i18n_ts_' . $language_id . '_comments');
     }
   }
