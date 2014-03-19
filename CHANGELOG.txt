@@ -1,6 +1,7 @@
 Apache Solr Multilingual 7.x-1.1, 2014-xx-xx
 --------------------------------------------
 [#2217753] mkalkbrenner: avoid duplicate snippets in search result
+[        ] mkalkbrenner: added support of language specific config file replication
 
 
 Apache Solr Multilingual 7.x-1.0, 2014-02-26

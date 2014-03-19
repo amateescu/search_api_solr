@@ -60,11 +60,7 @@ function apachesolr_multilingual_confgen_variable_get($name, $language_id, $solr
     $value = variable_realm_get('language', $language_id, $name, variable_get_default($name));
   }
 
-  $info = variable_get_info($name);
-  if ('boolean' == $info['type'] && array_key_exists('solr_format', $info) && 'string' == $info['solr_format']) {
-    return $value ? 'true' : 'false';
-  }
-  return $value;
+  return apachesolr_confgen_format_variable($name, $value);
 }
 
 /**
@@ -243,6 +239,19 @@ function apachesolr_multilingual_confgen_apachesolr_confgen_zip_file_alter(&$fil
   foreach (apachesolr_multilingual_confgen_get_apachesolr_confgen_textfiles_i18n_variables() as $var_name => $var_info) {
     foreach (apachesolr_multilingual_language_list() as $language_id => $language) {
       $files[basename($var_info['title'], '.txt') . '_' . $language_id . '.txt'] = apachesolr_multilingual_confgen_variable_get($var_name, $language_id);
+    }
+  }
+}
+
+/**
+ * Implements hook_apachesolr_confgen_solrcore_properties_alter().
+ */
+function apachesolr_multilingual_confgen_apachesolr_confgen_solrcore_properties_alter(&$properties, $solr_version) {
+  if (strpos($solr_version, '1.') !== 0) {
+    foreach (apachesolr_multilingual_confgen_get_apachesolr_confgen_textfiles_i18n_variables() as $var_name => $var_info) {
+      foreach (apachesolr_multilingual_language_list() as $language_id => $language) {
+        $properties['solr.replication.confFiles'] .= ',' . (basename($var_info['title'], '.txt') . '_' . $language_id . '.txt');
+      }
     }
   }
 }
