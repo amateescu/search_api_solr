@@ -149,53 +149,6 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
               // Always override the title / label if title module is active.
               $document->label = apachesolr_clean_text(title_entity_label($entity, 'node', $document->ss_language));
             }
-
-            // Create an index entry for each language to node has been translated to.
-            // The id gets a language suffix to be unique.
-            foreach ($additional_documents_langcodes as $langcode) {
-              // Prevent endless recursion if language specific document has been created already
-              // and $reentrance is set to TRUE.
-              if (!array_key_exists($document->id, $documents)) {
-                // Temporarily switch the language context for apachesolr_index_node_solr_document(),
-                // which is not aware of entity_translation.
-                $original_langcode = $entity->language;
-                $entity->language = $langcode;
-                $language_content = $languages[$langcode];
-
-                $id = $document->id . '/' . $langcode;
-                $additional_documents = array();
-                $additional_documents[$id] = clone $document;
-
-                $reentrance = FALSE;
-                // apachesolr_convert_entity_to_documents() calls hook_apachesolr_index_documents_alter().
-                // The variable $reentrance avoids an endless recursion.
-                $tmp_documents = apachesolr_convert_entity_to_documents($entity, $entity_type, $env_id);
-                $reentrance = TRUE;
-
-                $basic_fields = reset($tmp_documents);
-
-                foreach ($basic_fields->getFieldNames() as $field) {
-                  $additional_documents[$id]->$field = $basic_fields->$field;
-                }
-
-                $additional_documents[$id]->id = $id;
-                // Add document_id of original language, so that all translations can be deleted together,
-                // when original document is removed. See apachesolr_index_delete_entity_from_index().
-                $additional_documents[$id]->sm_parent_document_id = array($document->id);
-
-                apachesolr_index_node_solr_document($additional_documents[$id], $entity, $entity_type, $env_id);
-
-                // Recursive call to deal with 'apachesolr_multilingual_index_translations' aka CLIR and title field, see above and below
-                apachesolr_multilingual_apachesolr_index_documents_alter($additional_documents, $entity, $entity_type, $env_id);
-
-                $entity->language = $original_langcode;
-                $language_content = $languages[$original_langcode];
-
-                foreach ($additional_documents as $key => $additional_document) {
-                  $documents[$key] = $additional_document;
-                }
-              }
-            }
           }
           else {
 
@@ -223,6 +176,57 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
               }
             }
           }
+
+          // In case of entity translation, create an index entry for each
+          // language the node has been translated to.
+          // In case of content translation this same code is used when language
+          // undefined content needs to be mapped to different languages.
+          // The document id gets a language suffix to be unique.
+          foreach ($additional_documents_langcodes as $langcode) {
+            // Prevent endless recursion if language specific document has been created already
+            // and $reentrance is set to TRUE.
+            if (!array_key_exists($document->id, $documents)) {
+              // Temporarily switch the language context for apachesolr_index_node_solr_document(),
+              // which is not aware of entity_translation.
+              $original_langcode = $entity->language;
+              $entity->language = $langcode;
+              $language_content = $languages[$langcode];
+
+              $id = $document->id . '/' . $langcode;
+              $additional_documents = array();
+              $additional_documents[$id] = clone $document;
+
+              $reentrance = FALSE;
+              // apachesolr_convert_entity_to_documents() calls hook_apachesolr_index_documents_alter().
+              // The variable $reentrance avoids an endless recursion.
+              $tmp_documents = apachesolr_convert_entity_to_documents($entity, $entity_type, $env_id);
+              $reentrance = TRUE;
+
+              $basic_fields = reset($tmp_documents);
+
+              foreach ($basic_fields->getFieldNames() as $field) {
+                $additional_documents[$id]->$field = $basic_fields->$field;
+              }
+
+              $additional_documents[$id]->id = $id;
+              // Add document_id of original language, so that all translations can be deleted together,
+              // when original document is removed. See apachesolr_index_delete_entity_from_index().
+              $additional_documents[$id]->sm_parent_document_id = array($document->id);
+
+              apachesolr_index_node_solr_document($additional_documents[$id], $entity, $entity_type, $env_id);
+
+              // Recursive call to deal with 'apachesolr_multilingual_index_translations' aka CLIR and title field, see above and below
+              apachesolr_multilingual_apachesolr_index_documents_alter($additional_documents, $entity, $entity_type, $env_id);
+
+              $entity->language = $original_langcode;
+              $language_content = $languages[$original_langcode];
+
+              foreach ($additional_documents as $key => $additional_document) {
+                $documents[$key] = $additional_document;
+              }
+            }
+          }
+
           break;
 
         default:
