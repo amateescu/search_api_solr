@@ -452,10 +452,12 @@ function apachesolr_multilingual_get_language_filters_by_query($query) {
  * language.
  */
 function apachesolr_multilingual_module_implements_alter(&$implementations, $hook) {
-  if (
-    'apachesolr_query_alter' == $hook ||
-    'apachesolr_field_name_map_alter' == $hook
-  ) {
+  if (in_array($hook, array(
+    'apachesolr_query_alter',
+    'apachesolr_field_name_map_alter',
+    'search_api_solr_query_alter',
+    'search_api_solr_search_results_alter',
+  ))) {
     $group = $implementations['apachesolr_multilingual'];
     unset($implementations['apachesolr_multilingual']);
     $implementations['apachesolr_multilingual'] = $group;
@@ -564,6 +566,7 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
     }
   }
 }
+
 
 /**
  * Implements hook_form_search_form_alter().
