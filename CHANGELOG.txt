@@ -3,6 +3,7 @@ Apache Solr Multilingual 7.x-1.1, 2014-xx-xx
 [#2217753] mkalkbrenner: avoid duplicate snippets in search result
 [        ] mkalkbrenner: added support of language specific config file replication
 [#2222297] mkalkbrenner: mapping language neutral to all languages does not work without entity translation
+[#2056055] mkalkbrenner: More like this (MLT): Avoid Undefined index: page_id in apachesolr_multilingual_apachesolr_query_alter()
 
 
 Apache Solr Multilingual 7.x-1.0, 2014-02-26

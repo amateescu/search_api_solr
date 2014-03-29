@@ -478,9 +478,23 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
   $environment = apachesolr_multilingual_environment_load($context['env_id']);
   $settings = $environment['conf']['apachesolr_multilingual_index_settings'];
   if ($settings['apachesolr_multilingual_index']) {
-
-    $search_page = apachesolr_search_page_load($context['page_id']);
-    $custom_settings = $search_page['settings'];
+    $custom_settings = array();
+    if ('apachesolr_search_mlt' == $context['search_type']) {
+      // TODO Add multilingual settings to mlt blocks like we do for search pages.
+      //      These settings have to be loaded here.
+      //      @see https://drupal.org/node/2056055
+    }
+    elseif (!empty($context['page_id'])) {
+      // Load multilingual custom settings assigned to this search page.
+      $search_page = apachesolr_search_page_load($context['page_id']);
+      $custom_settings = $search_page['settings'];
+    }
+    else {
+      // A custom query has been created by a third party module.
+      // Assume default multilingual settings.
+      // TODO This behavior should be somehow configurable.
+    }
+    // Add defaults for required settings to not yet saved multilingual custom settings.
     apachesolr_multilingual_search_page_settings_add_defaults($custom_settings);
     $filter_languages = &drupal_static('apachesolr_multilingual_filter_languages_' . $context['page_id']);
     $filter_languages = apachesolr_multilingual_get_language_filters_by_query($query);
