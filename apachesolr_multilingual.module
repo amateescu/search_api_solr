@@ -480,9 +480,12 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
   if ($settings['apachesolr_multilingual_index']) {
     $custom_settings = array();
     if ('apachesolr_search_mlt' == $context['search_type']) {
-      // TODO Add multilingual settings to mlt blocks like we do for search pages.
-      //      These settings have to be loaded here.
-      //      @see https://drupal.org/node/2056055
+      // Add multilingual settings to mlt blocks like we do for search pages.
+      // @see https://drupal.org/node/2056055
+      $mlt_block_settings = apachesolr_search_mlt_block_load($context['block_id']);
+      if ($mlt_block_settings && array_key_exists('apachesolr_multilingual_query_settings', $mlt_block_settings)) {
+        $settings = $mlt_block_settings['apachesolr_multilingual_query_settings'];
+      }
     }
     elseif (!empty($context['page_id'])) {
       // Load multilingual custom settings assigned to this search page.
@@ -625,6 +628,77 @@ function apachesolr_multilingual_apachesolr_search_custom_page_search_form_submi
 }
 
 /**
+ * Add multilingual settings to MLT blocks.
+ *
+ * @param $form
+ * @param $form_state
+ * @param $form_id
+ */
+function apachesolr_multilingual_form_block_admin_configure_alter(&$form, &$form_state, $form_id) {
+  if ('apachesolr_search' == $form['module']['#value'] && 'sort' != $form['delta']['#value']) {
+    $settings = array();
+
+    $mlt_block_settings = apachesolr_search_mlt_block_load($form['delta']['#value']);
+    if ($mlt_block_settings && array_key_exists('apachesolr_multilingual_query_settings', $mlt_block_settings)) {
+      $settings = $mlt_block_settings['apachesolr_multilingual_query_settings'];
+    }
+
+    apachesolr_multilingual_search_page_settings_add_defaults($settings);
+    unset($settings['apachesolr_multilingual_auto_language_filter_detachable']);
+
+    apachesolr_multilingual_add_settings_form_elements($form, $settings);
+
+    array_push($form['#validate'], 'apachesolr_multilingual_block_admin_configure_form_validate');
+    // We have to modify apachesolr_search_mlt_blocks AFTER apachesolr_search.module!
+    array_push($form['#submit'], 'apachesolr_multilingual_block_admin_configure_form_submit');
+  }
+}
+
+function apachesolr_multilingual_block_admin_configure_form_validate($form, &$form_state) {
+}
+
+function apachesolr_multilingual_block_admin_configure_form_submit($form, &$form_state) {
+  $blocks = variable_get('apachesolr_search_mlt_blocks', array());
+  $blocks[$form_state['values']['delta']]['apachesolr_multilingual_query_settings'] =
+    $form_state['values']['apachesolr_multilingual_query_settings'];
+  variable_set('apachesolr_search_mlt_blocks', $blocks);
+}
+
+
+function apachesolr_multilingual_add_settings_form_elements(&$form, $settings) {
+  $form['apachesolr_multilingual_query_settings'] = array(
+    '#type' => 'fieldset',
+    '#tree' => TRUE,
+    '#title' => t('Multilingual Query Settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['apachesolr_multilingual_query_settings']['apachesolr_multilingual_auto_language_filter'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Limit search to current language by default'),
+    '#default_value' => $settings['apachesolr_multilingual_auto_language_filter'],
+    '#description' => t('Show only search results that match the current language.'),
+  );
+
+  if (array_key_exists('apachesolr_multilingual_auto_language_filter_detachable', $settings)) {
+    $form['apachesolr_multilingual_query_settings']['apachesolr_multilingual_auto_language_filter_detachable'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Limit search to current language could be disabled by user'),
+      '#default_value' => $settings['apachesolr_multilingual_auto_language_filter_detachable'],
+      '#description' => t('Displays a checkbox on search result page to search over all languages if "%limit_search" is active.', array('%limit_search' => t('Limit search to current language by default'))),
+    );
+  }
+
+  $form['apachesolr_multilingual_query_settings']['apachesolr_multilingual_show_language_undefined_results'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show language-neutral/undefined results by default'),
+    '#default_value' => $settings['apachesolr_multilingual_show_language_undefined_results'],
+    '#description' => t('Show language-neutral/undefined results on search result page if "%limit_search" is active.', array('%limit_search' => t('Limit search to current language by default'))),
+  );
+}
+
+/**
  * Implements hook_form_alter().
  *
  * @param $form_state
@@ -638,36 +712,10 @@ function apachesolr_multilingual_form_apachesolr_search_page_settings_form_alter
     // Add multilingual defaults.
     apachesolr_multilingual_search_page_settings_add_defaults($search_page_settings);
 
-    $form['apachesolr_multilingual_query_settings'] = array(
-      '#type' => 'fieldset',
-      '#tree' => TRUE,
-      '#title' => t('Multilingual Query Settings'),
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-    );
-
-    $form['apachesolr_multilingual_query_settings']['apachesolr_multilingual_auto_language_filter'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Limit search to current language by default'),
-      '#default_value' => $search_page_settings['apachesolr_multilingual_auto_language_filter'],
-      '#description' => t('Show only search results that match the current language.'),
-    );
-
-    $form['apachesolr_multilingual_query_settings']['apachesolr_multilingual_auto_language_filter_detachable'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Limit search to current language could be disabled by user'),
-      '#default_value' => $search_page_settings['apachesolr_multilingual_auto_language_filter_detachable'],
-      '#description' => t('Displays a checkbox on search result page to search over all languages if "%limit_search" is active.', array('%limit_search' => t('Limit search to current language by default'))),
-    );
-
-    $form['apachesolr_multilingual_query_settings']['apachesolr_multilingual_show_language_undefined_results'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Show language-neutral/undefined results by default'),
-      '#default_value' => $search_page_settings['apachesolr_multilingual_show_language_undefined_results'],
-      '#description' => t('Show language-neutral/undefined results on search result page if "%limit_search" is active.', array('%limit_search' => t('Limit search to current language by default'))),
-    );
+    apachesolr_multilingual_add_settings_form_elements($form, $search_page_settings);
 
     array_unshift($form['#validate'], 'apachesolr_multilingual_search_page_settings_form_validate');
+    // We have to modify $form_state['values']['advanced'] BEFORE apachesolr_search.module!
     array_unshift($form['#submit'], 'apachesolr_multilingual_search_page_settings_form_submit');
   }
 }
