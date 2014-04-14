@@ -1,5 +1,7 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
+- #2175829 by danquah, drunken monkey: Fixed error when admin interface is not
+  accessible.
 - #2222037 by drunken monkey: Fixed "Files" tab in Solr 4.7.
 - #2151719 by Derimagia, drunken monkey: Added an alter hook for multi-index
   search results.

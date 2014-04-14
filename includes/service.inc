@@ -79,6 +79,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
       'excerpt' => FALSE,
       'retrieve_data' => FALSE,
       'highlight_data' => FALSE,
+      'skip_schema_check' => FALSE,
+      'solr_version' => '',
       'http_method' => 'AUTO',
       // Default to TRUE for new servers, but to FALSE for existing ones.
       'clean_ids' => $this->options ? FALSE : TRUE,
@@ -207,6 +209,24 @@ class SearchApiSolrService extends SearchApiAbstractService {
       '#title' => t('Highlight retrieved data'),
       '#description' => t('When retrieving result data from the Solr server, try to highlight the search terms in the returned fulltext fields.'),
       '#default_value' => $options['highlight_data'],
+    );
+    $form['advanced']['skip_schema_check'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Skip schema verification'),
+      '#description' => t('Skip the automatic check for schema-compatibillity. Use this override if you are seeing an error-message about an incompatible schema.xml configuration file, and you are sure the configuration is compatible.'),
+      '#default_value' => $options['skip_schema_check'],
+    );
+    $form['advanced']['solr_version'] = array(
+      '#type' => 'select',
+      '#title' => t('Solr version override'),
+      '#description' => t('Specify the Solr version manually in case it cannot be retrived automatically. The version can be found in the Solr admin interface under "Solr Specification Version" or "solr-spec"'),
+      '#options' => array(
+        '' => t('Determine automatically'),
+        '1' => '1.4',
+        '3' => '3.x',
+        '4' => '4.x',
+      ),
+      '#default_value' => $options['solr_version'],
     );
     // Highlighting retrieved data only makes sense when we retrieve data.
     // (Actually, internally it doesn't really matter. However, from a user's
@@ -402,15 +422,17 @@ class SearchApiSolrService extends SearchApiAbstractService {
             );
 
             $status = 'ok';
-            if (substr($stats_summary['@schema_version'], 0, 10) == 'search-api') {
-              drupal_set_message(t('Your schema.xml version is too old. Please replace all configuration files with the ones packaged with this module and re-index you data.'), 'error');
-              $status = 'error';
-            }
-            elseif (substr($stats_summary['@schema_version'], 0, 9) != 'drupal-4.') {
-              $variables['@url'] = url(drupal_get_path('module', 'search_api_solr') . '/INSTALL.txt');
-              $message = t('You are using an incompatible schema.xml configuration file. Please follow the instructions in the <a href="@url">INSTALL.txt</a> file for setting up Solr.', $variables);
-              drupal_set_message($message, 'error');
-              $status = 'error';
+            if (empty($this->options['skip_schema_check'])) {
+              if (substr($stats_summary['@schema_version'], 0, 10) == 'search-api') {
+                drupal_set_message(t('Your schema.xml version is too old. Please replace all configuration files with the ones packaged with this module and re-index you data.'), 'error');
+                $status = 'error';
+              }
+              elseif (substr($stats_summary['@schema_version'], 0, 9) != 'drupal-4.') {
+                $variables['@url'] = url(drupal_get_path('module', 'search_api_solr') . '/INSTALL.txt');
+                $message = t('You are using an incompatible schema.xml configuration file. Please follow the instructions in the <a href="@url">INSTALL.txt</a> file for setting up Solr.', $variables);
+                drupal_set_message($message, 'error');
+                $status = 'error';
+              }
             }
             $info[] = array(
               'label' => t('Schema'),
