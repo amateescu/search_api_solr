@@ -5,19 +5,24 @@
  * Views integration code for the Search API Solr module.
  */
 
+use Drupal\search_api\Exception\SearchApiException;
+
 /**
  * Implements hook_views_data_alter().
  *
  * Adds field handlers for "virtual" fields, if the index's Solr server has
  * "Retrieve results data from Solr" enabled.
+ *
+ * @todo Update!
  */
-function search_api_solr_views_data_alter(array &$data) {
+function _search_api_solr_views_data_alter(array &$data) {
   try {
-    foreach (search_api_index_load_multiple(FALSE) as $index) {
+    foreach (entity_load_multiple('search_api_index') as $index) {
+      /** @var \Drupal\search_api\Index\IndexInterface $index */
       $server = NULL;
 
       try {
-        $server = $index->server();
+        $server = $index->getServer();
       }
       catch (SearchApiException $e) {
         // Just ignore invalid servers and skip the index.

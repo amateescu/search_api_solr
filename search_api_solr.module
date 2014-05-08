@@ -5,6 +5,10 @@
  * Provides a Solr-based service class for the Search API.
  */
 
+use Drupal\search_api\Exception\SearchApiException;
+use Drupal\search_api\Server\ServerInterface;
+use Symfony\Component\HttpFoundation\Request;
+
 /**
  * Implements hook_menu().
  */
@@ -26,33 +30,12 @@ function search_api_solr_menu() {
 }
 
 /**
- * Implements hook_search_api_service_info().
- */
-function search_api_solr_search_api_service_info() {
-  $variables = array(
-    '@solr_wiki_url' => url('http://wiki.apache.org/solr/SolrQuerySyntax'),
-    '@readme_url' => url(drupal_get_path('module', 'search_api_solr') . '/README.txt'),
-  );
-  $services['search_api_solr_service'] = array(
-    'name' => t('Solr service'),
-    'description' => t('<p>Index items using an Apache Solr search server.</p>
-<ul>
-  <li>See <a href="@solr_wiki_url">the Solr wiki</a> for information about the "direct" parse mode.</li>
-  <li>Will use internal Solr preprocessors, so Search API preprocessors should for the most part be deactivated.</li>
-  <li>See the <a href="@readme_url">README.txt</a> file provided with this module for details.</li>
-</ul>', $variables),
-    'class' => 'SearchApiSolrService',
-  );
-  return $services;
-}
-
-/**
  * Implements hook_help().
  */
-function search_api_solr_help($path, array $arg = array()) {
-  if ($path == 'admin/config/search/search_api') {
+function search_api_solr_help($route_name, Request $request) {
+  if ($route_name == 'search_api.overview') {
     // Included because we need the REQUIREMENT_* constants.
-    include_once(DRUPAL_ROOT . '/includes/install.inc');
+    include_once(DRUPAL_ROOT . '/core/includes/install.inc');
     module_load_include('install', 'search_api_solr');
     $reqs = search_api_solr_requirements('runtime');
     foreach ($reqs as $req) {
@@ -70,7 +53,7 @@ function search_api_solr_help($path, array $arg = array()) {
  * Used to execute an optimization operation on all enabled Solr servers once a
  * day.
  */
-function search_api_solr_cron() {
+function _search_api_solr_cron() {
   $action = variable_get('search_api_solr_cron_action', 'spellcheck');
   // We treat all unknown action settings as "none". However, we turn a blind
   // eye for Britons and other people who can spell.
@@ -115,20 +98,13 @@ function search_api_solr_cron() {
 }
 
 /**
- * Implements hook_flush_caches().
- */
-function search_api_solr_flush_caches() {
-  return array('cache_search_api_solr');
-}
-
-
-/**
  * Implements hook_search_api_server_update().
  */
-function search_api_solr_search_api_server_update(SearchApiServer $server) {
-  if ($server->class === 'search_api_solr_service') {
-    $server->getSolrConnection()->clearCache();
-  }
+function search_api_solr_search_api_server_update(ServerInterface $server) {
+  // @todo Do we still need to keep static and persistent caches?
+//  if ($server->getBackendId() == 'search_api_solr') {
+//    $server->getSolrConnection()->clearCache();
+//  }
 }
 
 /**
