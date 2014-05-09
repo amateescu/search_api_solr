@@ -54,7 +54,7 @@ function search_api_solr_help($route_name, Request $request) {
  * day.
  */
 function _search_api_solr_cron() {
-  $action = variable_get('search_api_solr_cron_action', 'spellcheck');
+  $action = \Drupal::config('search_api_solr.settings')->get('cron_action');
   // We treat all unknown action settings as "none". However, we turn a blind
   // eye for Britons and other people who can spell.
   if (!in_array($action, array('spellcheck', 'optimize', 'optimise'))) {
@@ -63,8 +63,8 @@ function _search_api_solr_cron() {
   // 86400 seconds is one day. We use slightly less here to allow for some
   // variation in the request time of the cron run, so that the time of day will
   // (more or less) stay the same.
-  if (REQUEST_TIME - variable_get('search_api_solr_last_optimize', 0) > 86340) {
-    variable_set('search_api_solr_last_optimize', REQUEST_TIME);
+  if (REQUEST_TIME - \Drupal::config('search_api_solr.settings')->get('last_optimize') > 86340) {
+    \Drupal::config('search_api_solr.settings')->set('last_optimize', REQUEST_TIME);
     $conditions = array('class' => 'search_api_solr_service', 'enabled' => TRUE);
     $count = 0;
     foreach (search_api_server_load_multiple(FALSE, $conditions) as $server) {
@@ -222,10 +222,10 @@ function search_api_solr_get_data_type_info($type = NULL) {
  */
 function search_api_solr_site_hash() {
   // Copied from apachesolr_site_hash().
-  if (!($hash = variable_get('search_api_solr_site_hash', FALSE))) {
+  if (!($hash = \Drupal::config('search_api_solr.settings')->get('site_hash'))) {
     global $base_url;
     $hash = substr(base_convert(sha1(uniqid($base_url, TRUE)), 16, 36), 0, 6);
-    variable_set('search_api_solr_site_hash', $hash);
+    \Drupal::config('search_api_solr.settings')->set('site_hash', $hash);
   }
   return $hash;
 }

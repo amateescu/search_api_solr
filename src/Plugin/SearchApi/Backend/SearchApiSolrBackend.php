@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api_solr\Plugin\SearchApi\Backend;
 
+use Drupal\Core\Config\Config;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
@@ -77,12 +78,20 @@ class SearchApiSolrBackend extends BackendPluginBase {
   protected $formBuilder;
 
   /**
+   * A config object for 'search_api_solr.settings'.
+   *
+   * @var \Drupal\Core\Config\Config
+   */
+  protected $searchApiSolrSettings;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, FormBuilderInterface $form_builder) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, FormBuilderInterface $form_builder, Config $search_api_solr_settings) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->formBuilder = $form_builder;
+    $this->searchApiSolrSettings = $search_api_solr_settings;
   }
 
   /**
@@ -93,7 +102,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('form_builder')
+      $container->get('form_builder'),
+      $container->get('config.factory')->get('search_api_solr.settings')
     );
   }
 
@@ -1862,7 +1872,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
             // Don't suggest terms that are too frequent (by default in more
             // than 90% of results).
             $result_count = $response->response->numFound;
-            $max_occurrences = $result_count * variable_get('search_api_solr_autocomplete_max_occurrences', 0.9);
+            $max_occurrences = $result_count * $this->searchApiSolrSettings->get('autocomplete_max_occurrences');
             if (($max_occurrences >= 1 || $i > 0) && $max_occurrences < $result_count) {
               foreach ($matches as $match => $count) {
                 if ($count > $max_occurrences) {
@@ -2259,8 +2269,9 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * Prefixes an index ID as configured.
    *
    * The resulting ID will be a concatenation of the following strings:
-   * - If set, the "search_api_solr_index_prefix" variable.
-   * - If set, the index-specific "search_api_solr_index_prefix_INDEX" variable.
+   * - If set, the "search_api_solr.settings.index_prefix" configuration.
+   * - If set, the index-specific "search_api_solr.settings.index_prefix_INDEX"
+   *   configuration.
    * - The index's machine name.
    *
    * @param string $machine_name
@@ -2271,9 +2282,9 @@ class SearchApiSolrBackend extends BackendPluginBase {
    */
   protected function getIndexId($machine_name) {
     // Prepend per-index prefix.
-    $id = variable_get('search_api_solr_index_prefix_' . $machine_name, '') . $machine_name;
+    $id = $this->searchApiSolrSettings->get('index_prefix_' . $machine_name) . $machine_name;
     // Prepend environment prefix.
-    $id = variable_get('search_api_solr_index_prefix', '') . $id;
+    $id = $this->searchApiSolrSettings->get('index_prefix') . $id;
     return $id;
   }
 

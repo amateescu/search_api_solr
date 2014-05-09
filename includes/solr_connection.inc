@@ -928,7 +928,7 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
 
     if ($method == 'GET' || $method == 'AUTO') {
       $searchUrl = $this->constructUrl(self::SEARCH_SERVLET, array(), $queryString);
-      if ($method == 'GET' || strlen($searchUrl) <= variable_get('search_api_solr_http_get_max_length', 4000)) {
+      if ($method == 'GET' || strlen($searchUrl) <= \Drupal::config('search_api_solr.settings')->get('http_get_max_length', 4000)) {
         return $this->sendRawGet($searchUrl);
       }
     }
