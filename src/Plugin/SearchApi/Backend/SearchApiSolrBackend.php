@@ -18,7 +18,7 @@ use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Utility\Utility;
 use Solarium\Client;
 use Solarium\Exception\HttpException;
-use Solarium\QueryType\Update\Query\Document\DocumentInterface;
+use Solarium\QueryType\Update\Query\Document\Document;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -716,7 +716,9 @@ class SearchApiSolrBackend extends BackendPluginBase {
         $type_info = search_api_solr_get_data_type_info($type);
         $pref = isset($type_info['prefix']) ? $type_info['prefix']: '';
         if (empty($type_info['always multiValued'])) {
-          $pref .= ($type == $type) ? 's' : 'm';
+          // @todo We assume that all fields can be multi-valued now, so the
+          // 'always multiValued' option doesn't make sense anymore.
+          $pref .= 'm';
         }
         if (!empty($this->configuration['clean_ids'])) {
           $name = $pref . '_' . str_replace(':', '$', $key);
@@ -744,9 +746,9 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * is the same as specified in
    * \Drupal\search_api\Backend\BackendSpecificInterface::indexItems().
    */
-  protected function addIndexField(DocumentInterface $doc, $key, $values, $type) {
+  protected function addIndexField(Document $doc, $key, $values, $type) {
     // Don't index empty values (i.e., when field is missing).
-    if (!isset($value)) {
+    if (!isset($values)) {
       return;
     }
 
@@ -770,8 +772,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
           $value = (float) $value;
           break;
       }
+      $doc->addField($key, $value);
     }
-    $doc->addField($key, $value);
   }
 
   /**
