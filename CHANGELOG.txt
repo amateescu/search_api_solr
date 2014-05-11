@@ -1,5 +1,5 @@
 Search API Solr search 1.x, dev (xx/xx/xxxx):
 ---------------------------------------------
 - Starting the 8.x port.
-- @todo Do we need to use https://github.com/cpliakas/solarium-luke for viewSettings()?
-- @todo Update deleteItems() and implement deleteAllItems().
+- @todo Finish https://github.com/basdenooijer/solarium/pull/155 and start a new
+  pull request for 'admin/luke'.

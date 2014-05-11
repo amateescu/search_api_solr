@@ -8,6 +8,7 @@
 namespace Drupal\search_api_solr\Plugin\SearchApi\Backend;
 
 use Drupal\Core\Config\Config;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
@@ -17,6 +18,7 @@ use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Utility\Utility;
 use Solarium\Client;
 use Solarium\Exception\HttpException;
+use Solarium\QueryType\Update\Query\Document\DocumentInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -57,6 +59,13 @@ class SearchApiSolrBackend extends BackendPluginBase {
   protected $fields;
 
   /**
+   * A Solarium Update query.
+   *
+   * @var \Solarium\QueryType\Update\Query\Query
+   */
+  protected static $updateQuery;
+
+  /**
    * Saves whether a commit operation was already scheduled for this server.
    *
    * @var bool
@@ -71,11 +80,25 @@ class SearchApiSolrBackend extends BackendPluginBase {
   protected $request_handler = NULL;
 
   /**
+   * Stores Solr system information.
+   *
+   * @var array
+   */
+  protected $systemInfo;
+
+  /**
    * The form builder.
    *
    * @var \Drupal\Core\Form\FormBuilderInterface
    */
   protected $formBuilder;
+
+  /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
 
   /**
    * A config object for 'search_api_solr.settings'.
@@ -87,10 +110,11 @@ class SearchApiSolrBackend extends BackendPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, FormBuilderInterface $form_builder, Config $search_api_solr_settings) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, FormBuilderInterface $form_builder, ModuleHandlerInterface $module_handler, Config $search_api_solr_settings) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->formBuilder = $form_builder;
+    $this->moduleHandler = $module_handler;
     $this->searchApiSolrSettings = $search_api_solr_settings;
   }
 
@@ -103,6 +127,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       $plugin_id,
       $plugin_definition,
       $container->get('form_builder'),
+      $container->get('module_handler'),
       $container->get('config.factory')->get('search_api_solr.settings')
     );
   }
@@ -571,7 +596,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $base_urls = array();
 
     foreach ($items as $id => $item) {
-      $doc = new SearchApiSolrDocument();
+      $doc = $this->getUpdateQuery()->createDocument();
       $doc->setField('id', $this->createId($index_id, $id));
       $doc->setField('index_id', $index_id);
       $doc->setField('item_id', $id);
@@ -592,18 +617,19 @@ class SearchApiSolrBackend extends BackendPluginBase {
       }
 
       // Now add all fields contained in the item, with dynamic fields.
+      // @todo This should not be needed anymore when items become classed
+      // objects.
+      unset($item['#item'], $item['#item_id'], $item['#datasource']);
       foreach ($item as $key => $field) {
         // If the field is not known for the index, something weird has
         // happened. We refuse to index the items and hope that the others are
         // OK.
         if (!isset($fields[$key])) {
-          $type = search_api_get_item_type_info($index->item_type);
           $vars = array(
-            '@field' => $key,
-            '@type' => $type ? $type['name'] : $index->item_type,
+            '%field' => $key,
             '@id' => $id,
           );
-          watchdog('search_api_solr', 'Error while indexing: Unknown field @field set for @type with ID @id.', $vars, WATCHDOG_WARNING);
+          watchdog('search_api_solr', 'Error while indexing: Unknown field %field on the item with ID @id.', $vars, WATCHDOG_WARNING);
           $doc = NULL;
           break;
         }
@@ -617,16 +643,22 @@ class SearchApiSolrBackend extends BackendPluginBase {
     }
 
     // Let other modules alter documents before sending them to solr.
-    drupal_alter('search_api_solr_documents', $documents, $index, $items);
+    $this->moduleHandler->alter('search_api_solr_documents', $documents, $index, $items);
     $this->alterSolrDocuments($documents, $index, $items);
 
     if (!$documents) {
       return array();
     }
     try {
-      $this->connect();
-      $this->solr->addDocuments($documents);
-      if (!empty($index->options['index_directly'])) {
+      $this->getUpdateQuery()->addDocuments($documents);
+      if ($index->getOption('index_directly')) {
+        $this->getUpdateQuery()->addCommit();
+        $this->solr->update(static::$updateQuery);
+
+        // Reset the Update query for further calls.
+        static::$updateQuery = NULL;
+      }
+      else {
         $this->scheduleCommit();
       }
       return $ret;
@@ -659,7 +691,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
    *
    * @see SearchApiSolrService::search()
    */
-  public function getFieldNames(SearchApiIndex $index, $reset = FALSE) {
+  public function getFieldNames(IndexInterface $index, $reset = FALSE) {
     if (!isset($this->fieldNames[$index->id()]) || $reset) {
       // This array maps "local property name" => "solr doc property name".
       $ret = array(
@@ -676,17 +708,15 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
         // Use the real type of the field if the server supports this type.
         if (isset($field['real_type'])) {
-          $custom_type = search_api_extract_inner_type($field['real_type']);
-          if ($this->supportsFeature('search_api_data_type_' . $custom_type)) {
+          if ($this->supportsFeature('search_api_data_type_' . $field['real_type'])) {
             $type = $field['real_type'];
           }
         }
 
-        $inner_type = search_api_extract_inner_type($type);
-        $type_info = search_api_solr_get_data_type_info($inner_type);
+        $type_info = search_api_solr_get_data_type_info($type);
         $pref = isset($type_info['prefix']) ? $type_info['prefix']: '';
         if (empty($type_info['always multiValued'])) {
-          $pref .= ($type == $inner_type) ? 's' : 'm';
+          $pref .= ($type == $type) ? 's' : 'm';
         }
         if (!empty($this->configuration['clean_ids'])) {
           $name = $pref . '_' . str_replace(':', '$', $key);
@@ -699,7 +729,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       }
 
       // Let modules adjust the field mappings.
-      drupal_alter('search_api_solr_field_mapping', $index, $ret);
+      $this->moduleHandler->alter('search_api_solr_field_mapping', $index, $ret);
 
       $this->fieldNames[$index->id()] = $ret;
     }
@@ -711,49 +741,37 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * Helper method for indexing.
    *
    * Adds $value with field name $key to the document $doc. The format of $value
-   * is the same as specified in SearchApiServiceInterface::indexItems().
+   * is the same as specified in
+   * \Drupal\search_api\Backend\BackendSpecificInterface::indexItems().
    */
-  protected function addIndexField(SearchApiSolrDocument $doc, $key, $value, $type, $multi_valued = FALSE) {
+  protected function addIndexField(DocumentInterface $doc, $key, $values, $type) {
     // Don't index empty values (i.e., when field is missing).
     if (!isset($value)) {
       return;
     }
-    if (search_api_is_list_type($type)) {
-      $type = substr($type, 5, -1);
-      foreach ($value as $v) {
-        $this->addIndexField($doc, $key, $v, $type, TRUE);
+
+    // All fields
+    foreach ($values as $value) {
+      switch ($type) {
+        case 'boolean':
+          $value = $value ? 'true' : 'false';
+          break;
+        case 'date':
+          $value = is_numeric($value) ? (int) $value : strtotime($value);
+          if ($value === FALSE) {
+            return;
+          }
+          $value = format_date($value, 'custom', self::SOLR_DATE_FORMAT, 'UTC');
+          break;
+        case 'integer':
+          $value = (int) $value;
+          break;
+        case 'decimal':
+          $value = (float) $value;
+          break;
       }
-      return;
     }
-    switch ($type) {
-      case 'tokens':
-        foreach ($value as $v) {
-          $doc->addField($key, $v['value']);
-        }
-        return;
-      case 'boolean':
-        $value = $value ? 'true' : 'false';
-        break;
-      case 'date':
-        $value = is_numeric($value) ? (int) $value : strtotime($value);
-        if ($value === FALSE) {
-          return;
-        }
-        $value = format_date($value, 'custom', self::SOLR_DATE_FORMAT, 'UTC');
-        break;
-      case 'integer':
-        $value = (int) $value;
-        break;
-      case 'decimal':
-        $value = (float) $value;
-        break;
-    }
-    if ($multi_valued) {
-      $doc->addField($key, $value);
-    }
-    else {
-      $doc->setField($key, $value);
-    }
+    $doc->addField($key, $value);
   }
 
   /**
@@ -776,46 +794,15 @@ class SearchApiSolrBackend extends BackendPluginBase {
   }
 
   /**
-   * Implements SearchApiServiceInterface::deleteItems().
-   *
-   * This method has a custom, Solr-specific extension:
-   *
-   * If $ids is a string other than "all", it is treated as a Solr query. All
-   * items matching that Solr query are then deleted. If $index is additionally
-   * specified, then only those items also lying on that index will be deleted.
-   *
-   * It is up to the caller to ensure $ids is a valid query when the method is
-   * called in this fashion.
-   *
-   * @todo Update the 'all' part.
+   * {@inheritdoc}
    */
   public function deleteItems(IndexInterface $index, array $ids) {
-    $this->connect();
-    if (is_array($ids)) {
-      $index_id = $this->getIndexId($index->id());
-      $solr_ids = array();
-      foreach ($ids as $id) {
-        $solr_ids[] = $this->createId($index_id, $id);
-      }
-      $this->solr->deleteByMultipleIds($solr_ids);
+    $index_id = $this->getIndexId($index->id());
+    $solr_ids = array();
+    foreach ($ids as $id) {
+      $solr_ids[] = $this->createId($index_id, $id);
     }
-    else {
-      $query = array();
-      if ($index) {
-        $index_id = $this->getIndexId($index->id());
-        $index_id = call_user_func(array($this->connection_class, 'phrase'), $index_id);
-        $query[] = "index_id:$index_id";
-      }
-      if (!empty($this->configuration['site_hash'])) {
-        // We don't need to escape the site hash, as that consists only of
-        // alphanumeric characters.
-        $query[] = 'hash:' . search_api_solr_site_hash();
-      }
-      if ($ids != 'all') {
-        $query[] = $query ? "($ids)" : $ids;
-      }
-      $this->solr->deleteByQuery($query ? implode(' ', $query) : '*:*');
-    }
+    $this->getUpdateQuery()->addDeleteByIds($solr_ids);
     $this->scheduleCommit();
   }
 
@@ -823,7 +810,10 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * {@inheritdoc}
    */
   public function deleteAllItems(IndexInterface $index = NULL) {
-    // @todo Implement it.
+    if ($index) {
+      $this->getUpdateQuery()->addDeleteQuery('*:*');
+      $this->scheduleCommit();
+    }
   }
 
   /**
@@ -839,7 +829,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $fields = $this->getFieldNames($index);
     // Get Solr connection.
     $this->connect();
-    $version = $this->solr->getSolrVersion();
+    $version = $this->getSolrVersion();
 
     // Extract keys.
     $keys = $query->getKeys();
@@ -854,7 +844,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $index_fields = $index->getFields();
     $qf = array();
     foreach ($search_fields as $f) {
-      $boost = '';
       $boost = isset($index_fields[$f]['boost']) ? '^' . $index_fields[$f]['boost'] : '';
       $qf[] = $fields[$f] . $boost;
     }
@@ -1112,10 +1101,11 @@ class SearchApiSolrBackend extends BackendPluginBase {
       $this->setRequestHandler($this->request_handler, $call_args);
     }
 
+    /*
     try {
       // Send search request.
       $time_processing_done = microtime(TRUE);
-      drupal_alter('search_api_solr_query', $call_args, $query);
+      $this->moduleHandler->alter('search_api_solr_query', $call_args, $query);
       $this->preQuery($call_args, $query);
 
       $response = $this->solr->search($keys, $params, $http_method);
@@ -1134,7 +1124,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
         $results['search_api_facets'] = $facets;
       }
 
-      drupal_alter('search_api_solr_search_results', $results, $query, $response);
+      $this->moduleHandler->alter('search_api_solr_search_results', $results, $query, $response);
       $this->postQuery($results, $query, $response);
 
       // Compute performance.
@@ -1151,6 +1141,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     catch (SearchApiException $e) {
       throw new SearchApiException(t('An error occurred while trying to search with Solr: @msg.', array('@msg' => $e->getMessage())));
     }
+    */
   }
 
   /**
@@ -1163,7 +1154,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
    *   An array with two keys:
    *   - result count: The number of total results.
    *   - results: An array of search results, as specified by
-   *     SearchApiQueryInterface::execute().
+   *     \Drupal\search_api\Query\QueryInterface::execute().
    */
   protected function extractResults(QueryInterface $query, $response) {
     $index = $query->getIndex();
@@ -1424,7 +1415,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
    *
    * @param array $keys
    *   The keys array to flatten, formatted as specified by
-   *   SearchApiQueryInterface::getKeys().
+   *   \Drupal\search_api\Query\QueryInterface::getKeys().
    *
    * @return string
    *   A Solr query string representing the same keys.
@@ -1632,14 +1623,13 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * (The $query parameter currently isn't used and only here for the potential
    * sake of subclasses.)
    *
-   * @param SearchApiQueryInterface|SearchApiMultiQueryInterface $query
-   *   The query object, either for a normal Search API query or a multi-index
-   *   query.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The query object.
    *
    * @return array
    *   An array of parameters to be added to the Solr search request.
    */
-  protected function getHighlightParams($query) {
+  protected function getHighlightParams(QueryInterface $query) {
     $highlight_params = array();
 
     if (!empty($this->configuration['excerpt']) || !empty($this->configuration['highlight_data'])) {
@@ -1706,10 +1696,11 @@ class SearchApiSolrBackend extends BackendPluginBase {
    *   An associative array containing all three arguments to the
    *   SearchApiSolrConnectionInterface::search() call ("query", "params" and
    *   "method") as references.
-   * @param SearchApiQueryInterface $query
-   *   The SearchApiQueryInterface object representing the executed search query.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The \Drupal\search_api\Query\Query object representing the executed
+   *   search query.
    */
-  protected function preQuery(array &$call_args, SearchApiQueryInterface $query) {
+  protected function preQuery(array &$call_args, QueryInterface $query) {
   }
 
   /**
@@ -1719,12 +1710,13 @@ class SearchApiSolrBackend extends BackendPluginBase {
    *
    * @param array $results
    *   The results array that will be returned for the search.
-   * @param SearchApiQueryInterface $query
-   *   The SearchApiQueryInterface object representing the executed search query.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The \Drupal\search_api\Query\Query object representing the executed
+   *   search query.
    * @param object $response
    *   The response object returned by Solr.
    */
-  protected function postQuery(array &$results, SearchApiQueryInterface $query, $response) {
+  protected function postQuery(array &$results, QueryInterface $query, $response) {
   }
 
   //
@@ -1735,7 +1727,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * Implements SearchApiAutocompleteInterface::getAutocompleteSuggestions().
    */
   // Largely copied from the apachesolr_autocomplete module.
-  public function getAutocompleteSuggestions(SearchApiQueryInterface $query, SearchApiAutocompleteSearch $search, $incomplete_key, $user_input) {
+  public function getAutocompleteSuggestions(QueryInterface $query, SearchApiAutocompleteSearch $search, $incomplete_key, $user_input) {
     $suggestions = array();
     // Reset request handler
     $this->request_handler = NULL;
@@ -1827,7 +1819,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       try {
         // Send search request
         $this->connect();
-        drupal_alter('search_api_solr_query', $call_args, $query);
+        $this->moduleHandler->alter('search_api_solr_query', $call_args, $query);
         $this->preQuery($call_args, $query);
         $response = $this->solr->search($keys, $params, $http_method);
 
@@ -2190,8 +2182,10 @@ class SearchApiSolrBackend extends BackendPluginBase {
    */
   public function commit() {
     try {
-      $this->connect();
-      return $this->solr->commit(FALSE);
+      if (static::$updateQuery) {
+        $this->getUpdateQuery()->addCommit();
+        $this->solr->update($this->getUpdateQuery());
+      }
     }
     catch (SearchApiException $e) {
       watchdog_exception('search_api_solr', $e,
@@ -2286,6 +2280,60 @@ class SearchApiSolrBackend extends BackendPluginBase {
     // Prepend environment prefix.
     $id = $this->searchApiSolrSettings->get('index_prefix') . $id;
     return $id;
+  }
+
+  /**
+   * Gets the current Solarium update query, creating one if necessary.
+   *
+   * @return \Solarium\QueryType\Update\Query\Query
+   *   The Update query.
+   */
+  protected function getUpdateQuery() {
+    if (!static::$updateQuery) {
+      $this->connect();
+      static::$updateQuery = $this->solr->createUpdate();
+    }
+    return static::$updateQuery;
+  }
+
+  /**
+   * Gets the current Solr version.
+   *
+   * @return int
+   *   1, 3 or 4. Does not give a more detailed version, for that you need to
+   *   use getSystemInfo().
+   */
+  protected function getSolrVersion() {
+    // Allow for overrides by the user.
+    if (!empty($this->configuration['solr_version'])) {
+      return $this->configuration['solr_version'];
+    }
+
+    $system_info = $this->getSystemInfo();
+    // Get our solr version number
+    if (isset($system_info->lucene->{'solr-spec-version'})) {
+      return $system_info->lucene->{'solr-spec-version'}[0];
+    }
+    return 0;
+  }
+
+  /**
+   * Gets information about the Solr Core.
+   *
+   * @return object
+   *   A response object with system information.
+   */
+  protected function getSystemInfo() {
+    // @todo Add back persistent cache?
+    if (!isset($this->systemInfo)) {
+      // @todo Finish https://github.com/basdenooijer/solarium/pull/155 and stop
+      // abusing the ping query for this.
+      $query = $this->solr->createPing();
+      $query->setHandler('admin/system');
+      $this->systemInfo = $this->solr->ping($query)->getData();
+    }
+
+    return $this->systemInfo;
   }
 
 }

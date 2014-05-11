@@ -7,6 +7,7 @@
 
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Server\ServerInterface;
+use Drupal\search_api\Utility\Utility;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -150,7 +151,7 @@ function search_api_solr_get_data_type_info($type = NULL) {
 
   if (!isset($types)) {
     // Grab the stock search_api data types.
-    $types = search_api_get_data_type_info();
+    $types = Utility::getDataTypeInfo();
 
     // Add our extras for the default search api fields.
     $types += array(
