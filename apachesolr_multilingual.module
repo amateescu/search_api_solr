@@ -455,8 +455,6 @@ function apachesolr_multilingual_module_implements_alter(&$implementations, $hoo
   if (in_array($hook, array(
     'apachesolr_query_alter',
     'apachesolr_field_name_map_alter',
-    'search_api_solr_query_alter',
-    'search_api_solr_search_results_alter',
   ))) {
     $group = $implementations['apachesolr_multilingual'];
     unset($implementations['apachesolr_multilingual']);
