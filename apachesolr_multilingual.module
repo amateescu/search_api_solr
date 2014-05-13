@@ -41,11 +41,11 @@ function apachesolr_multilingual_node_delete($node) {
  */
 function apachesolr_multilingual_node_update($node) {
   // If a node is translated using node translation aka content translation
-  // we need to mark all translations as modified.
+  // we need to mark all translations as modified to update field
+  // sm_missing_translations and CLIR.
   if (!empty($node->tnid)) {
     foreach (apachesolr_multilingual_load_all_environments() as $environment) {
-      if ($environment['conf']['apachesolr_multilingual_index_settings']['apachesolr_multilingual_clir']['apachesolr_multilingual_index_translations']
-        && !empty($environment['index_bundles']['node'])
+      if (!empty($environment['index_bundles']['node'])
         && in_array($node->type, $environment['index_bundles']['node'])
       ) {
         $translations = translation_node_get_translations($node->tnid);
