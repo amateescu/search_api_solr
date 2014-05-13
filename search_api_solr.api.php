@@ -49,15 +49,15 @@ function hook_search_api_solr_field_mapping_alter(SearchApiIndex $index, array &
 /**
  * Alter Solr documents before they are sent to Solr for indexing.
  *
- * @param array $documents
- *   An array of SearchApiSolrDocument objects ready to be indexed, generated
- *   from $items array.
- * @param SearchApiIndex $index
+ * @param \Solarium\QueryType\Update\Query\Document\Document[] $documents
+ *   An array of \Solarium\QueryType\Update\Query\Document\Document objects
+ *   ready to be indexed, generated from $items array.
+ * @param \Drupal\search_api\Index\IndexInterface $index
  *   The search index for which items are being indexed.
  * @param array $items
  *   An array of items being indexed.
  */
-function hook_search_api_solr_documents_alter(array &$documents, SearchApiIndex $index, array $items) {
+function hook_search_api_solr_documents_alter(array &$documents, \Drupal\search_api\Index\IndexInterface $index, array $items) {
   // Adds a "foo" field with value "bar" to all documents.
   foreach ($documents as $document) {
     $document->setField('foo', 'bar');

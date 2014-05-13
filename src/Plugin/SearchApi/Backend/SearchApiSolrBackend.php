@@ -782,9 +782,9 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * This method allows subclasses to easily apply custom changes before the
    * documents are sent to Solr. The method is empty by default.
    *
-   * @param array $documents
-   *   An array of SearchApiSolrDocument objects ready to be indexed, generated
-   *   from $items array.
+   * @param \Solarium\QueryType\Update\Query\Document\Document[] $documents
+   *   An array of \Solarium\QueryType\Update\Query\Document\Document objects
+   *   ready to be indexed, generated from $items array.
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   The search index for which items are being indexed.
    * @param array $items
