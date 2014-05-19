@@ -17,6 +17,7 @@ use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Utility\Utility;
 use Solarium\Client;
+use Solarium\Core\Query\Query;
 use Solarium\Exception\HttpException;
 use Solarium\QueryType\Update\Query\Document\Document;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -459,23 +460,21 @@ class SearchApiSolrBackend extends BackendPluginBase {
         'status' => $ping ? 'ok' : 'error',
       );
 
-      /*
       if ($ping) {
         try {
           // If Solr can be reached, provide more information. This isn't done
           // often (only when an admin views the server details), so we clear the
           // cache to get the current data.
           $this->connect();
-          $this->solr->clearCache();
-          $data = $this->solr->getLuke();
-          if (isset($data->index->numDocs)) {
+          $data = $this->getLuke();
+          if (isset($data['index']['numDocs'])) {
             // Collect the stats
-            $stats_summary = $this->solr->getStatsSummary();
+            $stats_summary = $this->getStatsSummary();
 
             $pending_msg = $stats_summary['@pending_docs'] ? $this->t('(@pending_docs sent but not yet processed)', $stats_summary) : '';
             $index_msg = $stats_summary['@index_size'] ? $this->t('(@index_size on disk)', $stats_summary) : '';
             $indexed_message = $this->t('@num items !pending !index_msg', array(
-              '@num' => $data->index->numDocs,
+              '@num' => $data['index']['numDocs'],
               '!pending' => $pending_msg,
               '!index_msg' => $index_msg,
             ));
@@ -531,7 +530,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
           );
         }
       }
-      */
     }
 
     return $info;
@@ -1014,7 +1012,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
         if ($version < 4) {
           // For Solr 3.x, only string and boolean fields are supported.
           if (search_api_is_list_type($type) || !search_api_is_text_type($type, array('string', 'boolean', 'uri'))) {
-            $warnings[] = t('Grouping is not supported for field @field. ' .
+            $warnings[] = $this->t('Grouping is not supported for field @field. ' .
                 'Only single-valued fields of type "String", "Boolean" or "URI" are supported.',
                 array('@field' => $index_fields[$collapse_field]['name']));
             continue;
@@ -1022,7 +1020,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
         }
         else {
           if (search_api_is_list_type($type) || search_api_is_text_type($type)) {
-            $warnings[] = t('Grouping is not supported for field @field. ' .
+            $warnings[] = $this->t('Grouping is not supported for field @field. ' .
                 'Only single-valued fields not indexed as "Fulltext" are supported.',
                 array('@field' => $index_fields[$collapse_field]['name']));
             continue;
@@ -1833,7 +1831,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
           $corrected = str_ireplace(array_keys($replace), array_values($replace), $user_input);
           if ($corrected != $user_input) {
             array_unshift($suggestions, array(
-              'prefix' => t('Did you mean') . ':',
+              'prefix' => $this->t('Did you mean') . ':',
               'user_input' => $corrected,
             ));
           }
@@ -2080,8 +2078,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     $system_info = $this->getSystemInfo();
     // Get our solr version number
-    if (isset($system_info->lucene->{'solr-spec-version'})) {
-      return $system_info->lucene->{'solr-spec-version'}[0];
+    if (isset($system_info['lucene']['solr-spec-version'])) {
+      return $system_info['lucene']['solr-spec-version'];
     }
     return 0;
   }
@@ -2103,6 +2101,90 @@ class SearchApiSolrBackend extends BackendPluginBase {
     }
 
     return $this->systemInfo;
+  }
+
+  /**
+   * Gets meta-data about the index.
+   *
+   * @return object
+   *   A response object filled with data from Solr's Luke.
+   */
+  protected function getLuke() {
+    // @todo Write a patch for Solarium to have a separate Luke query and stop
+    // abusing the ping query for this.
+    $query = $this->solr->createPing();
+    $query->setHandler('admin/luke');
+    return $this->solr->ping($query)->getData();
+  }
+
+  /**
+   * Gets summary information about the Solr Core.
+   *
+   * @return array
+   */
+  protected function getStatsSummary() {
+    $summary = array(
+      '@pending_docs' => '',
+      '@autocommit_time_seconds' => '',
+      '@autocommit_time' => '',
+      '@deletes_by_id' => '',
+      '@deletes_by_query' => '',
+      '@deletes_total' => '',
+      '@schema_version' => '',
+      '@core_name' => '',
+      '@index_size' => '',
+    );
+
+    $solr_version = $this->getSolrVersion();
+    $query = $this->solr->createPing();
+    $query->setResponseWriter(Query::WT_PHPS);
+    if (version_compare($solr_version, '4', '>=')) {
+      $query->setHandler('admin/mbeans?stats=true');
+    }
+    else {
+      $query->setHandler('admin/stats.jsp');
+    }
+    $stats = $this->solr->ping($query)->getData();
+    if (!empty($stats)) {
+      if (version_compare($solr_version, '3', '<=')) {
+        // @todo Needs to be updated by someone who has a Solr 3.x setup.
+        /*
+        $docs_pending_xpath = $stats->xpath('//stat[@name="docsPending"]');
+        $summary['@pending_docs'] = (int) trim(current($docs_pending_xpath));
+        $max_time_xpath = $stats->xpath('//stat[@name="autocommit maxTime"]');
+        $max_time = (int) trim(current($max_time_xpath));
+        // Convert to seconds.
+        $summary['@autocommit_time_seconds'] = $max_time / 1000;
+        $summary['@autocommit_time'] = \Drupal::service('date')->formatInterval($max_time / 1000);
+        $deletes_id_xpath = $stats->xpath('//stat[@name="deletesById"]');
+        $summary['@deletes_by_id'] = (int) trim(current($deletes_id_xpath));
+        $deletes_query_xpath = $stats->xpath('//stat[@name="deletesByQuery"]');
+        $summary['@deletes_by_query'] = (int) trim(current($deletes_query_xpath));
+        $summary['@deletes_total'] = $summary['@deletes_by_id'] + $summary['@deletes_by_query'];
+        $schema = $stats->xpath('/solr/schema[1]');
+        $summary['@schema_version'] = trim($schema[0]);
+        $core = $stats->xpath('/solr/core[1]');
+        $summary['@core_name'] = trim($core[0]);
+        $size_xpath = $stats->xpath('//stat[@name="indexSize"]');
+        $summary['@index_size'] = trim(current($size_xpath));
+        */
+      }
+      else {
+        $update_handler_stats = $stats['solr-mbeans']['UPDATEHANDLER']['updateHandler']['stats'];
+        $summary['@pending_docs'] = (int) $update_handler_stats['docsPending'];
+        $max_time = (int) $update_handler_stats['autocommit maxTime'];
+        // Convert to seconds.
+        $summary['@autocommit_time_seconds'] = $max_time / 1000;
+        $summary['@autocommit_time'] = \Drupal::service('date')->formatInterval($max_time / 1000);
+        $summary['@deletes_by_id'] = (int) $update_handler_stats['deletesById'];
+        $summary['@deletes_by_query'] = (int) $update_handler_stats['deletesByQuery'];
+        $summary['@deletes_total'] = $summary['@deletes_by_id'] + $summary['@deletes_by_query'];
+        $summary['@schema_version'] = $this->getSystemInfo()['core']['schema'];
+        $summary['@core_name'] = $stats['solr-mbeans']['CORE']['core']['stats']['coreName'];
+        $summary['@index_size'] = $stats['solr-mbeans']['QUERYHANDLER']['/replication']['stats']['indexSize'];
+      }
+    }
+    return $summary;
   }
 
 }
