@@ -55,7 +55,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
   /**
    * Metadata describing fields on the Solr/Lucene index.
    *
-   * @see SearchApiSolrService::getFields().
+   * @see SearchApiSolrBackend::getFields().
    *
    * @var array
    */
@@ -696,7 +696,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * included. Any Solr fields that exist on search results are mapped back to
    * to their local field names in the final result set.
    *
-   * @see SearchApiSolrService::search()
+   * @see SearchApiSolrBackend::search()
    */
   public function getFieldNames(IndexInterface $index, $reset = FALSE) {
     if (!isset($this->fieldNames[$index->id()]) || $reset) {
@@ -1223,7 +1223,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
       // Extract properties from the Solr document, translating from Solr to
       // Search API property names. This reverses the mapping in
-      // SearchApiSolrService::getFieldNames().
+      // SearchApiSolrBackend::getFieldNames().
       foreach ($fields as $search_api_property => $solr_property) {
         if (isset($doc_fields[$solr_property])) {
           $result['fields'][$search_api_property] = $doc_fields[$solr_property];
@@ -1239,7 +1239,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
       // We can find the item id and score in the special 'search_api_*'
       // properties. Mappings are provided for these properties in
-      // SearchApiSolrService::getFieldNames().
+      // SearchApiSolrBackend::getFieldNames().
       list($datasource, $id) = explode(IndexInterface::DATASOURCE_ID_SEPARATOR, $result['fields']['search_api_id']);
       $result['id'] = $id;
       $result['datasource'] = $datasource;
@@ -1253,7 +1253,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       }
 
       // Use the result's id as the array key. By default, 'id' is mapped to
-      // 'item_id' in SearchApiSolrService::getFieldNames().
+      // 'item_id' in SearchApiSolrBackend::getFieldNames().
       if ($result['id']) {
         $results['results'][$result['fields']['search_api_id']] = $result;
       }
