@@ -252,21 +252,21 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
 
 function apachesolr_multilingual_copy_common_to_i18n_fields($src_document, $dst_document) {
   $fields = $src_document->getFieldNames();
+  $additionally_store_unstemmed = array(
+    'ts' => 'tus',
+    'tm' => 'tom',
+  );
 
   // Use language-specific stemming and so on by copying all fields of type text
   // to a language-specific text field.
-  if (in_array('label', $fields)) {
-    $dst_document->{'i18n_label_' . $src_document->ss_language} = $src_document->label;
+  foreach (array('label', 'teaser', 'content', 'path_alias') as $field_name) {
+    if (in_array($field_name, $fields)) {
+      $dst_document->{'i18n_' . $field_name . '_' . $src_document->ss_language} =
+        $dst_document->{'i18n_tus_' . $src_document->ss_language . '_' . $field_name} =
+          $src_document->{$field_name};
+    }
   }
-  if (in_array('teaser', $fields)) {
-    $dst_document->{'i18n_teaser_' . $src_document->ss_language} = $src_document->teaser;
-  }
-  if (in_array('content', $fields)) {
-    $dst_document->{'i18n_content_' . $src_document->ss_language} = $src_document->content;
-  }
-  if (in_array('path_alias', $fields)) {
-    $dst_document->{'i18n_path_alias_' . $src_document->ss_language} = $src_document->path_alias;
-  }
+
   foreach ($fields as $field_name) {
     $prefixes = array_keys(apachesolr_multilingual_get_dynamic_text_field_prefixes_and_types());
     $prefixes[] = 'tags_';
@@ -279,7 +279,11 @@ function apachesolr_multilingual_copy_common_to_i18n_fields($src_document, $dst_
           // language-specific dynamic fields and standard dynamic fields.
           // The language suffix is not enough, because someone could define a
           // drupal field name like 'de_foo', which matches ts_de_* but not i18n_ts_*
-          $dst_document->{'i18n_' . $tmp[0] . '_' . $src_document->ss_language . drupal_substr($field_name, drupal_strlen($tmp[0]))} = $src_document->{$field_name};
+          $new_field_name = 'i18n_' . $tmp[0] . '_' . $src_document->ss_language . drupal_substr($field_name, drupal_strlen($tmp[0]));
+          $dst_document->{$new_field_name} = $src_document->{$field_name};
+          if (array_key_exists($tmp[0], $additionally_store_unstemmed)) {
+            $dst_document->{str_replace(array_keys($additionally_store_unstemmed), array_values($additionally_store_unstemmed), $new_field_name)} = $src_document->{$field_name};
+          }
         }
       }
     }
@@ -306,9 +310,10 @@ function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, 
   $fields = apachesolr_search_get_fields($environment);
   $unspecified_types = $types = array_unique(array_values(apachesolr_multilingual_get_dynamic_text_field_prefixes_and_types()));
   $defaults = array();
+
   foreach (array_keys(apachesolr_multilingual_language_list()) as $language_id) {
     foreach ($unspecified_types as $type) {
-      if (strpos($type, 'text') === 0) {
+      if (strpos($type, 'text') === 0) { // matches text_und, too
         // Register language specific text types to add all fields based on this
         // these types to the bias form.
         $types[] = $type . '_' . $language_id;
@@ -327,6 +332,12 @@ function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, 
     $defaults['i18n_tags_' . $language_id . '_h4_h5_h6'] = '2.0';
     $defaults['i18n_tags_' . $language_id . '_inline'] = '1.0';
     $defaults['i18n_tags_' . $language_id . '_a'] = '0';
+    $defaults['i18n_tus_' . $language_id . '_content'] = '0';
+    $defaults['i18n_tus_' . $language_id . '_comments'] = '0';
+    $defaults['i18n_tus_' . $language_id . '_label'] = '0';
+    $defaults['i18n_tus_' . $language_id . '_teaser'] = '0';
+    $defaults['i18n_tus_' . $language_id . '_path_alias'] = '0';
+
   }
 
   $qf = apachesolr_environment_variable_get($environment['env_id'], 'field_bias', $defaults);
@@ -371,7 +382,8 @@ function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, 
         // lot of fields in this form.
         $form['field_bias'][$field_name]['#attributes']['class'][] = 'error';
         // TODO use a theme function to format this message.
-        $form['field_bias'][$field_name]['#description'] .= ' <span class="error">' . t('This field is new and needs to be configured.') . '</span>';
+        $form['field_bias'][$field_name]['#description'] = (isset($form['field_bias'][$field_name]['#description']) ? $form['field_bias'][$field_name]['#description'] : '') .
+          ' <span class="error">' . t('This field is new and needs to be configured.') . '</span>';
       }
       // The form contains at least one field that has never been configured
       // before. Display a corresponding message.
@@ -409,6 +421,12 @@ function apachesolr_multilingual_apachesolr_field_name_map_alter(&$map) {
     $map['i18n_tags_' . $language . '_h4_h5_h6'] = $language_name . ': ' . $map['tags_h4_h5_h6'];
     $map['i18n_tags_' . $language . '_inline'] = $language_name . ': ' . $map['tags_inline'];
     $map['i18n_tags_' . $language . '_a'] = $language_name . ': ' . $map['tags_a'];
+    $map['i18n_tus_' . $language . '_content'] = $language_name . ': ' . $map['content'] . ' ' . t('(Unstemmed)');
+    $map['i18n_tus_' . $language . '_comments'] = $language_name . ': ' . $map['ts_comments'] . ' ' . t('(Unstemmed)');
+    $map['i18n_tus_' . $language . '_label'] = $language_name . ': ' . $map['label'] . ' ' . t('(Unstemmed)');
+    $map['i18n_tus_' . $language . '_teaser'] = $language_name . ': ' . $map['teaser'] . ' ' . t('(Unstemmed)');
+    $map['i18n_tus_' . $language . '_path_alias'] = $language_name . ': ' . $map['path_alias'] . ' ' . t('(Unstemmed)');
+
     if (module_exists('taxonomy')) {
       $map['i18n_taxonomy_names_' . $language] = $language_name . ': ' . $map['taxonomy_names'];
       foreach (taxonomy_get_vocabularies() as $vocab) {
