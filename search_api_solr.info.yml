@@ -1,5 +1,5 @@
 type: module
-name: Solr search'
+name: 'Solr search'
 description: 'Offers an implementation of the Search API that uses an Apache Solr server for indexing content.'
 core: 8.x
 package: Search
