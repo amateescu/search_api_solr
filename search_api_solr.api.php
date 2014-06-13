@@ -67,14 +67,14 @@ function hook_search_api_solr_documents_alter(array &$documents, \Drupal\search_
 /**
  * Lets modules alter the search results returned from a Solr search.
  *
- * @param array $results
+ * @param \Drupal\search_api\Query\ResultSetInterface $results
  *   The results array that will be returned for the search.
- * @param SearchApiQueryInterface $query
+ * @param \Drupal\search_api\Query\QueryInterface $query
  *   The SearchApiQueryInterface object representing the executed search query.
  * @param object $response
  *   The Solr response object.
  */
-function hook_search_api_solr_search_results_alter(array &$results, SearchApiQueryInterface $query, $response) {
+function hook_search_api_solr_search_results_alter(\Drupal\search_api\Query\ResultSetInterface $results, \Drupal\search_api\Query\QueryInterface $query, $response) {
   if (isset($response->facet_counts->facet_fields->custom_field)) {
     // Do something with $results.
   }
