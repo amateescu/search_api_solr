@@ -574,21 +574,9 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * {@inheritdoc}
    */
   public function removeIndex(IndexInterface $index) {
-    $index_id = is_object($index) ? $index->id() : $index;
     // Only delete the index's data if the index isn't read-only.
     if (!is_object($index) || empty($index->read_only)) {
-      $this->connect();
-      $index_id = $this->getIndexId($index_id);
-      // Since the index ID we use for indexing can contain arbitrary
-      // prefixes, we have to escape it for use in the query.
-      $index_id = $this->getQueryHelper()->escapePhrase($index_id);
-      $query = "index_id:$index_id";
-      if (!empty($this->configuration['site_hash'])) {
-        // We don't need to escape the site hash, as that consists only of
-        // alphanumeric characters.
-        $query .= ' hash:' . search_api_solr_site_hash();
-      }
-      $this->solr->deleteByQuery($query);
+      $this->deleteAllItems($index);
     }
   }
 
@@ -600,8 +588,12 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $ret = array();
     $index_id = $this->getIndexId($index->id());
     $fields = $this->getFieldNames($index);
+    $fields_single_value = $this->getFieldNames($index, TRUE);
     $languages = language_list();
     $base_urls = array();
+
+    // Make sure that we have a Solr connection.
+    $this->connect();
 
     /** @var \Drupal\search_api\Item\ItemInterface[] $items */
     foreach ($items as $id => $item) {
@@ -640,7 +632,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
           $doc = NULL;
           break;
         }
-        $this->addIndexField($doc, $fields[$name], $field->getValues(), $field->getType());
+        $this->addIndexField($doc, $fields[$name], $fields_single_value[$name], $field->getValues(), $field->getType());
       }
 
       if ($doc) {
@@ -690,7 +682,15 @@ class SearchApiSolrBackend extends BackendPluginBase {
   }
 
   /**
-   * Create a list of all indexed field names mapped to their Solr field names.
+   * Creates a list of all indexed field names mapped to their Solr field names.
+   *
+   * @param \Drupal\search_api\Index\IndexInterface $index
+   *   The Search Api index.
+   * @param bool $single_value_name
+   *   (optional) Whether to return names for fields which store only the first
+   *   value of the field. Defaults to FALSE.
+   * @param bool $reset
+   *   (optional) Whether to reset the static cache.
    *
    * The special fields "search_api_id" and "search_api_relevance" are also
    * included. Any Solr fields that exist on search results are mapped back to
@@ -698,8 +698,9 @@ class SearchApiSolrBackend extends BackendPluginBase {
    *
    * @see SearchApiSolrBackend::search()
    */
-  public function getFieldNames(IndexInterface $index, $reset = FALSE) {
-    if (!isset($this->fieldNames[$index->id()]) || $reset) {
+  public function getFieldNames(IndexInterface $index, $single_value_name = FALSE, $reset = FALSE) {
+    $subkey = (int) $single_value_name;
+    if (!isset($this->fieldNames[$index->id()][$subkey]) || $reset) {
       // This array maps "local property name" => "solr doc property name".
       $ret = array(
         'search_api_id' => 'item_id',
@@ -721,12 +722,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
         }
 
         $type_info = search_api_solr_get_data_type_info($type);
-        $pref = isset($type_info['prefix']) ? $type_info['prefix']: '';
-        if (empty($type_info['always multiValued'])) {
-          // @todo We assume that all fields can be multi-valued now, so the
-          // 'always multiValued' option doesn't make sense anymore.
-          $pref .= 'm';
-        }
+        $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
+        $pref .= ($single_value_name) ? 's' : 'm';
         if (!empty($this->configuration['clean_ids'])) {
           $name = $pref . '_' . str_replace(':', '$', $key);
         }
@@ -738,12 +735,13 @@ class SearchApiSolrBackend extends BackendPluginBase {
       }
 
       // Let modules adjust the field mappings.
-      $this->moduleHandler->alter('search_api_solr_field_mapping', $index, $ret);
+      $hook_name = $single_value_name ? 'search_api_solr_single_value_field_mapping' : 'search_api_solr_field_mapping';
+      $this->moduleHandler->alter($hook_name, $index, $ret);
 
-      $this->fieldNames[$index->id()] = $ret;
+      $this->fieldNames[$index->id()][$subkey] = $ret;
     }
 
-    return $this->fieldNames[$index->id()];
+    return $this->fieldNames[$index->id()][$subkey];
   }
 
   /**
@@ -753,7 +751,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * is the same as specified in
    * \Drupal\search_api\Backend\BackendSpecificInterface::indexItems().
    */
-  protected function addIndexField(Document $doc, $key, $values, $type) {
+  protected function addIndexField(Document $doc, $key, $key_single, $values, $type) {
     // Don't index empty values (i.e., when field is missing).
     if (!isset($values)) {
       return;
@@ -781,6 +779,10 @@ class SearchApiSolrBackend extends BackendPluginBase {
       }
       $doc->addField($key, $value);
     }
+
+    $field_value = $doc->{$key};
+    $first_value = (is_array($field_value)) ? reset($field_value) : $field_value ;
+    $doc->setField($key_single, $first_value);
   }
 
   /**
@@ -820,9 +822,22 @@ class SearchApiSolrBackend extends BackendPluginBase {
    */
   public function deleteAllItems(IndexInterface $index = NULL) {
     if ($index) {
-      $this->getUpdateQuery()->addDeleteQuery('*:*');
-      $this->scheduleCommit();
+      // Since the index ID we use for indexing can contain arbitrary
+      // prefixes, we have to escape it for use in the query.
+      $index_id = $this->getQueryHelper()->escapePhrase($index->id());
+      $index_id = $this->getIndexId($index_id);
+      $query = '(index_id:' . $index_id . ')';
+      if (!empty($this->configuration['site_hash'])) {
+        // We don't need to escape the site hash, as that consists only of
+        // alphanumeric characters.
+        $query .= ' AND (hash:' . search_api_solr_site_hash() . ')';
+      }
+      $this->getUpdateQuery()->addDeleteQuery($query);
     }
+    else {
+      $this->getUpdateQuery()->addDeleteQuery('*:*');
+    }
+    $this->scheduleCommit();
   }
 
   /**
@@ -835,6 +850,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $index = $query->getIndex();
     $index_id = $this->getIndexId($index->id());
     $fields = $this->getFieldNames($index);
+    $fields_single_value = $this->getFieldNames($index, TRUE);
     // Get Solr connection.
     $this->connect();
     $version = $this->getSolrVersion();
@@ -871,7 +887,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     // Extract sorts.
     foreach ($query->getSort() as $field => $order) {
-      $f = $fields[$field];
+      $f = $fields_single_value[$field];
       if (substr($f, 0, 3) == 'ss_') {
         $f = 'sort_' . substr($f, 3);
       }
@@ -880,10 +896,10 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     // Get facet fields.
     $facets = $query->getOption('search_api_facets', array());
-    $facet_params = $this->getFacetParams($facets, $fields, $fq);
+    $facet_params = $this->setFacets($facets, $fields, $fq, $solarium_query);
 
     // Handle highlighting.
-    $highlight_params = $this->getHighlightParams($query);
+    $this->setHighlighting($solarium_query, $query);
 
     // Handle More Like This query.
     $mlt = $query->getOption('search_api_mlt');
@@ -1079,16 +1095,11 @@ class SearchApiSolrBackend extends BackendPluginBase {
     }
     $rows = isset($options['limit']) ? $options['limit'] : 1000000;
     $solarium_query->setRows($rows);
-    /*
-    if (!empty($facet_params['facet.field'])) {
-      $params += $facet_params;
-    }
-    if (!empty($highlight_params)) {
-      $params += $highlight_params;
-    }
+
     if (!empty($options['search_api_spellcheck'])) {
-      $params['spellcheck'] = 'true';
+      $solarium_query->getSpellcheck();
     }
+    /*
     if (!empty($mlt_params['mlt.fl'])) {
       $params += $mlt_params;
     }
@@ -1292,18 +1303,20 @@ class SearchApiSolrBackend extends BackendPluginBase {
   }
 
   /**
-   * Extract facets from a Solr response.
+   * Extracts facets from a Solarium result set.
    *
-   * @param object $response
-   *   A response object from SolrPhpClient.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The search query.
+   * @param \Solarium\QueryType\Select\Result\Result $resultset
+   *   A Solarium select response object.
    *
    * @return array
    *   An array describing facets that apply to the current results.
    */
-  protected function extractFacets(QueryInterface $query, $response) {
+  protected function extractFacets(QueryInterface $query, Result $resultset) {
     $facets = array();
 
-    if (!isset($response->facet_counts)) {
+    if (!$resultset->getFacetSet()) {
       return $facets;
     }
 
@@ -1312,24 +1325,21 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     $extract_facets = $query->getOption('search_api_facets', array());
 
-    if (isset($response->facet_counts->facet_fields)) {
-      $facet_fields = $response->facet_counts->facet_fields;
-
+    if ($facet_fields = $resultset->getFacetSet()->getFacets()) {
       foreach ($extract_facets as $delta => $info) {
         $field = $fields[$info['field']];
-        if (!empty($facet_fields->$field)) {
+        if (!empty($facet_fields[$field])) {
           $min_count = $info['min_count'];
-          $terms = $facet_fields->$field;
+          $terms = $facet_fields[$field]->getValues();
           if ($info['missing']) {
             // We have to correctly incorporate the "_empty_" term.
             // This will ensure that the term with the least results is dropped,
             // if the limit would be exceeded.
-            if (isset($terms->_empty_)) {
-              if ($terms->_empty_ < $min_count) {
-                unset($terms->_empty_);
+            if (isset($terms[''])) {
+              if ($terms[''] < $min_count) {
+                unset($terms['']);
               }
               else {
-                $terms = (array) $terms;
                 arsort($terms);
                 if ($info['limit'] > 0 && count($terms) > $info['limit']) {
                   array_pop($terms);
@@ -1337,14 +1347,13 @@ class SearchApiSolrBackend extends BackendPluginBase {
               }
             }
           }
-          elseif (isset($terms->_empty_)) {
-            $terms = clone $terms;
-            unset($terms->_empty_);
+          elseif (isset($terms[''])) {
+            unset($terms['']);
           }
-          $type = isset($index->options['fields'][$info['field']]['type']) ? search_api_extract_inner_type($index->options['fields'][$info['field']]['type']) : 'string';
+          $type = isset($index->options['fields'][$info['field']]['type']) ? $index->options['fields'][$info['field']]['type'] : 'string';
           foreach ($terms as $term => $count) {
             if ($count >= $min_count) {
-              if ($term === '_empty_') {
+              if ($term === '') {
                 $term = '!';
               }
               elseif ($type == 'boolean') {
@@ -1374,13 +1383,12 @@ class SearchApiSolrBackend extends BackendPluginBase {
           }
         }
       }
-
     }
 
-    if (isset($response->facet_counts->facet_queries)) {
+    $result_data = $resultset->getData();
+    if (isset($result_data['facet_counts']['facet_queries'])) {
       if ($spatials = $query->getOption('search_api_location')) {
-        $queries = array();
-        foreach ($response->facet_counts->facet_queries as $key => $count) {
+        foreach ($result_data['facet_counts']['facet_queries'] as $key => $count) {
           if (!preg_match('/^spatial-(.*)-(\d+(?:\.\d+)?)$/', $key, $m)) {
             continue;
           }
@@ -1407,11 +1415,14 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * @param array $keys
    *   The keys array to flatten, formatted as specified by
    *   \Drupal\search_api\Query\QueryInterface::getKeys().
+   * @param bool $is_nested
+   *   (optional) Whether the function is called for a nested condition.
+   *   Defaults to FALSE.
    *
    * @return string
    *   A Solr query string representing the same keys.
    */
-  protected function flattenKeys(array $keys) {
+  protected function flattenKeys(array $keys, $is_nested = FALSE) {
     $k = array();
     $or = $keys['#conjunction'] == 'OR';
     $neg = !empty($keys['#negation']);
@@ -1422,7 +1433,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
         continue;
       }
       if (is_array($key)) {
-        $subkeys = $this->flattenKeys($key);
+        $subkeys = $this->flattenKeys($key, TRUE);
         if ($subkeys) {
           $nested_expressions = TRUE;
           // If this is a negated OR expression, we can't just use nested keys
@@ -1464,7 +1475,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       }
       return '((' . implode(') OR (', $k) . '))';
     }
-    $k = implode($neg ? ' AND ' : ' ', $k);
+    $k = implode($neg || $is_nested ? ' AND ' : ' ', $k);
     return $neg ? "*:* AND -($k)" : $k;
   }
 
@@ -1549,15 +1560,16 @@ class SearchApiSolrBackend extends BackendPluginBase {
   /**
    * Helper method for creating the facet field parameters.
    */
-  protected function getFacetParams(array $facets, array $fields, array &$fq = array()) {
+  protected function setFacets(array $facets, array $fields, array &$fq = array(), Query $solarium_query) {
     if (!$facets) {
       return array();
     }
-    $facet_params['facet'] = 'true';
-    $facet_params['facet.sort'] = 'count';
-    $facet_params['facet.limit'] = 10;
-    $facet_params['facet.mincount'] = 1;
-    $facet_params['facet.missing'] = 'false';
+    $facet_set = $solarium_query->getFacetSet();
+    $facet_set->setSort('count');
+    $facet_set->setLimit(10);
+    $facet_set->setMinCount(1);
+    $facet_set->setMissing(FALSE);
+
     $taggedFields = array();
     foreach ($facets as $info) {
       if (empty($fields[$info['field']])) {
@@ -1571,23 +1583,24 @@ class SearchApiSolrBackend extends BackendPluginBase {
         $escaped = static::escapeFieldName($fields[$info['field']]);
         $taggedFields[$escaped] = "{!tag=$escaped}";
         // Add the facet field.
-        $facet_params['facet.field'][] = "{!ex=$escaped}$field";
+        $facet_field = $facet_set->createFacetField($field)->setField("{!ex=$escaped}$field");
       }
       else {
         // Add the facet field.
-        $facet_params['facet.field'][] = $field;
+        $facet_field = $facet_set->createFacetField($field)->setField($field);
       }
       // Set limit, unless it's the default.
       if ($info['limit'] != 10) {
-        $facet_params["f.$field.facet.limit"] = $info['limit'] ? $info['limit'] : -1;
+        $limit = $info['limit'] ? $info['limit'] : -1;
+        $facet_field->setLimit($limit);
       }
       // Set mincount, unless it's the default.
       if ($info['min_count'] != 1) {
-        $facet_params["f.$field.facet.mincount"] = $info['min_count'];
+        $facet_field->setMinCount($info['min_count']);
       }
       // Set missing, if specified.
       if ($info['missing']) {
-        $facet_params["f.$field.facet.missing"] = 'true';
+        $facet_field->setMissing(TRUE);
       }
     }
     // Tag filters of fields with "OR" facets.
@@ -1604,52 +1617,46 @@ class SearchApiSolrBackend extends BackendPluginBase {
         }
       }
     }
-
-    return $facet_params;
   }
 
   /**
-   * Helper method for creating the highlighting parameters.
+   * Sets the highlighting parameters.
    *
    * (The $query parameter currently isn't used and only here for the potential
    * sake of subclasses.)
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The query object.
-   *
-   * @return array
-   *   An array of parameters to be added to the Solr search request.
+   * @param \Solarium\QueryType\Select\Query\Query $solarium_query
+   *   The Solarium select query object.
    */
-  protected function getHighlightParams(QueryInterface $query) {
-    $highlight_params = array();
-
+  protected function setHighlighting(Query $solarium_query, QueryInterface $query) {
     if (!empty($this->configuration['excerpt']) || !empty($this->configuration['highlight_data'])) {
-      $highlight_params['hl'] = 'true';
-      $highlight_params['hl.fl'] = 'spell';
-      $highlight_params['hl.simple.pre'] = '[HIGHLIGHT]';
-      $highlight_params['hl.simple.post'] = '[/HIGHLIGHT]';
-      $highlight_params['hl.snippets'] = 3;
-      $highlight_params['hl.fragsize'] = 70;
-      $highlight_params['hl.mergeContiguous'] = 'true';
+      $hl = $solarium_query->getHighlighting();
+      $hl->setFields('spell');
+      $hl->setSimplePrefix('[HIGHLIGHT]');
+      $hl->setSimplePostfix('[/HIGHLIGHT]');
+      $hl->setSnippets(3);
+      $hl->setFragSize(70);
+      $hl->setMergeContiguous(TRUE);
     }
 
     if (!empty($this->configuration['highlight_data'])) {
-      $highlight_params['hl.fl'] = 'tm_*';
-      $highlight_params['hl.snippets'] = 1;
-      $highlight_params['hl.fragsize'] = 0;
+      $hl = $solarium_query->getHighlighting();
+      $hl->setFields('tm_*');
+      $hl->setSnippets(1);
+      $hl->setFragSize(0);
       if (!empty($this->configuration['excerpt'])) {
         // If we also generate a "normal" excerpt, set the settings for the
         // "spell" field (which we use to generate the excerpt) back to the
         // above values.
-        $highlight_params['f.spell.hl.snippets'] = 3;
-        $highlight_params['f.spell.hl.fragsize'] = 70;
+        $hl->getField('spell')->setSnippets(3);
+        $hl->getField('spell')->setFragSize(70);
         // It regrettably doesn't seem to be possible to set hl.fl to several
         // values, if one contains wild cards (i.e., "t_*,spell" wouldn't work).
-        $highlight_params['hl.fl'] = '*';
+        $hl->setFields('*');
       }
     }
-
-    return $highlight_params;
   }
 
   /**
@@ -1939,6 +1946,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
   public function commit() {
     try {
       if (static::$updateQuery) {
+        $this->connect();
         $this->getUpdateQuery()->addCommit();
         $this->solr->update($this->getUpdateQuery());
       }

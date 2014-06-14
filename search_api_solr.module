@@ -154,12 +154,9 @@ function search_api_solr_get_data_type_info($type = NULL) {
     $types = Utility::getDataTypeInfo();
 
     // Add our extras for the default search api fields.
-    // @todo We assume that all fields can be multi-valued now, so the
-    // 'always multiValued' option doesn't make sense anymore.
     $types += array(
       'text' => array(
-        'prefix' => 'tm',
-        'always multiValued' => TRUE,
+        'prefix' => 't',
       ),
       'string' => array(
         'prefix' => 's',
@@ -183,8 +180,7 @@ function search_api_solr_get_data_type_info($type = NULL) {
         'prefix' => 's',
       ),
       'tokens' => array(
-        'prefix' => 'tm',
-        'always multiValued' => TRUE,
+        'prefix' => 't',
       ),
     );
 

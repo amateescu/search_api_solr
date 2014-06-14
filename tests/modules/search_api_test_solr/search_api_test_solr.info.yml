@@ -1,0 +1,8 @@
+type: module
+name: 'Search API Test Solr search'
+description: 'Support module for Search API Solr search tests.'
+package: 'Search API'
+dependencies:
+  - search_api_test_db
+core: 8.x
+hidden: true
