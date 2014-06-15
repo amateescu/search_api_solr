@@ -573,10 +573,10 @@ class SearchApiSolrBackend extends BackendPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function removeIndex(IndexInterface $index) {
+  public function removeIndex($index) {
     // Only delete the index's data if the index isn't read-only.
     if (!is_object($index) || empty($index->read_only)) {
-      $this->deleteAllItems($index);
+      $this->deleteAllIndexItems($index);
     }
   }
 
@@ -820,7 +820,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function deleteAllItems(IndexInterface $index = NULL) {
+  public function deleteAllIndexItems(IndexInterface $index = NULL) {
     if ($index) {
       // Since the index ID we use for indexing can contain arbitrary
       // prefixes, we have to escape it for use in the query.
