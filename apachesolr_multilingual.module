@@ -500,8 +500,10 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
       // @see https://drupal.org/node/2056055
       $mlt_block_settings = apachesolr_search_mlt_block_load($context['block_id']);
       if ($mlt_block_settings && array_key_exists('apachesolr_multilingual_query_settings', $mlt_block_settings)) {
-        $settings = $mlt_block_settings['apachesolr_multilingual_query_settings'];
+        $custom_settings = $mlt_block_settings['apachesolr_multilingual_query_settings'];
       }
+      // Use mlt block is as page id later in this function.
+      $context['page_id'] = $context['block_id'];
     }
     elseif (!empty($context['page_id'])) {
       // Load multilingual custom settings assigned to this search page.
