@@ -8,7 +8,7 @@ function search_api_solr_requirements($phase) {
 
   if ($phase == 'runtime') {
     /** @var \Drupal\search_api\Server\ServerInterface[] $servers */
-    $servers = entity_load_multiple_by_properties('search_api_server', array('backendPluginId' => 'search_api_solr', 'status' => TRUE));
+    $servers = entity_load_multiple_by_properties('search_api_server', array('backend' => 'search_api_solr', 'status' => TRUE));
     $count = 0;
     $unavailable = 0;
     $last = NULL;

@@ -1,8 +1,8 @@
 machine_name: solr_search_server
 name: 'Solr search server'
 description: 'A server used for testing.'
-backendPluginId: search_api_solr
-backendPluginConfig:
+backend: search_api_solr
+backend_config:
   clean_ids: true
   site_hash: true
   scheme: http
