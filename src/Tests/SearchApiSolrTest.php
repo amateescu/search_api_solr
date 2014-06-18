@@ -124,6 +124,10 @@ class SearchApiSolrTest extends SearchApiDbTest {
     // The parent assertions don't make sense for the Solr backend.
   }
 
+  protected function editServer() {
+    // The parent assertions don't make sense for the Solr backend.
+  }
+
   /**
    * {@inheritdoc}
    */

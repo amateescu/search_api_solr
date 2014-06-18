@@ -1,7 +1,7 @@
 machine_name: solr_search_index
 name: 'Test index'
 description: 'An index used for testing.'
-readOnly: false
+read_only: false
 options:
   cron_limit: -1
   index_directly: false
@@ -20,14 +20,14 @@ options:
     search_api_language:
       type: string
   processors:
-    search_api_language_processor:
+    language:
       status: true
-datasourcePluginIds:
+datasources:
   - 'entity:entity_test'
-datasourcePluginConfigs: {  }
-trackerPluginId: default_tracker
-trackerPluginConfig: {  }
-serverMachineName: solr_search_server
+datasource_configs: {  }
+tracker: default_tracker
+tracker_config: {  }
+server: solr_search_server
 status: 1
 langcode: en
 dependencies:
