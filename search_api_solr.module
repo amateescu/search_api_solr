@@ -109,17 +109,6 @@ function search_api_solr_search_api_server_update(ServerInterface $server) {
 }
 
 /**
- * Implements hook_views_api().
- */
-function search_api_solr_views_api() {
-  if (module_exists('search_api_views')) {
-    return array(
-      'api' => 3,
-    );
-  }
-}
-
-/**
  * Retrieves Solr-specific data for available data types.
  *
  * Returns the data type information for both the default Search API data types
