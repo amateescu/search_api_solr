@@ -11,22 +11,18 @@
  */
 
 /**
- * Lets modules alter a Solr search request before sending it.
+ * Lets modules alter the Solarium select query before executing it.
  *
- * Apache_Solr_Service::search() is called afterwards with these parameters.
- * Please see this method for details on what should be altered where and what
- * is set afterwards.
- *
- * @param array $call_args
- *   An associative array containing all three arguments to the
- *   SearchApiSolrConnectionInterface::search() call ("query", "params" and
- *   "method") as references.
- * @param SearchApiQueryInterface $query
- *   The SearchApiQueryInterface object representing the executed search query.
+ * @param \Solarium\QueryType\Select\Query\Query $solarium_query
+ *   The Solarium query object, as generated from the Search API query.
+ * @param \Drupal\search_api\Query\QueryInterface $query
+ *   The Search API query object representing the executed search query.
  */
-function hook_search_api_solr_query_alter(array &$call_args, SearchApiQueryInterface $query) {
+function hook_search_api_solr_query_alter(\Solarium\QueryType\Select\Query\Query $solarium_query, \Drupal\search_api\Query\QueryInterface $query) {
   if ($query->getOption('foobar')) {
-    $call_args['params']['foo'] = 'bar';
+    // If the Search API query has a 'foobar' option, remove all sorting options
+    // from the Solarium query.
+    $solarium_query->clearSorts();
   }
 }
 
@@ -41,8 +37,8 @@ function hook_search_api_solr_query_alter(array &$call_args, SearchApiQueryInter
  *   are also included.
  */
 function hook_search_api_solr_field_mapping_alter(\Drupal\search_api\Index\IndexInterface $index, array &$fields) {
-  if ($index->entity_type == 'node' && isset($fields['body:value'])) {
-    $fields['body:value'] = 'text';
+  if (in_array('entity:node', $index->getDatasourceIds()) && isset($fields['entity:node|body'])) {
+    $fields['entity:node|body'] = 'tm_entity$node|body_value';
   }
 }
 
@@ -58,8 +54,8 @@ function hook_search_api_solr_field_mapping_alter(\Drupal\search_api\Index\Index
  *   are also included.
  */
 function hook_search_api_solr_single_value_field_mapping_alter(\Drupal\search_api\Index\IndexInterface $index, array &$fields) {
-  if ($index->entity_type == 'node' && isset($fields['body:value'])) {
-    $fields['body:value'] = 'text';
+  if (in_array('entity:node', $index->getDatasourceIds()) && isset($fields['entity:node|body'])) {
+    $fields['entity:node|body'] = 'ts_entity$node|body_value';
   }
 }
 
@@ -71,10 +67,10 @@ function hook_search_api_solr_single_value_field_mapping_alter(\Drupal\search_ap
  *   ready to be indexed, generated from $items array.
  * @param \Drupal\search_api\Index\IndexInterface $index
  *   The search index for which items are being indexed.
- * @param array $items
- *   An array of items being indexed.
+ * @param \Drupal\search_api\Item\ItemInterface[] $items
+ *   An array of items to be indexed, keyed by their item IDs.
  */
-function hook_search_api_solr_documents_alter(array &$documents, \Drupal\search_api\Index\IndexInterface $index, array $items) {
+function hook_search_api_solr_documents_alter(array $documents, \Drupal\search_api\Index\IndexInterface $index, array $items) {
   // Adds a "foo" field with value "bar" to all documents.
   foreach ($documents as $document) {
     $document->setField('foo', 'bar');
@@ -88,47 +84,12 @@ function hook_search_api_solr_documents_alter(array &$documents, \Drupal\search_
  *   The results array that will be returned for the search.
  * @param \Drupal\search_api\Query\QueryInterface $query
  *   The SearchApiQueryInterface object representing the executed search query.
- * @param object $response
- *   The Solr response object.
+ * @param \Solarium\QueryType\Select\Result\Result $resultset
+ *   The Solarium result object.
  */
-function hook_search_api_solr_search_results_alter(\Drupal\search_api\Query\ResultSetInterface $results, \Drupal\search_api\Query\QueryInterface $query, $response) {
-  if (isset($response->facet_counts->facet_fields->custom_field)) {
-    // Do something with $results.
-  }
-}
-
-/**
- * Lets modules alter a Solr search request for a multi-index search.
- *
- * SearchApiSolrConnectionInterface::search() is called afterwards with these
- * parameters. Please see this method for details on what should be altered
- * where and what is set afterwards.
- *
- * @param array $call_args
- *   An associative array containing all three arguments to the
- *   SearchApiSolrConnectionInterface::search() call ("query", "params" and
- *   "method") as references.
- * @param SearchApiMultiQueryInterface $query
- *   The object representing the executed search query.
- */
-function hook_search_api_solr_multi_query_alter(array &$call_args, SearchApiMultiQueryInterface $query) {
-  if ($query->getOption('foobar')) {
-    $call_args['params']['foo'] = 'bar';
-  }
-}
-
-/**
- * Lets modules alter the search results returned from a multi-index search.
- *
- * @param array $results
- *   The results array that will be returned for the search.
- * @param SearchApiMultiQueryInterface $query
- *   The executed multi-index search query.
- * @param object $response
- *   The Solr response object.
- */
-function hook_search_api_solr_multi_search_results_alter(array &$results, SearchApiMultiQueryInterface $query, $response) {
-  if (isset($response->facet_counts->facet_fields->custom_field)) {
+function hook_search_api_solr_search_results_alter(\Drupal\search_api\Query\ResultSetInterface $results, \Drupal\search_api\Query\QueryInterface $query, \Solarium\QueryType\Select\Result\Result $resultset) {
+  $resultset_data = $resultset->getData();
+  if (isset($resultset_data['facet_counts']['facet_fields']['custom_field'])) {
     // Do something with $results.
   }
 }
