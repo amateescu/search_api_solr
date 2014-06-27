@@ -1,0 +1,105 @@
+<?php
+
+/**
+ * @file
+ * Contains \Drupal\search_api_solr\Form\SolrConfigForm.
+ */
+
+namespace Drupal\search_api_solr\Form;
+
+use Drupal\Component\Utility\String;
+use Drupal\Core\Form\FormBase;
+use Drupal\Core\Routing\Access\AccessInterface;
+use Drupal\search_api\Exception\SearchApiException;
+use Drupal\search_api\Server\ServerInterface;
+use Drupal\search_api_solr\Plugin\SearchApi\Backend\SearchApiSolrBackend;
+
+/**
+ * A basic form with a passed entity with an interface.
+ */
+class SolrConfigForm extends FormBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId() {
+    return 'solr_config_form';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, array &$form_state, ServerInterface $search_api_server = NULL) {
+    $form['#title'] = $this->t('List of configuration files found');
+
+    try {
+      // Retrieve the list of available files.
+      $files_list = search_api_solr_server_get_files($search_api_server);
+
+      if (empty($files_list)) {
+        $form['info']['#markup'] = $this->t('No files found.');
+        return $form;
+      }
+
+      $form['files_tabs'] = array(
+        '#type' => 'vertical_tabs',
+      );
+
+      // Generate a fieldset for each file.
+      foreach ($files_list as $file_name => $file_info) {
+        $file_date = format_date(strtotime($file_info['modified']));
+        $escaped_file_name = String::checkPlain($file_name);
+
+        $form['files'][$file_name] = array(
+          '#type'  => 'details',
+          '#title' => $escaped_file_name,
+          '#group' => 'files_tabs',
+        );
+
+        $data = '<h3>' . $escaped_file_name . '</h3>';
+        $data .= '<p><em>' . $this->t('Last modified: @time.', array('@time' => $file_date)) . '</em></p>';
+
+        if ($file_info['size'] > 0) {
+          $file_data = $search_api_server->getBackend()->getFile($file_name);
+          $data .= '<pre><code>' . String::checkPlain($file_data->getBody()) . '</code></pre>';
+        }
+        else {
+          $data .= '<p><em>' . $this->t('The file is empty.') . '</em></p>';
+        }
+
+        $form['files'][$file_name]['data']['#markup'] = $data;
+      }
+    }
+    catch (SearchApiException $e) {
+      watchdog_exception('search_api_solr', $e, '%type while retrieving config files of Solr server @server: !message in %function (line %line of %file).', array('@server' => $search_api_server->label()));
+      $form['info']['#markup'] = $this->t('An error occured while trying to load the list of files.');
+    }
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, array &$form_state) {
+  }
+
+  /**
+   * Checks access for the Solr config form.
+   *
+   * @param \Drupal\search_api\Server\ServerInterface $search_api_server
+  *   The server for which access should be tested.
+   *
+   * @return string
+   *   Returns AccessInterface::ALLOW when access was granted, otherwise
+   *   AccessInterface::DENY.
+   */
+  public function access(ServerInterface $search_api_server) {
+    if ($search_api_server->hasValidBackend() && $search_api_server->getBackend() instanceof SearchApiSolrBackend) {
+      return AccessInterface::ALLOW;
+    }
+
+    return AccessInterface::DENY;
+  }
+
+}

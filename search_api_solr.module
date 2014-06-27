@@ -12,26 +12,6 @@ use Drupal\search_api\Utility\Utility;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Implements hook_menu().
- */
-function search_api_solr_menu() {
-  $items['admin/config/search/search_api/server/%search_api_server/files'] = array(
-    'title' => 'Files',
-    'description' => 'View Solr configuration files.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('search_api_solr_solr_config_form', 5),
-    'access callback' => 'search_api_solr_access_server_files',
-    'access arguments' => array(5),
-    'file' => 'search_api_solr.admin.inc',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => -1,
-    'context' => MENU_CONTEXT_INLINE | MENU_CONTEXT_PAGE,
-  );
-
-  return $items;
-}
-
-/**
  * Implements hook_help().
  */
 function search_api_solr_help($route_name, Request $request) {
@@ -232,9 +212,9 @@ function search_api_solr_site_hash() {
 }
 
 /**
- * Retrieves a list of all config files of a server.
+ * Retrieves a list of all config files of a server's Solr backend.
  *
- * @param SearchApiServer $server
+ * @param \Drupal\search_api\Server\ServerInterface $server
  *   The Solr server whose files should be retrieved.
  * @param string $dir_name
  *   (optional) The directory that should be searched for files. Defaults to the
@@ -245,14 +225,14 @@ function search_api_solr_site_hash() {
  *   are the file names, values are arrays with information about the file. The
  *   files are returned in alphabetical order and breadth-first.
  *
- * @throws SearchApiException
+ * @throws \Drupal\search_api\Exception\SearchApiException
  *   If a problem occurred while retrieving the files.
  */
-function search_api_solr_server_get_files(SearchApiServer $server, $dir_name = NULL) {
-  $response = $server->getFile($dir_name);
+function search_api_solr_server_get_files(ServerInterface $server, $dir_name = NULL) {
+  $response = $server->getBackend()->getFile($dir_name);
 
   // Search for directories and recursively merge directory files.
-  $files_data = json_decode($response->data, TRUE);
+  $files_data = json_decode($response->getBody(), TRUE);
   $files_list = $files_data['files'];
   $dir_length = strlen($dir_name) + 1;
   $result = array('' => array());
@@ -276,46 +256,6 @@ function search_api_solr_server_get_files(SearchApiServer $server, $dir_name = N
   ksort($result);
   ksort($result['']);
   return array_reduce($result, 'array_merge', array());
-}
-
-/**
- * @deprecated
- *
- * @see search_api_solr_access_server_files()
- */
-function search_api_access_server_files(SearchApiServer $server) {
-  return search_api_solr_access_server_files($server);
-}
-
-/**
- * Access callback for a server's "Files" tab.
- *
- * Grants access if the user has the "administer search_api" permission and the
- * server is a Solr server.
- *
- * @param SearchApiServer $server
- *   The server for which access should be tested.
- *
- * @return bool
- *   TRUE if access should be granted, FALSE otherwise.
- */
-function search_api_solr_access_server_files(SearchApiServer $server) {
-  if (!user_access('administer search_api')) {
-    return FALSE;
-  }
-  $service_info = search_api_get_service_info($server->class);
-  $service_class = $service_info['class'];
-
-  if (empty($service_class) || !class_exists($service_class)) {
-    // Service class not found.
-    return FALSE;
-  }
-  if ($service_class == 'SearchApiSolrService' || in_array('SearchApiSolrService', class_parents($service_class))) {
-    // It's an SearchApiSolrService based connection class.
-    return TRUE;
-  }
-
-  return FALSE;
 }
 
 /**

@@ -2008,19 +2008,21 @@ class SearchApiSolrBackend extends BackendPluginBase {
    *   the directory contents are instead listed and returned. NULL represents
    *   the root config directory.
    *
-   * @return object
-   *  A HTTP response object containing either the file contents or a file list.
+   * @return \Solarium\Core\Client\Response
+   *   A Solarium response object containing either the file contents or a file
+   *   list.
    */
   public function getFile($file = NULL) {
     $this->connect();
 
-    $file_servlet_name = constant($this->connection_class . '::FILE_SERVLET');
-
-    $params['contentType'] = 'text/xml;charset=utf-8';
+    $query = $this->solr->createPing();
+    $query->setHandler('admin/file');
+    $query->addParam('contentType', 'text/xml;charset=utf-8');
     if ($file) {
-      $params['file'] = $file;
+      $query->addParam('file', $file);
     }
-    return $this->solr->makeServletRequest($file_servlet_name, $params);
+
+    return $this->solr->ping($query)->getResponse();
   }
 
   /**
