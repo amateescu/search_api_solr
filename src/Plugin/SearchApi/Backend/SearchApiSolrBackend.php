@@ -18,6 +18,7 @@ use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\Utility;
 use Solarium\Client;
+use Solarium\Core\Client\Request;
 use Solarium\Core\Query\Helper;
 use Solarium\QueryType\Select\Query\Query;
 use Solarium\Exception\HttpException;
@@ -1110,25 +1111,27 @@ class SearchApiSolrBackend extends BackendPluginBase {
     if (!empty($this->configuration['retrieve_data'])) {
       $solarium_query->setFields('*,score');
     }
-    // Retrieve http method from server options.
-    $http_method = !empty($this->configuration['http_method']) ? $this->configuration['http_method'] : 'AUTO';
-
-//    $call_args = array(
-//      'query'       => &$keys,
-//      'params'      => &$params,
-//      'http_method' => &$http_method,
-//    );
-//    if ($this->request_handler) {
-//      $this->setRequestHandler($this->request_handler, $call_args);
-//    }
 
     try {
-      // Send search request.
       $this->moduleHandler->alter('search_api_solr_query', $solarium_query, $query);
       $this->preQuery($solarium_query, $query);
 
-      // @todo Figure out when to use $http_method.
-      $resultset = $this->solr->select($solarium_query);
+      // Use the manual method of creating a Solarium request so we can control
+      // the HTTP method.
+      $request = $this->solr->createRequest($solarium_query);
+
+      // Set the HTTP method or use the 'postbigrequest' plugin if no specific
+      // method is configured.
+      if ($this->configuration['http_method'] == 'AUTO') {
+        $this->solr->getPlugin('postbigrequest');
+      }
+      elseif ($this->configuration['http_method'] == 'POST') {
+        $request->setMethod(Request::METHOD_POST);
+      }
+
+      // Send search request.
+      $response = $this->solr->executeRequest($request);
+      $resultset = $this->solr->createResult($solarium_query, $response);
 
       // Extract results.
       $results = $this->extractResults($query, $resultset);
