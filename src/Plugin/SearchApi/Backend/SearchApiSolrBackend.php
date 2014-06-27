@@ -1129,6 +1129,11 @@ class SearchApiSolrBackend extends BackendPluginBase {
         $request->setMethod(Request::METHOD_POST);
       }
 
+      // Set HTTP Basic Authentication parameter, if login data was set.
+      if (strlen($this->configuration['http_user']) && strlen($this->configuration['http_pass'])) {
+        $request->setAuthentication($this->configuration['http_user'], $this->configuration['http_pass']);
+      }
+
       // Send search request.
       $response = $this->solr->executeRequest($request);
       $resultset = $this->solr->createResult($solarium_query, $response);
