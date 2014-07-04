@@ -5,16 +5,16 @@
  * Provides a Solr-based service class for the Search API.
  */
 
+use \Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Utility\Utility;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Implements hook_help().
  */
-function search_api_solr_help($route_name, Request $request) {
+function search_api_solr_help($route_name, RouteMatchInterface $route_match) {
   if ($route_name == 'search_api.overview') {
     // Included because we need the REQUIREMENT_* constants.
     include_once(DRUPAL_ROOT . '/core/includes/install.inc');
