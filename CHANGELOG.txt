@@ -7,6 +7,7 @@ Apache Solr Multilingual 7.x-1.1, 2014-xx-xx
 [#2056055] mkalkbrenner: Provide multilingual settings for More like this (MLT)
 [        ] mkalkbrenner: Keep field sm_missing_translations in sync when using content translation
 [#2307367] mkalkbrenner: make the module compatible with solr attachment
+[#2277121] dunix: Broken link in field bias requirement description
 
 
 Apache Solr Multilingual 7.x-1.0, 2014-02-26
