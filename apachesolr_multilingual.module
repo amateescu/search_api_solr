@@ -213,7 +213,16 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
               // when original document is removed. See apachesolr_index_delete_entity_from_index().
               $additional_documents[$id]->sm_parent_document_id = array($document->id);
 
-              apachesolr_index_node_solr_document($additional_documents[$id], $entity, $entity_type, $env_id);
+              list(, , $bundle) = entity_extract_ids('node', $entity);
+              //Get the callback array to add stuff to the document
+              $document_callbacks = apachesolr_entity_get_callback($entity_type, 'document callback', $bundle);
+              $documents = array();
+              foreach ($document_callbacks as $document_callback) {
+                // Call a type-specific callback to add stuff to the document.
+                // Generic use case for future reference. Callbacks can
+                // allow you to send back multiple documents
+                $documents = array_merge($documents, $document_callback($additional_documents[$id], $entity, $entity_type, $env_id));
+              }
 
               // Recursive call to deal with 'apachesolr_multilingual_index_translations' aka CLIR and title field, see above and below
               apachesolr_multilingual_apachesolr_index_documents_alter($additional_documents, $entity, $entity_type, $env_id);
@@ -262,8 +271,8 @@ function apachesolr_multilingual_copy_common_to_i18n_fields($src_document, $dst_
   foreach (array('label', 'teaser', 'content', 'path_alias') as $field_name) {
     if (in_array($field_name, $fields)) {
       $dst_document->{'i18n_' . $field_name . '_' . $src_document->ss_language} =
-        $dst_document->{'i18n_tus_' . $src_document->ss_language . '_' . $field_name} =
-          $src_document->{$field_name};
+      $dst_document->{'i18n_tus_' . $src_document->ss_language . '_' . $field_name} =
+        $src_document->{$field_name};
     }
   }
 
@@ -798,7 +807,7 @@ function apachesolr_multilingual_form_apachesolr_environment_edit_form_alter(&$f
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#description' => filter_xss(t('<strong>Cross-language information retrieval</strong>. As a special feature Apache Solr Multilingual could be configured to provide a simple implementation of CLIR. That means that you can find content in any language it has been translated to, no matter which language was used to enter the search phrase. The standard use case for CLIR is to have only a few good translations, but machine translations for the other languages. See !wikipedia for details.',
-        array('!wikipedia' => l(t('CLIR on Wikipedia'), 'http://en.wikipedia.org/wiki/Cross-language_information_retrieval')))),
+      array('!wikipedia' => l(t('CLIR on Wikipedia'), 'http://en.wikipedia.org/wiki/Cross-language_information_retrieval')))),
   );
 
   $form['conf']['apachesolr_multilingual_index_settings']['apachesolr_multilingual_clir']['apachesolr_multilingual_index_translations'] = array(
