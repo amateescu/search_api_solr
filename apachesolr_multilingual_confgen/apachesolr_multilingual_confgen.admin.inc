@@ -39,11 +39,15 @@ function apachesolr_multilingual_confgen_admin_form($form_state) {
   asort($stemmer_options);
   $stemmer_options = array_merge(array('-none-' => t('(No stemming)')), $stemmer_options);
   $default = apachesolr_multilingual_confgen_variable_get($var_name, $variable_language);
+  $fallback = apachesolr_multilingual_confgen_get_stemmer($variable_language);
+  if (!$fallback) {
+    $fallback = '-none-';
+  }
   $form['vt']['apachesolr_multilingual_stemmer_settings'][$var_name] = array(
     '#type' => 'select',
     '#title' => check_plain($variable_info['title']),
     '#options' => $stemmer_options,
-    '#default_value' => !empty($default) ? $default : apachesolr_multilingual_confgen_get_stemmer($variable_language),
+    '#default_value' => !empty($default) ? $default : $fallback,
     '#description' => filter_xss($variable_info['description']),
   );
 
