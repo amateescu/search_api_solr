@@ -72,10 +72,8 @@ class DrupalSolrMultilingualConfigTestCase extends AbstractDrupalSolrOnlineWebTe
 
     foreach ($assert_multilingual_files as $file_name) {
       foreach ($language_ids as $language_id) {
-        if (!empty($language_id)) {
-          $file_name = str_replace('.txt', '_' . $language_id . '.txt', $file_name);
-        }
-        $this->assertTrue(array_key_exists($file_name, $files), 'Verify existence of ' . $file_name);
+        $i18n_file_name = !empty($language_id) ? str_replace('.txt', '_' . $language_id . '.txt', $file_name) : $file_name;
+        $this->assertTrue(array_key_exists($file_name, $files), 'Verify existence of ' . $i18n_file_name);
       }
     }
 
