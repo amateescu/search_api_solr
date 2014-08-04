@@ -216,12 +216,14 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
               list(, , $bundle) = entity_extract_ids('node', $entity);
               //Get the callback array to add stuff to the document
               $document_callbacks = apachesolr_entity_get_callback($entity_type, 'document callback', $bundle);
-              $documents = array();
+              $tmp_documents = array();
               foreach ($document_callbacks as $document_callback) {
                 // Call a type-specific callback to add stuff to the document.
+                $tmp_documents = array_merge($tmp_documents, $document_callback($additional_documents[$id], $entity, $entity_type, $env_id));
                 // Generic use case for future reference. Callbacks can
-                // allow you to send back multiple documents
-                $documents = array_merge($documents, $document_callback($additional_documents[$id], $entity, $entity_type, $env_id));
+                // allow you to send back multiple documents.
+                // @see apachesolr_index_node_solr_document()
+                // $tmp_documents is not in use yet.
               }
 
               // Recursive call to deal with 'apachesolr_multilingual_index_translations' aka CLIR and title field, see above and below

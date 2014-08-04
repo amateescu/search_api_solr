@@ -1,5 +1,6 @@
-Apache Solr Multilingual 7.x-1.2, 2014-xx-xx
+Apache Solr Multilingual 7.x-1.2, 2014-08-04
 --------------------------------------------
+[#2315085] eiriksm, mkalkbrenner: apachesolr_multilingual_apachesolr_index_documents_alter overwrites the function parameter, resulting in wrong index
 
 
 Apache Solr Multilingual 7.x-1.1, 2014-08-01
