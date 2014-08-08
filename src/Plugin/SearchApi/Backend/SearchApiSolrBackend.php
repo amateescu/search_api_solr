@@ -10,6 +10,7 @@ namespace Drupal\search_api_solr\Plugin\SearchApi\Backend;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\FilterInterface;
@@ -172,7 +173,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, array &$form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     if (!$this->server->isNew()) {
       // Editing this server
       $form['server_description'] = array(
@@ -366,7 +367,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function validateConfigurationForm(array &$form, array &$form_state) {
+  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state['values'];
     if (isset($values['port']) && (!is_numeric($values['port']) || $values['port'] < 0 || $values['port'] > 65535)) {
       $this->formBuilder->setError($form['port'], $form_state, $this->t('The port has to be an integer between 0 and 65535.'));
@@ -376,8 +377,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, array &$form_state) {
-    $values = &$form_state['values'];
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+    $values = $form_state['values'];
     // Since the form is nested into another, we can't simply use #parents for
     // doing this array restructuring magic. (At least not without creating an
     // unnecessary dependency on internal implementation.)
@@ -396,6 +397,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
         && $values['http_user'] === $this->configuration['http_user']) {
       $values['http_pass'] = $this->configuration['http_pass'];
     }
+
+    $form_state['values'] = $values;
 
     parent::submitConfigurationForm($form, $form_state);
   }
