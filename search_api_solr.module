@@ -5,6 +5,7 @@
  * Provides a Solr-based service class for the Search API.
  */
 
+use Drupal\Core\Form\FormStateInterface;
 use \Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Exception\SearchApiException;
@@ -263,7 +264,7 @@ function search_api_solr_server_get_files(ServerInterface $server, $dir_name = N
  *
  * Used as a submit callback in SearchApiSolrService::configurationForm().
  */
-function _search_api_solr_switch_to_clean_ids(array $form, array &$form_state) {
+function _search_api_solr_switch_to_clean_ids(array $form, FormStateInterface $form_state) {
   $server = $form_state['server'];
   $server->options['clean_ids'] = TRUE;
   $server->save();
@@ -294,7 +295,7 @@ function _search_api_solr_switch_to_clean_ids(array $form, array &$form_state) {
  *
  * Used as a submit callback in SearchApiSolrService::configurationForm().
  */
-function _search_api_solr_switch_to_site_hash(array $form, array &$form_state) {
+function _search_api_solr_switch_to_site_hash(array $form, FormStateInterface $form_state) {
   $server = $form_state['server'];
 
   try {

@@ -9,6 +9,7 @@ namespace Drupal\search_api_solr\Form;
 
 use Drupal\Component\Utility\String;
 use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Server\ServerInterface;
@@ -29,7 +30,7 @@ class SolrConfigForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, array &$form_state, ServerInterface $search_api_server = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ServerInterface $search_api_server = NULL) {
     $form['#title'] = $this->t('List of configuration files found');
 
     try {
@@ -81,7 +82,7 @@ class SolrConfigForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, array &$form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state) {
   }
 
   /**
