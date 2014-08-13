@@ -372,6 +372,7 @@ function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, 
 
     // Make sure all the default fields are included, even if they have
     // no indexed content.
+    $additional_vars_count = 0;
     foreach ($defaults as $field_name => $weight) {
       $form['field_bias'][$field_name] = array(
         '#type' => 'select',
@@ -382,6 +383,19 @@ function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, 
       if (!isset($qf[$field_name])) {
         $incomplete[] = $field_name;
       }
+      $additional_vars_count++;
+    }
+
+    // Based on a default value of 1000 for max_input_vars this is a rough
+    // estimation to warn the user about exceeding this setting.
+    if (
+      $additional_vars_count > (ini_get('max_input_vars') - 400) ||
+      $additional_vars_count > (ini_get('max_input_vars') * 0.6))
+    {
+      drupal_set_message(
+        t('This settings form contains a lot of variables. If you are unable to save the settings try to increase the value of "max_input_vars" in your php.ini. If you use the suhosin extension you have to adjust the values of "suhosin.post.max_vars" and "suhosin.request.max_vars" as well.'),
+        'warning'
+      );
     }
 
     ksort($form['field_bias']);
@@ -403,9 +417,6 @@ function apachesolr_multilingual_form_apachesolr_search_bias_form_alter(&$form, 
           array('!field_biases' => t('Field biases'))),
         'warning'
       );
-    }
-
-    if ($incomplete) {
     }
   }
 }
