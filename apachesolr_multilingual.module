@@ -562,40 +562,45 @@ function apachesolr_multilingual_apachesolr_query_alter($query) {
     }
 
     $qf = $query->getParam('qf');
-    // Per default the 'query fields' contain all language un-specific and
-    // specific fields.
-    // If the query filters by language we have to remove all unnecessary
-    // language specific fields.
-    // For the remaining language specific fields we have to apply the boosts as
-    // apachesolr_search_add_boost_params() will do for the unspecific ones.
-    foreach ($qf as $index => $field) {
-      if (strpos($field, 'i18n_') === 0) {
-        if (!empty($filter_languages)) {
-          $remove = TRUE;
-          foreach ($filter_languages as $filter_language) {
-            if (preg_match('@_' . $filter_language . '(\^|_)@', $field)) {
-              $remove = FALSE;
-              break;
+
+    // When CLIR is activated we want to search all language specific fields
+    if (!($settings['apachesolr_multilingual_clir']['apachesolr_multilingual_index_translations'])) {
+      // Per default the 'query fields' contain all language un-specific and
+      // specific fields.
+      // If the query filters by language we have to remove all unnecessary
+      // language specific fields.
+      // For the remaining language specific fields we have to apply the boosts as
+      // apachesolr_search_add_boost_params() will do for the unspecific ones.
+      foreach ($qf as $index => $field) {
+        if (strpos($field, 'i18n_') === 0) {
+          if (!empty($filter_languages)) {
+            $remove = TRUE;
+            foreach ($filter_languages as $filter_language) {
+              if (preg_match('@_' . $filter_language . '(\^|_)@', $field)) {
+                $remove = FALSE;
+                break;
+              }
+            }
+            if ($remove) {
+              unset($qf[$index]);
+              continue;
             }
           }
-          if ($remove) {
-            unset($qf[$index]);
-            continue;
-          }
-        }
 
-        // Because apachesolr_search_add_boost_params() does not recognize the
-        // the i18n_* prefix we have to apply the same logic here to add the
-        // extra boost to language specific normed fields.
-        if (strpos($field, 'i18n_content') === 0 || strpos($field, 'i18n_ts_') === 0 || strpos($field, 'i18n_tm_') === 0) {
-          list($field_name, $boost) = explode('^', $field);
-          // Normed fields tend to have a lower score. Multiplying by 40 is
-          // a rough attempt to bring the score in line with fields that are
-          // not normed.
-          $qf[$index] = $field_name . '^' . sprintf('%.1F', 40.0 * $boost);
+          // Because apachesolr_search_add_boost_params() does not recognize the
+          // the i18n_* prefix we have to apply the same logic here to add the
+          // extra boost to language specific normed fields.
+          if (strpos($field, 'i18n_content') === 0 || strpos($field, 'i18n_ts_') === 0 || strpos($field, 'i18n_tm_') === 0) {
+            list($field_name, $boost) = explode('^', $field);
+            // Normed fields tend to have a lower score. Multiplying by 40 is
+            // a rough attempt to bring the score in line with fields that are
+            // not normed.
+            $qf[$index] = $field_name . '^' . sprintf('%.1F', 40.0 * $boost);
+          }
         }
       }
     }
+
 
     $query->replaceParam('qf', $qf);
 
