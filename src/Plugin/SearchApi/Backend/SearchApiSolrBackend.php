@@ -2209,7 +2209,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
         $max_time = (int) $update_handler_stats['autocommit maxTime'];
         // Convert to seconds.
         $summary['@autocommit_time_seconds'] = $max_time / 1000;
-        $summary['@autocommit_time'] = \Drupal::service('date')->formatInterval($max_time / 1000);
+        $summary['@autocommit_time'] = \Drupal::service('date.formatter')->formatInterval($max_time / 1000);
         $summary['@deletes_by_id'] = (int) $update_handler_stats['deletesById'];
         $summary['@deletes_by_query'] = (int) $update_handler_stats['deletesByQuery'];
         $summary['@deletes_total'] = $summary['@deletes_by_id'] + $summary['@deletes_by_query'];
