@@ -368,7 +368,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * {@inheritdoc}
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-    $values = $form_state['values'];
+    $values = $form_state->getValues();
     if (isset($values['port']) && (!is_numeric($values['port']) || $values['port'] < 0 || $values['port'] > 65535)) {
       $this->formBuilder->setError($form['port'], $form_state, $this->t('The port has to be an integer between 0 and 65535.'));
     }
@@ -378,7 +378,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * {@inheritdoc}
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-    $values = $form_state['values'];
+    $values = $form_state->getValues();
     // Since the form is nested into another, we can't simply use #parents for
     // doing this array restructuring magic. (At least not without creating an
     // unnecessary dependency on internal implementation.)
@@ -398,7 +398,9 @@ class SearchApiSolrBackend extends BackendPluginBase {
       $values['http_pass'] = $this->configuration['http_pass'];
     }
 
-    $form_state['values'] = $values;
+    foreach ($values as $key => $value) {
+      $form_state->setValue($key, $value);
+    }
 
     parent::submitConfigurationForm($form, $form_state);
   }

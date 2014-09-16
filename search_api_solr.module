@@ -265,7 +265,7 @@ function search_api_solr_server_get_files(ServerInterface $server, $dir_name = N
  * Used as a submit callback in SearchApiSolrService::configurationForm().
  */
 function _search_api_solr_switch_to_clean_ids(array $form, FormStateInterface $form_state) {
-  $server = $form_state['server'];
+  $server = $form_state->get('server');
   $server->options['clean_ids'] = TRUE;
   $server->save();
   drupal_set_message(t('The Solr server was successfully switched to use clean field identifiers.'));
@@ -296,7 +296,7 @@ function _search_api_solr_switch_to_clean_ids(array $form, FormStateInterface $f
  * Used as a submit callback in SearchApiSolrService::configurationForm().
  */
 function _search_api_solr_switch_to_site_hash(array $form, FormStateInterface $form_state) {
-  $server = $form_state['server'];
+  $server = $form_state->get('server');
 
   try {
     $conditions['server'] = $server->machine_name;
