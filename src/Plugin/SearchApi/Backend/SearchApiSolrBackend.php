@@ -763,12 +763,13 @@ class SearchApiSolrBackend extends BackendPluginBase {
       return;
     }
 
-    // All fields
+    // All fields.
     foreach ($values as $value) {
       switch ($type) {
         case 'boolean':
           $value = $value ? 'true' : 'false';
           break;
+
         case 'date':
           $value = is_numeric($value) ? (int) $value : strtotime($value);
           if ($value === FALSE) {
@@ -776,18 +777,34 @@ class SearchApiSolrBackend extends BackendPluginBase {
           }
           $value = format_date($value, 'custom', self::SOLR_DATE_FORMAT, 'UTC');
           break;
+
         case 'integer':
           $value = (int) $value;
           break;
+
         case 'decimal':
           $value = (float) $value;
           break;
       }
-      $doc->addField($key, $value);
+
+      // For tokenized text, add each word separately.
+      if ($type == 'tokenized_text' && is_array($value)) {
+        foreach ($value as $tokenizd_value) {
+          // @todo Score is tracked by key, not for each value, how to handle
+          //   this?
+          $doc->addField($key, $tokenizd_value['value'], $tokenizd_value['score']);
+        }
+      }
+      else {
+        $doc->addField($key, $value);
+      }
     }
 
     $field_value = $doc->{$key};
-    $first_value = (is_array($field_value)) ? reset($field_value) : $field_value ;
+    $first_value = (is_array($field_value)) ? reset($field_value) : $field_value;
+    if ($type == 'tokenized_text' && is_array($first_value) && isset($first_value['value'])) {
+      $first_value = $first_value['value'];
+    }
     $doc->setField($key_single, $first_value);
   }
 
