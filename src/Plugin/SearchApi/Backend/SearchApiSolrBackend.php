@@ -184,7 +184,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     }
 
     if (!$this->configuration['clean_ids']) {
-      if (module_exists('advanced_help')) {
+      if (\Drupal::moduleHandler()->moduleExists('advanced_help')) {
         $variables['@url'] = url('help/search_api_solr/README.txt');
       }
       else {
@@ -340,7 +340,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       ),
     );
 
-    if (module_exists('search_api_autocomplete')) {
+    if (\Drupal::moduleHandler()->moduleExists('search_api_autocomplete')) {
       $form['advanced']['autocomplete'] = array(
         '#type' => 'fieldset',
         '#title' => $this->t('Autocomplete'),
