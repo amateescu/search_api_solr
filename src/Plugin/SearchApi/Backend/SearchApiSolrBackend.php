@@ -184,7 +184,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     }
 
     if (!$this->configuration['clean_ids']) {
-      if (module_exists('advanced_help')) {
+      if (\Drupal::moduleHandler()->moduleExists('advanced_help')) {
         $variables['@url'] = url('help/search_api_solr/README.txt');
       }
       else {
@@ -340,7 +340,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       ),
     );
 
-    if (module_exists('search_api_autocomplete')) {
+    if (\Drupal::moduleHandler()->moduleExists('search_api_autocomplete')) {
       $form['advanced']['autocomplete'] = array(
         '#type' => 'fieldset',
         '#title' => $this->t('Autocomplete'),
@@ -368,7 +368,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * {@inheritdoc}
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-    $values = $form_state['values'];
+    $values = $form_state->getValues();
     if (isset($values['port']) && (!is_numeric($values['port']) || $values['port'] < 0 || $values['port'] > 65535)) {
       $this->formBuilder->setError($form['port'], $form_state, $this->t('The port has to be an integer between 0 and 65535.'));
     }
@@ -378,7 +378,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * {@inheritdoc}
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-    $values = $form_state['values'];
+    $values = $form_state->getValues();
     // Since the form is nested into another, we can't simply use #parents for
     // doing this array restructuring magic. (At least not without creating an
     // unnecessary dependency on internal implementation.)
@@ -398,7 +398,9 @@ class SearchApiSolrBackend extends BackendPluginBase {
       $values['http_pass'] = $this->configuration['http_pass'];
     }
 
-    $form_state['values'] = $values;
+    foreach ($values as $key => $value) {
+      $form_state->setValue($key, $value);
+    }
 
     parent::submitConfigurationForm($form, $form_state);
   }
@@ -2207,7 +2209,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
         $max_time = (int) $update_handler_stats['autocommit maxTime'];
         // Convert to seconds.
         $summary['@autocommit_time_seconds'] = $max_time / 1000;
-        $summary['@autocommit_time'] = \Drupal::service('date')->formatInterval($max_time / 1000);
+        $summary['@autocommit_time'] = \Drupal::service('date.formatter')->formatInterval($max_time / 1000);
         $summary['@deletes_by_id'] = (int) $update_handler_stats['deletesById'];
         $summary['@deletes_by_query'] = (int) $update_handler_stats['deletesByQuery'];
         $summary['@deletes_total'] = $summary['@deletes_by_id'] + $summary['@deletes_by_query'];
