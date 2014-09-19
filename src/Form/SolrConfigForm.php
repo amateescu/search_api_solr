@@ -8,9 +8,9 @@
 namespace Drupal\search_api_solr\Form;
 
 use Drupal\Component\Utility\String;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api_solr\Plugin\SearchApi\Backend\SearchApiSolrBackend;
@@ -91,16 +91,11 @@ class SolrConfigForm extends FormBase {
    * @param \Drupal\search_api\Server\ServerInterface $search_api_server
   *   The server for which access should be tested.
    *
-   * @return string
-   *   Returns AccessInterface::ALLOW when access was granted, otherwise
-   *   AccessInterface::DENY.
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access result.
    */
   public function access(ServerInterface $search_api_server) {
-    if ($search_api_server->hasValidBackend() && $search_api_server->getBackend() instanceof SearchApiSolrBackend) {
-      return AccessInterface::ALLOW;
-    }
-
-    return AccessInterface::DENY;
+    return AccessResult::allowedIf($search_api_server->hasValidBackend() && $search_api_server->getBackend() instanceof SearchApiSolrBackend)->cacheUntilEntityChanges($search_api_server);
   }
 
 }
