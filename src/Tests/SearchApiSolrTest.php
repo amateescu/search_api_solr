@@ -63,10 +63,17 @@ class SearchApiSolrTest extends SearchApiDbTest {
    */
   public function setUp() {
     parent::setUp();
+    // @todo For some reason the init event (see AutoloaderSubscriber) is not
+    // working in command line tests
+    $filepath = drupal_get_path('module', 'search_api_solr') . '/vendor/autoload.php';
+    if (!class_exists('Solarium\\Client') && ($filepath != DRUPAL_ROOT . '/core/vendor/autoload.php')) {
+      require $filepath;
+    }
 
     $this->installConfig(array('search_api_test_solr'));
 
     try {
+      /** @var \Drupal\search_api\Server\ServerInterface $server */
       $server = Server::load($this->serverId);
       if ($server->getBackend()->ping()) {
         $this->solrAvailable = TRUE;
@@ -141,7 +148,7 @@ class SearchApiSolrTest extends SearchApiDbTest {
   /**
    * {@inheritdoc}
    */
-  protected function uninstallModule() {
+  protected function uninstallModule($module) {
     // See whether clearing the server works.
     // Regression test for #2156151.
     $server = Server::load($this->serverId);

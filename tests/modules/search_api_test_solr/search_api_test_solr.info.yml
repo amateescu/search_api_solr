@@ -4,5 +4,6 @@ description: 'Support module for Search API Solr search tests.'
 package: 'Search API'
 dependencies:
   - search_api_test_db
+  - search_api_solr
 core: 8.x
 hidden: true
