@@ -39,7 +39,9 @@ install:
   - composer global require drush/drush:dev-master --prefer-source
   - cd /home/travis/.composer/vendor/drush/drush && cd -
   # Make sure we don't fail when checking out projects
+
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+  - echo -e "Host git.drupal.org\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
   # LAMP package installation (mysql is already started)
   - sudo apt-get install apache2 libapache2-mod-fastcgi
   # enable php-fpm, travis does not support any other method with php and apache
