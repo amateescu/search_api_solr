@@ -81,6 +81,8 @@ script:
   # go to our Drupal module directory
   - mkdir $TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr
   - cp -R $TRAVIS_BUILD_DIR/* $TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr/
+  - cd $TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr/
+  - composer install
   # go to our Drupal main directory
   - cd $TRAVIS_BUILD_DIR/../drupal
   - ls -la $TRAVIS_BUILD_DIR/../drupal/sites/default
