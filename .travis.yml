@@ -12,8 +12,8 @@ php:
 
 # This creates a build with each php environment. 4 builds in total.
 env:
-  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=3.6.2 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/3.x
-  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=4.9.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/4.x
+  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=3.6.2 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/3.x"
+  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=4.9.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/4.x"
 
 notifications:
   email:
