@@ -10,6 +10,11 @@ php:
   - 5.4
   - 5.5
 
+# This creates a build with each php environment. 4 builds in total.
+env:
+  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=3.6.2 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/3.x
+  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=4.9.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/4.x
+
 notifications:
   email:
     - nick.veenhof@acquia.com
@@ -17,9 +22,6 @@ notifications:
   irc:
     - "chat.freenode.net#drupal-search-api"
 
-env:
-  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=4.9.1 SOLR_CORE=d8
-  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=4.5.1 SOLR_CORE=d8
 
 # This will create the database
 mysql:
@@ -75,7 +77,7 @@ before_script:
   - git clone --branch master http://git.drupal.org/sandbox/daeron/2091893.git modules/search_api
   - drush cr
   # Install Solr
-  - curl -sSL https://raw.githubusercontent.com/nickveenhof/travis-solr/master/travis-solr.sh | SOLR_VERSION=4.9.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/4.x" bash
+  - curl -sSL https://raw.githubusercontent.com/nickveenhof/travis-solr/master/travis-solr.sh | bash
 
 script:
   # go to our Drupal module directory
