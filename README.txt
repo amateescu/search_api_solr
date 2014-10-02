@@ -161,8 +161,3 @@ take effect.
 
 Developers
 ----------
-
-// @todo Not really true anymore :)
-The SearchApiSolrService class has a few custom extensions, documented with its
-code. Methods of note are deleteItems(), which treats the first argument
-differently in certain cases, and the methods at the end of service.inc.
