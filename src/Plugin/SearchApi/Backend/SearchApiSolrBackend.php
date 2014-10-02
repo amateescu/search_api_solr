@@ -927,10 +927,10 @@ class SearchApiSolrBackend extends BackendPluginBase {
     // Handle More Like This query.
     $mlt = $query->getOption('search_api_mlt');
     if ($mlt) {
-      $mlt_params['qt'] = 'mlt';
+      $solarium_query = $this->solr->createMoreLikeThis();
       // The fields to look for similarities in.
       $mlt_fl = array();
-      foreach($mlt['fields'] as $f) {
+      foreach ($mlt['fields'] as $f) {
         // Solr 4 has a bug which results in numeric fields not being supported
         // in MLT queries.
         // Date fields don't seem to be supported at all.
@@ -939,11 +939,15 @@ class SearchApiSolrBackend extends BackendPluginBase {
         }
         $mlt_fl[] = $fields[$f];
         // For non-text fields, set minimum word length to 0.
-        if (isset($index->options['fields'][$f]['type']) && !search_api_is_text_type($index->options['fields'][$f]['type'])) {
+        if (isset($index->options['fields'][$f]['type']) && !Utility::isTextType($index->options['fields'][$f]['type'])) {
           $mlt_params['f.' . $fields[$f] . '.mlt.minwl'] = 0;
         }
       }
-      $mlt_params['mlt.fl'] = implode(',', $mlt_fl);
+
+      $solarium_query->setMltFields($mlt_fl);
+      // From the example, I don't understand what this does :)
+      $solarium_query->setMinimumDocumentFrequency(1);
+      $solarium_query->setMinimumTermFrequency(1);
       $id = $this->createId($index_id, $mlt['id']);
       $id = static::getQueryHelper()->escapePhrase($id);
       $keys = 'id:' . $id;
@@ -1123,9 +1127,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
       $solarium_query->getSpellcheck();
     }
     /*
-    if (!empty($mlt_params['mlt.fl'])) {
-      $params += $mlt_params;
-    }
     if (!empty($group_params)) {
       $params += $group_params;
     }
