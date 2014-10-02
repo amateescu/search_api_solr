@@ -11,6 +11,7 @@ use Drupal\Core\Config\Config;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\FilterInterface;
@@ -185,10 +186,10 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     if (!$this->configuration['clean_ids']) {
       if (\Drupal::moduleHandler()->moduleExists('advanced_help')) {
-        $variables['@url'] = url('help/search_api_solr/README.txt');
+        $variables['@url'] =  Url::fromUri('base://help/search_api_solr/README.txt')->toString();
       }
       else {
-        $variables['@url'] = url(drupal_get_path('module', 'search_api_solr') . '/README.txt');
+        $variables['@url'] = Url::fromUri('base://' . drupal_get_path('module', 'search_api_solr') . '/README.txt')->toString();
       }
       $description = $this->t('Change Solr field names to be more compatible with advanced features. Doing this leads to re-indexing of all indexes on this server. See <a href="@url">README.txt</a> for details.', $variables);
       $form['clean_ids_form'] = array(
@@ -518,7 +519,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
                 $status = 'error';
               }
               elseif (substr($stats_summary['@schema_version'], 0, 9) != 'drupal-4.') {
-                $variables['@url'] = url(drupal_get_path('module', 'search_api_solr') . '/INSTALL.txt');
+                $variables['@url'] = Url::fromUri('base://' . drupal_get_path('module', 'search_api_solr') . '/INSTALL.txt')->toString();
                 $message = $this->t('You are using an incompatible schema.xml configuration file. Please follow the instructions in the <a href="@url">INSTALL.txt</a> file for setting up Solr.', $variables);
                 drupal_set_message($message, 'error');
                 $status = 'error';
@@ -562,8 +563,10 @@ class SearchApiSolrBackend extends BackendPluginBase {
     if ($host == 'localhost' && !empty($_SERVER['SERVER_NAME'])) {
       $host = $_SERVER['SERVER_NAME'];
     }
-    $url = $this->configuration['scheme'] . '://' . $host . ':' . $this->configuration['port'] . $this->configuration['path'];
-    return l($url, $url);
+    $url_path = $this->configuration['scheme'] . '://' . $host . ':' . $this->configuration['port'] . $this->configuration['path'];
+    $url = Url::fromUri($url_path);
+
+    return \Drupal::l($url_path, $url);
   }
 
   /**
@@ -619,7 +622,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
           if (isset($languages[$lang])) {
             $url_options['language'] = $languages[$lang];
           }
-          $base_urls[$lang] = url(NULL, $url_options);
+          $base_urls[$lang] = Url::fromUri(NULL, $url_options);
         }
         $doc->setField('site', $base_urls[$lang]);
       }
@@ -1005,7 +1008,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
             $sort[$spatial['field']] = str_replace($field, "geodist($field,$point)", $sort[$spatial['field']]);
           }
           else {
-            $link = l(t('edit server'), 'admin/config/search/search_api/server/' . $this->server->machine_name . '/edit');
+            $link = \Drupal::l(t('edit server'), Url::fromRoute('search_api.server_edit', array('search_api_server' => $this->server->machine_name)));
             watchdog('search_api_solr', 'Location sort on field @field had to be ignored because unclean field identifiers are used.', array('@field' => $spatial['field']), WATCHDOG_WARNING, $link);
           }
         }
