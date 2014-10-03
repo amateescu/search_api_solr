@@ -17,6 +17,7 @@ use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Backend\BackendPluginBase;
+use Drupal\search_api_solr\Plugin\SearchApi\Backend\SolrTrait;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\Utility;
 use Solarium\Client;
@@ -37,17 +38,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class SearchApiSolrBackend extends BackendPluginBase {
 
+  use SolrTrait;
+
   /**
    * The date format that Solr uses, in PHP date() syntax.
    */
   const SOLR_DATE_FORMAT = 'Y-m-d\TH:i:s\Z';
-
-  /**
-   * A connection to the Solr server.
-   *
-   * @var \Solarium\Client
-   */
-  protected $solr;
 
   /**
    * Static cache for getFieldNames().
@@ -412,16 +408,14 @@ class SearchApiSolrBackend extends BackendPluginBase {
   public function supportsFeature($feature) {
     // First, check the features we always support.
     $supported = array(
-      'search_api_autocomplete',
-      'search_api_facets',
-      'search_api_facets_operator_or',
-      'search_api_grouping',
+      //'search_api_autocomplete',
+      //'search_api_facets',
+      //'search_api_facets_operator_or',
+      //'search_api_grouping',
       'search_api_mlt',
-      'search_api_multi',
-      'search_api_service_extra',
       'search_api_spellcheck',
-      'search_api_data_type_location',
-      'search_api_data_type_geohash',
+      //'search_api_data_type_location',
+      //'search_api_data_type_geohash',
     );
     $supported = array_combine($supported, $supported);
     if (isset($supported[$feature])) {
@@ -606,6 +600,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     /** @var \Drupal\search_api\Item\ItemInterface[] $items */
     foreach ($items as $id => $item) {
+      /** @var \Solarium\QueryType\Update\Query\Document\Document $doc */
       $doc = $this->getUpdateQuery()->createDocument();
       $doc->setField('id', $this->createId($index_id, $id));
       $doc->setField('index_id', $index_id);
@@ -946,7 +941,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
         }
         $mlt_fl[] = $fields[$f];
         // For non-text fields, set minimum word length to 0.
-        if (isset($index->options['fields'][$f]['type']) && !Utility::isTextType($index->options['fields'][$f]['type'])) {
+        if (isset($index->getOption('fields')[$f]['type']) && !Utility::isTextType($index->getOption('fields')[$f]['type'])) {
           $mlt_params['f.' . $fields[$f] . '.mlt.minwl'] = 0;
         }
       }
@@ -1070,7 +1065,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
         // Only single-valued fields are supported.
         if ($version < 4) {
           // For Solr 3.x, only string and boolean fields are supported.
-          if (search_api_is_list_type($type) || !search_api_is_text_type($type, array('string', 'boolean', 'uri'))) {
+          if (!Utility::isTextType($type, array('string', 'boolean', 'uri'))) {
             $warnings[] = $this->t('Grouping is not supported for field @field. ' .
                 'Only single-valued fields of type "String", "Boolean" or "URI" are supported.',
                 array('@field' => $index_fields[$collapse_field]['name']));
@@ -1078,7 +1073,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
           }
         }
         else {
-          if (search_api_is_list_type($type) || search_api_is_text_type($type)) {
+          if (Utility::isTextType($type)) {
             $warnings[] = $this->t('Grouping is not supported for field @field. ' .
                 'Only single-valued fields not indexed as "Fulltext" are supported.',
                 array('@field' => $index_fields[$collapse_field]['name']));
@@ -1794,7 +1789,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
       $keys = $this->flattenKeys($query->getKeys());
     }
     else {
-      $keys_array = drupal_map_assoc(preg_split('/[-\s():{}\[\]\\\\"]+/', $keys, -1, PREG_SPLIT_NO_EMPTY));
+      $keys_array = preg_split('/[-\s():{}\[\]\\\\"]+/', $keys, -1, PREG_SPLIT_NO_EMPTY);
+      $keys_array = array_combine($keys_array, $keys_array);
     }
     if (!$keys) {
       $keys = NULL;
@@ -1951,10 +1947,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     return $suggestions;
   }
-
-  //
-  // Additional methods that might be used when knowing the service class.
-  //
 
   /**
    * Ping the Solr server to tell whether it can be accessed.
@@ -2245,23 +2237,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
       }
     }
     return $summary;
-  }
-
-  /**
-   * Escapes a Search API field name for passing to Solr.
-   *
-   * Since field names can only contain one special character, ":", there is no
-   * need to use the complete escape() method.
-   *
-   * @param string $value
-   *   The field name to escape.
-   *
-   * @return string
-   *   An escaped string suitable for passing to Solr.
-   */
-  public static function escapeFieldName($value) {
-    $value = str_replace(':', '\:', $value);
-    return $value;
   }
 
 }
