@@ -617,7 +617,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
           if (isset($languages[$lang])) {
             $url_options['language'] = $languages[$lang];
           }
-          $base_urls[$lang] = Url::fromRoute('<front>', array(), $url_options);
+          $base_urls[$lang] = Url::fromRoute('<front>', array(), $url_options)->toString();
         }
         $doc->setField('site', $base_urls[$lang]);
       }
