@@ -72,6 +72,10 @@ class SearchApiSolrTest extends SearchApiDbTest {
 
     $this->installConfig(array('search_api_test_solr'));
 
+    // Because this is a EntityUnitTest, the routing isn't built by default, so
+    // we have to force it.
+    \Drupal::service('router.builder')->rebuild();
+
     try {
       /** @var \Drupal\search_api\Server\ServerInterface $server */
       $server = Server::load($this->serverId);
