@@ -903,7 +903,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     // Extract filters.
     $filter = $query->getFilter();
-    $fq = $this->createFilterQueries($filter, $fields, $index->options['fields']);
+    $fq = $this->createFilterQueries($filter, $fields, $index->getOption('fields'));
     $fq[] = 'index_id:' . static::getQueryHelper($solarium_query)->escapePhrase($index_id);
     if (!empty($this->configuration['site_hash'])) {
       // We don't need to escape the site hash, as that consists only of
