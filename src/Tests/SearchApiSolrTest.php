@@ -148,7 +148,7 @@ class SearchApiSolrTest extends SearchApiDbTest {
   /**
    * {@inheritdoc}
    */
-  protected function uninstallModule($module) {
+  protected function checkModuleUninstall() {
     // See whether clearing the server works.
     // Regression test for #2156151.
     $server = Server::load($this->serverId);
