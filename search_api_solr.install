@@ -29,7 +29,7 @@ function search_api_solr_requirements($phase) {
     if ($unavailable) {
       if ($unavailable == 1) {
         $ret['search_api_solr']['description'] = \Drupal::translation()->translate('The Solr server of <a href="!url">%name</a> could not be reached.',
-            array('!url' => \Drupal\Core\Url::fromRoute('entity.search_api_server.canonical', array('search_api_server' => $last->id())), '%name' => $last->label()));
+            array('!url' => \Drupal\Core\Url::fromRoute('entity.search_api_server.canonical', array('search_api_server' => $last->id()))->toString(), '%name' => $last->label()));
       }
       else {
         $ret['search_api_solr']['description'] = \Drupal::translation()->translate('@count Solr servers could not be reached.', array('@count' => $unavailable));
