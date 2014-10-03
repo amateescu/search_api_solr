@@ -1008,7 +1008,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
             $sort[$spatial['field']] = str_replace($field, "geodist($field,$point)", $sort[$spatial['field']]);
           }
           else {
-            $link = \Drupal::l(t('edit server'), Url::fromRoute('search_api.server_edit', array('search_api_server' => $this->server->machine_name)));
+            $link = \Drupal::l(t('edit server'), Url::fromRoute('entity.search_api_server.edit_form', array('search_api_server' => $this->server->machine_name)));
             watchdog('search_api_solr', 'Location sort on field @field had to be ignored because unclean field identifiers are used.', array('@field' => $spatial['field']), WATCHDOG_WARNING, $link);
           }
         }
