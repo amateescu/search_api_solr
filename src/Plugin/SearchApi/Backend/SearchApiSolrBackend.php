@@ -622,7 +622,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
           if (isset($languages[$lang])) {
             $url_options['language'] = $languages[$lang];
           }
-          $base_urls[$lang] = Url::fromUri(NULL, $url_options);
+          $base_urls[$lang] = Url::fromRoute('<front>', array(), $url_options);
         }
         $doc->setField('site', $base_urls[$lang]);
       }
@@ -717,7 +717,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       );
 
       // Add the names of any fields configured on the index.
-      $fields = (isset($index->options['fields']) ? $index->options['fields'] : array());
+      $fields = $index->getOption('fields', array());
       foreach ($fields as $key => $field) {
         // Generate a field name; this corresponds with naming conventions in
         // our schema.xml
@@ -903,7 +903,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     // Extract filters.
     $filter = $query->getFilter();
-    $fq = $this->createFilterQueries($filter, $fields, $index->options['fields']);
+    $fq = $this->createFilterQueries($filter, $fields, $index->getOption('fields'));
     $fq[] = 'index_id:' . static::getQueryHelper($solarium_query)->escapePhrase($index_id);
     if (!empty($this->configuration['site_hash'])) {
       // We don't need to escape the site hash, as that consists only of
@@ -931,6 +931,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $mlt = $query->getOption('search_api_mlt');
     if ($mlt) {
       $mlt_params['qt'] = 'mlt';
+      $field_options = $index->getOption('fields', array());
       // The fields to look for similarities in.
       $mlt_fl = array();
       foreach($mlt['fields'] as $f) {
@@ -942,7 +943,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
         }
         $mlt_fl[] = $fields[$f];
         // For non-text fields, set minimum word length to 0.
-        if (isset($index->options['fields'][$f]['type']) && !search_api_is_text_type($index->options['fields'][$f]['type'])) {
+        if (isset($field_options[$f]['type']) && !search_api_is_text_type($field_options[$f]['type'])) {
           $mlt_params['f.' . $fields[$f] . '.mlt.minwl'] = 0;
         }
       }
@@ -1008,7 +1009,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
             $sort[$spatial['field']] = str_replace($field, "geodist($field,$point)", $sort[$spatial['field']]);
           }
           else {
-            $link = \Drupal::l(t('edit server'), Url::fromRoute('search_api.server_edit', array('search_api_server' => $this->server->machine_name)));
+            $link = \Drupal::l(t('edit server'), Url::fromRoute('entity.search_api_server.edit_form', array('search_api_server' => $this->server->machine_name)));
             watchdog('search_api_solr', 'Location sort on field @field had to be ignored because unclean field identifiers are used.', array('@field' => $spatial['field']), WATCHDOG_WARNING, $link);
           }
         }
@@ -1202,7 +1203,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
   protected function extractResults(QueryInterface $query, Result $resultset) {
     $index = $query->getIndex();
     $fields = $this->getFieldNames($index);
-    $field_options = $index->options['fields'];
+    $field_options = $index->getOption('fields', array());
 
     // Set up the results array.
     $results = Utility::createSearchResultSet($query);
@@ -1355,6 +1356,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     $index = $query->getIndex();
     $fields = $this->getFieldNames($index);
+    $field_options = $index->getOption('fields', array());
 
     $extract_facets = $query->getOption('search_api_facets', array());
 
@@ -1383,7 +1385,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
           elseif (isset($terms[''])) {
             unset($terms['']);
           }
-          $type = isset($index->options['fields'][$info['field']]['type']) ? $index->options['fields'][$info['field']]['type'] : 'string';
+          $type = isset($field_options[$info['field']]['type']) ? $field_options[$info['field']]['type'] : 'string';
           foreach ($terms as $term => $count) {
             if ($count >= $min_count) {
               if ($term === '') {
@@ -1803,7 +1805,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     }
 
     // Extract filters
-    $fq = $this->createFilterQueries($query->getFilter(), $fields, $index->options['fields']);
+    $fq = $this->createFilterQueries($query->getFilter(), $fields, $index->getOption('fields', array()));
     $index_id = $this->getIndexId($index->id());
     $fq[] = 'index_id:' . $this->getQueryHelper()->escapePhrase($index_id);
     if (!empty($this->configuration['site_hash'])) {
