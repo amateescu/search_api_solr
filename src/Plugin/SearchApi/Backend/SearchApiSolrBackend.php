@@ -910,7 +910,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     }
 
     // Extract sorts.
-    foreach ($query->getSort() as $field => $order) {
+    foreach ($query->getSorts() as $field => $order) {
       $f = $fields_single_value[$field];
       if (substr($f, 0, 3) == 'ss_') {
         $f = 'sort_' . substr($f, 3);
