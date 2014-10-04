@@ -79,7 +79,7 @@ class SearchApiSolrTest extends SearchApiDbTest {
     try {
       /** @var \Drupal\search_api\Server\ServerInterface $server */
       $server = Server::load($this->serverId);
-      if ($server->getBackend()->ping()) {
+      if ($server->getBackend()->solrHelper->ping()) {
         $this->solrAvailable = TRUE;
       }
     }
@@ -121,7 +121,7 @@ class SearchApiSolrTest extends SearchApiDbTest {
     // Since \Drupal\search_api_solr\Plugin\SearchApi\Backend\SearchApiSolrBackend::deleteAllItems()
     // schedules a commit operation which will be executed at the end of the PHP
     // request, we need to send a commit message to Solr manually.
-    $server->getBackend()->commit();
+    $server->getBackend()->solrHelper->commit();
   }
 
   /**
@@ -162,7 +162,7 @@ class SearchApiSolrTest extends SearchApiDbTest {
     // Since \Drupal\search_api_solr\Plugin\SearchApi\Backend\SearchApiSolrBackend::deleteAllItems()
     // schedules a commit operation which will be executed at the end of the PHP
     // request, we need to send a commit message to Solr manually.
-    $server->getBackend()->commit();
+    $server->getBackend()->solrHelper->commit();
 
     $query = $this->buildSearch();
     $results = $query->execute();

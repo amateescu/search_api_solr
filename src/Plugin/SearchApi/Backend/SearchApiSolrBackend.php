@@ -20,11 +20,8 @@ use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\Utility as SearchApiUtility;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
-use Solarium\Client;
 use Solarium\Core\Client\Request;
-use Solarium\Core\Query\Helper;
 use Solarium\QueryType\Select\Query\Query;
-use Solarium\Exception\HttpException;
 use Solarium\QueryType\Select\Result\Result;
 use Solarium\QueryType\Update\Query\Document\Document;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -37,8 +34,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class SearchApiSolrBackend extends BackendPluginBase {
-
-  use SolrTrait;
 
   /**
    * The date format that Solr uses, in PHP date() syntax.
@@ -60,27 +55,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * @var array
    */
   protected $fields;
-
-  /**
-   * A Solarium Update query.
-   *
-   * @var \Solarium\QueryType\Update\Query\Query
-   */
-  protected static $updateQuery;
-
-  /**
-   * A Solarium query helper.
-   *
-   * @var \Solarium\Core\Query\Helper
-   */
-  protected static $queryHelper;
-
-  /**
-   * Saves whether a commit operation was already scheduled for this server.
-   *
-   * @var bool
-   */
-  protected $commitScheduled = FALSE;
 
   /**
    * Request handler to use for this search query.
@@ -126,6 +100,9 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $this->formBuilder = $form_builder;
     $this->moduleHandler = $module_handler;
     $this->searchApiSolrSettings = $search_api_solr_settings;
+
+
+    $this->solrHelper = new SolrHelper($this->configuration + array('key' => $this->server->id()));
   }
 
   /**
@@ -458,7 +435,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     if ($this->server->status()) {
       // If the server is enabled, check whether Solr can be reached.
-      $ping = $this->ping();
+      $ping = $this->solrHelper->ping();
       if ($ping) {
         $msg = $this->t('The Solr server could be reached (latency: @millisecs ms).', array('@millisecs' => $ping * 1000));
       }
@@ -476,8 +453,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
           // If Solr can be reached, provide more information. This isn't done
           // often (only when an admin views the server details), so we clear the
           // cache to get the current data.
-          $this->connect();
-          $data = $this->getLuke();
+          $data = $this->solrHelper->getLuke();
           if (isset($data['index']['numDocs'])) {
             // Collect the stats
             $stats_summary = $this->getStatsSummary();
@@ -564,16 +540,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
   }
 
   /**
-   * Creates a connection to the Solr server as configured in $this->configuration.
-   */
-  protected function connect() {
-    if (!$this->solr) {
-      $this->solr = new Client();
-      $this->solr->createEndpoint($this->configuration + array('key' => $this->server->id()), TRUE);
-    }
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function removeIndex($index) {
@@ -596,12 +562,12 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $base_urls = array();
 
     // Make sure that we have a Solr connection.
-    $this->connect();
+    $this->solrHelper->ping();
 
     /** @var \Drupal\search_api\Item\ItemInterface[] $items */
     foreach ($items as $id => $item) {
       /** @var \Solarium\QueryType\Update\Query\Document\Document $doc */
-      $doc = $this->getUpdateQuery()->createDocument();
+      $doc = $this->solrHelper->getUpdateQuery()->createDocument();
       $doc->setField('id', $this->createId($index_id, $id));
       $doc->setField('index_id', $index_id);
       $doc->setField('item_id', $id);
@@ -653,16 +619,16 @@ class SearchApiSolrBackend extends BackendPluginBase {
       return array();
     }
     try {
-      $this->getUpdateQuery()->addDocuments($documents);
+      $this->solrHelper->getUpdateQuery()->addDocuments($documents);
       if ($index->getOption('index_directly')) {
-        $this->getUpdateQuery()->addCommit();
-        $this->solr->update(static::$updateQuery);
+        $this->solrHelper->getUpdateQuery()->addCommit();
+        $this->solrHelper->getSolrConnection()->update($this->solrHelper->getUpdateQuery());
 
         // Reset the Update query for further calls.
-        static::$updateQuery = NULL;
+        $this->solrHelper->setUpdateQuery();
       }
       else {
-        $this->scheduleCommit();
+        $this->solrHelper->scheduleCommit();
       }
       return $ret;
     }
@@ -834,8 +800,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
     foreach ($ids as $id) {
       $solr_ids[] = $this->createId($index_id, $id);
     }
-    $this->getUpdateQuery()->addDeleteByIds($solr_ids);
-    $this->scheduleCommit();
+    $this->solrHelper->getUpdateQuery()->addDeleteByIds($solr_ids);
+    $this->solrHelper->scheduleCommit();
   }
 
   /**
@@ -845,7 +811,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     if ($index) {
       // Since the index ID we use for indexing can contain arbitrary
       // prefixes, we have to escape it for use in the query.
-      $index_id = $this->getQueryHelper()->escapePhrase($index->id());
+      $index_id = $this->solrHelper->getQueryHelper()->escapePhrase($index->id());
       $index_id = $this->getIndexId($index_id);
       $query = '(index_id:' . $index_id . ')';
       if (!empty($this->configuration['site_hash'])) {
@@ -853,12 +819,12 @@ class SearchApiSolrBackend extends BackendPluginBase {
         // alphanumeric characters.
         $query .= ' AND (hash:' . SearchApiSolrUtility::search_api_solr_site_hash() . ')';
       }
-      $this->getUpdateQuery()->addDeleteQuery($query);
+      $this->solrHelper->getUpdateQuery()->addDeleteQuery($query);
     }
     else {
-      $this->getUpdateQuery()->addDeleteQuery('*:*');
+      $this->solrHelper->getUpdateQuery()->addDeleteQuery('*:*');
     }
-    $this->scheduleCommit();
+    $this->solrHelper->scheduleCommit();
   }
 
   /**
@@ -874,11 +840,11 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $fields = $this->getFieldNames($index);
     $fields_single_value = $this->getFieldNames($index, TRUE);
     // Get Solr connection.
-    $this->connect();
-    $version = $this->getSolrVersion();
+    $this->solrHelper->ping();
+    $version = $this->solrHelper->getSolrVersion();
 
     // Instantiate a Solarium select query.
-    $solarium_query = $this->solr->createSelect();
+    $solarium_query = $this->solrHelper->getSolrConnection()->createSelect();
 
     // Extract keys.
     $keys = $query->getKeys();
@@ -902,7 +868,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     // Extract filters.
     $filter = $query->getFilter();
     $fq = $this->createFilterQueries($filter, $fields, $index->getOption('fields'));
-    $fq[] = 'index_id:' . static::getQueryHelper($solarium_query)->escapePhrase($index_id);
+    $fq[] = 'index_id:' . $this->solrHelper->getQueryHelper($solarium_query)->escapePhrase($index_id);
     if (!empty($this->configuration['site_hash'])) {
       // We don't need to escape the site hash, as that consists only of
       // alphanumeric characters.
@@ -929,7 +895,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $mlt = $query->getOption('search_api_mlt');
     if ($mlt) {
       $field_options = $index->getOption('fields', array());
-      $solarium_query = $this->solr->createMoreLikeThis();
+      $solarium_query = $this->solrHelper->getSolrConnection()->createMoreLikeThis();
       // The fields to look for similarities in.
       $mlt_fl = array();
       foreach ($mlt['fields'] as $f) {
@@ -951,7 +917,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       $solarium_query->setMinimumDocumentFrequency(1);
       $solarium_query->setMinimumTermFrequency(1);
       $id = $this->createId($index_id, $mlt['id']);
-      $id = static::getQueryHelper()->escapePhrase($id);
+      $id = $this->solrHelper->getQueryHelper()->escapePhrase($id);
       $keys = 'id:' . $id;
     }
 
@@ -1143,12 +1109,12 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
       // Use the manual method of creating a Solarium request so we can control
       // the HTTP method.
-      $request = $this->solr->createRequest($solarium_query);
+      $request = $this->solrHelper->getSolrConnection()->createRequest($solarium_query);
 
       // Set the HTTP method or use the 'postbigrequest' plugin if no specific
       // method is configured.
       if ($this->configuration['http_method'] == 'AUTO') {
-        $this->solr->getPlugin('postbigrequest');
+        $this->solrHelper->getSolrConnection()->getPlugin('postbigrequest');
       }
       elseif ($this->configuration['http_method'] == 'POST') {
         $request->setMethod(Request::METHOD_POST);
@@ -1160,8 +1126,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
       }
 
       // Send search request.
-      $response = $this->solr->executeRequest($request);
-      $resultset = $this->solr->createResult($solarium_query, $response);
+      $response = $this->solrHelper->getSolrConnection()->executeRequest($request);
+      $resultset = $this->solrHelper->getSolrConnection()->createResult($solarium_query, $response);
 
       // Extract results.
       $results = $this->extractResults($query, $resultset);
@@ -1479,7 +1445,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
         }
       }
       else {
-        $key = static::getQueryHelper()->escapePhrase(trim($key));
+        $key = $this->solrHelper->getQueryHelper()->escapePhrase(trim($key));
         $k[] = $key;
       }
     }
@@ -1588,7 +1554,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
         $value = format_date($value, 'custom', self::SOLR_DATE_FORMAT, 'UTC');
         break;
     }
-    return $this->getQueryHelper()->escapePhrase($value);
+    return $this->solrHelper->getQueryHelper()->escapePhrase($value);
   }
 
   /**
@@ -1807,7 +1773,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     // Extract filters
     $fq = $this->createFilterQueries($query->getFilter(), $fields, $index->getOption('fields', array()));
     $index_id = $this->getIndexId($index->id());
-    $fq[] = 'index_id:' . $this->getQueryHelper()->escapePhrase($index_id);
+    $fq[] = 'index_id:' . $this->solrHelper->getQueryHelper()->escapePhrase($index_id);
     if (!empty($this->configuration['site_hash'])) {
       // We don't need to escape the site hash, as that consists only of
       // alphanumeric characters.
@@ -1849,10 +1815,10 @@ class SearchApiSolrBackend extends BackendPluginBase {
     for ($i = 0; $i < ($second_pass ? 2 : 1); ++$i) {
       try {
         // Send search request
-        $this->connect();
+        $this->solrHelper->ping();
         $this->moduleHandler->alter('search_api_solr_query', $call_args, $query);
         $this->preQuery($call_args, $query);
-        $response = $this->solr->search($keys, $params, $http_method);
+        $response = $this->solrHelper->getSolrConnection()->search($keys, $params, $http_method);
 
         if (!empty($response->spellcheck->suggestions)) {
           $replace = array();
@@ -1949,111 +1915,20 @@ class SearchApiSolrBackend extends BackendPluginBase {
   }
 
   /**
-   * Ping the Solr server to tell whether it can be accessed.
+   * Escapes a Search API field name for passing to Solr.
    *
-   * Uses the admin/ping request handler.
+   * Since field names can only contain one special character, ":", there is no
+   * need to use the complete escape() method.
+   *
+   * @param string $value
+   *   The field name to escape.
+   *
+   * @return string
+   *   An escaped string suitable for passing to Solr.
    */
-  public function ping() {
-    $this->connect();
-    $query = $this->solr->createPing();
-
-    try {
-      $start = microtime(TRUE);
-      $result = $this->solr->ping($query);
-      if ($result->getResponse()->getStatusCode() == 200) {
-        // Add 1 µs to the ping time so we never return 0.
-        return (microtime(TRUE) - $start) + 1E-6;
-      }
-    }
-    catch (HttpException $e) {
-      // @todo Show a message with the exception?
-    }
-    return FALSE;
-  }
-
-  /**
-   * Sends a commit command to the Solr server.
-   */
-  public function commit() {
-    try {
-      if (static::$updateQuery) {
-        $this->connect();
-        $this->getUpdateQuery()->addCommit();
-        $this->solr->update($this->getUpdateQuery());
-      }
-    }
-    catch (SearchApiException $e) {
-      watchdog_exception('search_api_solr', $e,
-          '%type while trying to commit on server @server: !message in %function (line %line of %file).',
-          array('@server' => $this->server->label()), WATCHDOG_WARNING);
-    }
-  }
-
-  /**
-   * Schedules a commit operation for this server.
-   *
-   * The commit will be sent at the end of the current page request. Multiple
-   * calls to this method will still only result in one commit operation.
-   */
-  public function scheduleCommit() {
-    if (!$this->commitScheduled) {
-      $this->commitScheduled = TRUE;
-      drupal_register_shutdown_function(array($this, 'commit'));
-    }
-  }
-
-  /**
-   * Gets the currently used Solr connection object.
-   *
-   * @return \Solarium\Client
-   *   The solr connection object used by this server.
-   */
-  public function getSolrConnection() {
-    $this->connect();
-    return $this->solr;
-  }
-
-  /**
-   * Get metadata about fields in the Solr/Lucene index.
-   *
-   * @param int $num_terms
-   *   Number of 'top terms' to return.
-   *
-   * @return array
-   *   An array of SearchApiSolrField objects.
-   *
-   * @see SearchApiSolrConnectionInterface::getFields()
-   */
-  public function getFields($num_terms = 0) {
-    $this->connect();
-    return $this->solr->getFields($num_terms);
-  }
-
-  /**
-   * Retrieves a config file or file list from the Solr server.
-   *
-   * Uses the admin/file request handler.
-   *
-   * @param string|null $file
-   *   (optional) The name of the file to retrieve. If the file is a directory,
-   *   the directory contents are instead listed and returned. NULL represents
-   *   the root config directory.
-   *
-   * @return \Solarium\Core\Client\Response
-   *   A Solarium response object containing either the file contents or a file
-   *   list.
-   */
-  public function getFile($file = NULL) {
-    $this->connect();
-
-    $query = $this->solr->createPing();
-    $query->setHandler('admin/file');
-    $query->addParam('contentType', 'text/xml;charset=utf-8');
-    if ($file) {
-      $query->addParam('file', $file);
-    }
-
-    return $this->solr->ping($query)->getResponse();
+  public static function escapeFieldName($value) {
+    $value = str_replace(':', '\:', $value);
+    return $value;
   }
 
   /**
@@ -2080,96 +1955,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
   }
 
   /**
-   * Gets the current Solarium update query, creating one if necessary.
-   *
-   * @return \Solarium\QueryType\Update\Query\Query
-   *   The Update query.
-   */
-  protected function getUpdateQuery() {
-    if (!static::$updateQuery) {
-      $this->connect();
-      static::$updateQuery = $this->solr->createUpdate();
-    }
-    return static::$updateQuery;
-  }
-
-  /**
-   * Returns a Solarium query helper object.
-   *
-   * @param \Solarium\Core\Query\Query|null $query
-   *   (optional) A Solarium query object.
-   *
-   * @return \Solarium\Core\Query\Helper
-   *   A Solarium query helper.
-   */
-  protected function getQueryHelper(Query $query = NULL) {
-    if (!static::$queryHelper) {
-      if ($query) {
-        static::$queryHelper = $query->getHelper();
-      }
-      else {
-        static::$queryHelper = new Helper();
-      }
-    }
-
-    return static::$queryHelper;
-  }
-
-  /**
-   * Gets the current Solr version.
-   *
-   * @return int
-   *   1, 3 or 4. Does not give a more detailed version, for that you need to
-   *   use getSystemInfo().
-   */
-  protected function getSolrVersion() {
-    // Allow for overrides by the user.
-    if (!empty($this->configuration['solr_version'])) {
-      return $this->configuration['solr_version'];
-    }
-
-    $system_info = $this->getSystemInfo();
-    // Get our solr version number
-    if (isset($system_info['lucene']['solr-spec-version'])) {
-      return $system_info['lucene']['solr-spec-version'];
-    }
-    return 0;
-  }
-
-  /**
-   * Gets information about the Solr Core.
-   *
-   * @return object
-   *   A response object with system information.
-   */
-  protected function getSystemInfo() {
-    // @todo Add back persistent cache?
-    if (!isset($this->systemInfo)) {
-      // @todo Finish https://github.com/basdenooijer/solarium/pull/155 and stop
-      // abusing the ping query for this.
-      $query = $this->solr->createPing();
-      $query->setHandler('admin/system');
-      $this->systemInfo = $this->solr->ping($query)->getData();
-    }
-
-    return $this->systemInfo;
-  }
-
-  /**
-   * Gets meta-data about the index.
-   *
-   * @return object
-   *   A response object filled with data from Solr's Luke.
-   */
-  protected function getLuke() {
-    // @todo Write a patch for Solarium to have a separate Luke query and stop
-    // abusing the ping query for this.
-    $query = $this->solr->createPing();
-    $query->setHandler('admin/luke');
-    return $this->solr->ping($query)->getData();
-  }
-
-  /**
    * Gets summary information about the Solr Core.
    *
    * @return array
@@ -2187,8 +1972,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
       '@index_size' => '',
     );
 
-    $solr_version = $this->getSolrVersion();
-    $query = $this->solr->createPing();
+    $solr_version = $this->solrHelper->getSolrVersion();
+    $query = $this->solrHelper->getSolrConnection()->createPing();
     $query->setResponseWriter(Query::WT_PHPS);
     if (version_compare($solr_version, '4', '>=')) {
       $query->setHandler('admin/mbeans?stats=true');
@@ -2196,7 +1981,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     else {
       $query->setHandler('admin/stats.jsp');
     }
-    $stats = $this->solr->ping($query)->getData();
+    $stats = $this->solrHelper->getSolrConnection()->ping($query)->getData();
     if (!empty($stats)) {
       if (version_compare($solr_version, '3', '<=')) {
         // @todo Needs to be updated by someone who has a Solr 3.x setup.
