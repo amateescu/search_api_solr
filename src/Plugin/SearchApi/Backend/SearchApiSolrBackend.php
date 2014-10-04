@@ -20,6 +20,7 @@ use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\Utility as SearchApiUtility;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
+use Drupal\search_api_solr\Solr\SolrHelper;
 use Solarium\Client;
 use Solarium\Core\Client\Request;
 use Solarium\Core\Query\Helper;
@@ -37,8 +38,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class SearchApiSolrBackend extends BackendPluginBase {
-
-  use SolrTrait;
 
   /**
    * The date format that Solr uses, in PHP date() syntax.
@@ -118,6 +117,20 @@ class SearchApiSolrBackend extends BackendPluginBase {
   protected $searchApiSolrSettings;
 
   /**
+   * A connection to the Solr server.
+   *
+   * @var \Solarium\Client
+   */
+  protected $solr;
+
+  /**
+   * SolrHelper object with helper functions to work with Solr.
+   *
+   * @var \Drupal\search_api_solr\Solr\SolrHelper
+   */
+  protected $solrHelper;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, array $plugin_definition, FormBuilderInterface $form_builder, ModuleHandlerInterface $module_handler, Config $search_api_solr_settings) {
@@ -126,6 +139,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $this->formBuilder = $form_builder;
     $this->moduleHandler = $module_handler;
     $this->searchApiSolrSettings = $search_api_solr_settings;
+    $solrHelper = new SolrHelper($this->configuration + array('key' => $this->server->id()));
+    $this->setSolrHelper($solrHelper);
   }
 
   /**
@@ -176,7 +191,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       $form['server_description'] = array(
         '#type' => 'item',
         '#title' => $this->t('Solr server URI'),
-        '#description' => $this->getServerLink(),
+        '#description' => $this->getSolrHelper()->getServerLink(),
       );
     }
 
@@ -441,7 +456,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     $info[] = array(
       'label' => $this->t('Solr server URI'),
-      'info' => $this->getServerLink(),
+      'info' => $this->getSolrHelper()->getServerLink(),
     );
 
     if ($this->configuration['http_user']) {
@@ -547,33 +562,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
   }
 
   /**
-   * Returns a link to the Solr server, if the necessary options are set.
-   */
-  public function getServerLink() {
-    if (!$this->configuration) {
-      return '';
-    }
-    $host = $this->configuration['host'];
-    if ($host == 'localhost' && !empty($_SERVER['SERVER_NAME'])) {
-      $host = $_SERVER['SERVER_NAME'];
-    }
-    $url_path = $this->configuration['scheme'] . '://' . $host . ':' . $this->configuration['port'] . $this->configuration['path'];
-    $url = Url::fromUri($url_path);
-
-    return \Drupal::l($url_path, $url);
-  }
-
-  /**
-   * Creates a connection to the Solr server as configured in $this->configuration.
-   */
-  protected function connect() {
-    if (!$this->solr) {
-      $this->solr = new Client();
-      $this->solr->createEndpoint($this->configuration + array('key' => $this->server->id()), TRUE);
-    }
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function removeIndex($index) {
@@ -670,6 +658,393 @@ class SearchApiSolrBackend extends BackendPluginBase {
       watchdog_exception('search_api_solr', $e, "%type while indexing: !message in %function (line %line of %file).");
     }
     return array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteItems(IndexInterface $index, array $ids) {
+    $index_id = $this->getIndexId($index->id());
+    $solr_ids = array();
+    foreach ($ids as $id) {
+      $solr_ids[] = $this->createId($index_id, $id);
+    }
+    $this->getUpdateQuery()->addDeleteByIds($solr_ids);
+    $this->scheduleCommit();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteAllIndexItems(IndexInterface $index = NULL) {
+    if ($index) {
+      // Since the index ID we use for indexing can contain arbitrary
+      // prefixes, we have to escape it for use in the query.
+      $index_id = $this->getQueryHelper()->escapePhrase($index->id());
+      $index_id = $this->getIndexId($index_id);
+      $query = '(index_id:' . $index_id . ')';
+      if (!empty($this->configuration['site_hash'])) {
+        // We don't need to escape the site hash, as that consists only of
+        // alphanumeric characters.
+        $query .= ' AND (hash:' . SearchApiSolrUtility::search_api_solr_site_hash() . ')';
+      }
+      $this->getUpdateQuery()->addDeleteQuery($query);
+    }
+    else {
+      $this->getUpdateQuery()->addDeleteQuery('*:*');
+    }
+    $this->scheduleCommit();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function search(QueryInterface $query) {
+    // Reset request handler.
+    $this->request_handler = NULL;
+    // Get field information.
+    /** @var \Drupal\search_api\Entity\Index $index */
+    $index = $query->getIndex();
+    $index_id = $this->getIndexId($index->id());
+    $fields = $this->getFieldNames($index);
+    $fields_single_value = $this->getFieldNames($index, TRUE);
+    // Get Solr connection.
+    $this->connect();
+    $version = $this->getSolrVersion();
+
+    // Instantiate a Solarium select query.
+    $solarium_query = $this->solr->createSelect();
+
+    // Extract keys.
+    $keys = $query->getKeys();
+    if (is_array($keys)) {
+      $keys = $this->getSolrHelper()->flattenKeys($keys);
+    }
+
+    // Set searched fields.
+    $options = $query->getOptions();
+    $search_fields = $query->getFields();
+    // Get the index fields to be able to retrieve boosts.
+    $index_fields = $index->getFields();
+    $qf = array();
+    foreach ($search_fields as $f) {
+      /** @var \Solarium\QueryType\Update\Query\Document\Document $document */
+      $document = $index_fields[$f];
+      $boost = $document->getBoost() ? '^' . $document->getBoost() : '';
+      $qf[] = $fields[$f] . $boost;
+    }
+
+    // Extract filters.
+    $filter = $query->getFilter();
+    $fq = $this->createFilterQueries($filter, $fields, $index->getOption('fields'));
+    $fq[] = 'index_id:' . static::getQueryHelper($solarium_query)->escapePhrase($index_id);
+    if (!empty($this->configuration['site_hash'])) {
+      // We don't need to escape the site hash, as that consists only of
+      // alphanumeric characters.
+      $fq[] = 'hash:' . SearchApiSolrUtility::search_api_solr_site_hash();
+    }
+
+    // Extract sorts.
+    foreach ($query->getSorts() as $field => $order) {
+      $f = $fields_single_value[$field];
+      if (substr($f, 0, 3) == 'ss_') {
+        $f = 'sort_' . substr($f, 3);
+      }
+      $solarium_query->addSort($f, strtolower($order));
+    }
+
+    // Get facet fields.
+    $facets = $query->getOption('search_api_facets', array());
+    $facet_params = $this->setFacets($facets, $fields, $fq, $solarium_query);
+
+    // Handle highlighting.
+    $this->setHighlighting($solarium_query, $query);
+
+    // Handle More Like This query.
+    $mlt = $query->getOption('search_api_mlt');
+    if ($mlt) {
+      $field_options = $index->getOption('fields', array());
+      $solarium_query = $this->solr->createMoreLikeThis();
+      // The fields to look for similarities in.
+      $mlt_fl = array();
+      foreach ($mlt['fields'] as $f) {
+        // Solr 4 has a bug which results in numeric fields not being supported
+        // in MLT queries.
+        // Date fields don't seem to be supported at all.
+        if ($fields[$f][0] === 'd' || ($version == 4 && in_array($fields[$f][0], array('i', 'f')))) {
+          continue;
+        }
+        $mlt_fl[] = $fields[$f];
+        // For non-text fields, set minimum word length to 0.
+        if (isset($index->getOption('fields')[$f]['type']) && !SearchApiUtility::isTextType($index->getOption('fields')[$f]['type'])) {
+          $mlt_params['f.' . $fields[$f] . '.mlt.minwl'] = 0;
+        }
+      }
+
+      $solarium_query->setMltFields($mlt_fl);
+      // From the example, I don't understand what this does :)
+      $solarium_query->setMinimumDocumentFrequency(1);
+      $solarium_query->setMinimumTermFrequency(1);
+      $id = $this->createId($index_id, $mlt['id']);
+      $id = static::getQueryHelper()->escapePhrase($id);
+      $keys = 'id:' . $id;
+    }
+
+    // Handle spatial filters.
+    if ($spatials = $query->getOption('search_api_location')) {
+      foreach ($spatials as $i => $spatial) {
+        if (empty($spatial['field']) || empty($spatial['lat']) || empty($spatial['lon'])) {
+          continue;
+        }
+
+        unset($radius);
+        $field = $fields[$spatial['field']];
+        $escaped_field = SearchApiSolrUtility::escapeFieldName($field);
+        $point = ((float) $spatial['lat']) . ',' . ((float) $spatial['lon']);
+
+        // Prepare the filter settings.
+        if (isset($spatial['radius'])) {
+          $radius = (float) $spatial['radius'];
+        }
+        $spatial_method = 'geofilt';
+        if (isset($spatial['method']) && in_array($spatial['method'], array('geofilt', 'bbox'))) {
+          $spatial_method = $spatial['method'];
+        }
+
+        // Change the fq facet ranges to the correct fq.
+        foreach ($fq as $key => $value) {
+          // If the fq consists only of a filter on this field, replace it with
+          // a range.
+          $preg_field = preg_quote($escaped_field, '/');
+          if (preg_match('/^' . $preg_field . ':\["?(\*|\d+(?:\.\d+)?)"? TO "?(\*|\d+(?:\.\d+)?)"?\]$/', $value, $m)) {
+            unset($fq[$key]);
+            if ($m[1] && is_numeric($m[1])) {
+              $min_radius = isset($min_radius) ? max($min_radius, $m[1]) : $m[1];
+            }
+            if (is_numeric($m[2])) {
+              // Make the radius tighter accordingly.
+              $radius = isset($radius) ? min($radius, $m[2]) : $m[2];
+            }
+          }
+        }
+
+        // If either a radius was given in the option, or a filter was
+        // encountered, set a filter for the lowest value. If a lower boundary
+        // was set (too), we can only set a filter for that if the field name
+        // doesn't contains any colons.
+        if (isset($min_radius) && strpos($field, ':') === FALSE) {
+          $upper = isset($radius) ? " u=$radius" : '';
+          $fq[] = "{!frange l=$min_radius$upper}geodist($field,$point)";
+        }
+        elseif (isset($radius)) {
+          $fq[] = "{!$spatial_method pt=$point sfield=$field d=$radius}";
+        }
+
+        // Change sort on the field, if set (and not already changed).
+        if (isset($sort[$spatial['field']]) && substr($sort[$spatial['field']], 0, strlen($field)) === $field) {
+          if (strpos($field, ':') === FALSE) {
+            $sort[$spatial['field']] = str_replace($field, "geodist($field,$point)", $sort[$spatial['field']]);
+          }
+          else {
+            $link = \Drupal::l(t('edit server'), Url::fromRoute('entity.search_api_server.edit_form', array('search_api_server' => $this->server->id())));
+            watchdog('search_api_solr', 'Location sort on field @field had to be ignored because unclean field identifiers are used.', array('@field' => $spatial['field']), WATCHDOG_WARNING, $link);
+          }
+        }
+
+        // Change the facet parameters for spatial fields to return distance
+        // facets.
+        if (!empty($facets)) {
+          if (!empty($facet_params['facet.field'])) {
+            $facet_params['facet.field'] = array_diff($facet_params['facet.field'], array($field));
+          }
+          foreach ($facets as $delta => $facet) {
+            if ($facet['field'] != $spatial['field']) {
+              continue;
+            }
+            $steps = $facet['limit'] > 0 ? $facet['limit'] : 5;
+            $step = (isset($radius) ? $radius : 100) / $steps;
+            for ($k = $steps - 1; $k > 0; --$k) {
+              $distance = $step * $k;
+              $key = "spatial-$delta-$distance";
+              $facet_params['facet.query'][] = "{!$spatial_method pt=$point sfield=$field d=$distance key=$key}";
+            }
+            foreach (array('limit', 'mincount', 'missing') as $setting) {
+              unset($facet_params["f.$field.facet.$setting"]);
+            }
+          }
+        }
+      }
+    }
+    // Normal sorting on location fields isn't possible.
+    foreach (array_keys($solarium_query->getSorts()) as $sort) {
+      if (substr($sort, 0, 3) === 'loc') {
+        $solarium_query->removeSort($sort);
+      }
+    }
+
+    // Handle field collapsing / grouping.
+    $grouping = $query->getOption('search_api_grouping');
+    if (!empty($grouping['use_grouping'])) {
+      $group_params['group'] = 'true';
+      // We always want the number of groups returned so that we get pagers done
+      // right.
+      $group_params['group.ngroups'] = 'true';
+      if (!empty($grouping['truncate'])) {
+        $group_params['group.truncate'] = 'true';
+      }
+      if (!empty($grouping['group_facet'])) {
+        $group_params['group.facet'] = 'true';
+      }
+      foreach ($grouping['fields'] as $collapse_field) {
+        $type = $index_fields[$collapse_field]['type'];
+        // Only single-valued fields are supported.
+        if ($version < 4) {
+          // For Solr 3.x, only string and boolean fields are supported.
+          if (!SearchApiUtility::isTextType($type, array('string', 'boolean', 'uri'))) {
+            $warnings[] = $this->t('Grouping is not supported for field @field. ' .
+              'Only single-valued fields of type "String", "Boolean" or "URI" are supported.',
+              array('@field' => $index_fields[$collapse_field]['name']));
+            continue;
+          }
+        }
+        else {
+          if (SearchApiUtility::isTextType($type)) {
+            $warnings[] = $this->t('Grouping is not supported for field @field. ' .
+              'Only single-valued fields not indexed as "Fulltext" are supported.',
+              array('@field' => $index_fields[$collapse_field]['name']));
+            continue;
+          }
+        }
+        $group_params['group.field'][] = $fields[$collapse_field];
+      }
+      if (empty($group_params['group.field'])) {
+        unset($group_params);
+      }
+      else {
+        if (!empty($grouping['group_sort'])) {
+          foreach ($grouping['group_sort'] as $group_sort_field => $order) {
+            if (isset($fields[$group_sort_field])) {
+              $f = $fields[$group_sort_field];
+              if (substr($f, 0, 3) == 'ss_') {
+                $f = 'sort_' . substr($f, 3);
+              }
+              $order = strtolower($order);
+              $group_params['group.sort'][] = $f . ' ' . $order;
+            }
+          }
+          if (!empty($group_params['group.sort'])) {
+            $group_params['group.sort'] = implode(', ', $group_params['group.sort']);
+          }
+        }
+        if (!empty($grouping['group_limit']) && ($grouping['group_limit'] != 1)) {
+          $group_params['group.limit'] = $grouping['group_limit'];
+        }
+      }
+    }
+
+    // Set defaults.
+    if ($keys) {
+      $solarium_query->setQuery($keys);
+    }
+
+    // Collect parameters.
+    $solarium_query->setFields('item_id,score');
+    $solarium_query->getEDisMax()->setQueryFields($qf);
+    foreach ($fq as $key => $filter_query) {
+      $solarium_query->createFilterQuery('fq' . $key)->setQuery($filter_query);
+    }
+
+    if (isset($options['offset'])) {
+      $solarium_query->setStart($options['offset']);
+    }
+    $rows = isset($options['limit']) ? $options['limit'] : 1000000;
+    $solarium_query->setRows($rows);
+
+    if (!empty($options['search_api_spellcheck'])) {
+      $solarium_query->getSpellcheck();
+    }
+    /*
+    if (!empty($group_params)) {
+      $params += $group_params;
+    }
+    */
+    if (!empty($this->configuration['retrieve_data'])) {
+      $solarium_query->setFields('*,score');
+    }
+
+    try {
+      $this->moduleHandler->alter('search_api_solr_query', $solarium_query, $query);
+      $this->preQuery($solarium_query, $query);
+
+      // Use the manual method of creating a Solarium request so we can control
+      // the HTTP method.
+      $request = $this->solr->createRequest($solarium_query);
+
+      // Set the HTTP method or use the 'postbigrequest' plugin if no specific
+      // method is configured.
+      if ($this->configuration['http_method'] == 'AUTO') {
+        $this->solr->getPlugin('postbigrequest');
+      }
+      elseif ($this->configuration['http_method'] == 'POST') {
+        $request->setMethod(Request::METHOD_POST);
+      }
+
+      // Set HTTP Basic Authentication parameter, if login data was set.
+      if (strlen($this->configuration['http_user']) && strlen($this->configuration['http_pass'])) {
+        $request->setAuthentication($this->configuration['http_user'], $this->configuration['http_pass']);
+      }
+
+      // Send search request.
+      $response = $this->solr->executeRequest($request);
+      $resultset = $this->solr->createResult($solarium_query, $response);
+
+      // Extract results.
+      $results = $this->extractResults($query, $resultset);
+
+      // Add warnings, if present.
+      if (!empty($warnings)) {
+        foreach ($warnings as $warning) {
+          $results->addWarning($warning);
+        }
+      }
+
+      // Extract facets.
+      if ($facets = $this->extractFacets($query, $resultset)) {
+        $results->setExtraData('search_api_facets', $facets);
+      }
+
+      $this->moduleHandler->alter('search_api_solr_search_results', $results, $query, $resultset);
+      $this->postQuery($results, $query, $resultset);
+
+      return $results;
+    }
+    catch (SearchApiException $e) {
+      throw new SearchApiException(t('An error occurred while trying to search with Solr: @msg.', array('@msg' => $e->getMessage())));
+    }
+  }
+
+  /**
+   * @return \Drupal\search_api_solr\Solr\SolrHelper
+   */
+  public function getSolrHelper() {
+    return $this->solrHelper;
+  }
+
+  /**
+   * @param Config $solrHelper
+   */
+  public function setSolrHelper($solrHelper) {
+    $this->solrHelper = $solrHelper;
+  }
+
+  /**
+   * Creates a connection to the Solr server as configured in $this->configuration.
+   */
+  protected function connect() {
+    if (!$this->solr) {
+      $this->solr = new Client();
+      $this->solr->createEndpoint($this->configuration + array('key' => $this->server->id()), TRUE);
+    }
   }
 
   /**
@@ -826,369 +1201,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function deleteItems(IndexInterface $index, array $ids) {
-    $index_id = $this->getIndexId($index->id());
-    $solr_ids = array();
-    foreach ($ids as $id) {
-      $solr_ids[] = $this->createId($index_id, $id);
-    }
-    $this->getUpdateQuery()->addDeleteByIds($solr_ids);
-    $this->scheduleCommit();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function deleteAllIndexItems(IndexInterface $index = NULL) {
-    if ($index) {
-      // Since the index ID we use for indexing can contain arbitrary
-      // prefixes, we have to escape it for use in the query.
-      $index_id = $this->getQueryHelper()->escapePhrase($index->id());
-      $index_id = $this->getIndexId($index_id);
-      $query = '(index_id:' . $index_id . ')';
-      if (!empty($this->configuration['site_hash'])) {
-        // We don't need to escape the site hash, as that consists only of
-        // alphanumeric characters.
-        $query .= ' AND (hash:' . SearchApiSolrUtility::search_api_solr_site_hash() . ')';
-      }
-      $this->getUpdateQuery()->addDeleteQuery($query);
-    }
-    else {
-      $this->getUpdateQuery()->addDeleteQuery('*:*');
-    }
-    $this->scheduleCommit();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function search(QueryInterface $query) {
-    // Reset request handler.
-    $this->request_handler = NULL;
-    // Get field information.
-    /** @var \Drupal\search_api\Entity\Index $index */
-    $index = $query->getIndex();
-    $index_id = $this->getIndexId($index->id());
-    $fields = $this->getFieldNames($index);
-    $fields_single_value = $this->getFieldNames($index, TRUE);
-    // Get Solr connection.
-    $this->connect();
-    $version = $this->getSolrVersion();
-
-    // Instantiate a Solarium select query.
-    $solarium_query = $this->solr->createSelect();
-
-    // Extract keys.
-    $keys = $query->getKeys();
-    if (is_array($keys)) {
-      $keys = $this->flattenKeys($keys);
-    }
-
-    // Set searched fields.
-    $options = $query->getOptions();
-    $search_fields = $query->getFields();
-    // Get the index fields to be able to retrieve boosts.
-    $index_fields = $index->getFields();
-    $qf = array();
-    foreach ($search_fields as $f) {
-      /** @var \Solarium\QueryType\Update\Query\Document\Document $document */
-      $document = $index_fields[$f];
-      $boost = $document->getBoost() ? '^' . $document->getBoost() : '';
-      $qf[] = $fields[$f] . $boost;
-    }
-
-    // Extract filters.
-    $filter = $query->getFilter();
-    $fq = $this->createFilterQueries($filter, $fields, $index->getOption('fields'));
-    $fq[] = 'index_id:' . static::getQueryHelper($solarium_query)->escapePhrase($index_id);
-    if (!empty($this->configuration['site_hash'])) {
-      // We don't need to escape the site hash, as that consists only of
-      // alphanumeric characters.
-      $fq[] = 'hash:' . SearchApiSolrUtility::search_api_solr_site_hash();
-    }
-
-    // Extract sorts.
-    foreach ($query->getSorts() as $field => $order) {
-      $f = $fields_single_value[$field];
-      if (substr($f, 0, 3) == 'ss_') {
-        $f = 'sort_' . substr($f, 3);
-      }
-      $solarium_query->addSort($f, strtolower($order));
-    }
-
-    // Get facet fields.
-    $facets = $query->getOption('search_api_facets', array());
-    $facet_params = $this->setFacets($facets, $fields, $fq, $solarium_query);
-
-    // Handle highlighting.
-    $this->setHighlighting($solarium_query, $query);
-
-    // Handle More Like This query.
-    $mlt = $query->getOption('search_api_mlt');
-    if ($mlt) {
-      $field_options = $index->getOption('fields', array());
-      $solarium_query = $this->solr->createMoreLikeThis();
-      // The fields to look for similarities in.
-      $mlt_fl = array();
-      foreach ($mlt['fields'] as $f) {
-        // Solr 4 has a bug which results in numeric fields not being supported
-        // in MLT queries.
-        // Date fields don't seem to be supported at all.
-        if ($fields[$f][0] === 'd' || ($version == 4 && in_array($fields[$f][0], array('i', 'f')))) {
-          continue;
-        }
-        $mlt_fl[] = $fields[$f];
-        // For non-text fields, set minimum word length to 0.
-        if (isset($index->getOption('fields')[$f]['type']) && !SearchApiUtility::isTextType($index->getOption('fields')[$f]['type'])) {
-          $mlt_params['f.' . $fields[$f] . '.mlt.minwl'] = 0;
-        }
-      }
-
-      $solarium_query->setMltFields($mlt_fl);
-      // From the example, I don't understand what this does :)
-      $solarium_query->setMinimumDocumentFrequency(1);
-      $solarium_query->setMinimumTermFrequency(1);
-      $id = $this->createId($index_id, $mlt['id']);
-      $id = static::getQueryHelper()->escapePhrase($id);
-      $keys = 'id:' . $id;
-    }
-
-    // Handle spatial filters.
-    if ($spatials = $query->getOption('search_api_location')) {
-      foreach ($spatials as $i => $spatial) {
-        if (empty($spatial['field']) || empty($spatial['lat']) || empty($spatial['lon'])) {
-          continue;
-        }
-
-        unset($radius);
-        $field = $fields[$spatial['field']];
-        $escaped_field = static::escapeFieldName($field);
-        $point = ((float) $spatial['lat']) . ',' . ((float) $spatial['lon']);
-
-        // Prepare the filter settings.
-        if (isset($spatial['radius'])) {
-          $radius = (float) $spatial['radius'];
-        }
-        $spatial_method = 'geofilt';
-        if (isset($spatial['method']) && in_array($spatial['method'], array('geofilt', 'bbox'))) {
-          $spatial_method = $spatial['method'];
-        }
-
-        // Change the fq facet ranges to the correct fq.
-        foreach ($fq as $key => $value) {
-          // If the fq consists only of a filter on this field, replace it with
-          // a range.
-          $preg_field = preg_quote($escaped_field, '/');
-          if (preg_match('/^' . $preg_field . ':\["?(\*|\d+(?:\.\d+)?)"? TO "?(\*|\d+(?:\.\d+)?)"?\]$/', $value, $m)) {
-            unset($fq[$key]);
-            if ($m[1] && is_numeric($m[1])) {
-              $min_radius = isset($min_radius) ? max($min_radius, $m[1]) : $m[1];
-            }
-            if (is_numeric($m[2])) {
-              // Make the radius tighter accordingly.
-              $radius = isset($radius) ? min($radius, $m[2]) : $m[2];
-            }
-          }
-        }
-
-        // If either a radius was given in the option, or a filter was
-        // encountered, set a filter for the lowest value. If a lower boundary
-        // was set (too), we can only set a filter for that if the field name
-        // doesn't contains any colons.
-        if (isset($min_radius) && strpos($field, ':') === FALSE) {
-          $upper = isset($radius) ? " u=$radius" : '';
-          $fq[] = "{!frange l=$min_radius$upper}geodist($field,$point)";
-        }
-        elseif (isset($radius)) {
-          $fq[] = "{!$spatial_method pt=$point sfield=$field d=$radius}";
-        }
-
-        // Change sort on the field, if set (and not already changed).
-        if (isset($sort[$spatial['field']]) && substr($sort[$spatial['field']], 0, strlen($field)) === $field) {
-          if (strpos($field, ':') === FALSE) {
-            $sort[$spatial['field']] = str_replace($field, "geodist($field,$point)", $sort[$spatial['field']]);
-          }
-          else {
-            $link = \Drupal::l(t('edit server'), Url::fromRoute('entity.search_api_server.edit_form', array('search_api_server' => $this->server->id())));
-            watchdog('search_api_solr', 'Location sort on field @field had to be ignored because unclean field identifiers are used.', array('@field' => $spatial['field']), WATCHDOG_WARNING, $link);
-          }
-        }
-
-        // Change the facet parameters for spatial fields to return distance
-        // facets.
-        if (!empty($facets)) {
-          if (!empty($facet_params['facet.field'])) {
-            $facet_params['facet.field'] = array_diff($facet_params['facet.field'], array($field));
-          }
-          foreach ($facets as $delta => $facet) {
-            if ($facet['field'] != $spatial['field']) {
-              continue;
-            }
-            $steps = $facet['limit'] > 0 ? $facet['limit'] : 5;
-            $step = (isset($radius) ? $radius : 100) / $steps;
-            for ($k = $steps - 1; $k > 0; --$k) {
-              $distance = $step * $k;
-              $key = "spatial-$delta-$distance";
-              $facet_params['facet.query'][] = "{!$spatial_method pt=$point sfield=$field d=$distance key=$key}";
-            }
-            foreach (array('limit', 'mincount', 'missing') as $setting) {
-              unset($facet_params["f.$field.facet.$setting"]);
-            }
-          }
-        }
-      }
-    }
-    // Normal sorting on location fields isn't possible.
-    foreach (array_keys($solarium_query->getSorts()) as $sort) {
-      if (substr($sort, 0, 3) === 'loc') {
-        $solarium_query->removeSort($sort);
-      }
-    }
-
-    // Handle field collapsing / grouping.
-    $grouping = $query->getOption('search_api_grouping');
-    if (!empty($grouping['use_grouping'])) {
-      $group_params['group'] = 'true';
-      // We always want the number of groups returned so that we get pagers done
-      // right.
-      $group_params['group.ngroups'] = 'true';
-      if (!empty($grouping['truncate'])) {
-        $group_params['group.truncate'] = 'true';
-      }
-      if (!empty($grouping['group_facet'])) {
-        $group_params['group.facet'] = 'true';
-      }
-      foreach ($grouping['fields'] as $collapse_field) {
-        $type = $index_fields[$collapse_field]['type'];
-        // Only single-valued fields are supported.
-        if ($version < 4) {
-          // For Solr 3.x, only string and boolean fields are supported.
-          if (!SearchApiUtility::isTextType($type, array('string', 'boolean', 'uri'))) {
-            $warnings[] = $this->t('Grouping is not supported for field @field. ' .
-                'Only single-valued fields of type "String", "Boolean" or "URI" are supported.',
-                array('@field' => $index_fields[$collapse_field]['name']));
-            continue;
-          }
-        }
-        else {
-          if (SearchApiUtility::isTextType($type)) {
-            $warnings[] = $this->t('Grouping is not supported for field @field. ' .
-                'Only single-valued fields not indexed as "Fulltext" are supported.',
-                array('@field' => $index_fields[$collapse_field]['name']));
-            continue;
-          }
-        }
-        $group_params['group.field'][] = $fields[$collapse_field];
-      }
-      if (empty($group_params['group.field'])) {
-        unset($group_params);
-      }
-      else {
-        if (!empty($grouping['group_sort'])) {
-          foreach ($grouping['group_sort'] as $group_sort_field => $order) {
-            if (isset($fields[$group_sort_field])) {
-              $f = $fields[$group_sort_field];
-              if (substr($f, 0, 3) == 'ss_') {
-                $f = 'sort_' . substr($f, 3);
-              }
-              $order = strtolower($order);
-              $group_params['group.sort'][] = $f . ' ' . $order;
-            }
-          }
-          if (!empty($group_params['group.sort'])) {
-            $group_params['group.sort'] = implode(', ', $group_params['group.sort']);
-          }
-        }
-        if (!empty($grouping['group_limit']) && ($grouping['group_limit'] != 1)) {
-          $group_params['group.limit'] = $grouping['group_limit'];
-        }
-      }
-    }
-
-    // Set defaults.
-    if ($keys) {
-      $solarium_query->setQuery($keys);
-    }
-
-    // Collect parameters.
-    $solarium_query->setFields('item_id,score');
-    $solarium_query->getEDisMax()->setQueryFields($qf);
-    foreach ($fq as $key => $filter_query) {
-      $solarium_query->createFilterQuery('fq' . $key)->setQuery($filter_query);
-    }
-
-    if (isset($options['offset'])) {
-      $solarium_query->setStart($options['offset']);
-    }
-    $rows = isset($options['limit']) ? $options['limit'] : 1000000;
-    $solarium_query->setRows($rows);
-
-    if (!empty($options['search_api_spellcheck'])) {
-      $solarium_query->getSpellcheck();
-    }
-    /*
-    if (!empty($group_params)) {
-      $params += $group_params;
-    }
-    */
-    if (!empty($this->configuration['retrieve_data'])) {
-      $solarium_query->setFields('*,score');
-    }
-
-    try {
-      $this->moduleHandler->alter('search_api_solr_query', $solarium_query, $query);
-      $this->preQuery($solarium_query, $query);
-
-      // Use the manual method of creating a Solarium request so we can control
-      // the HTTP method.
-      $request = $this->solr->createRequest($solarium_query);
-
-      // Set the HTTP method or use the 'postbigrequest' plugin if no specific
-      // method is configured.
-      if ($this->configuration['http_method'] == 'AUTO') {
-        $this->solr->getPlugin('postbigrequest');
-      }
-      elseif ($this->configuration['http_method'] == 'POST') {
-        $request->setMethod(Request::METHOD_POST);
-      }
-
-      // Set HTTP Basic Authentication parameter, if login data was set.
-      if (strlen($this->configuration['http_user']) && strlen($this->configuration['http_pass'])) {
-        $request->setAuthentication($this->configuration['http_user'], $this->configuration['http_pass']);
-      }
-
-      // Send search request.
-      $response = $this->solr->executeRequest($request);
-      $resultset = $this->solr->createResult($solarium_query, $response);
-
-      // Extract results.
-      $results = $this->extractResults($query, $resultset);
-
-      // Add warnings, if present.
-      if (!empty($warnings)) {
-        foreach ($warnings as $warning) {
-          $results->addWarning($warning);
-        }
-      }
-
-      // Extract facets.
-      if ($facets = $this->extractFacets($query, $resultset)) {
-        $results->setExtraData('search_api_facets', $facets);
-      }
-
-      $this->moduleHandler->alter('search_api_solr_search_results', $results, $query, $resultset);
-      $this->postQuery($results, $query, $resultset);
-
-      return $results;
-    }
-    catch (SearchApiException $e) {
-      throw new SearchApiException(t('An error occurred while trying to search with Solr: @msg.', array('@msg' => $e->getMessage())));
-    }
-  }
-
-  /**
    * Extract results from a Solr response.
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
@@ -1269,7 +1281,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
       $index_id = $this->getIndexId($index->id());
       $solr_id = $this->createId($index_id, $result_item->getId());
-      $excerpt = $this->getExcerpt($resultset->getData(), $solr_id, $result_item->getFields(), $fields);
+      $excerpt = $this->getSolrHelper()->getExcerpt($resultset->getData(), $solr_id, $result_item->getFields(), $fields);
       if ($excerpt) {
         $result_item->setExcerpt($excerpt);
       }
@@ -1283,56 +1295,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
 //    }
 
     return $results;
-  }
-
-  /**
-   * Extract and format highlighting information for a specific item from a Solr response.
-   *
-   * Will also use highlighted fields to replace retrieved field data, if the
-   * corresponding option is set.
-   */
-  protected function getExcerpt($response, $id, array $fields, array $field_mapping) {
-    if (!isset($response->highlighting->$id)) {
-      return FALSE;
-    }
-    $output = '';
-
-    if (!empty($this->configuration['excerpt']) && !empty($response->highlighting->$id->spell)) {
-      foreach ($response->highlighting->$id->spell as $snippet) {
-        $snippet = strip_tags($snippet);
-        $snippet = preg_replace('/^.*>|<.*$/', '', $snippet);
-        $snippet = $this->formatHighlighting($snippet);
-        // The created fragments sometimes have leading or trailing punctuation.
-        // We remove that here for all common cases, but take care not to remove
-        // < or > (so HTML tags stay valid).
-        $snippet = trim($snippet, "\00..\x2F:;=\x3F..\x40\x5B..\x60");
-        $output .= $snippet . ' … ';
-      }
-    }
-    if (!empty($this->configuration['highlight_data'])) {
-      foreach ($field_mapping as $search_api_property => $solr_property) {
-        if (substr($solr_property, 0, 3) == 'tm_' && !empty($response->highlighting->$id->$solr_property)) {
-          // Contrary to above, we here want to preserve HTML, so we just
-          // replace the [HIGHLIGHT] tags with the appropriate format.
-          $fields[$search_api_property] = $this->formatHighlighting($response->highlighting->$id->$solr_property);
-        }
-      }
-    }
-
-    return $output;
-  }
-
-  /**
-   * Changes highlighting tags from our custom, HTML-safe ones to HTML.
-   *
-   * @param string|array $snippet
-   *   The snippet(s) to format.
-   *
-   * @return string|array
-   *   The snippet(s), properly formatted as HTML.
-   */
-  protected function formatHighlighting($snippet) {
-    return preg_replace('#\[(/?)HIGHLIGHT\]#', '<$1strong>', $snippet);
   }
 
   /**
@@ -1444,76 +1406,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
   }
 
   /**
-   * Flatten a keys array into a single search string.
-   *
-   * @param array $keys
-   *   The keys array to flatten, formatted as specified by
-   *   \Drupal\search_api\Query\QueryInterface::getKeys().
-   * @param bool $is_nested
-   *   (optional) Whether the function is called for a nested condition.
-   *   Defaults to FALSE.
-   *
-   * @return string
-   *   A Solr query string representing the same keys.
-   */
-  protected function flattenKeys(array $keys, $is_nested = FALSE) {
-    $k = array();
-    $or = $keys['#conjunction'] == 'OR';
-    $neg = !empty($keys['#negation']);
-    foreach ($keys as $key_nr => $key) {
-      // We cannot use \Drupal\Core\Render\Element::children() anymore because
-      // $keys is not a valid render array.
-      if ($key_nr[0] === '#' || !$key) {
-        continue;
-      }
-      if (is_array($key)) {
-        $subkeys = $this->flattenKeys($key, TRUE);
-        if ($subkeys) {
-          $nested_expressions = TRUE;
-          // If this is a negated OR expression, we can't just use nested keys
-          // as-is, but have to put them into parantheses.
-          if ($or && $neg) {
-            $subkeys = "($subkeys)";
-          }
-          $k[] = $subkeys;
-        }
-      }
-      else {
-        $key = static::getQueryHelper()->escapePhrase(trim($key));
-        $k[] = $key;
-      }
-    }
-    if (!$k) {
-      return '';
-    }
-
-    // Formatting the keys into a Solr query can be a bit complex. The following
-    // code will produce filters that look like this:
-    //
-    // #conjunction | #negation | return value
-    // ----------------------------------------------------------------
-    // AND          | FALSE     | A B C
-    // AND          | TRUE      | -(A AND B AND C)
-    // OR           | FALSE     | ((A) OR (B) OR (C))
-    // OR           | TRUE      | -A -B -C
-
-    // If there was just a single, unnested key, we can ignore all this.
-    if (count($k) == 1 && empty($nested_expressions)) {
-      $k = reset($k);
-      return $neg ? "*:* AND -$k" : $k;
-    }
-
-    if ($or) {
-      if ($neg) {
-        return '*:* AND -' . implode(' AND -', $k);
-      }
-      return '((' . implode(') OR (', $k) . '))';
-    }
-    $k = implode($neg || $is_nested ? ' AND ' : ' ', $k);
-    return $neg ? "*:* AND -($k)" : $k;
-  }
-
-  /**
    * Transforms a query filter into a flat array of Solr filter queries, using
    * the field names in $fields.
    */
@@ -1549,7 +1441,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * and operator.
    */
   protected function createFilterQuery($field, $value, $operator, $field_info) {
-    $field = static::escapeFieldName($field);
+    $field = SearchApiSolrUtility::escapeFieldName($field);
     if ($value === NULL) {
       return ($operator == '=' ? '*:* AND -' : '') . "$field:[* TO *]";
     }
@@ -1614,7 +1506,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       // Check for the "or" operator.
       if (isset($info['operator']) && $info['operator'] === 'or') {
         // Remember that filters for this field should be tagged.
-        $escaped = static::escapeFieldName($fields[$info['field']]);
+        $escaped = SearchApiSolrUtility::escapeFieldName($fields[$info['field']]);
         $taggedFields[$escaped] = "{!tag=$escaped}";
         // Add the facet field.
         $facet_field = $facet_set->createFacetField($field)->setField("{!ex=$escaped}$field");
@@ -1786,7 +1678,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
           $keys_array[$key] = $key;
         }
       }
-      $keys = $this->flattenKeys($query->getKeys());
+      $keys = $this->getSolrHelper()->flattenKeys($query->getKeys());
     }
     else {
       $keys_array = preg_split('/[-\s():{}\[\]\\\\"]+/', $keys, -1, PREG_SPLIT_NO_EMPTY);

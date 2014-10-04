@@ -235,4 +235,36 @@ class Utility {
     $server->save();
     drupal_set_message(t('The Solr server was successfully switched to multi-site compatibility mode.'));
   }
+
+  /**
+   * Escapes a Search API field name for passing to Solr.
+   *
+   * Since field names can only contain one special character, ":", there is no
+   * need to use the complete escape() method.
+   *
+   * @param string $value
+   *   The field name to escape.
+   *
+   * @return string
+   *   An escaped string suitable for passing to Solr.
+   */
+  public static function escapeFieldName($value) {
+    $value = str_replace(':', '\:', $value);
+    return $value;
+  }
+
+  /**
+   * Changes highlighting tags from our custom, HTML-safe ones to HTML.
+   *
+   * @param string|array $snippet
+   *   The snippet(s) to format.
+   *
+   * @return string|array
+   *   The snippet(s), properly formatted as HTML.
+   */
+  public static function formatHighlighting($snippet) {
+    return preg_replace('#\[(/?)HIGHLIGHT\]#', '<$1strong>', $snippet);
+  }
 }
+
+
