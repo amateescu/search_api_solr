@@ -17,9 +17,9 @@ use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Backend\BackendPluginBase;
-use Drupal\search_api_solr\Plugin\SearchApi\Backend\SolrTrait;
 use Drupal\search_api\Query\ResultSetInterface;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Utility\Utility as SearchApiUtility;
+use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Solarium\Client;
 use Solarium\Core\Client\Request;
 use Solarium\Core\Query\Helper;
@@ -428,7 +428,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       return FALSE;
     }
     $type = substr($feature, 21);
-    $type = Utility::getDataTypeInfo($type);
+    $type = SearchApiSolrUtility::getDataTypeInfo($type);
     // We only support it if the "prefix" key is set.
     return $type && !empty($type['prefix']);
   }
@@ -609,7 +609,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       // If multi-site compatibility is enabled, add the site hash and
       // language-specific base URL.
       if (!empty($this->configuration['site_hash'])) {
-        $doc->setField('hash', search_api_solr_site_hash());
+        $doc->setField('hash', SearchApiSolrUtility::search_api_solr_site_hash());
         $lang = $item->getField('search_api_language')->getValues();
         $lang = reset($lang);
         if (empty($base_urls[$lang])) {
@@ -678,10 +678,10 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * This has to consist of both index and item ID. Optionally, the site hash is
    * also included.
    *
-   * @see search_api_solr_site_hash()
+   * @see SearchApiSolrUtility::search_api_solr_site_hash()
    */
   protected function createId($index_id, $item_id) {
-    $site_hash = !empty($this->configuration['site_hash']) ? search_api_solr_site_hash() . '-' : '';
+    $site_hash = !empty($this->configuration['site_hash']) ? SearchApiSolrUtility::search_api_solr_site_hash() . '-' : '';
     return "$site_hash$index_id-$item_id";
   }
 
@@ -725,7 +725,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
           }
         }
 
-        $type_info = search_api_solr_get_data_type_info($type);
+        $type_info = SearchApiSolrUtility::search_api_solr_get_data_type_info($type);
         $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
         $pref .= ($single_value_name) ? 's' : 'm';
         if (!empty($this->configuration['clean_ids'])) {
@@ -851,7 +851,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       if (!empty($this->configuration['site_hash'])) {
         // We don't need to escape the site hash, as that consists only of
         // alphanumeric characters.
-        $query .= ' AND (hash:' . search_api_solr_site_hash() . ')';
+        $query .= ' AND (hash:' . SearchApiSolrUtility::search_api_solr_site_hash() . ')';
       }
       $this->getUpdateQuery()->addDeleteQuery($query);
     }
@@ -906,7 +906,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     if (!empty($this->configuration['site_hash'])) {
       // We don't need to escape the site hash, as that consists only of
       // alphanumeric characters.
-      $fq[] = 'hash:' . search_api_solr_site_hash();
+      $fq[] = 'hash:' . SearchApiSolrUtility::search_api_solr_site_hash();
     }
 
     // Extract sorts.
@@ -941,7 +941,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
         }
         $mlt_fl[] = $fields[$f];
         // For non-text fields, set minimum word length to 0.
-        if (isset($index->getOption('fields')[$f]['type']) && !Utility::isTextType($index->getOption('fields')[$f]['type'])) {
+        if (isset($index->getOption('fields')[$f]['type']) && !SearchApiUtility::isTextType($index->getOption('fields')[$f]['type'])) {
           $mlt_params['f.' . $fields[$f] . '.mlt.minwl'] = 0;
         }
       }
@@ -1065,7 +1065,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
         // Only single-valued fields are supported.
         if ($version < 4) {
           // For Solr 3.x, only string and boolean fields are supported.
-          if (!Utility::isTextType($type, array('string', 'boolean', 'uri'))) {
+          if (!SearchApiUtility::isTextType($type, array('string', 'boolean', 'uri'))) {
             $warnings[] = $this->t('Grouping is not supported for field @field. ' .
                 'Only single-valued fields of type "String", "Boolean" or "URI" are supported.',
                 array('@field' => $index_fields[$collapse_field]['name']));
@@ -1073,7 +1073,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
           }
         }
         else {
-          if (Utility::isTextType($type)) {
+          if (SearchApiUtility::isTextType($type)) {
             $warnings[] = $this->t('Grouping is not supported for field @field. ' .
                 'Only single-valued fields not indexed as "Fulltext" are supported.',
                 array('@field' => $index_fields[$collapse_field]['name']));
@@ -1205,7 +1205,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $field_options = $index->getOption('fields', array());
 
     // Set up the results array.
-    $results = Utility::createSearchResultSet($query);
+    $results = SearchApiUtility::createSearchResultSet($query);
     $results->setExtraData('search_api_solr_response', $resultset->getData());
 
     // In some rare cases (e.g., MLT query with nonexistent ID) the response
@@ -1244,7 +1244,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       // We can find the item ID and the score in the special 'search_api_*'
       // properties. Mappings are provided for these properties in
       // SearchApiSolrBackend::getFieldNames().
-      $result_item = Utility::createItem($index, $doc_fields[$fields['search_api_id']]);
+      $result_item = SearchApiUtility::createItem($index, $doc_fields[$fields['search_api_id']]);
       $result_item->setScore($doc_fields[$fields['search_api_id']]);
       unset($doc_fields[$fields['search_api_id']], $doc_fields[$fields['search_api_relevance']]);
 
@@ -1261,7 +1261,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
             $doc_fields[$solr_property] = strtotime($doc_fields[$solr_property]);
           }
 
-          $field = Utility::createField($index, $search_api_property);
+          $field = SearchApiUtility::createField($index, $search_api_property);
           $field->setValues($doc_fields[$solr_property]);
           $result_item->setField($search_api_property, $field);
         }
@@ -1811,7 +1811,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     if (!empty($this->configuration['site_hash'])) {
       // We don't need to escape the site hash, as that consists only of
       // alphanumeric characters.
-      $fq[] = 'hash:' . search_api_solr_site_hash();
+      $fq[] = 'hash:' . SearchApiSolrUtility::search_api_solr_site_hash();
     }
 
     // Autocomplete magic
