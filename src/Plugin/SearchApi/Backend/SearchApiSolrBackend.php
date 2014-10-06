@@ -759,12 +759,11 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     // Handle highlighting.
     $this->setHighlighting($solarium_query, $query);
-
     // Handle More Like This query.
     $mlt = $query->getOption('search_api_mlt');
     if ($mlt) {
       $field_options = $index->getOption('fields', array());
-      $solarium_query = $this->solr->createMoreLikeThis();
+      $solarium_query = $this->solr->createMoreLikeThis(array('handler' => 'select'));
       // The fields to look for similarities in.
       $mlt_fl = array();
       foreach ($mlt['fields'] as $f) {
@@ -781,7 +780,13 @@ class SearchApiSolrBackend extends BackendPluginBase {
         }
       }
 
+      //$solarium_query->setHandler('mlt');
       $solarium_query->setMltFields($mlt_fl);
+      $customizer = $this->solr->getPlugin('customizerequest');
+      $customizer->createCustomization('id')
+        ->setType('param')
+        ->setName('qt')
+        ->setValue('mlt');
       // From the example, I don't understand what this does :)
       $solarium_query->setMinimumDocumentFrequency(1);
       $solarium_query->setMinimumTermFrequency(1);
@@ -791,7 +796,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     }
 
     // Handle spatial filters.
-    if ($spatials = $query->getOption('search_api_location')) {
+    /*if ($spatials = $query->getOption('search_api_location')) {
       foreach ($spatials as $i => $spatial) {
         if (empty($spatial['field']) || empty($spatial['lat']) || empty($spatial['lon'])) {
           continue;
@@ -874,16 +879,16 @@ class SearchApiSolrBackend extends BackendPluginBase {
           }
         }
       }
-    }
+    }*/
     // Normal sorting on location fields isn't possible.
-    foreach (array_keys($solarium_query->getSorts()) as $sort) {
+    /*foreach (array_keys($solarium_query->getSorts()) as $sort) {
       if (substr($sort, 0, 3) === 'loc') {
         $solarium_query->removeSort($sort);
       }
-    }
+    }*/
 
     // Handle field collapsing / grouping.
-    $grouping = $query->getOption('search_api_grouping');
+    /*$grouping = $query->getOption('search_api_grouping');
     if (!empty($grouping['use_grouping'])) {
       $group_params['group'] = 'true';
       // We always want the number of groups returned so that we get pagers done
@@ -940,7 +945,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
           $group_params['group.limit'] = $grouping['group_limit'];
         }
       }
-    }
+    }*/
 
     // Set defaults.
     if ($keys) {
@@ -960,17 +965,18 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $rows = isset($options['limit']) ? $options['limit'] : 1000000;
     $solarium_query->setRows($rows);
 
+    /*
     if (!empty($options['search_api_spellcheck'])) {
       $solarium_query->getSpellcheck();
-    }
+    }*/
     /*
     if (!empty($group_params)) {
       $params += $group_params;
     }
     */
-    if (!empty($this->configuration['retrieve_data'])) {
+    /*if (!empty($this->configuration['retrieve_data'])) {
       $solarium_query->setFields('*,score');
-    }
+    }*/
 
     try {
       $this->moduleHandler->alter('search_api_solr_query', $solarium_query, $query);
