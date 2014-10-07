@@ -1880,7 +1880,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
         $this->solr->update($this->getUpdateQuery());
       }
     }
-    catch (SearchApiException $e) {
+    catch (\Exception $e) {
       watchdog_exception('search_api_solr', $e,
           '%type while trying to commit on server @server: !message in %function (line %line of %file).',
           array('@server' => $this->server->label()), WATCHDOG_WARNING);
