@@ -478,63 +478,64 @@ class SolrHelper {
     }
   }
 
-  public function setGrouping(Query $solarium_query, QueryInterface $query, $grouping_options = array()) {
-    if (!empty($grouping_options['use_grouping'])) {
-      $group_params['group'] = 'true';
-      // We always want the number of groups returned so that we get pagers done
-      // right.
-      $group_params['group.ngroups'] = 'true';
-      if (!empty($grouping_options['truncate'])) {
-        $group_params['group.truncate'] = 'true';
-      }
-      if (!empty($grouping_options['group_facet'])) {
-        $group_params['group.facet'] = 'true';
-      }
-      foreach ($grouping_options['fields'] as $collapse_field) {
-        $type = $index_fields[$collapse_field]['type'];
-        // Only single-valued fields are supported.
-        if ($version < 4) {
-          // For Solr 3.x, only string and boolean fields are supported.
-          if (!SearchApiUtility::isTextType($type, array('string', 'boolean', 'uri'))) {
-            $warnings[] = $this->t('Grouping is not supported for field @field. ' .
-              'Only single-valued fields of type "String", "Boolean" or "URI" are supported.',
-              array('@field' => $index_fields[$collapse_field]['name']));
-            continue;
-          }
+  public function setGrouping(Query $solarium_query, QueryInterface $query, $grouping_options = array(), $index_fields = array(), $field_names = array()) {
+    $group_params['group'] = 'true';
+    // We always want the number of groups returned so that we get pagers done
+    // right.
+    $group_params['group.ngroups'] = 'true';
+    if (!empty($grouping_options['truncate'])) {
+      $group_params['group.truncate'] = 'true';
+    }
+    if (!empty($grouping_options['group_facet'])) {
+      $group_params['group.facet'] = 'true';
+    }
+    foreach ($grouping_options['fields'] as $collapse_field) {
+      $type = $index_fields[$collapse_field]['type'];
+      // Only single-valued fields are supported.
+      if ($this->getSolrVersion() < 4) {
+        // For Solr 3.x, only string and boolean fields are supported.
+        if (!SearchApiUtility::isTextType($type, array('string', 'boolean', 'uri'))) {
+          $warnings[] = $this->t('Grouping is not supported for field @field. ' .
+            'Only single-valued fields of type "String", "Boolean" or "URI" are supported.',
+            array('@field' => $index_fields[$collapse_field]['name']));
+          continue;
         }
-        else {
-          if (SearchApiUtility::isTextType($type)) {
-            $warnings[] = $this->t('Grouping is not supported for field @field. ' .
-              'Only single-valued fields not indexed as "Fulltext" are supported.',
-              array('@field' => $index_fields[$collapse_field]['name']));
-            continue;
-          }
-        }
-        $group_params['group.field'][] = $fields[$collapse_field];
-      }
-      if (empty($group_params['group.field'])) {
-        unset($group_params);
       }
       else {
-        if (!empty($grouping_options['group_sort'])) {
-          foreach ($grouping_options['group_sort'] as $group_sort_field => $order) {
-            if (isset($fields[$group_sort_field])) {
-              $f = $fields[$group_sort_field];
-              if (substr($f, 0, 3) == 'ss_') {
-                $f = 'sort_' . substr($f, 3);
-              }
-              $order = strtolower($order);
-              $group_params['group.sort'][] = $f . ' ' . $order;
-            }
-          }
-          if (!empty($group_params['group.sort'])) {
-            $group_params['group.sort'] = implode(', ', $group_params['group.sort']);
-          }
-        }
-        if (!empty($grouping_options['group_limit']) && ($grouping_options['group_limit'] != 1)) {
-          $group_params['group.limit'] = $grouping_options['group_limit'];
+        if (SearchApiUtility::isTextType($type)) {
+          $warnings[] = $this->t('Grouping is not supported for field @field. ' .
+            'Only single-valued fields not indexed as "Fulltext" are supported.',
+            array('@field' => $index_fields[$collapse_field]['name']));
+          continue;
         }
       }
+      $group_params['group.field'][] = $field_names[$collapse_field];
+    }
+    if (empty($group_params['group.field'])) {
+      unset($group_params);
+    }
+    else {
+      if (!empty($grouping_options['group_sort'])) {
+        foreach ($grouping_options['group_sort'] as $group_sort_field => $order) {
+          if (isset($fields[$group_sort_field])) {
+            $f = $fields[$group_sort_field];
+            if (substr($f, 0, 3) == 'ss_') {
+              $f = 'sort_' . substr($f, 3);
+            }
+            $order = strtolower($order);
+            $group_params['group.sort'][] = $f . ' ' . $order;
+          }
+        }
+        if (!empty($group_params['group.sort'])) {
+          $group_params['group.sort'] = implode(', ', $group_params['group.sort']);
+        }
+      }
+      if (!empty($grouping_options['group_limit']) && ($grouping_options['group_limit'] != 1)) {
+        $group_params['group.limit'] = $grouping_options['group_limit'];
+      }
+    }
+    foreach ($group_params as $param_id => $param_value) {
+      $solarium_query->addParam($param_id, $param_value);
     }
   }
 

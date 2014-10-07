@@ -779,8 +779,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     // Handle field collapsing / grouping.
     $grouping_options = $query->getOption('search_api_grouping');
-    if ($grouping_options) {
-      $this->solrHelper->setGrouping($solarium_query, $query, $grouping_options);
+    if (!empty($grouping_options['use_grouping'])) {
+      $this->solrHelper->setGrouping($solarium_query, $query, $grouping_options, $index_fields, $field_names);
     }
 
     // Set defaults.
