@@ -106,7 +106,9 @@ class SearchApiSolrTest extends BackendTest {
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = Index::load($index_id);
     $index->setOption('index_directly', TRUE);
-    return $index->index();
+    $index_status = $index->index();
+    sleep(2);
+    return $index_status;
   }
 
   /**
@@ -115,6 +117,10 @@ class SearchApiSolrTest extends BackendTest {
   protected function clearIndex() {
     $index = Index::load($this->indexId);
     $index->clear();
+    // Deleting items take at least 1 second for Solr to parse it so that drupal
+    // doesn't get timeouts while waiting for Solr. Lets give it 2 seconds to
+    // make sure we are in bounds.
+    sleep(2);
   }
 
   /**
@@ -151,7 +157,10 @@ class SearchApiSolrTest extends BackendTest {
     $server = Server::load($this->serverId);
     $index = Index::load($this->indexId);
     $server->deleteAllItems($index);
-
+    // Deleting items take at least 1 second for Solr to parse it so that drupal
+    // doesn't get timeouts while waiting for Solr. Lets give it 2 seconds to
+    // make sure we are in bounds.
+    sleep(2);
     $query = $this->buildSearch();
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 0, 'Clearing the server worked correctly.');
