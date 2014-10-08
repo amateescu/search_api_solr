@@ -642,16 +642,11 @@ class SearchApiSolrBackend extends BackendPluginBase {
     }
     try {
       $this->getUpdateQuery()->addDocuments($documents);
-      if ($index->getOption('index_directly')) {
-        $this->getUpdateQuery()->addCommit();
-        $this->solr->update(static::$updateQuery);
+      $this->getUpdateQuery()->addCommit(TRUE);
+      $this->solr->update($this->getUpdateQuery());
 
-        // Reset the Update query for further calls.
-        static::$updateQuery = NULL;
-      }
-      else {
-        $this->scheduleCommit();
-      }
+      // Reset the Update query for further calls.
+      static::$updateQuery = NULL;
       return $ret;
     }
     catch (SearchApiException $e) {
@@ -664,19 +659,22 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * {@inheritdoc}
    */
   public function deleteItems(IndexInterface $index, array $ids) {
+    $this->connect();
     $index_id = $this->getIndexId($index->id());
     $solr_ids = array();
     foreach ($ids as $id) {
       $solr_ids[] = $this->createId($index_id, $id);
     }
     $this->getUpdateQuery()->addDeleteByIds($solr_ids);
-    $this->scheduleCommit();
+    $this->getUpdateQuery()->addCommit(TRUE);
+    $this->solr->update($this->getUpdateQuery());
   }
 
   /**
    * {@inheritdoc}
    */
   public function deleteAllIndexItems(IndexInterface $index = NULL) {
+    $this->connect();
     if ($index) {
       // Since the index ID we use for indexing can contain arbitrary
       // prefixes, we have to escape it for use in the query.
@@ -693,7 +691,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
     else {
       $this->getUpdateQuery()->addDeleteQuery('*:*');
     }
-    $this->scheduleCommit();
+    $this->getUpdateQuery()->addCommit(TRUE);
+    $this->solr->update($this->getUpdateQuery());
   }
 
   /**
@@ -1867,37 +1866,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
       // @todo Show a message with the exception?
     }
     return FALSE;
-  }
-
-  /**
-   * Sends a commit command to the Solr server.
-   */
-  public function commit() {
-    try {
-      if (static::$updateQuery) {
-        $this->connect();
-        $this->getUpdateQuery()->addCommit();
-        $this->solr->update($this->getUpdateQuery());
-      }
-    }
-    catch (SearchApiException $e) {
-      watchdog_exception('search_api_solr', $e,
-          '%type while trying to commit on server @server: !message in %function (line %line of %file).',
-          array('@server' => $this->server->label()), WATCHDOG_WARNING);
-    }
-  }
-
-  /**
-   * Schedules a commit operation for this server.
-   *
-   * The commit will be sent at the end of the current page request. Multiple
-   * calls to this method will still only result in one commit operation.
-   */
-  public function scheduleCommit() {
-    if (!$this->commitScheduled) {
-      $this->commitScheduled = TRUE;
-      drupal_register_shutdown_function(array($this, 'commit'));
-    }
   }
 
   /**
