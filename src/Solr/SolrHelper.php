@@ -68,14 +68,14 @@ class SolrHelper {
    * Will also use highlighted fields to replace retrieved field data, if the
    * corresponding option is set.
    */
-  public function getExcerpt($response, $id, array $fields, array $field_mapping) {
-    if (!isset($response->highlighting->$id)) {
+  public function getExcerpt($response, $solr_id, array $fields, array $field_mapping) {
+    if (!isset($response->highlighting->$solr_id)) {
       return FALSE;
     }
     $output = '';
 
-    if (!empty($this->configuration['excerpt']) && !empty($response->highlighting->$id->spell)) {
-      foreach ($response->highlighting->$id->spell as $snippet) {
+    if (!empty($this->configuration['excerpt']) && !empty($response->highlighting->$solr_id->spell)) {
+      foreach ($response->highlighting->$solr_id->spell as $snippet) {
         $snippet = strip_tags($snippet);
         $snippet = preg_replace('/^.*>|<.*$/', '', $snippet);
         $snippet = SearchApiSolrUtility::formatHighlighting($snippet);
@@ -88,10 +88,10 @@ class SolrHelper {
     }
     if (!empty($this->configuration['highlight_data'])) {
       foreach ($field_mapping as $search_api_property => $solr_property) {
-        if (substr($solr_property, 0, 3) == 'tm_' && !empty($response->highlighting->$id->$solr_property)) {
+        if (substr($solr_property, 0, 3) == 'tm_' && !empty($response->highlighting->$solr_id->$solr_property)) {
           // Contrary to above, we here want to preserve HTML, so we just
           // replace the [HIGHLIGHT] tags with the appropriate format.
-          $fields[$search_api_property] = SearchApiSolrUtility::formatHighlighting($response->highlighting->$id->$solr_property);
+          $fields[$search_api_property] = SearchApiSolrUtility::formatHighlighting($response->highlighting->$solr_id->$solr_property);
         }
       }
     }

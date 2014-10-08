@@ -58,7 +58,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
    *
    * @var array
    */
-  protected $fields;
+  protected $field_names;
 
   /**
    * A Solarium Update query.
@@ -571,8 +571,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $documents = array();
     $ret = array();
     $index_id = $this->getIndexId($index->id());
-    $fields = $this->getFieldNames($index);
-    $fields_single_value = $this->getFieldNames($index, TRUE);
+    $field_names = $this->getFieldNames($index);
+    $field_names_single_value = $this->getFieldNames($index, TRUE);
     $languages = language_list();
     $base_urls = array();
 
@@ -608,7 +608,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
         // If the field is not known for the index, something weird has
         // happened. We refuse to index the items and hope that the others are
         // OK.
-        if (!isset($fields[$name])) {
+        if (!isset($field_names[$name])) {
           $vars = array(
             '%field' => $name,
             '@id' => $id,
@@ -617,7 +617,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
           $doc = NULL;
           break;
         }
-        $this->addIndexField($doc, $fields[$name], $fields_single_value[$name], $field->getValues(), $field->getType());
+        $this->addIndexField($doc, $field_names[$name], $field_names_single_value[$name], $field->getValues(), $field->getType());
       }
 
       if ($doc) {
@@ -730,18 +730,18 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     // Set basic filters.
     $filter_queries = $this->createFilterQueries($query->getFilter(), $field_names, $index->getOption('fields'));
-    foreach ($filter_queries as $filter_query) {
-      $solarium_query->createFilterQuery()->setQuery($filter_query);
+    foreach ($filter_queries as $id => $filter_query) {
+      $solarium_query->createFilterQuery('filters_' . $id)->setQuery($filter_query);
     }
 
     // Set the Index filter
-    $solarium_query->createFilterQuery()->setQuery('index_id:' . static::getQueryHelper($solarium_query)->escapePhrase($index_id));
+    $solarium_query->createFilterQuery('index_id')->setQuery('index_id:' . static::getQueryHelper($solarium_query)->escapePhrase($index_id));
 
     // Set the site hash filter
     if (!empty($this->configuration['site_hash'])) {
       // We don't need to escape the site hash, as that consists only of
       // alphanumeric characters.
-      $solarium_query->createFilterQuery()->setQuery('hash:' . SearchApiSolrUtility::search_api_solr_site_hash());
+      $solarium_query->createFilterQuery('site_hash')->setQuery('hash:' . SearchApiSolrUtility::search_api_solr_site_hash());
     }
 
     // Set sorts.
@@ -749,7 +749,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     // Set facet fields.
     $facets = $query->getOption('search_api_facets', array());
-    $facet_params = $this->setFacets($facets, $field_names, $fq, $solarium_query);
+    $this->setFacets($facets, $field_names, $solarium_query);
 
     // Set highlighting.
     $excerpt = !empty($this->configuration['excerpt']) ? true : false;
@@ -791,9 +791,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
     // Collect parameters.
     $solarium_query->setFields('item_id,score');
     $solarium_query->getEDisMax()->setQueryFields($qf);
-    //foreach ($fq as $key => $filter_query) {
-    //  $solarium_query->createFilterQuery('fq' . $key)->setQuery($filter_query);
-    //}
 
     if (isset($options['offset'])) {
       $solarium_query->setStart($options['offset']);
@@ -801,19 +798,15 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $rows = isset($options['limit']) ? $options['limit'] : 1000000;
     $solarium_query->setRows($rows);
 
-    /*
     if (!empty($options['search_api_spellcheck'])) {
       $solarium_query->getSpellcheck();
-    }*/
-    /*
-    if (!empty($group_params)) {
-      $params += $group_params;
     }
-    */
-    /*if (!empty($this->configuration['retrieve_data'])) {
-      $solarium_query->setFields('*,score');
-    }*/
 
+    if (!empty($this->configuration['retrieve_data'])) {
+      $solarium_query->setFields('*,score');
+    }
+
+    // Allow modules to alter the query
     try {
       $this->moduleHandler->alter('search_api_solr_query', $solarium_query, $query);
       $this->preQuery($solarium_query, $query);
@@ -1055,7 +1048,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
    */
   protected function extractResults(QueryInterface $query, Result $resultset) {
     $index = $query->getIndex();
-    $fields = $this->getFieldNames($index);
+    $field_names = $this->getFieldNames($index);
     $field_options = $index->getOption('fields', array());
 
     // Set up the results array.
@@ -1098,14 +1091,14 @@ class SearchApiSolrBackend extends BackendPluginBase {
       // We can find the item ID and the score in the special 'search_api_*'
       // properties. Mappings are provided for these properties in
       // SearchApiSolrBackend::getFieldNames().
-      $result_item = SearchApiUtility::createItem($index, $doc_fields[$fields['search_api_id']]);
-      $result_item->setScore($doc_fields[$fields['search_api_id']]);
-      unset($doc_fields[$fields['search_api_id']], $doc_fields[$fields['search_api_relevance']]);
+      $result_item = SearchApiUtility::createItem($index, $doc_fields[$field_names['search_api_id']]);
+      $result_item->setScore($doc_fields[$field_names['search_api_id']]);
+      unset($doc_fields[$field_names['search_api_id']], $doc_fields[$field_names['search_api_relevance']]);
 
       // Extract properties from the Solr document, translating from Solr to
       // Search API property names. This reverses the mapping in
       // SearchApiSolrBackend::getFieldNames().
-      foreach ($fields as $search_api_property => $solr_property) {
+      foreach ($field_names as $search_api_property => $solr_property) {
         if (isset($doc_fields[$solr_property])) {
           // Date fields need some special treatment to become valid date values
           // (i.e., timestamps) again.
@@ -1123,7 +1116,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
       $index_id = $this->getIndexId($index->id());
       $solr_id = $this->createId($index_id, $result_item->getId());
-      $excerpt = $this->getSolrHelper()->getExcerpt($resultset->getData(), $solr_id, $result_item->getFields(), $fields);
+      $item_fields = $result_item->getFields();
+      $excerpt = $this->getSolrHelper()->getExcerpt($resultset->getData(), $solr_id, $item_fields, $field_names);
       if ($excerpt) {
         $result_item->setExcerpt($excerpt);
       }
@@ -1132,9 +1126,9 @@ class SearchApiSolrBackend extends BackendPluginBase {
     }
 
     // Check for spellcheck suggestions.
-//    if (module_exists('search_api_spellcheck') && $query->getOption('search_api_spellcheck')) {
-//      $results->setExtraData('search_api_spellcheck', new SearchApiSpellcheckSolr($resultset));
-//    }
+    /*if (module_exists('search_api_spellcheck') && $query->getOption('search_api_spellcheck')) {
+       $results->setExtraData('search_api_spellcheck', new SearchApiSpellcheckSolr($resultset));
+    }*/
 
     return $results;
   }
@@ -1158,14 +1152,14 @@ class SearchApiSolrBackend extends BackendPluginBase {
     }
 
     $index = $query->getIndex();
-    $fields = $this->getFieldNames($index);
+    $field_names = $this->getFieldNames($index);
     $field_options = $index->getOption('fields', array());
 
     $extract_facets = $query->getOption('search_api_facets', array());
 
     if ($facet_fields = $resultset->getFacetSet()->getFacets()) {
       foreach ($extract_facets as $delta => $info) {
-        $field = $fields[$info['field']];
+        $field = $field_names[$info['field']];
         if (!empty($facet_fields[$field])) {
           $min_count = $info['min_count'];
           $terms = $facet_fields[$field]->getValues();
@@ -1249,22 +1243,22 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
   /**
    * Transforms a query filter into a flat array of Solr filter queries, using
-   * the field names in $fields.
+   * the field names in $field_names.
    */
-  protected function createFilterQueries(FilterInterface $filter, array $solr_fields, array $fields) {
+  protected function createFilterQueries(FilterInterface $filter, array $solr_fields, array $field_names) {
     $or = $filter->getConjunction() == 'OR';
     $fq = array();
     foreach ($filter->getFilters() as $f) {
       if (is_array($f)) {
-        if (!isset($fields[$f[0]])) {
+        if (!isset($field_names[$f[0]])) {
           throw new SearchApiException(t('Filter term on unknown or unindexed field @field.', array('@field' => $f[0])));
         }
         if ($f[1] !== '') {
-          $fq[] = $this->createFilterQuery($solr_fields[$f[0]], $f[1], $f[2], $fields[$f[0]]);
+          $fq[] = $this->createFilterQuery($solr_fields[$f[0]], $f[1], $f[2], $field_names[$f[0]]);
         }
       }
       else {
-        $q = $this->createFilterQueries($f, $solr_fields, $fields);
+        $q = $this->createFilterQueries($f, $solr_fields, $field_names);
         if ($filter->getConjunction() != $f->getConjunction()) {
           // $or == TRUE means the nested filter has conjunction AND, and vice versa
           $sep = $or ? ' ' : ' OR ';
@@ -1328,7 +1322,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
   /**
    * Helper method for creating the facet field parameters.
    */
-  protected function setFacets(array $facets, array $fields, array &$fq = array(), Query $solarium_query) {
+  protected function setFacets(array $facets, array $field_names, Query $solarium_query) {
+    $fq = array();
     if (!$facets) {
       return array();
     }
@@ -1340,15 +1335,15 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     $taggedFields = array();
     foreach ($facets as $info) {
-      if (empty($fields[$info['field']])) {
+      if (empty($field_names[$info['field']])) {
         continue;
       }
       // String fields have their own corresponding facet fields.
-      $field = $fields[$info['field']];
+      $field = $field_names[$info['field']];
       // Check for the "or" operator.
       if (isset($info['operator']) && $info['operator'] === 'or') {
         // Remember that filters for this field should be tagged.
-        $escaped = SearchApiSolrUtility::escapeFieldName($fields[$info['field']]);
+        $escaped = SearchApiSolrUtility::escapeFieldName($field_names[$info['field']]);
         $taggedFields[$escaped] = "{!tag=$escaped}";
         // Add the facet field.
         $facet_field = $facet_set->createFacetField($field)->setField("{!ex=$escaped}$field");
@@ -1384,6 +1379,10 @@ class SearchApiSolrBackend extends BackendPluginBase {
           $fq[$i] = $tag . $filter;
         }
       }
+    }
+
+    foreach ($fq as $key => $filter_query) {
+      $solarium_query->createFilterQuery('facets_' . $key)->setQuery($filter_query);
     }
   }
 
@@ -1459,7 +1458,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $incomp = drupal_strtolower($incomplete_key);
 
     $index = $query->getIndex();
-    $fields = $this->getFieldNames($index);
+    $field_names = $this->getFieldNames($index);
     $complete = $query->getOriginalKeys();
 
     // Extract keys
@@ -1495,11 +1494,11 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $search_fields = $query->getFields();
     $qf = array();
     foreach ($search_fields as $f) {
-      $qf[] = $fields[$f];
+      $qf[] = $field_names[$f];
     }
 
     // Extract filters
-    $fq = $this->createFilterQueries($query->getFilter(), $fields, $index->getOption('fields', array()));
+    $fq = $this->createFilterQueries($query->getFilter(), $field_names, $index->getOption('fields', array()));
     $index_id = $this->getIndexId($index->id());
     $fq[] = 'index_id:' . $this->getQueryHelper()->escapePhrase($index_id);
     if (!empty($this->configuration['site_hash'])) {
@@ -1511,7 +1510,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     // Autocomplete magic
     $facet_fields = array();
     foreach ($search_fields as $f) {
-      $facet_fields[] = $fields[$f];
+      $facet_fields[] = $field_names[$f];
     }
 
     $limit = $query->getOption('limit', 10);
