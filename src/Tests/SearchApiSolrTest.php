@@ -114,14 +114,8 @@ class SearchApiSolrTest extends SearchApiDbTest {
    * {@inheritdoc}
    */
   protected function clearIndex() {
-    $server = Server::load($this->serverId);
     $index = Index::load($this->indexId);
     $index->clear();
-
-    // Since \Drupal\search_api_solr\Plugin\SearchApi\Backend\SearchApiSolrBackend::deleteAllItems()
-    // schedules a commit operation which will be executed at the end of the PHP
-    // request, we need to send a commit message to Solr manually.
-    $server->getBackend()->commit();
   }
 
   /**
@@ -158,11 +152,6 @@ class SearchApiSolrTest extends SearchApiDbTest {
     $server = Server::load($this->serverId);
     $index = Index::load($this->indexId);
     $server->deleteAllItems($index);
-
-    // Since \Drupal\search_api_solr\Plugin\SearchApi\Backend\SearchApiSolrBackend::deleteAllItems()
-    // schedules a commit operation which will be executed at the end of the PHP
-    // request, we need to send a commit message to Solr manually.
-    $server->getBackend()->commit();
 
     $query = $this->buildSearch();
     $results = $query->execute();
