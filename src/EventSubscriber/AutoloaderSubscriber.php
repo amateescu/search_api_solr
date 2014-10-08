@@ -24,7 +24,8 @@ class AutoloaderSubscriber implements EventSubscriberInterface {
    */
   public static function getSubscribedEvents() {
     return array(
-      KernelEvents::REQUEST => array('onRequest', 999),
+      // Run very early but after composer_manager which has a priority of 999.
+      KernelEvents::REQUEST => array('onRequest', 990),
     );
   }
 
@@ -50,11 +51,17 @@ class AutoloaderSubscriber implements EventSubscriberInterface {
   public function registerAutoloader() {
     if (!$this->autoloaderRegistered) {
 
+      // If the class can already be loaded, do nothing.
+      if (class_exists('Solarium\\Client')) {
+        $this->autoloaderRegistered = TRUE;
+        return;
+      }
+
       $filepath = $this->getAutoloadFilepath();
       if (!is_file($filepath)) {
         throw new \RuntimeException(String::format('Autoloader not found: @filepath', array('@filepath' => $filepath)));
       }
-      if (!class_exists('Solarium\\Client') && ($filepath != DRUPAL_ROOT . '/core/vendor/autoload.php')) {
+      if (($filepath != DRUPAL_ROOT . '/core/vendor/autoload.php')) {
         $this->autoloaderRegistered = TRUE;
         require $filepath;
       }
