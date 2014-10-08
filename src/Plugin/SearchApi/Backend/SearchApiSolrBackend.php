@@ -635,7 +635,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
     }
     try {
       $this->getUpdateQuery()->addDocuments($documents);
-      $this->getUpdateQuery()->addCommit(TRUE);
       // Do a commitWithin since that is automatically a softCommit with Solr 4
       // and a delayed hard commit with Solr 3.4+.
       // We wait 1 second after the request arrived for solr to parse the commit.
