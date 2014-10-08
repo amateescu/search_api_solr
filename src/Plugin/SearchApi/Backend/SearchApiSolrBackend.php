@@ -707,26 +707,32 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     // Instantiate a Solarium select query.
     $solarium_query = $this->solr->createSelect();
+    // get the dismax component and set a boost query
+    $edismax = $solarium_query->getEDisMax();
 
     // Extract keys.
     $keys = $query->getKeys();
     if (is_array($keys)) {
       $keys = $this->getSolrHelper()->flattenKeys($keys);
     }
+    // Set them
+    $solarium_query->setQuery($keys);
+    unset($keys);
+    $solarium_query->setFields(array('item_id', 'score'));
 
     // Set searched fields.
     $options = $query->getOptions();
     $search_fields = $query->getFields();
     // Get the index fields to be able to retrieve boosts.
     $index_fields = $index->getFields();
-    $qf = array();
-
-    foreach ($search_fields as $f) {
+    $query_fields = array();
+    foreach ($search_fields as $search_field) {
       /** @var \Solarium\QueryType\Update\Query\Document\Document $document */
-      $document = $index_fields[$f];
+      $document = $index_fields[$search_field];
       $boost = $document->getBoost() ? '^' . $document->getBoost() : '';
-      $qf[] = $field_names[$f] . $boost;
+      $query_fields[] = $field_names[$search_field] . $boost;
     }
+    $solarium_query->getEDisMax()->setQueryFields(implode(' ', $query_fields));
 
     // Set basic filters.
     $filter_queries = $this->createFilterQueries($query->getFilter(), $field_names, $index->getOption('fields'));
@@ -768,7 +774,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       // so we do not do unnecessary function calls
       $id = $this->createId($index_id, $mlt_options['id']);
       $id = static::getQueryHelper()->escapePhrase($id);
-      $keys = 'id:' . $id;
+      $solarium_query->setQuery('id:' . $id);
     }
 
     // Handle spatial filters.
@@ -783,15 +789,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
       $this->solrHelper->setGrouping($solarium_query, $query, $grouping_options, $index_fields, $field_names);
     }
 
-    // Set defaults.
-    if ($keys) {
-      $solarium_query->setQuery($keys);
-    }
-
-    // Collect parameters.
-    $solarium_query->setFields('item_id,score');
-    $solarium_query->getEDisMax()->setQueryFields($qf);
-
     if (isset($options['offset'])) {
       $solarium_query->setStart($options['offset']);
     }
@@ -802,8 +799,12 @@ class SearchApiSolrBackend extends BackendPluginBase {
       $solarium_query->getSpellcheck();
     }
 
+    /**
+     * @todo Make this more configurable so that views can choose which fields
+     * it wants to fetch
+     */
     if (!empty($this->configuration['retrieve_data'])) {
-      $solarium_query->setFields('*,score');
+      $solarium_query->setFields(array('*', 'score'));
     }
 
     // Allow modules to alter the query
@@ -1807,7 +1808,4 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     return static::$queryHelper;
   }
-
-
-
 }

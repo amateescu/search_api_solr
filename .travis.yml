@@ -98,7 +98,8 @@ script:
   # Also make the grep case insensitive and fail on run-tests.sh regular fails as well on fatal errors.
   - TEST_OUTPUT=$(! egrep -i "([0-9]+ fails)|(PHP Fatal error)|([0-9]+ exceptions)" /tmp/test.txt > /dev/null)$?
   - cd $TRAVIS_BUILD_DIR/../drupal/core
-  - ./vendor/bin/phpunit --group search_api_solr -c "../modules/search_api_solr/phpunit.xml.travis" --verbose --debug --coverage-text | tee ; export TEST_PHPUNIT=${PIPESTATUS[0]} ; echo $TEST_PHPUNIT
+  - ./vendor/bin/phpunit --group search_api_solr -c "../modules/search_api_solr/phpunit.xml.travis" --verbose --debug | tee ; export TEST_PHPUNIT=${PIPESTATUS[0]} ; echo $TEST_PHPUNIT
+  #- ./vendor/bin/phpunit --group search_api_solr -c "../modules/search_api_solr/phpunit.xml.travis" --verbose --debug --coverage-text | tee ; export TEST_PHPUNIT=${PIPESTATUS[0]} ; echo $TEST_PHPUNIT
   # if the TEST_EXIT status is 0 AND the TEST_OUTPUT status is also 0 it means we succeeded, in all other cases we
   # failed.
   # Re-enable when trying to get CodeSniffer doesn't return a 403 anymore.
