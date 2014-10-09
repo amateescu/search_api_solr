@@ -885,6 +885,16 @@ class SearchApiSolrBackend extends BackendPluginBase {
   }
 
   /**
+   * Returns the Solarium client.
+   *
+   * @return \Solarium\Client
+   *   The solarium instance object.
+   */
+  public function getSolr() {
+    return $this->solr;
+  }
+
+  /**
    * Creates an ID used as the unique identifier at the Solr server.
    *
    * This has to consist of both index and item ID. Optionally, the site hash is
