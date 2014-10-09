@@ -879,6 +879,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     if (!$this->solr) {
       $this->solr = new Client();
       $this->solr->createEndpoint($this->configuration + array('key' => $this->server->id()), TRUE);
+      $this->getSolrHelper()->setSolr($this->solr);
     }
   }
 
@@ -1104,8 +1105,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
           // (i.e., timestamps) again.
           if (isset($field_options[$search_api_property]['type'])
               && $field_options[$search_api_property]['type'] == 'date'
-              && preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $doc_fields[$solr_property])) {
-            $doc_fields[$solr_property] = strtotime($doc_fields[$solr_property]);
+              && preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $doc_fields[$solr_property][0])) {
+            $doc_fields[$solr_property][0] = strtotime($doc_fields[$solr_property][0]);
           }
 
           $field = SearchApiUtility::createField($index, $search_api_property);

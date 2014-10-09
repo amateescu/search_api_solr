@@ -46,6 +46,16 @@ class SolrHelper {
   }
 
   /**
+   * Sets the solr connection.
+   *
+   * @param \Solarium\Client $solr
+   *   The solarium connection object.
+   */
+  public function setSolr(Client $solr) {
+    $this->solr = $solr;
+  }
+
+  /**
    * Returns a link to the Solr server, if the necessary options are set.
    */
   public function getServerLink() {
@@ -332,7 +342,7 @@ class SolrHelper {
     }
   }
 
-  public function setMoreLikeThis(Query $solarium_query, QueryInterface $query, $mlt_options = array(), $field_options = array(), $fields) {
+  public function setMoreLikeThis(Query &$solarium_query, QueryInterface $query, $mlt_options = array(), $field_options = array(), $fields) {
     $solarium_query = $this->solr->createMoreLikeThis(array('handler' => 'select'));
     // The fields to look for similarities in.
     if (empty($mlt_options['fields'])) {
