@@ -613,7 +613,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
             '%field' => $name,
             '@id' => $id,
           );
-          watchdog('search_api_solr', 'Error while indexing: Unknown field %field on the item with ID @id.', $vars, WATCHDOG_WARNING);
+          \Drupal::logger('search_api_solr')->warning('Error while indexing: Unknown field %field on the item with ID @id.', $vars);
           $doc = NULL;
           break;
         }

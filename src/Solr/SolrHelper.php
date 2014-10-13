@@ -440,7 +440,7 @@ class SolrHelper {
         }
         else {
           $link = \Drupal::l(t('edit server'), Url::fromRoute('entity.search_api_server.edit_form', array('search_api_server' => $this->server->id())));
-          watchdog('search_api_solr', 'Location sort on field @field had to be ignored because unclean field identifiers are used.', array('@field' => $spatial['field']), WATCHDOG_WARNING, $link);
+          \Drupal::logger('search_api_solr')->warning('Location sort on field @field had to be ignored because unclean field identifiers are used.', array('@field' => $spatial['field'], 'link' => $link));
         }
       }
 
