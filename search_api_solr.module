@@ -84,10 +84,10 @@ function search_api_solr_cron() {
     if ($count) {
       $vars['@count'] = $count;
       if ($action != 'spellcheck') {
-        watchdog('search_api_solr', 'Optimized @count Solr server(s).', $vars, WATCHDOG_INFO);
+        \Drupal::logger('search_api_solr')->info('Optimized @count Solr server(s).', $vars);
       }
       else {
-        watchdog('search_api_solr', 'Rebuilt spellcheck dictionary on @count Solr server(s).', $vars, WATCHDOG_INFO);
+        \Drupal::logger('search_api_solr')->info('Rebuilt spellcheck dictionary on @count Solr server(s).', $vars);
       }
     }
   }
