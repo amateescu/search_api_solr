@@ -2,6 +2,7 @@ Apache Solr Multilingual 7.x-1.3, 2014-xx-xx
 --------------------------------------------
 [        ] mkalkbrenner: added warning about exceeding max_input_vars in bias settings form
 [#2331215] gnindl: Search all language specific fields when CLIR is activated
+[        ] mkalkbrenner: introduced sm_translations and i18n_path_*
 
 
 Apache Solr Multilingual 7.x-1.2, 2014-08-04

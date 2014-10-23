@@ -16,6 +16,10 @@ function apachesolr_multilingual_confgen_modify_schema($qp_schema, $solr_version
   foreach (apachesolr_multilingual_language_list() as $language_id => $language) {
     $qp_schema_language_specific = apachesolr_confgen_clone_qp($qp_schema);
 
+    $qp_schema_language_specific
+      ->find(':root')->xpath("fields/field[@name='path']")->attr('name', 'i18n_path_' . $language_id)
+      ->insertAfter($qp_schema->find(':root')->xpath("fields/field[@name='path']"));
+
     foreach (array('text', 'text_und') as $type) {
       if ('text_und' != $type) {
         $qp_schema_language_specific

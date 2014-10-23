@@ -42,7 +42,7 @@ function apachesolr_multilingual_node_delete($node) {
 function apachesolr_multilingual_node_update($node) {
   // If a node is translated using node translation aka content translation
   // we need to mark all translations as modified to update field
-  // sm_missing_translations and CLIR.
+  // sm_translations, sm_missing_translations and CLIR.
   if (!empty($node->tnid)) {
     foreach (apachesolr_multilingual_load_all_environments() as $environment) {
       if (!empty($environment['index_bundles']['node'])
@@ -124,6 +124,7 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
             $translations_key = $entity_info['entity keys']['translations'];
             $original_langcode = $entity->language;
 
+            $document->setField('sm_translations', array_unique(array_merge(array_keys($entity->{$translations_key}->data), array($original_langcode))));
             $document->setField('sm_missing_translations', array_diff($active_langcodes, array_keys($entity->{$translations_key}->data)));
 
             foreach ($entity->{$translations_key}->data as $langcode => $entity_translation) {
@@ -160,6 +161,7 @@ function apachesolr_multilingual_apachesolr_index_documents_alter(&$documents, $
               $translations = translation_node_get_translations($document->is_tnid);
             }
 
+            $document->setField('sm_translations', array_unique(array_merge(array_keys($translations), array($document->ss_language))));
             $document->setField('sm_missing_translations', array_diff($active_langcodes, array_merge(array_keys($translations), array($document->ss_language))));
 
             if (!empty($translations) && $settings['apachesolr_multilingual_clir']['apachesolr_multilingual_index_translations']) {
@@ -277,6 +279,8 @@ function apachesolr_multilingual_copy_common_to_i18n_fields($src_document, $dst_
         $src_document->{$field_name};
     }
   }
+
+  $dst_document->{'i18n_path_' . $src_document->ss_language} = $src_document->{'path'};
 
   foreach ($fields as $field_name) {
     $prefixes = array_keys(apachesolr_multilingual_get_dynamic_text_field_prefixes_and_types());
