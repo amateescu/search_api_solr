@@ -47,8 +47,8 @@ function search_api_solr_cron() {
   // 86400 seconds is one day. We use slightly less here to allow for some
   // variation in the request time of the cron run, so that the time of day will
   // (more or less) stay the same.
-  if (REQUEST_TIME - \Drupal::config('search_api_solr.settings')->get('last_optimize') > 86340) {
-    \Drupal::config('search_api_solr.settings')->set('last_optimize', REQUEST_TIME);
+  if (REQUEST_TIME - \Drupal::state()->get('search_api_solr.last_optimize') > 86340) {
+    \Drupal::state()->set('search_api_solr.last_optimize', REQUEST_TIME);
 
     // Get the IDs of all enabled servers which use the Solr backend.
     $ids = \Drupal::entityQuery('search_api_server')
