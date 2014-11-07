@@ -31,7 +31,7 @@ server: solr_search_server
 status: 1
 langcode: en
 dependencies:
-  entity:
+  config:
     - field.field.entity_test.body
     - field.field.entity_test.keywords
     - field.instance.entity_test.article.body
