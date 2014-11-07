@@ -659,7 +659,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
       $solr_ids[] = $this->createId($index_id, $id);
     }
     $this->getUpdateQuery()->addDeleteByIds($solr_ids);
-    $this->getUpdateQuery()->addCommit(TRUE);
     $this->solr->update($this->getUpdateQuery());
   }
 
@@ -684,7 +683,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
     else {
       $this->getUpdateQuery()->addDeleteQuery('*:*');
     }
-    $this->getUpdateQuery()->addCommit(TRUE);
     $this->solr->update($this->getUpdateQuery());
   }
 
