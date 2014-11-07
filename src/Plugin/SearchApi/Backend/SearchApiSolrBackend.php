@@ -635,7 +635,18 @@ class SearchApiSolrBackend extends BackendPluginBase {
     }
     try {
       $this->getUpdateQuery()->addDocuments($documents);
-      $this->getUpdateQuery()->addCommit(TRUE);
+      // Do a commitWithin since that is automatically a softCommit with Solr 4
+      // and a delayed hard commit with Solr 3.4+.
+      // We wait 1 second after the request arrived for solr to parse the commit.
+      // This allows us to return to Drupal and let Solr handle what it
+      // needs to handle
+      // @see http://wiki.apache.org/solr/NearRealtimeSearch
+      $customizer = $this->solr->getPlugin('customizerequest');
+      $customizer->createCustomization('id')
+        ->setType('param')
+        ->setName('commitWithin')
+        ->setValue('1000');
+
       $this->solr->update($this->getUpdateQuery());
 
       // Reset the Update query for further calls.
@@ -658,8 +669,21 @@ class SearchApiSolrBackend extends BackendPluginBase {
     foreach ($ids as $id) {
       $solr_ids[] = $this->createId($index_id, $id);
     }
+
     $this->getUpdateQuery()->addDeleteByIds($solr_ids);
-    $this->getUpdateQuery()->addCommit(TRUE);
+
+    // Do a commitWithin since that is automatically a softCommit with Solr 4
+    // and a delayed hard commit with Solr 3.4+.
+    // We wait 1 second after the request arrived for solr to parse the commit.
+    // This allows us to return to Drupal and let Solr handle what it
+    // needs to handle
+    // @see http://wiki.apache.org/solr/NearRealtimeSearch
+    $customizer = $this->solr->getPlugin('customizerequest');
+    $customizer->createCustomization('id')
+      ->setType('param')
+      ->setName('commitWithin')
+      ->setValue('1000');
+
     $this->solr->update($this->getUpdateQuery());
   }
 
@@ -684,7 +708,19 @@ class SearchApiSolrBackend extends BackendPluginBase {
     else {
       $this->getUpdateQuery()->addDeleteQuery('*:*');
     }
-    $this->getUpdateQuery()->addCommit(TRUE);
+
+    // Do a commitWithin since that is automatically a softCommit with Solr 4
+    // and a delayed hard commit with Solr 3.4+.
+    // We wait 1 second after the request arrived for solr to parse the commit.
+    // This allows us to return to Drupal and let Solr handle what it
+    // needs to handle
+    // @see http://wiki.apache.org/solr/NearRealtimeSearch
+    $customizer = $this->solr->getPlugin('customizerequest');
+    $customizer->createCustomization('id')
+      ->setType('param')
+      ->setName('commitWithin')
+      ->setValue('1000');
+
     $this->solr->update($this->getUpdateQuery());
   }
 
