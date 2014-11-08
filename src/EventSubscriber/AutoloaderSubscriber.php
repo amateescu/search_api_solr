@@ -8,6 +8,7 @@
 namespace Drupal\search_api_solr\EventSubscriber;
 
 use Drupal\Component\Utility\String;
+use Drupal\Core\Logger\RfcLogLevel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -38,7 +39,7 @@ class AutoloaderSubscriber implements EventSubscriberInterface {
     }
     catch (\RuntimeException $e) {
       if (PHP_SAPI !== 'cli') {
-        watchdog_exception('search_api_solr', $e, NULL, array(), WATCHDOG_WARNING);
+        watchdog_exception('search_api_solr', $e, NULL, array(), RfcLogLevel::WARNING);
       }
     }
   }
