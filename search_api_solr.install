@@ -6,6 +6,17 @@
 function search_api_solr_requirements($phase) {
   $ret = array();
 
+  if ($phase == 'install' || $phase == 'runtime') {
+    if (!class_exists('Solarium\\Client')) {
+      $ret['search_api_solr'] = array(
+        'title' => \Drupal::translation()->translate('Solr'),
+        'value' => \Drupal::translation()->translate('The Solarium library could not be found and is required for Solr search.<br />Use the composer manager module or run "composer install" in the @path folder to install it.', array('@path' => drupal_get_path('module', 'search_api_solr'))),
+        'severity' => REQUIREMENT_ERROR,
+      );
+      return $ret;
+    }
+  }
+
   if ($phase == 'runtime') {
     /** @var \Drupal\search_api\Server\ServerInterface[] $servers */
     $servers = entity_load_multiple_by_properties('search_api_server', array('backend' => 'search_api_solr', 'status' => TRUE));
