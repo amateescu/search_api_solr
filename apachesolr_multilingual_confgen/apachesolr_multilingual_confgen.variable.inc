@@ -38,7 +38,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
   $variables['apachesolr_multilingual_splitOnCaseChange_query'] =
   $variables['apachesolr_multilingual_splitOnCaseChange_index'] = array(
     'type' => 'boolean',
-    'solr_format' => 'nummeric',
+    'solr_format' => 'numeric',
     'title' => t('splitOnCaseChange', array(), $options),
     'default' => TRUE,
     'description' => t('Causes lowercase => uppercase transitions to generate a new part.<br />"PowerShot" => "Power" "Shot"<br />"TransAM" => "Trans" "AM"', array(), $options),
@@ -49,7 +49,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
   $variables['apachesolr_multilingual_splitOnNumerics_query'] =
   $variables['apachesolr_multilingual_splitOnNumerics_index'] = array(
     'type' => 'boolean',
-    'solr_format' => 'nummeric',
+    'solr_format' => 'numeric',
     'title' => t('splitOnNumerics', array(), $options),
     'default' => TRUE,
     'description' => t('Causes alphabet => number transitions to generate a new part.<br />"j2se" => "j" "2" "se"', array(), $options),
@@ -60,7 +60,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
   $variables['apachesolr_multilingual_stemEnglishPossessive_query'] =
   $variables['apachesolr_multilingual_stemEnglishPossessive_index'] = array(
     'type' => 'boolean',
-    'solr_format' => 'nummeric',
+    'solr_format' => 'numeric',
     'title' => t('stemEnglishPossessive', array(), $options),
     'default' => TRUE,
     'description' => t('Causes trailing "\'s" to be removed for each subword.<br />"Doug\'s" => "Doug"<br />"O\'Neil\'s" -> "O", "Neil"'),
@@ -71,7 +71,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
   $variables['apachesolr_multilingual_generateWordParts_query'] =
   $variables['apachesolr_multilingual_generateWordParts_index'] = array(
     'type' => 'boolean',
-    'solr_format' => 'nummeric',
+    'solr_format' => 'numeric',
     'title' => t('generateWordParts', array(), $options),
     'default' => TRUE,
     'description' => t('Causes parts of words to be generated.<br />"PowerShot" => "Power" "Shot" (if splitOnCaseChange=1)<br />"Power-Shot" => "Power" "Shot"'),
@@ -82,7 +82,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
   $variables['apachesolr_multilingual_generateNumberParts_query'] =
   $variables['apachesolr_multilingual_generateNumberParts_index'] = array(
     'type' => 'boolean',
-    'solr_format' => 'nummeric',
+    'solr_format' => 'numeric',
     'title' => t('generateNumberParts', array(), $options),
     'default' => TRUE,
     'description' => t('Causes number subwords to be generated.<br />"500-42" => "500" "42"'),
@@ -93,7 +93,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
   $variables['apachesolr_multilingual_catenateWords_query'] =
   $variables['apachesolr_multilingual_catenateWords_index'] = array(
     'type' => 'boolean',
-    'solr_format' => 'nummeric',
+    'solr_format' => 'numeric',
     'title' => t('catenateWords', array(), $options),
     'default' => TRUE,
     'description' => t('Causes maximum runs of word parts to be catenated.<br />"wi-fi" => "wifi"'),
@@ -104,7 +104,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
   $variables['apachesolr_multilingual_catenateNumbers_query'] =
   $variables['apachesolr_multilingual_catenateNumbers_index'] = array(
     'type' => 'boolean',
-    'solr_format' => 'nummeric',
+    'solr_format' => 'numeric',
     'title' => t('catenateNumbers', array(), $options),
     'default' => TRUE,
     'description' => t('Causes maximum runs of number parts to be catenated.<br />"500-42" => "50042"'),
@@ -115,7 +115,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
   $variables['apachesolr_multilingual_catenateAll_query'] =
   $variables['apachesolr_multilingual_catenateAll_index'] = array(
     'type' => 'boolean',
-    'solr_format' => 'nummeric',
+    'solr_format' => 'numeric',
     'title' => t('catenateAll', array(), $options),
     'default' => TRUE,
     'description' => t('Causes all subword parts to be catenated.<br />"wi-fi-4000" => "wifi4000"'),
@@ -126,7 +126,7 @@ function apachesolr_multilingual_confgen_variable_info($options) {
   $variables['apachesolr_multilingual_preserveOriginal_query'] =
   $variables['apachesolr_multilingual_preserveOriginal_index'] = array(
     'type' => 'boolean',
-    'solr_format' => 'nummeric',
+    'solr_format' => 'numeric',
     'title' => t('preserveOriginal', array(), $options),
     'default_value' => TRUE,
     'description' => t('Causes the original token to be indexed without modifications (in addition to the tokens produced due to other options).'),
