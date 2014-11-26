@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api_solr\Plugin\SearchApi\Backend;
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
@@ -1456,7 +1457,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     // Reset request handler
     $this->request_handler = NULL;
     // Turn inputs to lower case, otherwise we get case sensivity problems.
-    $incomp = drupal_strtolower($incomplete_key);
+    $incomp = Unicode::strtolower($incomplete_key);
 
     $index = $query->getIndex();
     $field_names = $this->getFieldNames($index);
@@ -1609,7 +1610,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
             // Build suggestions using returned facets
             $incomp_length = strlen($incomp);
             foreach ($matches as $term => $count) {
-              if (drupal_strtolower(substr($term, 0, $incomp_length)) == $incomp) {
+              if (Unicode::strtolower(substr($term, 0, $incomp_length)) == $incomp) {
                 $suggestions[] = array(
                   'suggestion_suffix' => substr($term, $incomp_length),
                   'term' => $term,
