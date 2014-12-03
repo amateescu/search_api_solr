@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api_solr\Plugin\SearchApi\Backend\SearchApiSolrBackend.
+ * Contains \Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend.
  */
 
-namespace Drupal\search_api_solr\Plugin\SearchApi\Backend;
+namespace Drupal\search_api_solr\Plugin\search_api\backend;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\Config;
@@ -13,13 +13,13 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\search_api\Exception\SearchApiException;
-use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\SearchApiException;
+use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Query\ResultSetInterface;
-use Drupal\search_api\Utility\Utility as SearchApiUtility;
+use Drupal\search_api\Utility as SearchApiUtility;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Drupal\search_api_solr\Solr\SolrHelper;
 use Solarium\Client;

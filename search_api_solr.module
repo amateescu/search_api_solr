@@ -8,9 +8,8 @@
 use Drupal\Core\Form\FormStateInterface;
 use \Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\search_api\Entity\Server;
-use Drupal\search_api\Exception\SearchApiException;
-use Drupal\search_api\Server\ServerInterface;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\SearchApiException;
+use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\Plugin\SearchApi\Backend\SearchApiSolrBackend;
 
 /**
@@ -78,7 +77,7 @@ function search_api_solr_cron() {
         ++$count;
       }
       catch(SearchApiException $e) {
-        watchdog_exception('search_api_solr', $e, '%type while optimizing Solr server @server: !message in %function (line %line of %file).', array('@server' => $server->name));
+        watchdog_exception('search_api_solr', $e, '%type while optimizing Solr server @server: !message in %function (line %line of %file).', array('@server' => $server->label()));
       }
     }
     if ($count) {

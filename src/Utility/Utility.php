@@ -8,8 +8,8 @@
 namespace Drupal\search_api_solr\Utility;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\search_api\Server\ServerInterface;
-use \Drupal\search_api\Utility\Utility as SearchApiUtility;
+use Drupal\search_api\ServerInterface;
+use \Drupal\search_api\Utility as SearchApiUtility;
 
 class Utility {
 

@@ -74,7 +74,7 @@ before_script:
   # Install the site
   - drush -v site-install standard --db-url=mysql://root:@localhost/drupal --yes
   - drush en --yes simpletest
-  - git clone --branch master http://git.drupal.org/sandbox/daeron/2091893.git modules/search_api
+  - git clone --branch 8.x-1.x http://git.drupal.org/project/search_api.git modules/search_api
   - drush cr
   # Install Solr
   - curl -sSL https://raw.githubusercontent.com/nickveenhof/travis-solr/master/travis-solr.sh | bash
