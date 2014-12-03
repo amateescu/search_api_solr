@@ -13,7 +13,7 @@ use Solarium\Client;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Solarium\Core\Query\Helper as SolariumHelper;
 use Solarium\QueryType\Select\Query\Query;
-use Drupal\search_api\Utility\Utility as SearchApiUtility;
+use Drupal\search_api\Utility as SearchApiUtility;
 
 class SolrHelper {
 

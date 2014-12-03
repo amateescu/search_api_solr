@@ -10,13 +10,12 @@ namespace Drupal\search_api_solr\Tests;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Query\ResultSetInterface;
-use Drupal\search_api\Tests\ExampleContentTrait;
-use Drupal\search_api_db\Tests\SearchApiDbTest;
+use Drupal\search_api_db\Tests\BackendTest;
 
 /**
  * Tests index and search capabilities using the Solr search backend.
  */
-class SearchApiSolrTest extends SearchApiDbTest {
+class SearchApiSolrTest extends BackendTest {
 
   /**
    * A Search API server ID.

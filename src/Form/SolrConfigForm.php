@@ -11,8 +11,8 @@ use Drupal\Component\Utility\String;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\search_api\Exception\SearchApiException;
-use Drupal\search_api\Server\ServerInterface;
+use Drupal\search_api\SearchApiException;
+use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\Plugin\SearchApi\Backend\SearchApiSolrBackend;
 
 /**
@@ -88,7 +88,7 @@ class SolrConfigForm extends FormBase {
   /**
    * Checks access for the Solr config form.
    *
-   * @param \Drupal\search_api\Server\ServerInterface $search_api_server
+   * @param \Drupal\search_api\ServerInterface $search_api_server
   *   The server for which access should be tested.
    *
    * @return \Drupal\Core\Access\AccessResultInterface
