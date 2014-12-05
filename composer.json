@@ -1,4 +1,9 @@
 {
+  "name": "drupal/search_api_solr",
+  "description": "Offers an implementation of the Search API that uses an Apache Solr server for indexing content.",
+  "type": "drupal-module",
+  "license": "GPL-2.0+",
+  "minimum-stability": "dev",
   "require": {
     "solarium/solarium": "3.2.0"
   }
