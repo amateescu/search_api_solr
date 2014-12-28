@@ -734,6 +734,21 @@ class SearchApiSolrBackend extends BackendPluginBase {
     }
     $solarium_query->getEDisMax()->setQueryFields(implode(' ', $query_fields));
 
+    // Handle More Like This requests
+    $mlt_options = $query->getOption('search_api_mlt');
+    if ($mlt_options) {
+      $field_options = $index->getOption('fields', array());
+      $this->getSolrHelper()->setMoreLikeThis($solarium_query, $query, $mlt_options, $field_options, $field_names);
+
+      // Override the search key by setting it to the solr document id
+      // we want to compare it with
+      // @todo. Figure out how we can set MLT earlier in the process
+      // so we do not do unnecessary function calls
+      $id = $this->createId($index_id, $mlt_options['id']);
+      $id = static::getQueryHelper()->escapePhrase($id);
+      $solarium_query->setQuery('id:' . $id);
+    }
+
     // Set basic filters.
     $filter_queries = $this->createFilterQueries($query->getFilter(), $field_names, $index->getOption('fields'));
     foreach ($filter_queries as $id => $filter_query) {
@@ -761,21 +776,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $excerpt = !empty($this->configuration['excerpt']) ? true : false;
     $highlight_data = !empty($this->configuration['highlight_data']) ? true : false;
     $this->getSolrHelper()->setHighlighting($solarium_query, $query, $excerpt, $highlight_data);
-
-    // Handle More Like This requests
-    $mlt_options = $query->getOption('search_api_mlt');
-    if ($mlt_options) {
-      $field_options = $index->getOption('fields', array());
-      $this->getSolrHelper()->setMoreLikeThis($solarium_query, $query, $mlt_options, $field_options, $field_names);
-
-      // Override the search key by setting it to the solr document id
-      // we want to compare it with
-      // @todo. Figure out how we can set MLT earlier in the process
-      // so we do not do unnecessary function calls
-      $id = $this->createId($index_id, $mlt_options['id']);
-      $id = static::getQueryHelper()->escapePhrase($id);
-      $solarium_query->setQuery('id:' . $id);
-    }
 
     // Handle spatial filters.
     $spatial_options = $query->getOption('search_api_location');
