@@ -118,7 +118,7 @@ class Utility {
     if (!($hash = \Drupal::config('search_api_solr.settings')->get('site_hash'))) {
       global $base_url;
       $hash = substr(base_convert(sha1(uniqid($base_url, TRUE)), 16, 36), 0, 6);
-      \Drupal::config('search_api_solr.settings')->set('site_hash', $hash)->save();
+      \Drupal::configFactory()->getEditable('search_api_solr.settings')->set('site_hash', $hash)->save();
     }
     return $hash;
   }

@@ -486,10 +486,10 @@ class SearchApiSolrBackend extends BackendPluginBase {
           // often (only when an admin views the server details), so we clear the
           // cache to get the current data.
           $this->connect();
-          $data = $this->getLuke();
+          $data = $this->getSolrHelper()->getLuke();
           if (isset($data['index']['numDocs'])) {
             // Collect the stats
-            $stats_summary = $this->getStatsSummary();
+            $stats_summary = $this->getSolrHelper()->getStatsSummary();
 
             $pending_msg = $stats_summary['@pending_docs'] ? $this->t('(@pending_docs sent but not yet processed)', $stats_summary) : '';
             $index_msg = $stats_summary['@index_size'] ? $this->t('(@index_size on disk)', $stats_summary) : '';
