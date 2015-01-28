@@ -653,15 +653,20 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * {@inheritdoc}
    */
   public function deleteItems(IndexInterface $index, array $ids) {
-    $this->connect();
-    $index_id = $this->getIndexId($index->id());
-    $solr_ids = array();
-    foreach ($ids as $id) {
-      $solr_ids[] = $this->createId($index_id, $id);
+    try {
+      $this->connect();
+      $index_id = $this->getIndexId($index->id());
+      $solr_ids = array();
+      foreach ($ids as $id) {
+        $solr_ids[] = $this->createId($index_id, $id);
+      }
+      $this->getUpdateQuery()->addDeleteByIds($solr_ids);
+      $this->getUpdateQuery()->addCommit(TRUE);
+      $this->solr->update($this->getUpdateQuery());
     }
-    $this->getUpdateQuery()->addDeleteByIds($solr_ids);
-    $this->getUpdateQuery()->addCommit(TRUE);
-    $this->solr->update($this->getUpdateQuery());
+    catch (ExceptionInterface $e) {
+      throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
+    }
   }
 
   /**
