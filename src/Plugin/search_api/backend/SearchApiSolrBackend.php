@@ -26,6 +26,7 @@ use Solarium\Client;
 use Solarium\Core\Client\Request;
 use Solarium\Core\Query\Helper;
 use Solarium\QueryType\Select\Query\Query;
+use Solarium\Exception\ExceptionInterface;
 use Solarium\Exception\HttpException;
 use Solarium\QueryType\Select\Result\Result;
 use Solarium\QueryType\Update\Query\Document\Document;
