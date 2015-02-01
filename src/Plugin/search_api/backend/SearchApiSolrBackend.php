@@ -192,10 +192,10 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     if (!$this->configuration['clean_ids']) {
       if (\Drupal::moduleHandler()->moduleExists('advanced_help')) {
-        $variables['@url'] =  Url::fromUri('base://help/search_api_solr/README.txt')->toString();
+        $variables['@url'] =  Url::fromUri('user-path:help/search_api_solr/README.txt')->toString();
       }
       else {
-        $variables['@url'] = Url::fromUri('base://' . drupal_get_path('module', 'search_api_solr') . '/README.txt')->toString();
+        $variables['@url'] = Url::fromUri('user-path:' . drupal_get_path('module', 'search_api_solr') . '/README.txt')->toString();
       }
       $description = $this->t('Change Solr field names to be more compatible with advanced features. Doing this leads to re-indexing of all indexes on this server. See <a href="@url">README.txt</a> for details.', $variables);
       $form['clean_ids_form'] = array(
@@ -523,7 +523,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
                 $status = 'error';
               }
               elseif (substr($stats_summary['@schema_version'], 0, 9) != 'drupal-4.') {
-                $variables['@url'] = Url::fromUri('base://' . drupal_get_path('module', 'search_api_solr') . '/INSTALL.txt')->toString();
+                $variables['@url'] = Url::fromUri('user-path:' . drupal_get_path('module', 'search_api_solr') . '/INSTALL.txt')->toString();
                 $message = $this->t('You are using an incompatible schema.xml configuration file. Please follow the instructions in the <a href="@url">INSTALL.txt</a> file for setting up Solr.', $variables);
                 drupal_set_message($message, 'error');
                 $status = 'error';
