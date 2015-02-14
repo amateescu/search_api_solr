@@ -14,6 +14,8 @@ use Drupal\search_api_db\Tests\BackendTest;
 
 /**
  * Tests index and search capabilities using the Solr search backend.
+ * 
+ * @group search_api_solr
  */
 class SearchApiSolrTest extends BackendTest {
 
@@ -45,17 +47,6 @@ class SearchApiSolrTest extends BackendTest {
    * @var array
    */
   public static $modules = array('search_api_solr', 'search_api_test_solr');
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Test "Solr search" module',
-      'description' => 'Tests indexing and searching with the "Solr search" module.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * {@inheritdoc}
