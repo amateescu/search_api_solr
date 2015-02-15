@@ -1,3 +1,19 @@
+Installation
+------------
+
+Place the search_api_solr module either directly under the /modules directory
+at the root of your Drupal installation, or place it under /modules/contrib
+directory instead, to group all contributed modules together.
+
+Next, run composer update from within the module's root directory in order to
+install all dependencies the module requires to work properly. Alternatively,
+you can use the composer_manager [1] module to install dependencies.
+
+You can now visit the /admin/modules page on your site and install the Solr
+search module.
+
+[1] https://www.drupal.org/project/composer_manager
+
 Solr search
 -----------
 
@@ -5,9 +21,9 @@ This module provides an implementation of the Search API which uses an Apache
 Solr search server for indexing and searching. Before enabling or using this
 module, you'll have to follow the instructions given in INSTALL.txt first.
 
-For more detailed documentation, see the handbook [1].
+For more detailed documentation, see the handbook [2].
 
-[1] https://drupal.org/node/1999280
+[2] https://drupal.org/node/1999280
 
 Supported optional features
 ---------------------------
@@ -19,13 +35,13 @@ can be changed arbitrarily. Using your own Solr extensions is thereby also
 possible.
 
 The "direct" parse mode for queries will result in the keys being directly used
-as the query to Solr. For details about Lucene's query syntax, see [2]. There
-are also some Solr additions to this, listed at [3]. Note however that, by
+as the query to Solr. For details about Lucene's query syntax, see [3]. There
+are also some Solr additions to this, listed at [4]. Note however that, by
 default, this module uses the dismax query handler, so searches like
 "field:value" won't work with the "direct" mode.
 
-[2] http://lucene.apache.org/java/2_9_1/queryparsersyntax.html
-[3] http://wiki.apache.org/solr/SolrQuerySyntax
+[3] http://lucene.apache.org/java/2_9_1/queryparsersyntax.html
+[4] http://wiki.apache.org/solr/SolrQuerySyntax
 
 Regarding third-party features, the following are supported:
 
@@ -46,7 +62,7 @@ Regarding third-party features, the following are supported:
   a "More like this" block for node pages.
   NOTE: Due to a regression in Solr itself, "More like this" doesn't work with
   integer and float fields in Solr 4. As a work-around, you can index the fields
-  (or copies of them) as string values. See [4] for details.
+  (or copies of them) as string values. See [5] for details.
   Also, MLT with date fields isn't currently supported at all for any version.
 - search_api_multi
   Introduced by module: search_api_multi
@@ -62,18 +78,18 @@ Regarding third-party features, the following are supported:
   single-valued fields are currently supported for Solr 3.x, and that the option
   isn't supported at all in Solr 1.4.
 - search_api_grouping
-  Introduced by module: search_api_grouping [5]
+  Introduced by module: search_api_grouping [6]
   Lets you group search results based on indexed fields. For further information
-  see the FieldCollapsing documentation in the solr wiki [6].
+  see the FieldCollapsing documentation in the solr wiki [7].
 
 If you feel some service option is missing, or have other ideas for improving
 this implementation, please file a feature request in the project's issue queue,
-at [7].
+at [8].
 
-[4] https://drupal.org/node/2004596
-[5] https://drupal.org/sandbox/daspeter/1783280
-[6] http://wiki.apache.org/solr/FieldCollapsing
-[7] https://drupal.org/project/issues/search_api_solr
+[5] https://drupal.org/node/2004596
+[6] https://drupal.org/sandbox/daspeter/1783280
+[7] http://wiki.apache.org/solr/FieldCollapsing
+[8] https://drupal.org/project/issues/search_api_solr
 
 Specifics
 ---------
@@ -129,7 +145,7 @@ Hidden variables
   operation is carried out.
   - spellcheck: The "default" spellcheck dictionary used by Solr will be rebuilt
   so that spellchecking reflects the latest index state.
-  - optimize: An "optimize" operation [8] is executed on the Solr server. As a
+  - optimize: An "optimize" operation [9] is executed on the Solr server. As a
   result of this, all spellcheck dictionaries (that have "buildOnOptimize" set
   to "true") will be rebuilt, too.
   - none: No action is executed.
@@ -141,7 +157,7 @@ Hidden variables
   and all items will have to be reindexed. Can only contain alphanumeric
   characters.
 
-[8] http://wiki.apache.org/solr/UpdateXmlMessages#A.22commit.22_and_.22optimize.22
+[9] http://wiki.apache.org/solr/UpdateXmlMessages#A.22commit.22_and_.22optimize.22
 
 Customizing your Solr server
 ----------------------------
@@ -150,11 +166,11 @@ The schema.xml and solrconfig.xml files contain extensive comments on how to
 add additional features or modify behaviour, e.g., for adding a language-
 specific stemmer or a stopword list.
 If you are interested in further customizing your Solr server to your needs,
-see the Solr wiki at [9] for documentation. When editing the schema.xml and
+see the Solr wiki at [10] for documentation. When editing the schema.xml and
 solrconfig.xml files, please only edit the copies in the Solr configuration
 directory, not directly the ones provided with this module.
 
-[9] http://wiki.apache.org/solr/
+[10] http://wiki.apache.org/solr/
 
 You'll have to restart your Solr server after making such changes, for them to
 take effect.
