@@ -13,7 +13,8 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\ServerInterface;
-use Drupal\search_api_solr\Plugin\SearchApi\Backend\SearchApiSolrBackend;
+use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
+use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 
 /**
  * A basic form with a passed entity with an interface.
@@ -35,7 +36,7 @@ class SolrConfigForm extends FormBase {
 
     try {
       // Retrieve the list of available files.
-      $files_list = search_api_solr_server_get_files($search_api_server);
+      $files_list = SearchApiSolrUtility::search_api_solr_server_get_files($search_api_server);
 
       if (empty($files_list)) {
         $form['info']['#markup'] = $this->t('No files found.');
