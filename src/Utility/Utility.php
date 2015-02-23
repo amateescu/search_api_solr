@@ -114,7 +114,7 @@ class Utility {
    * @return string
    *   A unique site hash, containing only alphanumeric characters.
    */
-  public static function search_api_solr_site_hash() {
+  public static function getSiteHash() {
     // Copied from apachesolr_site_hash().
     if (!($hash = \Drupal::config('search_api_solr.settings')->get('site_hash'))) {
       global $base_url;
@@ -141,7 +141,7 @@ class Utility {
    * @throws \Drupal\search_api\SearchApiException
    *   If a problem occurred while retrieving the files.
    */
-  public static function search_api_solr_server_get_files(ServerInterface $server, $dir_name = NULL) {
+  public static function getServerFiles(ServerInterface $server, $dir_name = NULL) {
     $response = $server->getBackend()->getFile($dir_name);
 
     // Search for directories and recursively merge directory files.
@@ -162,7 +162,7 @@ class Utility {
         $result[''][$file_name] = $file_info;
       }
       else {
-        $result[$file_name] = static::search_api_solr_server_get_files($server, $file_name);
+        $result[$file_name] = static::getServerFiles($server, $file_name);
       }
     }
 

@@ -582,7 +582,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       // If multi-site compatibility is enabled, add the site hash and
       // language-specific base URL.
       if (!empty($this->configuration['site_hash'])) {
-        $doc->setField('hash', SearchApiSolrUtility::search_api_solr_site_hash());
+        $doc->setField('hash', SearchApiSolrUtility::getSiteHash());
         $lang = $item->getField('search_api_language')->getValues();
         $lang = reset($lang);
         if (empty($base_urls[$lang])) {
@@ -697,7 +697,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       if (!empty($this->configuration['site_hash'])) {
         // We don't need to escape the site hash, as that consists only of
         // alphanumeric characters.
-        $query .= ' AND (hash:' . SearchApiSolrUtility::search_api_solr_site_hash() . ')';
+        $query .= ' AND (hash:' . SearchApiSolrUtility::getSiteHash() . ')';
       }
       $this->getUpdateQuery()->addDeleteQuery($query);
     }
@@ -793,7 +793,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     if (!empty($this->configuration['site_hash'])) {
       // We don't need to escape the site hash, as that consists only of
       // alphanumeric characters.
-      $solarium_query->createFilterQuery('site_hash')->setQuery('hash:' . SearchApiSolrUtility::search_api_solr_site_hash());
+      $solarium_query->createFilterQuery('site_hash')->setQuery('hash:' . SearchApiSolrUtility::getSiteHash());
     }
 
     // Set sorts.
@@ -931,10 +931,10 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * This has to consist of both index and item ID. Optionally, the site hash is
    * also included.
    *
-   * @see SearchApiSolrUtility::search_api_solr_site_hash()
+   * @see \Drupal\search_api_solr\Utility\Utility::getSiteHash()
    */
   protected function createId($index_id, $item_id) {
-    $site_hash = !empty($this->configuration['site_hash']) ? SearchApiSolrUtility::search_api_solr_site_hash() . '-' : '';
+    $site_hash = !empty($this->configuration['site_hash']) ? SearchApiSolrUtility::getSiteHash() . '-' : '';
     return "$site_hash$index_id-$item_id";
   }
 
@@ -1547,7 +1547,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     if (!empty($this->configuration['site_hash'])) {
       // We don't need to escape the site hash, as that consists only of
       // alphanumeric characters.
-      $fq[] = 'hash:' . SearchApiSolrUtility::search_api_solr_site_hash();
+      $fq[] = 'hash:' . SearchApiSolrUtility::getSiteHash();
     }
 
     // Autocomplete magic

@@ -36,7 +36,7 @@ class SolrConfigForm extends FormBase {
 
     try {
       // Retrieve the list of available files.
-      $files_list = SearchApiSolrUtility::search_api_solr_server_get_files($search_api_server);
+      $files_list = SearchApiSolrUtility::getServerFiles($search_api_server);
 
       if (empty($files_list)) {
         $form['info']['#markup'] = $this->t('No files found.');
