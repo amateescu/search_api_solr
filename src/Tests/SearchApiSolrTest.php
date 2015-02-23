@@ -67,7 +67,7 @@ class SearchApiSolrTest extends BackendTest {
     \Drupal::service('router.builder')->rebuild();
 
     try {
-      /** @var \Drupal\search_api\Server\ServerInterface $server */
+      /** @var \Drupal\search_api\ServerInterface $server */
       $server = Server::load($this->serverId);
       if ($server->getBackend()->ping()) {
         $this->solrAvailable = TRUE;
@@ -94,7 +94,7 @@ class SearchApiSolrTest extends BackendTest {
    * {@inheritdoc}
    */
   protected function indexItems($index_id) {
-    /** @var \Drupal\search_api\Index\IndexInterface $index */
+    /** @var \Drupal\search_api\IndexInterface $index */
     $index = Index::load($index_id);
     $index->setOption('index_directly', TRUE);
     $index_status = $index->index();

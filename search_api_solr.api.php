@@ -29,14 +29,14 @@ function hook_search_api_solr_query_alter(\Solarium\QueryType\Select\Query\Query
 /**
  * Change the way the index's field names are mapped to Solr field names.
  *
- * @param \Drupal\search_api\Index\IndexInterface $index
+ * @param \Drupal\search_api\IndexInterface $index
  *   The index whose field mappings are altered.
  * @param array $fields
  *   An associative array containing the index field names mapped to their Solr
  *   counterparts. The special fields 'search_api_id' and 'search_api_relevance'
  *   are also included.
  */
-function hook_search_api_solr_field_mapping_alter(\Drupal\search_api\Index\IndexInterface $index, array &$fields) {
+function hook_search_api_solr_field_mapping_alter(\Drupal\search_api\IndexInterface $index, array &$fields) {
   if (in_array('entity:node', $index->getDatasourceIds()) && isset($fields['entity:node|body'])) {
     $fields['entity:node|body'] = 'tm_entity$node|body_value';
   }
@@ -46,14 +46,14 @@ function hook_search_api_solr_field_mapping_alter(\Drupal\search_api\Index\Index
  * Change the way the index's field names are mapped to Solr field names that
  * store only the first value of the field.
  *
- * @param \Drupal\search_api\Index\IndexInterface $index
+ * @param \Drupal\search_api\IndexInterface $index
  *   The index whose field mappings are altered.
  * @param array $fields
  *   An associative array containing the index field names mapped to their Solr
  *   counterparts. The special fields 'search_api_id' and 'search_api_relevance'
  *   are also included.
  */
-function hook_search_api_solr_single_value_field_mapping_alter(\Drupal\search_api\Index\IndexInterface $index, array &$fields) {
+function hook_search_api_solr_single_value_field_mapping_alter(\Drupal\search_api\IndexInterface $index, array &$fields) {
   if (in_array('entity:node', $index->getDatasourceIds()) && isset($fields['entity:node|body'])) {
     $fields['entity:node|body'] = 'ts_entity$node|body_value';
   }
@@ -65,12 +65,12 @@ function hook_search_api_solr_single_value_field_mapping_alter(\Drupal\search_ap
  * @param \Solarium\QueryType\Update\Query\Document\Document[] $documents
  *   An array of \Solarium\QueryType\Update\Query\Document\Document objects
  *   ready to be indexed, generated from $items array.
- * @param \Drupal\search_api\Index\IndexInterface $index
+ * @param \Drupal\search_api\IndexInterface $index
  *   The search index for which items are being indexed.
  * @param \Drupal\search_api\Item\ItemInterface[] $items
  *   An array of items to be indexed, keyed by their item IDs.
  */
-function hook_search_api_solr_documents_alter(array $documents, \Drupal\search_api\Index\IndexInterface $index, array $items) {
+function hook_search_api_solr_documents_alter(array $documents, \Drupal\search_api\IndexInterface $index, array $items) {
   // Adds a "foo" field with value "bar" to all documents.
   foreach ($documents as $document) {
     $document->setField('foo', 'bar');

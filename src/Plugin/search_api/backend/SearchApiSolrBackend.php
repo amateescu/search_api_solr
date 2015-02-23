@@ -10,7 +10,6 @@ namespace Drupal\search_api_solr\Plugin\search_api\backend;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\SearchApiException;
@@ -91,13 +90,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
   protected $request_handler = NULL;
 
   /**
-   * The form builder.
-   *
-   * @var \Drupal\Core\Form\FormBuilderInterface
-   */
-  protected $formBuilder;
-
-  /**
    * The module handler.
    *
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
@@ -128,10 +120,9 @@ class SearchApiSolrBackend extends BackendPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, FormBuilderInterface $form_builder, ModuleHandlerInterface $module_handler, Config $search_api_solr_settings) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, ModuleHandlerInterface $module_handler, Config $search_api_solr_settings) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
-    $this->formBuilder = $form_builder;
     $this->moduleHandler = $module_handler;
     $this->searchApiSolrSettings = $search_api_solr_settings;
     $solrHelper = new SolrHelper($this->configuration + array('key' => $this->server->id()));
@@ -146,7 +137,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('form_builder'),
       $container->get('module_handler'),
       $container->get('config.factory')->get('search_api_solr.settings')
     );
@@ -191,7 +181,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     }
 
     if (!$this->configuration['clean_ids']) {
-      if (\Drupal::moduleHandler()->moduleExists('advanced_help')) {
+      if ($this->moduleHandler->moduleExists('advanced_help')) {
         $variables['@url'] =  Url::fromUri('internal:help/search_api_solr/README.txt')->toString();
       }
       else {
@@ -347,7 +337,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       ),
     );
 
-    if (\Drupal::moduleHandler()->moduleExists('search_api_autocomplete')) {
+    if ($this->moduleHandler->moduleExists('search_api_autocomplete')) {
       $form['advanced']['autocomplete'] = array(
         '#type' => 'fieldset',
         '#title' => $this->t('Autocomplete'),
@@ -377,7 +367,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
     if (isset($values['port']) && (!is_numeric($values['port']) || $values['port'] < 0 || $values['port'] > 65535)) {
-      $this->formBuilder->setError($form['port'], $form_state, $this->t('The port has to be an integer between 0 and 65535.'));
+      $form_state->setError($form['port'], $this->t('The port has to be an integer between 0 and 65535.'));
     }
   }
 
@@ -592,7 +582,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       // If multi-site compatibility is enabled, add the site hash and
       // language-specific base URL.
       if (!empty($this->configuration['site_hash'])) {
-        $doc->setField('hash', SearchApiSolrUtility::search_api_solr_site_hash());
+        $doc->setField('hash', SearchApiSolrUtility::getSiteHash());
         $lang = $item->getField('search_api_language')->getValues();
         $lang = reset($lang);
         if (empty($base_urls[$lang])) {
@@ -707,7 +697,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       if (!empty($this->configuration['site_hash'])) {
         // We don't need to escape the site hash, as that consists only of
         // alphanumeric characters.
-        $query .= ' AND (hash:' . SearchApiSolrUtility::search_api_solr_site_hash() . ')';
+        $query .= ' AND (hash:' . SearchApiSolrUtility::getSiteHash() . ')';
       }
       $this->getUpdateQuery()->addDeleteQuery($query);
     }
@@ -803,7 +793,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     if (!empty($this->configuration['site_hash'])) {
       // We don't need to escape the site hash, as that consists only of
       // alphanumeric characters.
-      $solarium_query->createFilterQuery('site_hash')->setQuery('hash:' . SearchApiSolrUtility::search_api_solr_site_hash());
+      $solarium_query->createFilterQuery('site_hash')->setQuery('hash:' . SearchApiSolrUtility::getSiteHash());
     }
 
     // Set sorts.
@@ -941,17 +931,17 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * This has to consist of both index and item ID. Optionally, the site hash is
    * also included.
    *
-   * @see SearchApiSolrUtility::search_api_solr_site_hash()
+   * @see \Drupal\search_api_solr\Utility\Utility::getSiteHash()
    */
   protected function createId($index_id, $item_id) {
-    $site_hash = !empty($this->configuration['site_hash']) ? SearchApiSolrUtility::search_api_solr_site_hash() . '-' : '';
+    $site_hash = !empty($this->configuration['site_hash']) ? SearchApiSolrUtility::getSiteHash() . '-' : '';
     return "$site_hash$index_id-$item_id";
   }
 
   /**
    * Creates a list of all indexed field names mapped to their Solr field names.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The Search Api index.
    * @param bool $single_value_name
    *   (optional) Whether to return names for fields which store only the first
@@ -988,7 +978,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
           }
         }
 
-        $type_info = SearchApiSolrUtility::search_api_solr_get_data_type_info($type);
+        $type_info = SearchApiSolrUtility::getDataTypeInfo($type);
         $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
         $pref .= ($single_value_name) ? 's' : 'm';
         if (!empty($this->configuration['clean_ids'])) {
@@ -1078,7 +1068,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * @param \Solarium\QueryType\Update\Query\Document\Document[] $documents
    *   An array of \Solarium\QueryType\Update\Query\Document\Document objects
    *   ready to be indexed, generated from $items array.
-   * @param \Drupal\search_api\Index\IndexInterface $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The search index for which items are being indexed.
    * @param array $items
    *   An array of items being indexed.
@@ -1557,7 +1547,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     if (!empty($this->configuration['site_hash'])) {
       // We don't need to escape the site hash, as that consists only of
       // alphanumeric characters.
-      $fq[] = 'hash:' . SearchApiSolrUtility::search_api_solr_site_hash();
+      $fq[] = 'hash:' . SearchApiSolrUtility::getSiteHash();
     }
 
     // Autocomplete magic

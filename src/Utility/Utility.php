@@ -8,6 +8,7 @@
 namespace Drupal\search_api_solr\Utility;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\search_api\SearchApiException;
 use Drupal\search_api\ServerInterface;
 use \Drupal\search_api\Utility as SearchApiUtility;
 
@@ -40,7 +41,7 @@ class Utility {
    * @see search_api_get_data_type_info()
    * @see search_api_solr_hook_search_api_data_type_info()
    */
-  public static function search_api_solr_get_data_type_info($type = NULL) {
+  public static function getDataTypeInfo($type = NULL) {
     $types = &drupal_static(__FUNCTION__);
 
     if (!isset($types)) {
@@ -113,7 +114,7 @@ class Utility {
    * @return string
    *   A unique site hash, containing only alphanumeric characters.
    */
-  public static function search_api_solr_site_hash() {
+  public static function getSiteHash() {
     // Copied from apachesolr_site_hash().
     if (!($hash = \Drupal::config('search_api_solr.settings')->get('site_hash'))) {
       global $base_url;
@@ -126,7 +127,7 @@ class Utility {
   /**
    * Retrieves a list of all config files of a server's Solr backend.
    *
-   * @param \Drupal\search_api\Server\ServerInterface $server
+   * @param \Drupal\search_api\ServerInterface $server
    *   The Solr server whose files should be retrieved.
    * @param string $dir_name
    *   (optional) The directory that should be searched for files. Defaults to the
@@ -137,10 +138,10 @@ class Utility {
    *   are the file names, values are arrays with information about the file. The
    *   files are returned in alphabetical order and breadth-first.
    *
-   * @throws \Drupal\search_api\Exception\SearchApiException
+   * @throws \Drupal\search_api\SearchApiException
    *   If a problem occurred while retrieving the files.
    */
-  public static function search_api_solr_server_get_files(ServerInterface $server, $dir_name = NULL) {
+  public static function getServerFiles(ServerInterface $server, $dir_name = NULL) {
     $response = $server->getBackend()->getFile($dir_name);
 
     // Search for directories and recursively merge directory files.
@@ -161,7 +162,7 @@ class Utility {
         $result[''][$file_name] = $file_info;
       }
       else {
-        $result[$file_name] = Utility::search_api_solr_server_get_files($server, $file_name);
+        $result[$file_name] = static::getServerFiles($server, $file_name);
       }
     }
 
@@ -198,7 +199,7 @@ class Utility {
       }
     }
     if ($count) {
-      $msg = format_plural($count, '1 index was scheduled for re-indexing.', '@count indexes were scheduled for re-indexing.');
+      $msg = \Drupal::translation()->formatPlural($count, '1 index was scheduled for re-indexing.', '@count indexes were scheduled for re-indexing.');
       drupal_set_message($msg);
     }
   }
@@ -219,12 +220,12 @@ class Utility {
         foreach ($indexes as $index) {
           $index->reindex();
         }
-        $msg = format_plural(count($indexes), '1 index was cleared.', '@count indexes were cleared.');
+        $msg = \Drupal::translation()->formatPlural(count($indexes), '1 index was cleared.', '@count indexes were cleared.');
         $server->deleteItems('index_id:(' . implode(' ', array_keys($indexes)) . ')');
         drupal_set_message($msg);
       }
     }
-    catch (\Drupal\search_api\Exception\SearchApiException $e) {
+    catch (SearchApiException $e) {
       $variables = array('@server' => $server->name);
       watchdog_exception('search_api_solr', $e, '%type while attempting to enable multi-site compatibility mode for Solr server @server: !message in %function (line %line of %file).', $variables);
       drupal_set_message(t('An error occured while attempting to enable multi-site compatibility mode for Solr server @server. Check the logs for details.', $variables), 'error');

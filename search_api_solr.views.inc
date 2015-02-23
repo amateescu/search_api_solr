@@ -18,7 +18,7 @@ use Drupal\search_api\Exception\SearchApiException;
 function _search_api_solr_views_data_alter(array &$data) {
   try {
     foreach (entity_load_multiple('search_api_index') as $index) {
-      /** @var \Drupal\search_api\Index\IndexInterface $index */
+      /** @var \Drupal\search_api\IndexInterface $index */
       $server = NULL;
 
       try {
