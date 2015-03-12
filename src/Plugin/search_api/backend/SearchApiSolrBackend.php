@@ -565,7 +565,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $index_id = $this->getIndexId($index->id());
     $field_names = $this->getFieldNames($index);
     $field_names_single_value = $this->getFieldNames($index, TRUE);
-    $languages = language_list();
+    $language_list = \Drupal::languageManager()->getLanguages();
     $base_urls = array();
 
     // Make sure that we have a Solr connection.
