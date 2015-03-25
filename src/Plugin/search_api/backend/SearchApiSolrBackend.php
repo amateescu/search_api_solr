@@ -11,6 +11,7 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
@@ -118,13 +119,21 @@ class SearchApiSolrBackend extends BackendPluginBase {
   protected $solrHelper;
 
   /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, ModuleHandlerInterface $module_handler, Config $search_api_solr_settings) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, ModuleHandlerInterface $module_handler, Config $search_api_solr_settings, LanguageManagerInterface $language_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->moduleHandler = $module_handler;
     $this->searchApiSolrSettings = $search_api_solr_settings;
+    $this->languageManager = $language_manager;
     $solrHelper = new SolrHelper($this->configuration + array('key' => $this->server->id()));
     $this->setSolrHelper($solrHelper);
   }
@@ -138,7 +147,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
       $plugin_id,
       $plugin_definition,
       $container->get('module_handler'),
-      $container->get('config.factory')->get('search_api_solr.settings')
+      $container->get('config.factory')->get('search_api_solr.settings'),
+      $container->get('language_manager')
     );
   }
 
@@ -565,7 +575,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $index_id = $this->getIndexId($index->id());
     $field_names = $this->getFieldNames($index);
     $field_names_single_value = $this->getFieldNames($index, TRUE);
-    $languages = language_list();
+    $languages = $this->languageManager->getLanguages();
     $base_urls = array();
 
     // Make sure that we have a Solr connection.
