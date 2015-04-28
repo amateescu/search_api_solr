@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api_solr\Utility;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\ServerInterface;
@@ -49,7 +50,7 @@ class Utility {
       $types = SearchApiUtility::getDataTypeInfo();
 
       // Add our extras for the default search api fields.
-      $types += array(
+      $types = NestedArray::mergeDeep($types, array(
         'text' => array(
           'prefix' => 't',
         ),
@@ -77,7 +78,7 @@ class Utility {
         'tokens' => array(
           'prefix' => 't',
         ),
-      );
+      ));
 
       // Extra data type info.
       $extra_types_info = array(
