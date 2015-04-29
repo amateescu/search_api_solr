@@ -161,6 +161,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       'host' => 'localhost',
       'port' => '8983',
       'path' => '/solr',
+      'timeout' => '5',
       'http_user' => '',
       'http_pass' => '',
       'excerpt' => FALSE,
@@ -264,6 +265,12 @@ class SearchApiSolrBackend extends BackendPluginBase {
       '#title' => $this->t('Solr path'),
       '#description' => $this->t('The path that identifies the Solr instance to use on the server.'),
       '#default_value' => $this->configuration['path'],
+    );
+    $form['timeout'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Solr Timeout'),
+      '#description' => $this->t('The timeout for connecting to the solr instance.'),
+      '#default_value' => $this->configuration['timeout'],
     );
 
     $form['http'] = array(
