@@ -49,7 +49,7 @@ class Utility {
       $types = SearchApiUtility::getDataTypeInfo();
 
       // Add our extras for the default search api fields.
-      $types += array(
+      $defaults = array(
         'text' => array(
           'prefix' => 't',
         ),
@@ -78,6 +78,7 @@ class Utility {
           'prefix' => 't',
         ),
       );
+      $types = array_merge_recursive($types, $defaults);
 
       // Extra data type info.
       $extra_types_info = array(
