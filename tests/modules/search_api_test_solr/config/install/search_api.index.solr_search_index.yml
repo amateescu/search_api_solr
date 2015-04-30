@@ -21,7 +21,10 @@ options:
       type: string
   processors:
     language:
-      status: true
+      processor_id: language
+      weights:
+        preprocess_index: -50
+      settings: {  }
 datasources:
   - 'entity:entity_test'
 datasource_configs: {  }
