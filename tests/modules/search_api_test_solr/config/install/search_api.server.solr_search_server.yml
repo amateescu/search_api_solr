@@ -11,10 +11,10 @@ backend_config:
   path: /solr/d8
   http_user: ''
   http_pass: ''
-  excerpt: 0
-  retrieve_data: 0
-  highlight_data: 0
-  skip_schema_check: 0
+  excerpt: false
+  retrieve_data: false
+  highlight_data: false
+  skip_schema_check: false
   solr_version: ''
   http_method: AUTO
 status: true
