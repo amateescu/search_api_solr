@@ -10,7 +10,7 @@ options:
       type: integer
     'entity:entity_test/name':
       type: text
-      boost: '5.0'
+      boost: 5.0
     'entity:entity_test/body':
       type: text
     'entity:entity_test/type':
