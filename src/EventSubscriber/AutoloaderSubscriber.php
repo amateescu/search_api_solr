@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api_solr\EventSubscriber;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Logger\RfcLogLevel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
@@ -60,7 +60,7 @@ class AutoloaderSubscriber implements EventSubscriberInterface {
 
       $filepath = $this->getAutoloadFilepath();
       if (!is_file($filepath)) {
-        throw new \RuntimeException(String::format('Autoloader not found: @filepath', array('@filepath' => $filepath)));
+        throw new \RuntimeException(SafeMarkup::format('Autoloader not found: @filepath', array('@filepath' => $filepath)));
       }
       if (($filepath != DRUPAL_ROOT . '/core/vendor/autoload.php')) {
         $this->autoloaderRegistered = TRUE;
