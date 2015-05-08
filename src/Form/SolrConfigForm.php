@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api_solr\Form;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -50,7 +50,7 @@ class SolrConfigForm extends FormBase {
       // Generate a fieldset for each file.
       foreach ($files_list as $file_name => $file_info) {
         $file_date = format_date(strtotime($file_info['modified']));
-        $escaped_file_name = String::checkPlain($file_name);
+        $escaped_file_name = SafeMarkup::checkPlain($file_name);
 
         $form['files'][$file_name] = array(
           '#type'  => 'details',
@@ -63,7 +63,7 @@ class SolrConfigForm extends FormBase {
 
         if ($file_info['size'] > 0) {
           $file_data = $search_api_server->getBackend()->getFile($file_name);
-          $data .= '<pre><code>' . String::checkPlain($file_data->getBody()) . '</code></pre>';
+          $data .= '<pre><code>' . SafeMarkup::checkPlain($file_data->getBody()) . '</code></pre>';
         }
         else {
           $data .= '<p><em>' . $this->t('The file is empty.') . '</em></p>';
