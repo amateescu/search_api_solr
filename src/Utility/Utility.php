@@ -47,7 +47,8 @@ class Utility {
 
     if (!isset($types)) {
       // Grab the stock search_api data types.
-      $types = SearchApiUtility::getDataTypeInfo();
+      $data_type_service = \Drupal::service('plugin.manager.search_api.data_type');
+      $types = $data_type_service->getDataTypeDefinitions();
 
       // Add our extras for the default search api fields.
       $types = NestedArray::mergeDeep($types, array(
