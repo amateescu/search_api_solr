@@ -438,7 +438,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       return FALSE;
     }
     $type = substr($feature, 21);
-    $type = SearchApiSolrUtility::getDataTypeInfo($type);
+    $type = SearchApiSolrUtility::getDefaultDataTypes($type);
     // We only support it if the "prefix" key is set.
     return $type && !empty($type['prefix']);
   }
@@ -988,7 +988,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
           }
         }
 
-        $type_info = SearchApiSolrUtility::getDataTypeInfo($type);
+        $type_info = SearchApiSolrUtility::getDefaultDataTypes($type);
         $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
         $pref .= ($single_value_name) ? 's' : 'm';
         if (!empty($this->configuration['clean_ids'])) {
