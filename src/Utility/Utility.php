@@ -42,12 +42,12 @@ class Utility {
    * @see search_api_get_data_type_info()
    * @see search_api_solr_hook_search_api_data_type_info()
    */
-  public static function getDataTypeInfo($type = NULL) {
+  public static function getDefaultDataTypes($type = NULL) {
     $types = &drupal_static(__FUNCTION__);
 
     if (!isset($types)) {
       // Grab the stock search_api data types.
-      $types = SearchApiUtility::getDataTypeInfo();
+      $types = SearchApiUtility::getDefaultDataTypes();
 
       // Add our extras for the default search api fields.
       $types = NestedArray::mergeDeep($types, array(
