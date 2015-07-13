@@ -982,7 +982,13 @@ class SearchApiSolrBackend extends BackendPluginBase {
         $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
         $pref .= ($single_value_name) ? 's' : 'm';
         if (!empty($this->configuration['clean_ids'])) {
-          $name = $pref . '_' . str_replace(':', '$', $key);
+          // Solr doesn't restrict the characters used to build field names. But
+          // using non java identifiers within a field name can cause different
+          // kind of trouble when running querries. Java identifiers are only
+          // consist of letters, digits, '$' and '_'. See
+          // https://issues.apache.org/jira/browse/SOLR-3996
+          // http://docs.oracle.com/cd/E19798-01/821-1841/bnbuk/index.html
+          $name = $pref . '_' . preg_replace('/[^\d\w$_]/', '$', $key);
         }
         else {
           $name = $pref . '_' . $key;
