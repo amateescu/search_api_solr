@@ -7,8 +7,8 @@ cache:
   apt: true
 
 php:
-  - 5.4
   - 5.5
+  - 5.6
 
 # This creates a build with each php environment. 4 builds in total.
 env:
