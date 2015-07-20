@@ -15,6 +15,7 @@ entity.asm_text_field_filter.collection:
     _title: 'TextFieldFilter Configuration'
   requirements:
     _permission: 'administer search_api'
+    _apachesolr_multilingual_local_action_access_check: 'TRUE'
 
 entity.asm_text_field_filter.add_form:
   path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_field_filter/add'
@@ -23,6 +24,7 @@ entity.asm_text_field_filter.add_form:
     _title: 'Add TextFieldFilter'
   requirements:
     _permission: 'administer search_api'
+    _apachesolr_multilingual_local_action_access_check: 'TRUE'
 
 entity.asm_text_field_filter.edit_form:
   path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_field_filter/{asm_text_field_filter}'
@@ -31,6 +33,7 @@ entity.asm_text_field_filter.edit_form:
     _title: 'Edit TextFieldFilter'
   requirements:
     _permission: 'administer search_api'
+    _apachesolr_multilingual_local_action_access_check: 'TRUE'
 
 entity.asm_text_field_filter.delete_form:
   path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_field_filter/{asm_text_field_filter}/delete'
@@ -39,6 +42,7 @@ entity.asm_text_field_filter.delete_form:
     _title: 'Delete TextFieldFilter'
   requirements:
     _permission: 'administer search_api'
+    _apachesolr_multilingual_local_action_access_check: 'TRUE'
 
 # TextFile routing definition
 entity.asm_text_file.collection:
@@ -48,6 +52,7 @@ entity.asm_text_file.collection:
     _title: 'TextFile Configuration'
   requirements:
     _permission: 'administer search_api'
+    _apachesolr_multilingual_local_action_access_check: 'TRUE'
 
 entity.asm_text_file.add_form:
   path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_file/add'
@@ -56,6 +61,7 @@ entity.asm_text_file.add_form:
     _title: 'Add TextFile'
   requirements:
     _permission: 'administer search_api'
+    _apachesolr_multilingual_local_action_access_check: 'TRUE'
 
 entity.asm_text_file.edit_form:
   path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_file/{asm_text_file}'
@@ -64,6 +70,7 @@ entity.asm_text_file.edit_form:
     _title: 'Edit TextFile'
   requirements:
     _permission: 'administer search_api'
+    _apachesolr_multilingual_local_action_access_check: 'TRUE'
 
 entity.asm_text_file.delete_form:
   path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/text_file/{asm_text_file}/delete'
@@ -72,4 +79,4 @@ entity.asm_text_file.delete_form:
     _title: 'Delete TextFile'
   requirements:
     _permission: 'administer search_api'
-
+    _apachesolr_multilingual_local_action_access_check: 'TRUE'
