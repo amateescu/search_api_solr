@@ -1,0 +1,12 @@
+apachesolr_multilingual.asm_text_file.*:
+  type: config_entity
+  label: 'TextFile config'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    uuid:
+      type: string

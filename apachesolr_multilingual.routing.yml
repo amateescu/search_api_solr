@@ -1,0 +1,75 @@
+
+apachesolr_multilingual.default_controller_hello:
+  path: '/apachesolr_multilingual/hello/{name}'
+  defaults:
+    _controller: '\Drupal\apachesolr_multilingual\Controller\DefaultController::hello'
+    _title: 'apachesolr_multilingual Title'
+  requirements:
+    _permission: 'access content'
+
+# TextFieldFilter routing definition
+entity.asm_text_field_filter.collection:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_field_filter'
+  defaults:
+    _entity_list: 'asm_text_field_filter'
+    _title: 'TextFieldFilter Configuration'
+  requirements:
+    _permission: 'administer search_api'
+
+entity.asm_text_field_filter.add_form:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_field_filter/add'
+  defaults:
+    _entity_form: 'asm_text_field_filter.add'
+    _title: 'Add TextFieldFilter'
+  requirements:
+    _permission: 'administer search_api'
+
+entity.asm_text_field_filter.edit_form:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_field_filter/{asm_text_field_filter}'
+  defaults:
+    _entity_form: 'asm_text_field_filter.edit'
+    _title: 'Edit TextFieldFilter'
+  requirements:
+    _permission: 'administer search_api'
+
+entity.asm_text_field_filter.delete_form:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_field_filter/{asm_text_field_filter}/delete'
+  defaults:
+    _entity_form: 'asm_text_field_filter.delete'
+    _title: 'Delete TextFieldFilter'
+  requirements:
+    _permission: 'administer search_api'
+
+# TextFile routing definition
+entity.asm_text_file.collection:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_file'
+  defaults:
+    _entity_list: 'asm_text_file'
+    _title: 'TextFile Configuration'
+  requirements:
+    _permission: 'administer search_api'
+
+entity.asm_text_file.add_form:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_file/add'
+  defaults:
+    _entity_form: 'asm_text_file.add'
+    _title: 'Add TextFile'
+  requirements:
+    _permission: 'administer search_api'
+
+entity.asm_text_file.edit_form:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_file/{asm_text_file}'
+  defaults:
+    _entity_form: 'asm_text_file.edit'
+    _title: 'Edit TextFile'
+  requirements:
+    _permission: 'administer search_api'
+
+entity.asm_text_file.delete_form:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/text_file/{asm_text_file}/delete'
+  defaults:
+    _entity_form: 'asm_text_file.delete'
+    _title: 'Delete TextFile'
+  requirements:
+    _permission: 'administer search_api'
+

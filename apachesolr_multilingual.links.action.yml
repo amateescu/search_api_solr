@@ -1,0 +1,13 @@
+entity.asm_text_field_filter.add_form:
+  route_name: 'entity.asm_text_field_filter.add_form'
+  title: 'Add TextFieldFilter'
+  appears_on:
+    - entity.asm_text_field_filter.collection
+    - entity.search_api_server.canonical
+
+entity.asm_text_file.add_form:
+  route_name: 'entity.asm_text_file.add_form'
+  title: 'Add TextFile'
+  appears_on:
+    - entity.asm_text_file.collection
+    - entity.search_api_server.canonical

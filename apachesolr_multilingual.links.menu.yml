@@ -1,0 +1,14 @@
+# TextFile menu items definition
+entity.asm_text_file.collection:
+  title: 'TextFile'
+  route_name: entity.asm_text_file.collection
+  description: 'List TextFile'
+  parent: search_api.overview
+
+# TextFieldFilter menu items definition
+entity.asm_text_field.collection:
+  title: 'TextFieldFilter'
+  route_name: entity.asm_text_field_filter.collection
+  description: 'List TextFieldFilter'
+  parent: search_api.overview
+
