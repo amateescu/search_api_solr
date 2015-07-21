@@ -69,7 +69,7 @@ class TextFieldFilter extends ConfigEntityBase implements TextFieldFilterInterfa
   protected function urlRouteParameters($rel) {
     $uri_route_parameters = parent::urlRouteParameters($rel);
 
-    $uri_route_parameters['search_api_server'] = \Drupal::routeMatch()->getParameter('search_api_server');
+    $uri_route_parameters['search_api_server'] = \Drupal::routeMatch()->getRawParameter('search_api_server');
 
     return $uri_route_parameters;
   }

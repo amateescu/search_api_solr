@@ -1,18 +1,14 @@
 
-apachesolr_multilingual.default_controller_hello:
-  path: '/apachesolr_multilingual/hello/{name}'
-  defaults:
-    _controller: '\Drupal\apachesolr_multilingual\Controller\DefaultController::hello'
-    _title: 'apachesolr_multilingual Title'
-  requirements:
-    _permission: 'access content'
-
 # TextFieldFilter routing definition
 entity.asm_text_field_filter.collection:
   path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_field_filter'
   defaults:
     _entity_list: 'asm_text_field_filter'
     _title: 'TextFieldFilter Configuration'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
     _apachesolr_multilingual_local_action_access_check: 'TRUE'
@@ -22,6 +18,10 @@ entity.asm_text_field_filter.add_form:
   defaults:
     _entity_form: 'asm_text_field_filter.add'
     _title: 'Add TextFieldFilter'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
     _apachesolr_multilingual_local_action_access_check: 'TRUE'
@@ -31,6 +31,10 @@ entity.asm_text_field_filter.edit_form:
   defaults:
     _entity_form: 'asm_text_field_filter.edit'
     _title: 'Edit TextFieldFilter'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
     _apachesolr_multilingual_local_action_access_check: 'TRUE'
@@ -40,6 +44,10 @@ entity.asm_text_field_filter.delete_form:
   defaults:
     _entity_form: 'asm_text_field_filter.delete'
     _title: 'Delete TextFieldFilter'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
     _apachesolr_multilingual_local_action_access_check: 'TRUE'
@@ -50,6 +58,10 @@ entity.asm_text_file.collection:
   defaults:
     _entity_list: 'asm_text_file'
     _title: 'TextFile Configuration'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
     _apachesolr_multilingual_local_action_access_check: 'TRUE'
@@ -59,6 +71,10 @@ entity.asm_text_file.add_form:
   defaults:
     _entity_form: 'asm_text_file.add'
     _title: 'Add TextFile'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
     _apachesolr_multilingual_local_action_access_check: 'TRUE'
@@ -68,6 +84,10 @@ entity.asm_text_file.edit_form:
   defaults:
     _entity_form: 'asm_text_file.edit'
     _title: 'Edit TextFile'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
     _apachesolr_multilingual_local_action_access_check: 'TRUE'
@@ -77,6 +97,10 @@ entity.asm_text_file.delete_form:
   defaults:
     _entity_form: 'asm_text_file.delete'
     _title: 'Delete TextFile'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
     _apachesolr_multilingual_local_action_access_check: 'TRUE'
