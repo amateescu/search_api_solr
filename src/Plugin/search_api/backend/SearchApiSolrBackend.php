@@ -956,6 +956,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * @see SearchApiSolrBackend::search()
    */
   public function getFieldNames(IndexInterface $index, $single_value_name = FALSE, $reset = FALSE) {
+    // @todo The field name mapping should be cached per index because custom
+    // queries needs to access it on every query.
     $subkey = (int) $single_value_name;
     if (!isset($this->fieldNames[$index->id()][$subkey]) || $reset) {
       // This array maps "local property name" => "solr doc property name".
@@ -981,6 +983,9 @@ class SearchApiSolrBackend extends BackendPluginBase {
         $type_info = SearchApiSolrUtility::getDataTypeInfo($type);
         $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
         $pref .= ($single_value_name) ? 's' : 'm';
+        // @todo A modification of this configuration needs to trigger a
+        // deletion of the index and a start of re-index. Or it needs to be
+        // avoided at all.
         if (!empty($this->configuration['clean_ids'])) {
           // Solr doesn't restrict the characters used to build field names. But
           // using non java identifiers within a field name can cause different
@@ -988,7 +993,23 @@ class SearchApiSolrBackend extends BackendPluginBase {
           // consist of letters, digits, '$' and '_'. See
           // https://issues.apache.org/jira/browse/SOLR-3996
           // http://docs.oracle.com/cd/E19798-01/821-1841/bnbuk/index.html
-          $name = $pref . '_' . preg_replace('/[^\d\w$_]/', '$', $key);
+          // For full compatibility the '$' has to be avoided, too. And there're
+          // more restrictions regarding the field name itself. See
+          // https://cwiki.apache.org/confluence/display/solr/Defining+Fields
+          // "Field names should consist of alphanumeric or underscore
+          // characters only and not start with a digit ... Names with both
+          // leading and trailing underscores (e.g. _version_) are reserved."
+          // Field names starting with digits or underscores are already avoided
+          // by our schema.
+          $name = $pref . '_' . preg_replace_callback('/([^\d\w_]{1})/',
+            function ($matches) {
+              // Convert non Java identifiers and '$' into byte-wise hexadecimal
+              // values encapsulated by '_'.
+              return '_' . bin2hex($matches[1]) . '_';
+            },
+            // Underscores themselves are converted into their hexadecimal
+            // representation before the replacement above happens.
+            str_replace('_', '_5f_', $key));
         }
         else {
           $name = $pref . '_' . $key;
