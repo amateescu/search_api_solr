@@ -853,17 +853,23 @@ class SearchApiSolrBackend extends BackendPluginBase {
       $this->moduleHandler->alter('search_api_solr_query', $solarium_query, $query);
       $this->preQuery($solarium_query, $query);
 
+      // Use the 'postbigrequest' plugin if no specific http method is
+      // configured. The plugin needs to be loaded before the request is
+      // created.
+      if ($this->configuration['http_method'] == 'AUTO') {
+        $this->solr->getPlugin('postbigrequest');
+      }
+
       // Use the manual method of creating a Solarium request so we can control
       // the HTTP method.
       $request = $this->solr->createRequest($solarium_query);
 
-      // Set the HTTP method or use the 'postbigrequest' plugin if no specific
-      // method is configured.
-      if ($this->configuration['http_method'] == 'AUTO') {
-        $this->solr->getPlugin('postbigrequest');
-      }
-      elseif ($this->configuration['http_method'] == 'POST') {
+      // Set the configured HTTP method.
+      if ($this->configuration['http_method'] == 'POST') {
         $request->setMethod(Request::METHOD_POST);
+      }
+      elseif ($this->configuration['http_method'] == 'GET') {
+        $request->setMethod(Request::METHOD_GET);
       }
 
       // Set HTTP Basic Authentication parameter, if login data was set.
