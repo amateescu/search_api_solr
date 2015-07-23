@@ -1001,7 +1001,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
           // leading and trailing underscores (e.g. _version_) are reserved."
           // Field names starting with digits or underscores are already avoided
           // by our schema.
-          $name = $pref . '_' . preg_replace_callback('/([^\d\w_]{1})/',
+          $name = $pref . '_' . preg_replace_callback('/([^\da-zA-Z_]{1})/u',
             function ($matches) {
               // Convert non Java identifiers and '$' into byte-wise hexadecimal
               // values encapsulated by '_'.
