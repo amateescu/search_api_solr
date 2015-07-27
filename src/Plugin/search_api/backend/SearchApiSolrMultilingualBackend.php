@@ -8,9 +8,10 @@
 namespace Drupal\apachesolr_multilingual\Plugin\search_api\backend;
 
 use Drupal\Core\Language\LanguageInterface;
-use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
+use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
+use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Solarium\QueryType\Select\Query\FilterQuery;
 use Solarium\QueryType\Select\Query\Query;
 
@@ -73,4 +74,44 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
     parent::postQuery($results, $query, $response);
   }
 
+   /**
+   * Applies custom modifications to indexed Solr documents.
+   *
+   * This method allows subclasses to easily apply custom changes before the
+   * documents are sent to Solr. The method is empty by default.
+   *
+   * @param \Solarium\QueryType\Update\Query\Document\Document[] $documents
+   *   An array of \Solarium\QueryType\Update\Query\Document\Document objects
+   *   ready to be indexed, generated from $items array.
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The search index for which items are being indexed.
+   * @param array $items
+   *   An array of items being indexed.
+   *
+   * @see hook_search_api_solr_documents_alter()
+   */
+  protected function alterSolrDocuments(array &$documents, IndexInterface $index, array $items) {
+    parent::alterSolrDocuments($documents, $index, $items);
+
+    $fulltext_fields = $index->getFulltextFields(TRUE);
+    $field_names = $this->getFieldNames($index);
+    $fulltext_field_names = array_flip(array_filter(array_flip($field_names),
+      function($key) use ($fulltext_fields) {
+        return in_array($key, $fulltext_fields);
+      }));
+
+    foreach ($documents as $document) {
+      $fields = $document->getFields();
+      $language_id = $fields[$field_names['search_api_language']];
+      foreach ($fields as $field_name => $field_value) {
+        if (in_array($field_name, $fulltext_field_names)) {
+          $document->addField($this->getMultilingualSolrFieldName($field_name, $language_id), $field_value, $document->getFieldBoost($field_name));
+        }
+      }
+    }
+  }
+
+  private function getMultilingualSolrFieldName($field_name, $language_id) {
+    return preg_replace('/^([a-z]+)/', '$1_i18n_' . $language_id, $field_name);
+  }
 }
