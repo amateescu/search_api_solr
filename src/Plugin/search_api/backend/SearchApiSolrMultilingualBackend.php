@@ -159,6 +159,6 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
    * @return type
    */
   protected function getMultilingualSolrFieldName($field_name, $language_id) {
-    return preg_replace('/^([a-z]+)/', '$1' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . 'i18n_' . $language_id . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR, $field_name);
+    return preg_replace('/^([a-z]+_)/', '$1' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . 'i18n_' . $language_id . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR, $field_name);
   }
 }
