@@ -266,6 +266,61 @@ class Utility {
   public static function formatHighlighting($snippet) {
     return preg_replace('#\[(/?)HIGHLIGHT\]#', '<$1strong>', $snippet);
   }
+
+  /**
+   * Encodes field names to avoid characters that are not supported by solr.
+   *
+   * Solr doesn't restrict the characters used to build field names. But using
+   * non java identifiers within a field name can cause different kind of
+   * trouble when running querries. Java identifiers are only consist of
+   * letters, digits, '$' and '_'. See
+   * https://issues.apache.org/jira/browse/SOLR-3996 and
+   * http://docs.oracle.com/cd/E19798-01/821-1841/bnbuk/index.html
+   * For full compatibility the '$' has to be avoided, too. And there're more
+   * restrictions regarding the field name itself. See
+   * https://cwiki.apache.org/confluence/display/solr/Defining+Fields
+   * "Field names should consist of alphanumeric or underscore characters only
+   * and not start with a digit ... Names with both leading and trailing
+   * underscores (e.g. _version_) are reserved." Field names starting with
+   * digits or underscores are already avoided by our schema.
+   *
+   * This function therfore encodes all forbidden characters in their
+   * hexadecimal equivalent encapsulted by underscores. Example:
+   * "tm_entity:node/body" becomes "tm_5f_entity_3a_node_2f_body"
+   *
+   * @param string $field_name
+   *
+   * @return string
+   */
+  public static function encodeSolrDynamicFieldName($field_name) {
+    return preg_replace_callback('/([^\da-zA-Z])/u',
+      function ($matches) {
+        // Convert non Java identifiers and '$' into byte-wise hexadecimal
+        // values encapsulated by '_'.
+        return '_' . bin2hex($matches[1]) . '_';
+      },
+      $field_name);
+  }
+
+/**
+   * Decodes solr field names.
+   *
+   * See encodeSolrDynamicFieldName() for details.
+   *
+   * @param string $field_name
+   *
+   * @return string
+   */
+  public static function decodeSolrDynamicFieldName($field_name) {
+    return preg_replace_callback('/_([\dabcdef]+?)_/',
+      function ($matches) {
+        // Convert byte-wise hexadecimal values encapsulated by '_' back into
+        // characters.
+        return hex2bin($matches[1]);
+      },
+      $field_name);
+  }
+
 }
 
 
