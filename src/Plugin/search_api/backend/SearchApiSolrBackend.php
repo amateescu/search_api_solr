@@ -972,6 +972,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * @see SearchApiSolrBackend::search()
    */
   public function getFieldNames(IndexInterface $index, $single_value_name = FALSE, $reset = FALSE) {
+    // @todo The field name mapping should be cached per index because custom
+    // queries needs to access it on every query.
     $subkey = (int) $single_value_name;
     if (!isset($this->fieldNames[$index->id()][$subkey]) || $reset) {
       // This array maps "local property name" => "solr doc property name".
@@ -997,19 +999,13 @@ class SearchApiSolrBackend extends BackendPluginBase {
         $type_info = SearchApiSolrUtility::getDataTypeInfo($type);
         $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
         $pref .= ($single_value_name) ? 's' : 'm';
+        $name = $pref . '_' . $key;
+        // @todo A modification of this configuration needs to trigger a
+        // deletion of the index and a start of re-index. Or it needs to be
+        // avoided at all.
         if (!empty($this->configuration['clean_ids'])) {
-          // Solr doesn't restrict the characters used to build field names. But
-          // using non java identifiers within a field name can cause different
-          // kind of trouble when running querries. Java identifiers are only
-          // consist of letters, digits, '$' and '_'. See
-          // https://issues.apache.org/jira/browse/SOLR-3996
-          // http://docs.oracle.com/cd/E19798-01/821-1841/bnbuk/index.html
-          $name = $pref . '_' . preg_replace('/[^\d\w$_]/', '$', $key);
+          $name = SearchApiSolrUtility::encodeSolrDynamicFieldName($name);
         }
-        else {
-          $name = $pref . '_' . $key;
-        }
-
         $ret[$key] = $name;
       }
 
