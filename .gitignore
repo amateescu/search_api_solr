@@ -2,4 +2,4 @@
 .buildpath
 .settings
 .idea
-/nbproject/private/
+nbproject

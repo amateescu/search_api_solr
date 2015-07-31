@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\apachesolr_multilingual\Controller\TextFieldFilterListBuilder.
+ * Contains Drupal\apachesolr_multilingual\Controller\SolrFieldTypeListBuilder.
  */
 
 namespace Drupal\apachesolr_multilingual\Controller;
@@ -11,14 +11,14 @@ use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 
 /**
- * Provides a listing of TextFieldFilter.
+ * Provides a listing of SolrFieldType.
  */
-class TextFieldFilterListBuilder extends ConfigEntityListBuilder {
+class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   /**
    * {@inheritdoc}
    */
   public function buildHeader() {
-    $header['label'] = $this->t('TextFieldFilter');
+    $header['label'] = $this->t('Solr Field Type');
     $header['id'] = $this->t('Machine name');
     return $header + parent::buildHeader();
   }

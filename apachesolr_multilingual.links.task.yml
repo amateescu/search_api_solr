@@ -1,6 +1,5 @@
-entity.asm_text_field_filter.collection:
-  route_name: entity.asm_text_field_filter.collection
+entity.solr_field_type.collection:
+  route_name: entity.solr_field_type.collection
   base_route: entity.search_api_server.canonical
-  #class: '\Drupal\apachesolr_multilingual\Plugin\Menu\MultilingualTab'
   title: 'Multilingual'
   weight: 10

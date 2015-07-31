@@ -1,10 +1,10 @@
 
-# TextFieldFilter routing definition
-entity.asm_text_field_filter.collection:
-  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_field_filter'
+# SolrFieldType routing definition
+entity.solr_field_type.collection:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type'
   defaults:
-    _entity_list: 'asm_text_field_filter'
-    _title: 'TextFieldFilter Configuration'
+    _entity_list: 'solr_field_type'
+    _title: 'SolrFieldType Configuration'
   options:
     parameters:
       search_api_server:
@@ -13,11 +13,11 @@ entity.asm_text_field_filter.collection:
     _permission: 'administer search_api'
     _apachesolr_multilingual_local_action_access_check: 'TRUE'
 
-entity.asm_text_field_filter.add_form:
-  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_field_filter/add'
+entity.solr_field_type.add_form:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/add'
   defaults:
-    _entity_form: 'asm_text_field_filter.add'
-    _title: 'Add TextFieldFilter'
+    _entity_form: 'solr_field_type.add'
+    _title: 'Add SolrFieldType'
   options:
     parameters:
       search_api_server:
@@ -26,11 +26,11 @@ entity.asm_text_field_filter.add_form:
     _permission: 'administer search_api'
     _apachesolr_multilingual_local_action_access_check: 'TRUE'
 
-entity.asm_text_field_filter.edit_form:
-  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_field_filter/{asm_text_field_filter}'
+entity.solr_field_type.edit_form:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}'
   defaults:
-    _entity_form: 'asm_text_field_filter.edit'
-    _title: 'Edit TextFieldFilter'
+    _entity_form: 'solr_field_type.edit'
+    _title: 'Edit SolrFieldType'
   options:
     parameters:
       search_api_server:
@@ -39,64 +39,11 @@ entity.asm_text_field_filter.edit_form:
     _permission: 'administer search_api'
     _apachesolr_multilingual_local_action_access_check: 'TRUE'
 
-entity.asm_text_field_filter.delete_form:
-  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_field_filter/{asm_text_field_filter}/delete'
+entity.solr_field_type.delete_form:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}/delete'
   defaults:
-    _entity_form: 'asm_text_field_filter.delete'
-    _title: 'Delete TextFieldFilter'
-  options:
-    parameters:
-      search_api_server:
-        type: entity:search_api_server
-  requirements:
-    _permission: 'administer search_api'
-    _apachesolr_multilingual_local_action_access_check: 'TRUE'
-
-# TextFile routing definition
-entity.asm_text_file.collection:
-  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_file'
-  defaults:
-    _entity_list: 'asm_text_file'
-    _title: 'TextFile Configuration'
-  options:
-    parameters:
-      search_api_server:
-        type: entity:search_api_server
-  requirements:
-    _permission: 'administer search_api'
-    _apachesolr_multilingual_local_action_access_check: 'TRUE'
-
-entity.asm_text_file.add_form:
-  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_file/add'
-  defaults:
-    _entity_form: 'asm_text_file.add'
-    _title: 'Add TextFile'
-  options:
-    parameters:
-      search_api_server:
-        type: entity:search_api_server
-  requirements:
-    _permission: 'administer search_api'
-    _apachesolr_multilingual_local_action_access_check: 'TRUE'
-
-entity.asm_text_file.edit_form:
-  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/asm_text_file/{asm_text_file}'
-  defaults:
-    _entity_form: 'asm_text_file.edit'
-    _title: 'Edit TextFile'
-  options:
-    parameters:
-      search_api_server:
-        type: entity:search_api_server
-  requirements:
-    _permission: 'administer search_api'
-    _apachesolr_multilingual_local_action_access_check: 'TRUE'
-
-entity.asm_text_file.delete_form:
-  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/text_file/{asm_text_file}/delete'
-  defaults:
-    _entity_form: 'asm_text_file.delete'
-    _title: 'Delete TextFile'
+    _entity_form: 'solr_field_type.delete'
+    _title: 'Delete SolrFieldType'
   options:
     parameters:
       search_api_server:

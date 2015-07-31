@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\apachesolr_multilingual\Form\TextFieldFilterDeleteForm.
+ * Contains Drupal\apachesolr_multilingual\Form\SolrFieldTypeDeleteForm.
  */
 
 namespace Drupal\apachesolr_multilingual\Form;
@@ -12,9 +12,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
 /**
- * Builds the form to delete a TextFieldFilter.
+ * Builds the form to delete a SolrFieldType.
  */
-class TextFieldFilterDeleteForm extends EntityConfirmFormBase {
+class SolrFieldTypeDeleteForm extends EntityConfirmFormBase {
   /**
    * {@inheritdoc}
    */

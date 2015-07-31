@@ -1,13 +1,6 @@
-entity.asm_text_field_filter.add_form:
-  route_name: 'entity.asm_text_field_filter.add_form'
-  title: 'Add TextFieldFilter'
+entity.solr_field_type.add_form:
+  route_name: 'entity.solr_field_type.add_form'
+  title: 'Add SolrFieldType'
   appears_on:
-    - entity.asm_text_field_filter.collection
-    - entity.search_api_server.canonical
-
-entity.asm_text_file.add_form:
-  route_name: 'entity.asm_text_file.add_form'
-  title: 'Add TextFile'
-  appears_on:
-    - entity.asm_text_file.collection
+    - entity.solr_field_type.collection
     - entity.search_api_server.canonical

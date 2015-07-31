@@ -1,6 +1,6 @@
-apachesolr_multilingual.asm_text_field_filter.*:
+apachesolr_multilingual.solr_field_type.*:
   type: config_entity
-  label: 'TextFieldFilterFilter config'
+  label: 'Solr Field Type config'
   mapping:
     id:
       type: string
