@@ -1107,31 +1107,31 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * @return \Drupal\search_api\Query\ResultSetInterface
    *   A result set object.
    */
-  protected function extractResults(QueryInterface $query, Result $resultset) {
+  protected function extractResults(QueryInterface $query, Result $result) {
     $index = $query->getIndex();
     $field_names = $this->getFieldNames($index);
     $field_options = $index->getOption('fields', array());
 
     // Set up the results array.
-    $results = SearchApiUtility::createSearchResultSet($query);
-    $results->setExtraData('search_api_solr_response', $resultset->getData());
+    $result_set = SearchApiUtility::createSearchResultSet($query);
+    $result_set->setExtraData('search_api_solr_response', $result->getData());
 
     // In some rare cases (e.g., MLT query with nonexistent ID) the response
     // will be NULL.
-    if (!$resultset->getResponse() && !$resultset->getGrouping()) {
-      $results->setResultCount(0);
-      return $results;
+    if (!$result->getResponse() && !$result->getGrouping()) {
+      $result_set->setResultCount(0);
+      return $result_set;
     }
 
     // If field collapsing has been enabled for this query, we need to process
     // the results differently.
     $grouping = $query->getOption('search_api_grouping');
-    if (!empty($grouping['use_grouping']) && $resultset->getGrouping()) {
+    if (!empty($grouping['use_grouping']) && $result->getGrouping()) {
 //      $docs = array();
-//      $results['result count'] = 0;
+//      $result_set['result count'] = 0;
 //      foreach ($grouping['fields'] as $field) {
 //        if (!empty($response->grouped->{$fields[$field]})) {
-//          $results['result count'] += $response->grouped->{$fields[$field]}->ngroups;
+//          $result_set['result count'] += $response->grouped->{$fields[$field]}->ngroups;
 //          foreach ($response->grouped->{$fields[$field]}->groups as $group) {
 //            foreach ($group->doclist->docs as $doc) {
 //              $docs[] = $doc;
@@ -1141,8 +1141,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
 //      }
     }
     else {
-      $results->setResultCount($resultset->getNumFound());
-      $docs = $resultset->getDocuments();
+      $result_set->setResultCount($result->getNumFound());
+      $docs = $result->getDocuments();
     }
 
     // Add each search result to the results array.
@@ -1178,20 +1178,20 @@ class SearchApiSolrBackend extends BackendPluginBase {
       $index_id = $this->getIndexId($index->id());
       $solr_id = $this->createId($index_id, $result_item->getId());
       $item_fields = $result_item->getFields();
-      $excerpt = $this->getSolrHelper()->getExcerpt($resultset->getData(), $solr_id, $item_fields, $field_names);
+      $excerpt = $this->getSolrHelper()->getExcerpt($result->getData(), $solr_id, $item_fields, $field_names);
       if ($excerpt) {
         $result_item->setExcerpt($excerpt);
       }
 
-      $results->addResultItem($result_item);
+      $result_set->addResultItem($result_item);
     }
 
     // Check for spellcheck suggestions.
     /*if (module_exists('search_api_spellcheck') && $query->getOption('search_api_spellcheck')) {
-       $results->setExtraData('search_api_spellcheck', new SearchApiSpellcheckSolr($resultset));
+       $result_set->setExtraData('search_api_spellcheck', new SearchApiSpellcheckSolr($result));
     }*/
 
-    return $results;
+    return $result_set;
   }
 
   /**
