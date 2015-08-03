@@ -51,12 +51,19 @@ class SolrFieldTypeForm extends EntityForm {
     );
 
     $form['text_files'] = array(
-      '#type' => 'textarea',
-      '#title' => $this->t('TextFiles'),
-      '#description' => $this->t('TextFiles.'),
-      '#default_value' => $solr_field_type->getTextFiles(),
+      '#type' => 'fieldset',
+      '#title' => $this->t('Text Files'),
+      '#tree' => TRUE,
     );
 
+    $text_files = $solr_field_type->getTextFiles();
+    foreach ($text_files as $text_file_name => $text_file) {
+      $form['text_files'][$text_file_name] = array(
+        '#type' => 'textarea',
+        '#title' => $text_file_name,
+        '#default_value' => $text_file,
+      );
+    }
     return $form;
   }
 
@@ -74,6 +81,7 @@ class SolrFieldTypeForm extends EntityForm {
   public function save(array $form, FormStateInterface $form_state) {
     $solr_field_type = $this->entity;
     $solr_field_type->setFieldTypeAsJson($form_state->getValue('field_type'));
+    $solr_field_type->setTextFiles($form_state->getValue('text_files'));
 
     $status = $solr_field_type->save();
 

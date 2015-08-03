@@ -85,6 +85,17 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     return $this->text_files;
   }
 
+  public function addTextFile($name, $content) {
+    $this->text_files[$name] = preg_replace('/\R/u', "\n", $content);
+  }
+
+  public function setTextFiles($text_files) {
+    $this->text_files = [];
+    foreach ($text_files as $name => $content) {
+      $this->addTextFile($name, $content);
+    }
+  }
+
   /**
    * Gets an array of placeholders for this entity.
    *
