@@ -1,0 +1,126 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - apachesolr_multilingual
+    - language
+  config:
+    - language.entity.en
+id: text_en
+label: null
+field_type:
+  name: text_en
+  class: solr.TextField
+  positionIncrementGap: '100'
+  indexAnalyzer:
+    charFilters:
+      -
+        class: solr.MappingCharFilterFactory
+        mapping: mapping-ISOLatin1Accent.txt
+    tokenizer:
+      class: solr.WhitespaceTokenizerFactory
+    filters:
+      -
+        class: solr.ManagedStopFilterFactory
+        managed: stopwords_en
+        ignoreCase: 'true'
+      -
+        class: solr.WordDelimiterFilterFactory
+        catenateNumbers: '1'
+        generateNumberParts: '1'
+        protected: protwords.txt
+        splitOnCaseChange: '0'
+        generateWordParts: '1'
+        preserveOriginal: '1'
+        catenateAll: '0'
+        catenateWords: '1'
+      -
+        class: solr.LengthFilterFactory
+        min: '2'
+        max: '100'
+      -
+        class: solr.LowerCaseFilterFactory
+      -
+        class: solr.SnowballPorterFilterFactory
+        language: English
+        protected: protwords.txt
+      -
+        class: solr.RemoveDuplicatesTokenFilterFactory
+  queryAnalyzer:
+    charFilters:
+      -
+        class: solr.MappingCharFilterFactory
+        mapping: mapping-ISOLatin1Accent.txt
+    tokenizer:
+      class: solr.WhitespaceTokenizerFactory
+    filters:
+      -
+        class: solr.ManagedSynonymFilterFactory
+        managed: synonyms_en
+        expand: 'true'
+        ignoreCase: 'true'
+      -
+        class: solr.ManagedStopFilterFactory
+        managed: stopwords_en
+        ignoreCase: 'true'
+      -
+        class: solr.WordDelimiterFilterFactory
+        catenateNumbers: '0'
+        generateNumberParts: '1'
+        protected: protwords.txt
+        splitOnCaseChange: '0'
+        generateWordParts: '1'
+        preserveOriginal: '1'
+        catenateAll: '0'
+        catenateWords: '0'
+      -
+        class: solr.LengthFilterFactory
+        min: '2'
+        max: '100'
+      -
+        class: solr.LowerCaseFilterFactory
+      -
+        class: solr.SnowballPorterFilterFactory
+        language: English
+        protected: protwords.txt
+      -
+        class: solr.RemoveDuplicatesTokenFilterFactory
+text_files:
+  stopwords: |
+    a
+    an
+    and
+    are
+    as
+    at
+    be
+    but
+    by
+    for
+    if
+    in
+    into
+    is
+    it
+    no
+    not
+    of
+    on
+    or
+    s
+    such
+    t
+    that
+    the
+    their
+    then
+    there
+    these
+    they
+    this
+    to
+    was
+    will
+    with
+  synonyms: |
+    drupal, durpal

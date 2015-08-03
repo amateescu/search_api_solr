@@ -1,10 +1,12 @@
-langcode: en
+langcode: und
 status: true
-dependencies: {  }
-id: text_en
+dependencies:
+  module:
+    - apachesolr_multilingual
+id: text_und
 label: null
 field_type:
-  name: text_en
+  name: text_und
   class: solr.TextField
   positionIncrementGap: '100'
   indexAnalyzer:
@@ -17,7 +19,7 @@ field_type:
     filters:
       -
         class: solr.ManagedStopFilterFactory
-        managed: stopwords_en
+        managed: stopwords_und
         ignoreCase: 'true'
       -
         class: solr.WordDelimiterFilterFactory
@@ -36,10 +38,6 @@ field_type:
       -
         class: solr.LowerCaseFilterFactory
       -
-        class: solr.SnowballPorterFilterFactory
-        language: English
-        protected: protwords.txt
-      -
         class: solr.RemoveDuplicatesTokenFilterFactory
   queryAnalyzer:
     charFilters:
@@ -51,12 +49,12 @@ field_type:
     filters:
       -
         class: solr.ManagedSynonymFilterFactory
-        managed: synonyms_en
+        managed: synonyms_und
         expand: 'true'
         ignoreCase: 'true'
       -
         class: solr.ManagedStopFilterFactory
-        managed: stopwords_en
+        managed: stopwords_und
         ignoreCase: 'true'
       -
         class: solr.WordDelimiterFilterFactory
@@ -74,10 +72,6 @@ field_type:
         max: '100'
       -
         class: solr.LowerCaseFilterFactory
-      -
-        class: solr.SnowballPorterFilterFactory
-        language: English
-        protected: protwords.txt
       -
         class: solr.RemoveDuplicatesTokenFilterFactory
 text_files:
