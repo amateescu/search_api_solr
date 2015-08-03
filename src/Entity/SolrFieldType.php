@@ -7,6 +7,7 @@
 
 namespace Drupal\apachesolr_multilingual\Entity;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\apachesolr_multilingual\SolrFieldTypeInterface;
 
@@ -52,6 +53,37 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    * @var string
    */
   protected $label;
+
+  /**
+   * Solr Field Type definition
+   *
+   * @var array
+   */
+  protected $field_type;
+
+  /**
+   * Array of text files.
+   *
+   * @var array
+   */
+  protected $text_files;
+
+  public function getFieldType() {
+    return $this->field_type;
+  }
+
+  public function getFieldTypeAsJson() {
+    return Json::encode($this->field_type);
+  }
+
+  public function setFieldTypeAsJson($field_type) {
+    $this->field_type = Json::decode($field_type);
+    return $this;
+  }
+
+  public function getTextFiles() {
+    return $this->text_files;
+  }
 
   /**
    * Gets an array of placeholders for this entity.

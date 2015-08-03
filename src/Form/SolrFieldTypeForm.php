@@ -7,7 +7,6 @@
 
 namespace Drupal\apachesolr_multilingual\Form;
 
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
 
@@ -44,7 +43,29 @@ class SolrFieldTypeForm extends EntityForm {
 
     /* You will need additional form elements for your custom properties. */
 
+    $form['field_type'] = array(
+      '#type' => 'textarea',
+      '#title' => $this->t('FieldType'),
+      '#description' => $this->t('FieldType.'),
+      '#default_value' => $solr_field_type->getFieldTypeAsJson(),
+    );
+
+    $form['text_files'] = array(
+      '#type' => 'textarea',
+      '#title' => $this->t('TextFiles'),
+      '#description' => $this->t('TextFiles.'),
+      '#default_value' => $solr_field_type->getTextFiles(),
+    );
+
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    parent::validateForm($form, $form_state);
+
   }
 
   /**
@@ -52,6 +73,8 @@ class SolrFieldTypeForm extends EntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     $solr_field_type = $this->entity;
+    $solr_field_type->setFieldTypeAsJson($form_state->getValue('field_type'));
+
     $status = $solr_field_type->save();
 
     if ($status) {

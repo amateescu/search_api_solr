@@ -10,3 +10,9 @@ apachesolr_multilingual.solr_field_type.*:
       label: 'Label'
     uuid:
       type: string
+    field_type:
+      type: mapping
+      label: 'Field Type'
+    text_files:
+      type: mapping
+      label: 'Text Files'
