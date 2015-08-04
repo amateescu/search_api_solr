@@ -31,10 +31,10 @@ class ConfigSubscriber implements EventSubscriberInterface {
     $events[ConfigEvents::SAVE][] = array('onConfigSave');
     return $events;
   }
-  
+
   function onConfigSave(ConfigCrudEvent $event) {
     $saved_config = $event->getConfig();
-    
+
     if (preg_match('@^language\.entity\.(.+)@', $saved_config->getName(), $matches) &&
         $matches[1] != 'und') {
       $restrict_by_dependency = [
@@ -48,5 +48,5 @@ class ConfigSubscriber implements EventSubscriberInterface {
     // drupal_set_message($saved_config->getName());
     // drupal_set_message(print_r($saved_config->getRawData(), TRUE));
   }
-  
+
 }
