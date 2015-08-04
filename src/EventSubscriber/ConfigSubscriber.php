@@ -1,6 +1,7 @@
 <?php
 /**
- * Subscribe to config changes.
+ * @file
+ * Contains \Drupal\apachesolr_multilingual\EventSubscriber\ConfigSubscriber.
  */
 
 namespace Drupal\apachesolr_multilingual\EventSubscriber;
@@ -17,7 +18,7 @@ class ConfigSubscriber implements EventSubscriberInterface {
   protected $configInstaller;
 
   /**
-   * @param $configInstaller.
+   * @param $configInstaller
    *   The Config Installer.
    */
   public function __construct(ConfigInstallerInterface $configInstaller) {
