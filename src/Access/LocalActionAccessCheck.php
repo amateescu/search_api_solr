@@ -6,8 +6,7 @@
 
 namespace Drupal\apachesolr_multilingual\Access;
 
-use Drupal\Core\Access\AccessResultAllowed;
-use Drupal\Core\Access\AccessResultForbidden;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\apachesolr_multilingual\Plugin\search_api\backend\SearchApiSolrMultilingualBackend;
@@ -26,8 +25,8 @@ class LocalActionAccessCheck implements AccessInterface {
    */
   public function access(AccountInterface $account, ServerInterface $search_api_server = NULL) {
     if ($search_api_server && $search_api_server->getBackend() instanceof SearchApiSolrMultilingualBackend) {
-      return new AccessResultAllowed();
+      return AccessResult::allowed();
     }
-    return new AccessResultForbidden();
+    return AccessResult::forbidden();
   }
 }
