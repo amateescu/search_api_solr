@@ -39,31 +39,55 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
   protected function preQuery(Query $solarium_query, QueryInterface $query) {
     parent::preQuery($solarium_query, $query);
 
-    // @todo $language_id needs to be set dynamically from filter, config,
-    //   facet, whatever ...
-    $language_id = \Drupal::languageManager()->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)->getId();
+    $language_ids = $this->getLanguageIdFiltersFromQuery($solarium_query, $query);
 
-    $edismax = $solarium_query->getEDisMax();
-    $query_fields = $edismax->getQueryFields();
+    // @todo the configuration doesn't exist yet.
+    $this->configuration['asm_limit_search_to_content_language'] = TRUE;
 
-    $index = $query->getIndex();
-    $fulltext_fields = $index->getFulltextFields(TRUE);
-    $field_names = $this->getFieldNames($index);
-
-    foreach($fulltext_fields as $fulltext_field) {
-      $query_fields = str_replace(
-        $field_names[$fulltext_field],
-        SearchApiSolrMultilingualUtility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_names[$fulltext_field], $language_id),
-        $query_fields
-      );
+    if (empty($language_ids) && $this->configuration['asm_limit_search_to_content_language']) {
+      $language_ids[] = \Drupal::languageManager()->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)->getId();
     }
 
-    $edismax->setQueryFields($query_fields);
+    if (!empty($language_ids)) {
+      $edismax = $solarium_query->getEDisMax();
+      $query_fields = $edismax->getQueryFields();
 
-    $fq = new FilterQuery();
-    $fq->setKey('i18n_' . $language_id);
-    $fq->setQuery($field_names['search_api_language'] . ':' . $language_id);
-    $solarium_query->addFilterQuery($fq);
+      $index = $query->getIndex();
+      $fulltext_fields = $index->getFulltextFields(TRUE);
+      $multiple_field_names = $this->getFieldNames($index);
+      $single_field_names = $this->getFieldNames($index, TRUE);
+
+      foreach($fulltext_fields as $fulltext_field) {
+        foreach ([$single_field_names[$fulltext_field], $multiple_field_names[$fulltext_field]] as $field_name) {
+          $boost = '';
+          if (preg_match('@' . $field_name . '(^[\d.]?)@', $query_fields, $matches)) {
+            $boost = $matches[1];
+          }
+
+          $language_specific_fields = [];
+          foreach ($language_ids as $language_id) {
+            $language_specific_fields[] = SearchApiSolrMultilingualUtility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id) . $boost;
+          }
+
+          $query_fields = str_replace(
+            $field_name,
+            implode(',', $language_specific_fields),
+            $query_fields
+          );
+        }
+
+        $edismax->setQueryFields($query_fields);
+
+        $language_filters = [];
+        foreach ($language_ids as $language_id) {
+          $language_filters[] = '+' . $single_field_names['search_api_language'] . ':' . $language_id;
+        }
+        $fq = new FilterQuery();
+        $fq->setKey('asm_language_filter');
+        $fq->setQuery(implode(' ', $language_filters));
+        $solarium_query->addFilterQuery($fq);
+      }
+    }
   }
 
   /**
@@ -71,12 +95,18 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
    */
   protected function extractResults(QueryInterface $query, Result $result) {
     if ($this->configuration['retrieve_data']) {
+      $language_ids = $this->getLanguageIdFiltersFromQuery($result->getQuery(), $query);
+      $index = $query->getIndex();
+      $single_field_names = $this->getFieldNames($index, TRUE);
       $data = $result->getData();
-      foreach ($data['docs'] as &$doc) {
+      foreach ($data['response']['docs'] as &$doc) {
+        $language_id = $doc[$single_field_names['search_api_language']];
         foreach (array_keys($doc) as $language_specific_field_name) {
           $field_name = SearchApiSolrMultilingualUtility::getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($language_specific_field_name);
           if ($field_name != $language_specific_field_name) {
-            $doc[$field_name] = $doc[$language_specific_field_name];
+            if (SearchApiSolrMultilingualUtility::getLangaugeIdFromLanguageSpecificSolrDynamicFieldName($language_specific_field_name) == $language_id) {
+              $doc[$field_name] = $doc[$language_specific_field_name];
+            }
             unset($doc[$language_specific_field_name]);
           }
         }
@@ -124,21 +154,42 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
     parent::alterSolrDocuments($documents, $index, $items);
 
     $fulltext_fields = $index->getFulltextFields(TRUE);
-    $field_names = $this->getFieldNames($index);
-    $fulltext_field_names = array_flip(array_filter(array_flip($field_names),
-      function($key) use ($fulltext_fields) {
-        return in_array($key, $fulltext_fields);
-      }));
+    $multiple_field_names = $this->getFieldNames($index);
+    $single_field_names = $this->getFieldNames($index, TRUE);
+    $fulltext_field_names = array_filter(array_flip($multiple_field_names) + array_flip($single_field_names),
+      function($value) use ($fulltext_fields) {
+        return in_array($value, $fulltext_fields);
+      });
 
     foreach ($documents as $document) {
       $fields = $document->getFields();
-      $language_id = $fields[$field_names['search_api_language']];
+      $language_id = $fields[$single_field_names['search_api_language']];
       foreach ($fields as $field_name => $field_value) {
-        if (in_array($field_name, $fulltext_field_names)) {
+        if (array_key_exists($field_name, $fulltext_field_names)) {
           $document->addField(SearchApiSolrMultilingualUtility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id), $field_value, $document->getFieldBoost($field_name));
+          // @todo removal should be configurable
+          $document->removeField($field_name);
         }
       }
     }
+  }
+
+  protected function getLanguageIdFiltersFromQuery(Query $solarium_query, QueryInterface $query) {
+    $language_ids = [];
+    $multiple_field_names = $this->getFieldNames($query->getIndex());
+    $single_field_names = $this->getFieldNames($query->getIndex(), TRUE);
+    $filter_queries = $solarium_query->getFilterQueries();
+    foreach ($filter_queries as $filter_query) {
+      $query_string = $filter_query->getQuery();
+      foreach ([$single_field_names['search_api_language'], $multiple_field_names['search_api_language']] as $field_name) {
+        if (preg_match_all('@' . $field_name . ':(.+?)\b@', $query_string, $matches)) {
+          foreach ($matches as $match) {
+            $language_ids[] = trim($match[1], '"');
+          }
+        }
+      }
+    }
+    return array_unique($language_ids);
   }
 
 }

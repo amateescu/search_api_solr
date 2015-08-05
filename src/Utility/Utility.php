@@ -44,15 +44,15 @@ class Utility {
    * @return type
    */
   public static function getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id) {
-    return Utility::_modifySolrDynamicFieldName($field_name, '/^([a-z]+)_/', '$1' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . $language_id . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR);
+    return Utility::_modifySolrDynamicFieldName($field_name, '@^([a-z]+)_@', '$1' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . $language_id . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR);
   }
 
   public static function getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($field_name) {
-    return Utility::_modifySolrDynamicFieldName($field_name, '/' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . '.+?' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . '/');
+    return Utility::_modifySolrDynamicFieldName($field_name, '@' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . '.+?' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . '@', '_');
   }
 
-  public static function _modifySolrDynamicFieldName($field_name, $pattern, $replacement = '') {
-    $encoded = strpos($field_name, SearchApiSolrUtility::encodeSolrDynamicFieldName('_'));
+  public static function _modifySolrDynamicFieldName($field_name, $pattern, $replacement) {
+    $encoded = strpos($field_name, SearchApiSolrUtility::encodeSolrDynamicFieldName('_')) | strpos($field_name, SearchApiSolrUtility::encodeSolrDynamicFieldName(SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR));
     if ($encoded) {
       $field_name = SearchApiSolrUtility::decodeSolrDynamicFieldName($field_name);
     }
@@ -62,6 +62,18 @@ class Utility {
     }
     return $field_name;
   }
+
+  public static function getLangaugeIdFromLanguageSpecificSolrDynamicFieldName($field_name) {
+    $encoded = strpos($field_name, SearchApiSolrUtility::encodeSolrDynamicFieldName(SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR));
+    if ($encoded) {
+      $field_name = SearchApiSolrUtility::decodeSolrDynamicFieldName($field_name);
+    }
+    if (preg_match('@' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . '(.+?)' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . '@', $field_name, $matches)) {
+      return $matches[1];
+    }
+    return FALSE;
+  }
+
 }
 
 
