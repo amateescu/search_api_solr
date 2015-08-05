@@ -83,12 +83,23 @@ env:
     # etc. to only output those channels.
     #- DRUPAL_TI_DEBUG_FILE_OUTPUT="selenium xvfb webserver"
 
+    # Set the test runner.
+    - DRUPAL_TI_RUNNERS="phpunit-core simpletest"
+
   matrix:
     # [[[ SELECT ANY OR MORE OPTIONS ]]]
     #- DRUPAL_TI_RUNNERS="phpunit"
     #- DRUPAL_TI_RUNNERS="simpletest"
     #- DRUPAL_TI_RUNNERS="behat"
-    - DRUPAL_TI_RUNNERS="phpunit-core simpletest"
+    - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=3.6.2 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/3.x"
+    - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=4.9.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/4.x"
+
+notifications:
+  email:
+    - nick.veenhof@acquia.com
+    - andrei@amateescu.me
+  irc:
+    - "chat.freenode.net#drupal-search-api"
 
 # This will create the database
 mysql:
