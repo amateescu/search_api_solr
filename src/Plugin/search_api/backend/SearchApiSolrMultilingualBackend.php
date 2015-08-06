@@ -7,12 +7,15 @@
 
 namespace Drupal\apachesolr_multilingual\Plugin\search_api\backend;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\apachesolr_multilingual\Entity\SolrFieldType;
 use Drupal\apachesolr_multilingual\Utility\Utility as SearchApiSolrMultilingualUtility;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
+use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Solarium\Core\Client\Response;
 use Solarium\QueryType\Select\Query\FilterQuery;
 use Solarium\QueryType\Select\Query\Query;
@@ -28,7 +31,7 @@ use Solarium\QueryType\Select\Result\Result;
 class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
 
   /**
-   * Modify the query before sent to solr.
+   * Modify the query before it is sent to solr.
    *
    * @param \Solarium\QueryType\Select\Query\Query $solarium_query
    *   The Solarium select query object.
@@ -159,19 +162,24 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
     $fulltext_field_names = array_filter(array_flip($multiple_field_names) + array_flip($single_field_names),
       function($value) use ($fulltext_fields) {
         return in_array($value, $fulltext_fields);
-      });
+      }
+    );
 
+    $field_name_map_per_language = [];
     foreach ($documents as $document) {
       $fields = $document->getFields();
       $language_id = $fields[$single_field_names['search_api_language']];
-      foreach ($fields as $field_name => $field_value) {
-        if (array_key_exists($field_name, $fulltext_field_names)) {
-          $document->addField(SearchApiSolrMultilingualUtility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id), $field_value, $document->getFieldBoost($field_name));
+      foreach ($fields as $monolingual_solr_field_name => $field_value) {
+        if (array_key_exists($monolingual_solr_field_name, $fulltext_field_names)) {
+          $multilingual_solr_field_name = SearchApiSolrMultilingualUtility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($monolingual_solr_field_name, $language_id);
+          $field_name_map_per_language[$language_id][$monolingual_solr_field_name] = $multilingual_solr_field_name;
+          $document->addField($multilingual_solr_field_name, $field_value, $document->getFieldBoost($monolingual_solr_field_name));
           // @todo removal should be configurable
-          $document->removeField($field_name);
+          $document->removeField($monolingual_solr_field_name);
         }
       }
     }
+    //$this->ensureAllMultilingualFieldsExist($field_name_map_per_language, $index);
   }
 
   protected function getLanguageIdFiltersFromQuery(Query $solarium_query, QueryInterface $query) {
@@ -190,6 +198,96 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
       }
     }
     return array_unique($language_ids);
+  }
+
+  protected function ensureAllMultilingualFieldsExist(array $field_name_map_per_language, IndexInterface $index) {
+    foreach ($field_name_map_per_language as $language_id => $map) {
+      // REVIEW: Do we need to encode the language_id as part of the field type name?
+      $field_type_name = 'text' . '_' . $language_id;
+      $solr_field_type_name = SearchApiSolrUtility::encodeSolrDynamicFieldName($field_type_name);
+      $this->ensureMultilingualFieldTypeExists($field_type_name, $solr_field_type_name, $index);
+      foreach ($map as $monolingual_solr_field_name => $multilingual_solr_field_name) {
+        $this->ensureMultilingualFieldExists($multilingual_solr_field_name, $solr_field_type_name, $index);
+      }
+    }
+  }
+
+  protected function ensureMultilingualFieldTypeExists($field_type_name, $solr_field_type_name, IndexInterface $index) {
+    if (!$this->solrFieldTypeExists($solr_field_type_name, $index)) {
+      $this->createSolrMultilingualFieldType($field_type_name, $solr_field_type_name, $index);
+    }
+  }
+
+  protected function ensureMultilingualFieldExists($multilingual_solr_field_name, $solr_field_type_name, IndexInterface $index) {
+    if (!$this->solrDynamicFieldExists($multilingual_solr_field_name, $index)) {
+      $this->createSolrDynamicField($multilingual_solr_field_name, $solr_field_type_name, $index);
+    }
+  }
+
+  protected function solrDynamicFieldExists($solr_field_name, IndexInterface $index) {
+    $response = $this->solrRestGet('schema/dynamicfields', $index);
+    $found = FALSE;
+    foreach ($response['dynamicFields'] as $dynamic_field) {
+      if ($dynamic_field['name'] == $solr_field_name) {
+        $found = TRUE;
+        break;
+      }
+    }
+    return $found;
+  }
+
+  protected function solrFieldTypeExists($solr_field_type_name, IndexInterface $index) {
+    $response = $this->solrRestGet('schema/fieldtypes', $index);
+    $found = FALSE;
+    foreach ($response['fieldTypes'] as $field_type) {
+      if ($field_type['name'] == $solr_field_type_name) {
+        $found = TRUE;
+        break;
+      }
+    }
+    return $found;
+  }
+
+  protected function createSolrDynamicField($solr_field_name, $solr_field_type_name, IndexInterface $index) {
+    $command_json = '{
+      "add-dynamic-field":{
+        "name":   "' . $solr_field_name . '",
+        "type":   "' . $solr_field_type_name . '",
+        "stored": true
+      }
+    }';
+    return $this->solrRestPost('schema', $command_json, $index);
+  }
+
+  protected function createSolrMultilingualFieldType($field_type_name, $solr_field_type_name, IndexInterface $index) {
+    $field_type_entity = SolrFieldType::load($field_type_name);
+    $command_json = '{ "add-field-type": ' . $field_type_entity->getFieldTypeAsJson() . '}';
+    $command_json = str_replace('"'.$field_type_name.'"', '"'.$solr_field_type_name.'"', $command_json);
+    return $this->solrRestPost('schema', $command_json, $index);
+  }
+
+  protected function solrRestGet($path, IndexInterface $index) {
+    $uri = $this->solr->getEndpoint()->getBaseUri() . $path;
+    $client = \Drupal::service('http_client');
+    $result = $client->get($uri, ['Accept' => 'application/json']);
+    $output = Json::decode($result->getBody());
+    return $output;
+  }
+
+  protected function solrRestPost($path, $command_json, IndexInterface $index) {
+    $uri = $this->solr->getEndpoint()->getBaseUri() . $path;
+    /** @var \GuzzleHttp\Client $client */
+    $client = \Drupal::service('http_client');
+    $result = $client->post($uri, [
+      'body' => $command_json,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-type' => 'application/json'
+      ],
+    ]);
+    $output = Json::decode($result->getBody());
+    \Drupal::logger('apachesolr_multilingual')->info(print_r($output, true));
+    return $output;
   }
 
 }
