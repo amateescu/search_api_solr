@@ -180,7 +180,7 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
         }
       }
     }
-    $this->ensureAllMultilingualFieldsExist($field_name_map_per_language, $index);
+    // $this->ensureAllMultilingualFieldsExist($field_name_map_per_language, $index);
   }
 
   protected function getLanguageIdFiltersFromQuery(Query $solarium_query, QueryInterface $query) {
