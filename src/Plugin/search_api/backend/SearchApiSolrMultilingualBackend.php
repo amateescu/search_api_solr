@@ -16,6 +16,7 @@ use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
+use Drupal\search_api\SearchApiException;
 use Solarium\Core\Client\Response;
 use Solarium\QueryType\Select\Query\FilterQuery;
 use Solarium\QueryType\Select\Query\Query;
@@ -179,7 +180,7 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
         }
       }
     }
-    //$this->ensureAllMultilingualFieldsExist($field_name_map_per_language, $index);
+    $this->ensureAllMultilingualFieldsExist($field_name_map_per_language, $index);
   }
 
   protected function getLanguageIdFiltersFromQuery(Query $solarium_query, QueryInterface $query) {
@@ -260,20 +261,64 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
   }
 
   protected function createSolrMultilingualFieldType($field_type_name, $solr_field_type_name, IndexInterface $index) {
+    // Get the field type definition from Drupal.
     $field_type_entity = SolrFieldType::load($field_type_name);
-    $command_json = '{ "add-field-type": ' . $field_type_entity->getFieldTypeAsJson() . '}';
+    $field_type_definition = $field_type_entity->getFieldType();
+    $field_type_definition['name'] = $solr_field_type_name;
+    $this->tweakFilterConfig($field_type_definition['indexAnalyzer']['filters']);
+    $this->tweakFilterConfig($field_type_definition['queryAnalyzer']['filters']);
+
+    // Send the config to Solr.
+    $command_json = '{ "add-field-type": ' . Json::encode($field_type_definition) . '}';
     $command_json = str_replace('"'.$field_type_name.'"', '"'.$solr_field_type_name.'"', $command_json);
     return $this->solrRestPost('schema', $command_json, $index);
   }
 
+  /**
+   *  (temporarily) apply tweaks to the config until Solr's
+   *  Managed* classes support all parameters
+   *
+   * @param array $filters The filters to act upon.
+   */
+  protected function tweakFilterConfig(&$filters) {
+    foreach ($filters as &$filter) {
+      if ($filter['class'] == 'solr.ManagedSynonymFilterFactory') {
+        unset($filter['expand']);
+        unset($filter['ignoreCase']);
+      }
+      if ($filter['class'] == 'solr.ManagedStopFilterFactory') {
+        unset($filter['ignoreCase']);
+      }
+    }
+  }
+
+  /**
+   * Sends a REST GET request and return the result.
+   * @param string $path The path to append to the base URI
+   * @param IndexInterface $index The index whose server the request should be sent to
+   * @return string The decoded response
+   */
   protected function solrRestGet($path, IndexInterface $index) {
     $uri = $this->solr->getEndpoint()->getBaseUri() . $path;
     $client = \Drupal::service('http_client');
     $result = $client->get($uri, ['Accept' => 'application/json']);
     $output = Json::decode($result->getBody());
+    // \Drupal::logger('apachesolr_multilingual')->info(print_r($output, true));
+    if (!empty($output['errors'])) {
+      throw new SearchApiException('Error trying to send a REST GET request to "$uri"' .
+          "\nError message(s):" . print_r($output['errors'], TRUE));
+    }
     return $output;
   }
 
+  /**
+   * Sends a REST POST request and return the result.
+   * @param string $path The path to append to the base URI
+   * @param string $command_json The JSON-encoded data.
+   * @param IndexInterface $index The index whose server the request should be sent to
+   * @return string The decoded response
+   * @see https://cwiki.apache.org/confluence/display/solr/Schema+API
+   */
   protected function solrRestPost($path, $command_json, IndexInterface $index) {
     $uri = $this->solr->getEndpoint()->getBaseUri() . $path;
     /** @var \GuzzleHttp\Client $client */
@@ -286,7 +331,11 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
       ],
     ]);
     $output = Json::decode($result->getBody());
-    \Drupal::logger('apachesolr_multilingual')->info(print_r($output, true));
+    // \Drupal::logger('apachesolr_multilingual')->info(print_r($output, true));
+    if (!empty($output['errors'])) {
+      throw new SearchApiException('Error trying to send the following JSON to Solr (REST POST request to "$uri"): ' . $command_json .
+          "\nError message(s):" . print_r($output['errors'], TRUE));
+    }
     return $output;
   }
 
