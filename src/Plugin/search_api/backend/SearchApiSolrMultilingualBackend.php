@@ -191,9 +191,9 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
     foreach ($filter_queries as $filter_query) {
       $query_string = $filter_query->getQuery();
       foreach ([$single_field_names['search_api_language'], $multiple_field_names['search_api_language']] as $field_name) {
-        if (preg_match_all('@' . $field_name . ':(.+?)\b@', $query_string, $matches)) {
-          foreach ($matches as $match) {
-            $language_ids[] = trim($match[1], '"');
+        if (preg_match_all('@' . preg_quote($field_name, '@') . ':(.+?)\b@', $query_string, $matches)) {
+          foreach ($matches[1] as $match) {
+            $language_ids[] = trim($match, '"');
           }
         }
       }
