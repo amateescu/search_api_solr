@@ -258,14 +258,14 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
   }
 
   protected function createSolrDynamicField($solr_field_name, $solr_field_type_name, IndexInterface $index) {
-    $command_json = '{
-      "add-dynamic-field":{
-        "name":   "' . $solr_field_name . '",
-        "type":   "' . $solr_field_type_name . '",
-        "stored": true
-      }
-    }';
-    return $this->solrRestPost('schema', $command_json, $index);
+    $command = ['add-dynamic-field' => [
+      'name' => $solr_field_name,
+      'type' => $solr_field_type_name,
+      'stored' => TRUE,
+      'indexed' => TRUE,
+      'multiValued' => strpos($solr_field_name, 'tm_') === 0 ? TRUE : FALSE,
+    ]];
+    return $this->solrRestPost('schema', Json::encode($command), $index);
   }
 
   protected function createSolrMultilingualFieldType($field_type_name, $solr_field_type_name, IndexInterface $index) {
