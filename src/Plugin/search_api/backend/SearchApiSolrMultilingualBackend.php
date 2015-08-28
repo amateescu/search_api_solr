@@ -43,7 +43,7 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
   protected function preQuery(Query $solarium_query, QueryInterface $query) {
     parent::preQuery($solarium_query, $query);
 
-    $language_ids = $this->getLanguageIdFiltersFromQuery($solarium_query, $query);
+    $language_ids = $this->getLanguageIdFiltersFromQuery($solarium_query, $query, TRUE);
 
     // @todo the configuration doesn't exist yet.
     $this->configuration['asm_limit_search_to_content_language'] = TRUE;
@@ -82,13 +82,9 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
 
         $edismax->setQueryFields($query_fields);
 
-        $language_filters = [];
-        foreach ($language_ids as $language_id) {
-          $language_filters[] = '+' . $single_field_names['search_api_language'] . ':' . $language_id;
-        }
         $fq = new FilterQuery();
         $fq->setKey('asm_language_filter');
-        $fq->setQuery(implode(' ', $language_filters));
+        $fq->setQuery($single_field_names['search_api_language'] . ':("' . implode('" OR "', $language_ids) . '")');
         $solarium_query->addFilterQuery($fq);
       }
     }
@@ -183,17 +179,20 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
     $this->ensureAllMultilingualFieldsExist($field_name_map_per_language, $index);
   }
 
-  protected function getLanguageIdFiltersFromQuery(Query $solarium_query, QueryInterface $query) {
+  protected function getLanguageIdFiltersFromQuery(Query $solarium_query, QueryInterface $query, $remove = FALSE) {
     $language_ids = [];
     $multiple_field_names = $this->getFieldNames($query->getIndex());
     $single_field_names = $this->getFieldNames($query->getIndex(), TRUE);
     $filter_queries = $solarium_query->getFilterQueries();
-    foreach ($filter_queries as $filter_query) {
+    foreach ($filter_queries as $filter_query_name => $filter_query) {
       $query_string = $filter_query->getQuery();
       foreach ([$single_field_names['search_api_language'], $multiple_field_names['search_api_language']] as $field_name) {
-        if (preg_match_all('@' . preg_quote($field_name, '@') . ':(.+?)\b@', $query_string, $matches)) {
+        if (preg_match_all('@' . preg_quote($field_name, '@') . ':"(.+?)"@', $query_string, $matches)) {
           foreach ($matches[1] as $match) {
             $language_ids[] = trim($match, '"');
+          }
+          if ($remove) {
+            $solarium_query->removeFilterQuery($filter_query_name);
           }
         }
       }
