@@ -983,18 +983,11 @@ class SearchApiSolrBackend extends BackendPluginBase {
       );
 
       // Add the names of any fields configured on the index.
-      $fields = $index->getOption('fields', array());
+      $fields = $index->getFields();
       foreach ($fields as $key => $field) {
         // Generate a field name; this corresponds with naming conventions in
         // our schema.xml
-        $type = $field['type'];
-
-        // Use the real type of the field if the server supports this type.
-        if (isset($field['real_type'])) {
-          if ($this->supportsFeature('search_api_data_type_' . $field['real_type'])) {
-            $type = $field['real_type'];
-          }
-        }
+        $type = $field->getType();
 
         $type_info = SearchApiSolrUtility::getDataTypeInfo($type);
         $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
