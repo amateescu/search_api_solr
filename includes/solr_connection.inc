@@ -214,7 +214,7 @@ class SearchApiSolrConnection implements SearchApiSolrConnectionInterface {
     );
     $this->options = $options;
 
-    $path = '/' . trim($options['path'], '/') . '/';
+    $path = !empty($options['path']) ? '/' . trim($options['path'], '/') . '/' : '/';
     $this->base_url = $options['scheme'] . '://' . $options['host'] . ':' . $options['port'] . $path;
 
     // Set HTTP Basic Authentication parameter, if login data was set.
