@@ -1,4 +1,4 @@
-Search API Solr search 1.x, dev (xx/xx/xxxx):
+Search API Solr Search 1.x, dev (xxxx-xx-xx):
 ---------------------------------------------
 - Starting the 8.x port.
 - @todo Finish https://github.com/basdenooijer/solarium/pull/155 and start a new
