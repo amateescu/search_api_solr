@@ -763,7 +763,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     // Set searched fields.
     $options = $query->getOptions();
-    $search_fields = $query->getFulltextFields();
+    $search_fields = $this->getQueryFulltextFields($query);
     // Get the index fields to be able to retrieve boosts.
     $index_fields = $index->getFields();
     $query_fields = array();
