@@ -342,7 +342,10 @@ class SolrHelper {
     }
   }
 
-  public function setMoreLikeThis(Query &$solarium_query, QueryInterface $query, $mlt_options = array(), $field_options = array(), $fields) {
+  /**
+   * Changes the query to a "More Like This"  query.
+   */
+  public function setMoreLikeThis(Query &$solarium_query, QueryInterface $query, $mlt_options = array(), $index_fields = array(), $fields) {
     $solarium_query = $this->solr->createMoreLikeThis(array('handler' => 'select'));
     // The fields to look for similarities in.
     if (empty($mlt_options['fields'])) {
@@ -361,7 +364,7 @@ class SolrHelper {
 
       $mlt_fl[] = $fields[$mlt_field];
       // For non-text fields, set minimum word length to 0.
-      if (isset($field_options[$mlt_field]['type']) && !SearchApiUtility::isTextType($field_options[$mlt_field]['type'])) {
+      if (isset($index_fields[$mlt_field]) && !SearchApiUtility::isTextType($index_fields[$mlt_field]->getType())) {
         $solarium_query->addParam('f.' . $fields[$mlt_field] . '.mlt.minwl', 0);
       }
     }

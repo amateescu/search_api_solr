@@ -7,15 +7,16 @@
 
 namespace Drupal\search_api_solr\Plugin\search_api\backend;
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Url;
+use Drupal\search_api\Item\FieldInterface;
+use Drupal\search_api\Query\ConditionInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
-use Drupal\search_api\Query\FilterInterface;
+use Drupal\search_api\Query\ConditionGroupInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Query\ResultSetInterface;
@@ -25,6 +26,7 @@ use Drupal\search_api_solr\Solr\SolrHelper;
 use Solarium\Client;
 use Solarium\Core\Client\Request;
 use Solarium\Core\Query\Helper;
+use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\QueryType\Select\Query\Query;
 use Solarium\Exception\ExceptionInterface;
 use Solarium\Exception\HttpException;
@@ -494,10 +496,10 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
             $pending_msg = $stats_summary['@pending_docs'] ? $this->t('(@pending_docs sent but not yet processed)', $stats_summary) : '';
             $index_msg = $stats_summary['@index_size'] ? $this->t('(@index_size on disk)', $stats_summary) : '';
-            $indexed_message = $this->t('@num items !pending !index_msg', array(
+            $indexed_message = $this->t('@num items @pending @index_msg', array(
               '@num' => $data['index']['numDocs'],
-              '!pending' => $pending_msg,
-              '!index_msg' => $index_msg,
+              '@pending' => $pending_msg,
+              '@index_msg' => $index_msg,
             ));
             $info[] = array(
               'label' => $this->t('Indexed'),
@@ -656,7 +658,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       return $ret;
     }
     catch (SearchApiException $e) {
-      watchdog_exception('search_api_solr', $e, "%type while indexing: !message in %function (line %line of %file).");
+      watchdog_exception('search_api_solr', $e, "%type while indexing: @message in %function (line %line of %file).");
     }
     return array();
   }
@@ -778,8 +780,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
     // Handle More Like This requests
     $mlt_options = $query->getOption('search_api_mlt');
     if ($mlt_options) {
-      $field_options = $index->getOption('fields', array());
-      $this->getSolrHelper()->setMoreLikeThis($solarium_query, $query, $mlt_options, $field_options, $field_names);
+      $index_fields = $index->getFields();
+      $this->getSolrHelper()->setMoreLikeThis($solarium_query, $query, $mlt_options, $index_fields, $field_names);
 
       // Override the search key by setting it to the solr document id
       // we want to compare it with
@@ -791,9 +793,9 @@ class SearchApiSolrBackend extends BackendPluginBase {
     }
 
     // Set basic filters.
-    $filter_queries = $this->createFilterQueries($query->getFilter(), $field_names, $index->getOption('fields'));
-    foreach ($filter_queries as $id => $filter_query) {
-      $solarium_query->createFilterQuery('filters_' . $id)->setQuery($filter_query);
+    $conditions_queries = $this->createFilterQueries($query->getConditionGroup(), $field_names, $index->getFields());
+    foreach ($conditions_queries as $id => $conditions_query) {
+      $solarium_query->createFilterQuery('filters_' . $id)->setQuery($conditions_query);
     }
 
     // Set the Index filter
@@ -983,19 +985,11 @@ class SearchApiSolrBackend extends BackendPluginBase {
       );
 
       // Add the names of any fields configured on the index.
-      $fields = $index->getOption('fields', array());
+      $fields = $index->getFields();
       foreach ($fields as $key => $field) {
         // Generate a field name; this corresponds with naming conventions in
         // our schema.xml
-        $type = $field['type'];
-
-        // Use the real type of the field if the server supports this type.
-        if (isset($field['real_type'])) {
-          if ($this->supportsFeature('search_api_data_type_' . $field['real_type'])) {
-            $type = $field['real_type'];
-          }
-        }
-
+        $type = $field->getType();
         $type_info = SearchApiSolrUtility::getDataTypeInfo($type);
         $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
         $pref .= ($single_value_name) ? 's' : 'm';
@@ -1110,7 +1104,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
   protected function extractResults(QueryInterface $query, Result $result) {
     $index = $query->getIndex();
     $field_names = $this->getFieldNames($index);
-    $field_options = $index->getOption('fields', array());
+    $fields = $index->getFields();
 
     // Set up the results array.
     $result_set = SearchApiUtility::createSearchResultSet($query);
@@ -1163,8 +1157,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
         if (isset($doc_fields[$solr_property])) {
           // Date fields need some special treatment to become valid date values
           // (i.e., timestamps) again.
-          if (isset($field_options[$search_api_property]['type'])
-              && $field_options[$search_api_property]['type'] == 'date'
+          if (isset($fields[$search_api_property])
+              && $fields[$search_api_property]->getType() == 'date'
               && preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $doc_fields[$solr_property][0])) {
             $doc_fields[$solr_property][0] = strtotime($doc_fields[$solr_property][0]);
           }
@@ -1214,7 +1208,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     $index = $query->getIndex();
     $field_names = $this->getFieldNames($index);
-    $field_options = $index->getOption('fields', array());
+    $fields = $index->getFields();
 
     $extract_facets = $query->getOption('search_api_facets', array());
 
@@ -1243,7 +1237,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
           elseif (isset($terms[''])) {
             unset($terms['']);
           }
-          $type = isset($field_options[$info['field']]['type']) ? $field_options[$info['field']]['type'] : 'string';
+          $type = isset($fields[$info['field']]) ? $fields[$info['field']]->getType() : 'string';
           foreach ($terms as $term => $count) {
             if ($count >= $min_count) {
               if ($term === '') {
@@ -1306,21 +1300,23 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * Transforms a query filter into a flat array of Solr filter queries, using
    * the field names in $field_names.
    */
-  protected function createFilterQueries(FilterInterface $filter, array $solr_fields, array $field_names) {
-    $or = $filter->getConjunction() == 'OR';
+  protected function createFilterQueries(ConditionGroupInterface $conditions, array $solr_fields, array $index_fields) {
+    $or = $conditions->getConjunction() == 'OR';
     $fq = array();
-    foreach ($filter->getFilters() as $f) {
-      if (is_array($f)) {
-        if (!isset($field_names[$f[0]])) {
-          throw new SearchApiException(t('Filter term on unknown or unindexed field @field.', array('@field' => $f[0])));
+    foreach ($conditions->getConditions() as $condition) {
+      if ($condition instanceof ConditionInterface) {
+        $field = $condition->getField();
+        if (!isset($index_fields[$field])) {
+          throw new SearchApiException(t('Filter term on unknown or unindexed field @field.', array('@field' => $field)));
         }
-        if ($f[1] !== '') {
-          $fq[] = $this->createFilterQuery($solr_fields[$f[0]], $f[1], $f[2], $field_names[$f[0]]);
+        $value = $condition->getValue();
+        if ($value !== '') {
+          $fq[] = $this->createFilterQuery($solr_fields[$field], $value, $condition->getOperator(), $index_fields[$field]);
         }
       }
       else {
-        $q = $this->createFilterQueries($f, $solr_fields, $field_names);
-        if ($filter->getConjunction() != $f->getConjunction()) {
+        $q = $this->createFilterQueries($condition, $solr_fields, $index_fields);
+        if ($conditions->getConjunction() != $condition->getConjunction()) {
           // $or == TRUE means the nested filter has conjunction AND, and vice versa
           $sep = $or ? ' ' : ' OR ';
           $fq[] = count($q) == 1 ? reset($q) : '((' . implode(')' . $sep . '(', $q) . '))';
@@ -1337,13 +1333,13 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * Create a single search query string according to the given field, value
    * and operator.
    */
-  protected function createFilterQuery($field, $value, $operator, $field_info) {
+  protected function createFilterQuery($field, $value, $operator, FieldInterface $index_field) {
     $field = SearchApiSolrUtility::escapeFieldName($field);
     if ($value === NULL) {
       return ($operator == '=' ? '*:* AND -' : '') . "$field:[* TO *]";
     }
     $value = trim($value);
-    $value = $this->formatFilterValue($value, $field_info['type']);
+    $value = $this->formatFilterValue($value, $index_field->getType());
     switch ($operator) {
       case '<>':
         return "*:* AND -($field:$value)";
@@ -1430,20 +1426,20 @@ class SearchApiSolrBackend extends BackendPluginBase {
     // Tag filters of fields with "OR" facets.
     foreach ($taggedFields as $field => $tag) {
       $regex = '#(?<![^( ])' . preg_quote($field, '#') . ':#';
-      foreach ($fq as $i => $filter) {
+      foreach ($fq as $i => $conditions) {
         // Solr can't handle two tags on the same filter, so we don't add two.
         // Another option here would even be to remove the other tag, too,
         // since we can be pretty sure that this filter does not originate from
         // a facet – however, wrong results would still be possible, and this is
         // definitely an edge case, so don't bother.
-        if (preg_match($regex, $filter) && substr($filter, 0, 6) != '{!tag=') {
-          $fq[$i] = $tag . $filter;
+        if (preg_match($regex, $conditions) && substr($conditions, 0, 6) != '{!tag=') {
+          $fq[$i] = $tag . $conditions;
         }
       }
     }
 
-    foreach ($fq as $key => $filter_query) {
-      $solarium_query->createFilterQuery('facets_' . $key)->setQuery($filter_query);
+    foreach ($fq as $key => $conditions_query) {
+      $solarium_query->createFilterQuery('facets_' . $key)->setQuery($conditions_query);
     }
   }
 

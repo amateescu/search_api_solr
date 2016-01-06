@@ -94,10 +94,7 @@ class SearchApiSolrTest extends BackendTest {
    * {@inheritdoc}
    */
   protected function indexItems($index_id) {
-    /** @var \Drupal\search_api\IndexInterface $index */
-    $index = Index::load($index_id);
-    $index->setOption('index_directly', TRUE);
-    $index_status = $index->index();
+    $index_status = parent::indexItems($index_id);
     sleep(2);
     return $index_status;
   }
