@@ -5,7 +5,7 @@
  * Contains \Drupal\search_api_solr\Tests\SearchApiSolrTest.
  */
 
-namespace Drupal\Tests\Kernel\search_api_solr;
+namespace Drupal\Tests\search_api_solr\Kernel;
 
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
