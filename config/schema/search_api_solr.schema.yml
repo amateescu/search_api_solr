@@ -1,7 +1,7 @@
 # Schema for configuration files of the Search API Solr module.
 
 search_api_solr.settings:
-  type: mapping
+  type: config_object
   label: 'Search API Solr settings'
   mapping:
     last_optimize:

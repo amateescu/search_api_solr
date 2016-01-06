@@ -5,12 +5,12 @@
  * Contains \Drupal\search_api_solr\Tests\SearchApiSolrTest.
  */
 
-namespace Drupal\search_api_solr\Tests;
+namespace Drupal\Tests\Kernel\search_api_solr;
 
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Query\ResultSetInterface;
-use Drupal\search_api_db\Tests\BackendTest;
+use Drupal\Tests\search_api_db\Kernel\BackendTest;
 
 /**
  * Tests index and search capabilities using the Solr search backend.

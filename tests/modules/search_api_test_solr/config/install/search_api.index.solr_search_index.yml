@@ -1,30 +1,59 @@
 id: solr_search_index
 name: 'Test index'
-description: 'An index used for testing.'
+description: 'An index used for testing'
 read_only: false
+fields:
+  id:
+    label: ID
+    type: integer
+    datasource_id: 'entity:entity_test'
+    property_path: id
+  name:
+    label: Name
+    type: text
+    datasource_id: 'entity:entity_test'
+    property_path: name
+    boost: 5.0
+  body:
+    label: Body
+    type: text
+    datasource_id: 'entity:entity_test'
+    property_path: body
+  type:
+    label: Type
+    type: string
+    datasource_id: 'entity:entity_test'
+    property_path: type
+  keywords:
+    label: Keywords
+    type: string
+    datasource_id: 'entity:entity_test'
+    property_path: keywords
+  category:
+    label: Category
+    type: string
+    datasource_id: 'entity:entity_test'
+    property_path: category
+  search_api_language:
+    label: 'Item language'
+    type: string
+    property_path: search_api_language
+    index_locked: true
+    type_locked: true
+processors:
+  add_url:
+    processor_id: add_url
+    weights:
+      preprocess_index: -30
+    settings: {  }
+  language:
+    processor_id: language
+    weights:
+      preprocess_index: -50
+    settings: {  }
 options:
   cron_limit: -1
   index_directly: false
-  fields:
-    'entity:entity_test/id':
-      type: integer
-    'entity:entity_test/name':
-      type: text
-      boost: 5.0
-    'entity:entity_test/body':
-      type: text
-    'entity:entity_test/type':
-      type: string
-    'entity:entity_test/keywords':
-      type: string
-    search_api_language:
-      type: string
-  processors:
-    language:
-      processor_id: language
-      weights:
-        preprocess_index: -50
-      settings: {  }
 datasources:
   - 'entity:entity_test'
 datasource_configs: {  }
@@ -37,10 +66,13 @@ dependencies:
   config:
     - field.field.entity_test.article.body
     - field.field.entity_test.article.keywords
+    - field.field.entity_test.article.category
     - field.field.entity_test.item.body
     - field.field.entity_test.item.keywords
+    - field.field.entity_test.item.category
     - field.storage.entity_test.body
     - field.storage.entity_test.keywords
+    - field.storage.entity_test.category
     - search_api.server.solr_search_server
   module:
     - entity_test
