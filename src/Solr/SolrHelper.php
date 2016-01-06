@@ -15,6 +15,9 @@ use Solarium\Core\Query\Helper as SolariumHelper;
 use Solarium\QueryType\Select\Query\Query;
 use Drupal\search_api\Utility as SearchApiUtility;
 
+/**
+ * Contains helper methods for working with Solr.
+ */
 class SolrHelper {
 
   /**
@@ -213,7 +216,7 @@ class SolrHelper {
       // @todo Finish https://github.com/basdenooijer/solarium/pull/155 and stop
       // abusing the ping query for this.
       $query = $this->solr->createPing(array('handler' => 'admin/system'));
-      $this->systemInfo = $this->solr->ping($query)->getData();
+      $this->systemInfo = $this->solr->execute($query)->getData();
     }
 
     return $this->systemInfo;
@@ -229,7 +232,7 @@ class SolrHelper {
     // @todo Write a patch for Solarium to have a separate Luke query and stop
     // abusing the ping query for this.
     $query = $this->solr->createPing(array('handler' => 'admin/luke'));
-    return $this->solr->ping($query)->getData();
+    return $this->solr->execute($query)->getData();
   }
 
   /**
@@ -259,7 +262,7 @@ class SolrHelper {
     else {
       $query->setHandler('admin/stats.jsp');
     }
-    $stats = $this->solr->ping($query)->getData();
+    $stats = $this->solr->execute($query)->getData();
     if (!empty($stats)) {
       if (version_compare($solr_version, '3', '<=')) {
         // @todo Needs to be updated by someone who has a Solr 3.x setup.
@@ -371,6 +374,7 @@ class SolrHelper {
 
     //$solarium_query->setHandler('mlt');
     $solarium_query->setMltFields($mlt_fl);
+    /** @var \Solarium\Plugin\CustomizeRequest\CustomizeRequest $customizer */
     $customizer = $this->solr->getPlugin('customizerequest');
     $customizer->createCustomization('id')
       ->setType('param')
@@ -381,6 +385,9 @@ class SolrHelper {
     $solarium_query->setMinimumTermFrequency(1);
   }
 
+  /**
+   * Adds spatial features to the search query.
+   */
   public function setSpatial(Query $solarium_query, QueryInterface $query, $spatial_options = array(), $field_names) {
     foreach ($spatial_options as $i => $spatial) {
       // reset radius for each option
@@ -438,13 +445,7 @@ class SolrHelper {
       $sorts = $solarium_query->getSorts();
       // Change sort on the field, if set (and not already changed).
       if (isset($sorts[$spatial['field']]) && substr($sorts[$spatial['field']], 0, strlen($field)) === $field) {
-        if (strpos($field, ':') === FALSE) {
-          $sorts[$spatial['field']] = str_replace($field, "geodist($field,$point)", $sorts[$spatial['field']]);
-        }
-        else {
-          $link = \Drupal::l(t('edit server'), Url::fromRoute('entity.search_api_server.edit_form', array('search_api_server' => $this->server->id())));
-          \Drupal::logger('search_api_solr')->warning('Location sort on field @field had to be ignored because unclean field identifiers are used.', array('@field' => $spatial['field'], 'link' => $link));
-        }
+        $sorts[$spatial['field']] = str_replace($field, "geodist($field,$point)", $sorts[$spatial['field']]);
       }
 
       // Change the facet parameters for spatial fields to return distance

@@ -136,8 +136,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
     $this->moduleHandler = $module_handler;
     $this->searchApiSolrSettings = $search_api_solr_settings;
     $this->languageManager = $language_manager;
-    $solrHelper = new SolrHelper($this->configuration + array('key' => $this->server->id()));
-    $this->setSolrHelper($solrHelper);
+    $solr_helper = new SolrHelper($this->configuration + array('key' => $this->server->id()));
+    $this->setSolrHelper($solr_helper);
   }
 
   /**
@@ -645,13 +645,14 @@ class SearchApiSolrBackend extends BackendPluginBase {
       // This allows us to return to Drupal and let Solr handle what it
       // needs to handle
       // @see http://wiki.apache.org/solr/NearRealtimeSearch
+      /** @var \Solarium\Plugin\CustomizeRequest\CustomizeRequest $customizer */
       $customizer = $this->solr->getPlugin('customizerequest');
       $customizer->createCustomization('id')
         ->setType('param')
         ->setName('commitWithin')
         ->setValue('1000');
 
-      $this->solr->update($this->getUpdateQuery());
+      $this->solr->execute($this->getUpdateQuery());
 
       // Reset the Update query for further calls.
       static::$updateQuery = NULL;
@@ -682,13 +683,14 @@ class SearchApiSolrBackend extends BackendPluginBase {
       // This allows us to return to Drupal and let Solr handle what it
       // needs to handle
       // @see http://wiki.apache.org/solr/NearRealtimeSearch
+      /** @var \Solarium\Plugin\CustomizeRequest\CustomizeRequest $customizer */
       $customizer = $this->solr->getPlugin('customizerequest');
       $customizer->createCustomization('id')
         ->setType('param')
         ->setName('commitWithin')
         ->setValue('1000');
 
-      $this->solr->update($this->getUpdateQuery());
+      $this->solr->execute($this->getUpdateQuery());
     }
     catch (ExceptionInterface $e) {
       throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
@@ -723,6 +725,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     // This allows us to return to Drupal and let Solr handle what it
     // needs to handle
     // @see http://wiki.apache.org/solr/NearRealtimeSearch
+    /** @var \Solarium\Plugin\CustomizeRequest\CustomizeRequest $customizer */
     $customizer = $this->solr->getPlugin('customizerequest');
     $customizer->createCustomization('id')
       ->setType('param')
@@ -750,8 +753,6 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     // Instantiate a Solarium select query.
     $solarium_query = $this->solr->createSelect();
-    // get the dismax component and set a boost query
-    $edismax = $solarium_query->getEDisMax();
 
     // Extract keys.
     $keys = $query->getKeys();
@@ -894,8 +895,10 @@ class SearchApiSolrBackend extends BackendPluginBase {
       }
 
       // Extract facets.
-      if ($facets = $this->extractFacets($query, $resultset)) {
-        $results->setExtraData('search_api_facets', $facets);
+      if ($resultset instanceof Result) {
+        if ($facets = $this->extractFacets($query, $resultset)) {
+          $results->setExtraData('search_api_facets', $facets);
+        }
       }
 
       $this->moduleHandler->alter('search_api_solr_search_results', $results, $query, $resultset);
@@ -916,7 +919,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
   }
 
   /**
-   * @param Config $solrHelper
+   * @param \Drupal\search_api_solr\Solr\SolrHelper $solrHelper
    */
   public function setSolrHelper($solrHelper) {
     $this->solrHelper = $solrHelper;
@@ -1095,13 +1098,13 @@ class SearchApiSolrBackend extends BackendPluginBase {
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The Search API query object.
-   * @param \Solarium\QueryType\Select\Result\Result $resultset
+   * @param \Solarium\Core\Query\Result\ResultInterface $result
    *   A Solarium select response object.
    *
    * @return \Drupal\search_api\Query\ResultSetInterface
    *   A result set object.
    */
-  protected function extractResults(QueryInterface $query, Result $result) {
+  protected function extractResults(QueryInterface $query, ResultInterface $result) {
     $index = $query->getIndex();
     $field_names = $this->getFieldNames($index);
     $fields = $index->getFields();
@@ -1112,7 +1115,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     // In some rare cases (e.g., MLT query with nonexistent ID) the response
     // will be NULL.
-    if (!$result->getResponse() && !$result->getGrouping()) {
+    $is_grouping = $result instanceof Result && $result->getGrouping();
+    if (!$result->getResponse() && !$is_grouping) {
       $result_set->setResultCount(0);
       return $result_set;
     }
@@ -1120,7 +1124,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
     // If field collapsing has been enabled for this query, we need to process
     // the results differently.
     $grouping = $query->getOption('search_api_grouping');
-    if (!empty($grouping['use_grouping']) && $result->getGrouping()) {
+    $docs = array();
+    if (!empty($grouping['use_grouping']) && $is_grouping) {
 //      $docs = array();
 //      $result_set['result count'] = 0;
 //      foreach ($grouping['fields'] as $field) {
@@ -1140,6 +1145,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
     }
 
     // Add each search result to the results array.
+    /** @var \Solarium\QueryType\Select\Result\Document $doc */
     foreach ($docs as $doc) {
       $doc_fields = $doc->getFields();
 
@@ -1382,7 +1388,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
   protected function setFacets(array $facets, array $field_names, Query $solarium_query) {
     $fq = array();
     if (!$facets) {
-      return array();
+      return;
     }
     $facet_set = $solarium_query->getFacetSet();
     $facet_set->setSort('count');
@@ -1709,7 +1715,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
 
     try {
       $start = microtime(TRUE);
-      $result = $this->solr->ping($query);
+      $result = $this->solr->execute($query);
       if ($result->getResponse()->getStatusCode() == 200) {
         // Add 1 µs to the ping time so we never return 0.
         return (microtime(TRUE) - $start) + 1E-6;
@@ -1772,7 +1778,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       $query->addParam('file', $file);
     }
 
-    return $this->solr->ping($query)->getResponse();
+    return $this->solr->execute($query)->getResponse();
   }
 
   /**
@@ -1815,7 +1821,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
   /**
    * Returns a Solarium query helper object.
    *
-   * @param \Solarium\Core\Query\Query|null $query
+   * @param \Solarium\QueryType\Select\Query\Query|null $query
    *   (optional) A Solarium query object.
    *
    * @return \Solarium\Core\Query\Helper
