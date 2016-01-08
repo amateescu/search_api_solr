@@ -18,6 +18,7 @@ use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Drupal\search_api\SearchApiException;
 use Solarium\Core\Client\Response;
+use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\QueryType\Select\Query\FilterQuery;
 use Solarium\QueryType\Select\Query\Query;
 use Solarium\QueryType\Select\Result\Result;
@@ -93,7 +94,7 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
   /**
    * @inheritdoc
    */
-  protected function extractResults(QueryInterface $query, Result $result) {
+  protected function extractResults(QueryInterface $query, ResultInterface $result) {
     if ($this->configuration['retrieve_data']) {
       $language_ids = $this->getLanguageIdFiltersFromQuery($result->getQuery(), $query);
       $index = $query->getIndex();
