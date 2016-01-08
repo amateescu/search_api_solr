@@ -411,6 +411,10 @@ class SearchApiSolrBackend extends BackendPluginBase {
       $form_state->setValue($key, $value);
     }
 
+    // The server description is a #type item element, which means it has a
+    // value, do not save it.
+    $form_state->unsetValue('server_description');
+
     parent::submitConfigurationForm($form, $form_state);
   }
 
