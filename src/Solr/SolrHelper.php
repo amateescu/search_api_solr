@@ -435,10 +435,10 @@ class SolrHelper {
       // doesn't contains any colons.
       if (isset($min_radius) && strpos($field, ':') === FALSE) {
         $upper = isset($radius) ? " u=$radius" : '';
-        $solarium_query->createFilterQuery()->setQuery("{!frange l=$min_radius$upper}geodist($field,$point)");
+        $solarium_query->createFilterQuery($field)->setQuery("{!frange l=$min_radius$upper}geodist($field,$point)");
       }
       elseif (isset($radius)) {
-        $solarium_query->createFilterQuery()->setQuery("{!$spatial_method pt=$point sfield=$field d=$radius}");
+        $solarium_query->createFilterQuery($field)->setQuery("{!$spatial_method pt=$point sfield=$field d=$radius}");
       }
 
       // @todo: Check if this object returns the correct value
