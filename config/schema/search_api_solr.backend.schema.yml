@@ -26,12 +26,9 @@ search_api.backend.plugin.search_api_solr:
     skip_schema_check:
       type: boolean
       label: 'Skip schema verification'
-    clean_ids:
-      type: boolean
-      label: 'Switch to clean field identifiers'
     site_hash:
       type: boolean
-      label: 'Drupal site hash that can be used to identify the content in Solr.'
+      label: 'Restrict searches to current site'
     http:
       type: mapping
       label: 'Http Configuration'

@@ -102,19 +102,6 @@ classic preprocessing tasks. Enabling the HTML filter can be useful, though, as
 the default config files included in this module don't handle stripping out HTML
 tags.
 
-Clean field identifiers:
-  If your Solr server was created in a module version prior to 1.2, you will get
-  the option to switch the server to "Clean field identifiers" (which is default
-  for all new servers). This will change the Solr field names used for all
-  fields whose Search API identifiers contain a colon (i.e., all nested fields)
-  to support some advanced functionality, like sorting by distance, for which
-  Solr is buggy when using field names with colons.
-  The only downside of this change is that the data in Solr for these fields
-  will become invalid, so all indexes on the server which contain such fields
-  will be scheduled for re-indexing. (If you don't want to search on incomplete
-  data until the re-indexing is finished, you can additionally manually clear
-  the indexes, on their Status tabs, to prevent this.)
-
 Hidden variables
 ----------------
 
@@ -154,8 +141,8 @@ Hidden variables
   A unique hash specific to the local site, created the first time it is needed.
   Only change this if you want to display another server's results and you know
   what you are doing. Old indexed items will be lost when the hash is changed
-  and all items will have to be reindexed. Can only contain alphanumeric
-  characters.
+  (without being automatically deleted from the Solr server!) and all items will
+  have to be reindexed. Should only contain alphanumeric characters.
 
 [9] http://wiki.apache.org/solr/UpdateXmlMessages#A.22commit.22_and_.22optimize.22
 

@@ -3,7 +3,6 @@ name: 'Solr search server'
 description: 'A server used for testing.'
 backend: search_api_solr
 backend_config:
-  clean_ids: true
   site_hash: true
   scheme: http
   host: localhost
