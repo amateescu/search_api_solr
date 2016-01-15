@@ -566,7 +566,11 @@ class SearchApiSolrBackend extends BackendPluginBase {
         if (isset($languages[$lang])) {
           $url_options['language'] = $languages[$lang];
         }
-        $base_urls[$lang] = Url::fromRoute('<front>', array(), $url_options)->toString();
+        // An exception is thrown if this is called during a non-HTML response
+        // like REST or a redirect without collecting metadata. Avoid that by
+        // collecting and discarding it.
+        // See https://www.drupal.org/node/2638686.
+        $base_urls[$lang] = Url::fromRoute('<front>', array(), $url_options)->toString(TRUE)->getGeneratedUrl();
       }
       $doc->setField('site', $base_urls[$lang]);
 
