@@ -621,7 +621,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       static::$updateQuery = NULL;
       return $ret;
     }
-    catch (SearchApiException $e) {
+    catch (\Exception $e) {
       watchdog_exception('search_api_solr', $e, "%type while indexing: @message in %function (line %line of %file).");
     }
     return array();
