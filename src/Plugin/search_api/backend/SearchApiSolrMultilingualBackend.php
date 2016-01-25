@@ -80,14 +80,13 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
             $query_fields
           );
         }
-
         $edismax->setQueryFields($query_fields);
-
-        $fq = new FilterQuery();
-        $fq->setKey('asm_language_filter');
-        $fq->setQuery($single_field_names['search_api_language'] . ':("' . implode('" OR "', $language_ids) . '")');
-        $solarium_query->addFilterQuery($fq);
       }
+
+      $fq = new FilterQuery();
+      $fq->setKey('asm_language_filter');
+      $fq->setQuery($single_field_names['search_api_language'] . ':("' . implode('" OR "', $language_ids) . '")');
+      $solarium_query->addFilterQuery($fq);
     }
   }
 
