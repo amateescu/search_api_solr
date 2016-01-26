@@ -24,6 +24,13 @@ use Solarium\QueryType\Select\Query\Query;
 use Solarium\QueryType\Select\Result\Result;
 
 /**
+ * The name of the language field might be change in future releases of
+ * search_api. @see https://www.drupal.org/node/2641392 for details.
+ * Therefor we define a constant here that could be easily changed.
+ * /
+define('SEARCH_API_LANGUAGE_FIELD_NAME', 'search_api_language');
+
+/**
  * @SearchApiBackend(
  *   id = "search_api_solr_multilingual",
  *   label = @Translation("Solr Multilingual"),
@@ -34,6 +41,9 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
 
   /**
    * Modify the query before it is sent to solr.
+   *
+   * Replace all language unspecific fulltext query fields by language specific
+   * ones and add a language filter if required.
    *
    * @param \Solarium\QueryType\Select\Query\Query $solarium_query
    *   The Solarium select query object.
@@ -49,8 +59,15 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
     // @todo the configuration doesn't exist yet.
     $this->configuration['asm_limit_search_to_content_language'] = TRUE;
 
-    if (empty($language_ids) && $this->configuration['asm_limit_search_to_content_language']) {
-      $language_ids[] = \Drupal::languageManager()->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)->getId();
+    if (empty($language_ids)) {
+      if ($this->configuration['asm_limit_search_to_content_language']) {
+        $language_ids[] = \Drupal::languageManager()->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)->getId();
+      }
+      else {
+        foreach (\Drupal::languageManager()->getLangauges() as $language) {
+          $language_ids[] = $language->getId();
+        }
+      }
     }
 
     if (!empty($language_ids)) {
@@ -85,7 +102,7 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
 
       $fq = new FilterQuery();
       $fq->setKey('asm_language_filter');
-      $fq->setQuery($single_field_names['search_api_language'] . ':("' . implode('" OR "', $language_ids) . '")');
+      $fq->setQuery($single_field_names[SEARCH_API_LANGUAGE_FIELD_NAME] . ':("' . implode('" OR "', $language_ids) . '")');
       $solarium_query->addFilterQuery($fq);
     }
   }
@@ -100,7 +117,7 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
       $single_field_names = $this->getFieldNames($index, TRUE);
       $data = $result->getData();
       foreach ($data['response']['docs'] as &$doc) {
-        $language_id = $doc[$single_field_names['search_api_language']];
+        $language_id = $doc[$single_field_names[SEARCH_API_LANGUAGE_FIELD_NAME]];
         foreach (array_keys($doc) as $language_specific_field_name) {
           $field_name = SearchApiSolrMultilingualUtility::getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($language_specific_field_name);
           if ($field_name != $language_specific_field_name) {
@@ -134,11 +151,8 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
     parent::postQuery($results, $query, $response);
  }
 
-   /**
-   * Applies custom modifications to indexed Solr documents.
-   *
-   * This method allows subclasses to easily apply custom changes before the
-   * documents are sent to Solr. The method is empty by default.
+  /**
+   * Replaces language unspecific fulltext fields by language specific ones.
    *
    * @param \Solarium\QueryType\Update\Query\Document\Document[] $documents
    *   An array of \Solarium\QueryType\Update\Query\Document\Document objects
@@ -165,7 +179,7 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
     $field_name_map_per_language = [];
     foreach ($documents as $document) {
       $fields = $document->getFields();
-      $language_id = $fields[$single_field_names['search_api_language']];
+      $language_id = $fields[$single_field_names[SEARCH_API_LANGUAGE_FIELD_NAME]];
       foreach ($fields as $monolingual_solr_field_name => $field_value) {
         if (array_key_exists($monolingual_solr_field_name, $fulltext_field_names)) {
           $multilingual_solr_field_name = SearchApiSolrMultilingualUtility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($monolingual_solr_field_name, $language_id);
@@ -179,6 +193,19 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
     $this->ensureAllMultilingualFieldsExist($field_name_map_per_language, $index);
   }
 
+  /**
+   * Get all languages a solarium query is filtered by.
+   *
+   * @param \Solarium\QueryType\Select\Query\Query $solarium_query
+   *   The solarium query.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The search_api query the solarium query has been built from.
+   * @param bool $remove
+   *   Wether the language filters should be removed from the solarium query or
+   *   not. Default is FALSE.
+   * @return array
+   *   Array of language ids.
+   */
   protected function getLanguageIdFiltersFromQuery(Query $solarium_query, QueryInterface $query, $remove = FALSE) {
     $language_ids = [];
     $multiple_field_names = $this->getFieldNames($query->getIndex());
@@ -186,7 +213,7 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
     $filter_queries = $solarium_query->getFilterQueries();
     foreach ($filter_queries as $filter_query_name => $filter_query) {
       $query_string = $filter_query->getQuery();
-      foreach ([$single_field_names['search_api_language'], $multiple_field_names['search_api_language']] as $field_name) {
+      foreach ([$single_field_names[SEARCH_API_LANGUAGE_FIELD_NAME], $multiple_field_names[SEARCH_API_LANGUAGE_FIELD_NAME]] as $field_name) {
         if (preg_match_all('@' . preg_quote($field_name, '@') . ':"(.+?)"@', $query_string, $matches)) {
           foreach ($matches[1] as $match) {
             $language_ids[] = trim($match, '"');
@@ -301,6 +328,7 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
 
   /**
    * Sends a REST GET request and return the result.
+   *
    * @param string $path The path to append to the base URI
    * @param IndexInterface $index The index whose server the request should be sent to
    * @return string The decoded response
@@ -313,13 +341,14 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
     // \Drupal::logger('apachesolr_multilingual')->info(print_r($output, true));
     if (!empty($output['errors'])) {
       throw new SearchApiException("Error trying to send a REST GET request to '$uri'" .
-          "\nError message(s):" . print_r($output['errors'], TRUE));
+        "\nError message(s):" . print_r($output['errors'], TRUE));
     }
     return $output;
   }
 
   /**
    * Sends a REST POST request and return the result.
+   *
    * @param string $path The path to append to the base URI
    * @param string $command_json The JSON-encoded data.
    * @param IndexInterface $index The index whose server the request should be sent to
