@@ -27,7 +27,7 @@ use Solarium\QueryType\Select\Result\Result;
  * The name of the language field might be change in future releases of
  * search_api. @see https://www.drupal.org/node/2641392 for details.
  * Therefor we define a constant here that could be easily changed.
- * /
+ */
 define('SEARCH_API_LANGUAGE_FIELD_NAME', 'search_api_language');
 
 /**
@@ -75,7 +75,7 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
       $query_fields = $edismax->getQueryFields();
 
       $index = $query->getIndex();
-      $fulltext_fields = $index->getFulltextFields(TRUE);
+      $fulltext_fields = $index->getFulltextFields();
       $multiple_field_names = $this->getFieldNames($index);
       $single_field_names = $this->getFieldNames($index, TRUE);
 
@@ -167,7 +167,7 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
   protected function alterSolrDocuments(array &$documents, IndexInterface $index, array $items) {
     parent::alterSolrDocuments($documents, $index, $items);
 
-    $fulltext_fields = $index->getFulltextFields(TRUE);
+    $fulltext_fields = $index->getFulltextFields();
     $multiple_field_names = $this->getFieldNames($index);
     $single_field_names = $this->getFieldNames($index, TRUE);
     $fulltext_field_names = array_filter(array_flip($multiple_field_names) + array_flip($single_field_names),
