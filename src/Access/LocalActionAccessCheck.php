@@ -4,12 +4,12 @@
  * Contains \Drupal\example\Access\CustomAccessCheck.
  */
 
-namespace Drupal\apachesolr_multilingual\Access;
+namespace Drupal\search_api_solr_multilingual\Access;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\apachesolr_multilingual\Plugin\search_api\backend\SearchApiSolrMultilingualBackend;
+use Drupal\search_api_solr_multilingual\Plugin\search_api\backend\SearchApiSolrMultilingualBackend;
 use Drupal\search_api\ServerInterface;
 
 /**

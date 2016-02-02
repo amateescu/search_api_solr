@@ -2,7 +2,7 @@ langcode: und
 status: true
 dependencies:
   module:
-    - apachesolr_multilingual
+    - search_api_solr_multilingual
 id: text_und
 label: null
 field_type:

@@ -2,14 +2,14 @@
 
 /**
  * @file
- * Contains Drupal\apachesolr_multilingual\Entity\SolrFieldType.
+ * Contains Drupal\search_api_solr_multilingual\Entity\SolrFieldType.
  */
 
-namespace Drupal\apachesolr_multilingual\Entity;
+namespace Drupal\search_api_solr_multilingual\Entity;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
-use Drupal\apachesolr_multilingual\SolrFieldTypeInterface;
+use Drupal\search_api_solr_multilingual\SolrFieldTypeInterface;
 
 /**
  * Defines the SolrFieldType entity.
@@ -18,11 +18,11 @@ use Drupal\apachesolr_multilingual\SolrFieldTypeInterface;
  *   id = "solr_field_type",
  *   label = @Translation("Solr Field Type"),
  *   handlers = {
- *     "list_builder" = "Drupal\apachesolr_multilingual\Controller\SolrFieldTypeListBuilder",
+ *     "list_builder" = "Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeListBuilder",
  *     "form" = {
- *       "add" = "Drupal\apachesolr_multilingual\Form\SolrFieldTypeForm",
- *       "edit" = "Drupal\apachesolr_multilingual\Form\SolrFieldTypeForm",
- *       "delete" = "Drupal\apachesolr_multilingual\Form\SolrFieldTypeDeleteForm"
+ *       "add" = "Drupal\search_api_solr_multilingual\Form\SolrFieldTypeForm",
+ *       "edit" = "Drupal\search_api_solr_multilingual\Form\SolrFieldTypeForm",
+ *       "delete" = "Drupal\search_api_solr_multilingual\Form\SolrFieldTypeDeleteForm"
  *     }
  *   },
  *   config_prefix = "solr_field_type",

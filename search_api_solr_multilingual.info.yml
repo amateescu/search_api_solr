@@ -1,4 +1,4 @@
-name: apachesolr_multilingual
+name: search_api_solr_multilingual
 type: module
 description: Apache Solr Multilingual.
 core: 8.x

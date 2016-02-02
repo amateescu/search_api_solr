@@ -1,4 +1,4 @@
-apachesolr_multilingual.solr_field_type.*:
+search_api_solr_multilingual.solr_field_type.*:
   type: config_entity
   label: 'Solr Field Type config'
   mapping:

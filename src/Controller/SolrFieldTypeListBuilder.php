@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains Drupal\apachesolr_multilingual\Controller\SolrFieldTypeListBuilder.
+ * Contains Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeListBuilder.
  */
 
-namespace Drupal\apachesolr_multilingual\Controller;
+namespace Drupal\search_api_solr_multilingual\Controller;
 
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;

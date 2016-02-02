@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains apachesolr_multilingual.module.
+ * Contains search_api_solr_multilingual.module.
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -10,10 +10,10 @@ use Drupal\Core\Routing\RouteMatchInterface;
 /**
  * Implements hook_help().
  */
-function apachesolr_multilingual_help($route_name, RouteMatchInterface $route_match) {
+function search_api_solr_multilingual_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
-    // Main module help for the apachesolr_multilingual module.
-    case 'help.page.apachesolr_multilingual':
+    // Main module help for the search_api_solr_multilingual module.
+    case 'help.page.search_api_solr_multilingual':
       $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
       $output .= '<p>' . t('Apache Solr Multilingual.') . '</p>';
@@ -26,7 +26,7 @@ function apachesolr_multilingual_help($route_name, RouteMatchInterface $route_ma
 /**
  * Implements hook_theme().
  */
-function apachesolr_multilingual_theme() {
+function search_api_solr_multilingual_theme() {
   $theme = [];
 
   return $theme;

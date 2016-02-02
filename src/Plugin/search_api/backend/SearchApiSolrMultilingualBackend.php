@@ -5,12 +5,12 @@
  * Contains \Drupal\as_search\Plugin\search_api\backend\ASSearchApiSolrBackend.
  */
 
-namespace Drupal\apachesolr_multilingual\Plugin\search_api\backend;
+namespace Drupal\search_api_solr_multilingual\Plugin\search_api\backend;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Language\LanguageInterface;
-use Drupal\apachesolr_multilingual\Entity\SolrFieldType;
-use Drupal\apachesolr_multilingual\Utility\Utility as SearchApiSolrMultilingualUtility;
+use Drupal\search_api_solr_multilingual\Entity\SolrFieldType;
+use Drupal\search_api_solr_multilingual\Utility\Utility as SearchApiSolrMultilingualUtility;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
@@ -338,7 +338,7 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
     $client = \Drupal::service('http_client');
     $result = $client->get($uri, ['Accept' => 'application/json']);
     $output = Json::decode($result->getBody());
-    // \Drupal::logger('apachesolr_multilingual')->info(print_r($output, true));
+    // \Drupal::logger('search_api_solr_multilingual')->info(print_r($output, true));
     if (!empty($output['errors'])) {
       throw new SearchApiException("Error trying to send a REST GET request to '$uri'" .
         "\nError message(s):" . print_r($output['errors'], TRUE));
@@ -367,7 +367,7 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
       ],
     ]);
     $output = Json::decode($result->getBody());
-    // \Drupal::logger('apachesolr_multilingual')->info(print_r($output, true));
+    // \Drupal::logger('search_api_solr_multilingual')->info(print_r($output, true));
     if (!empty($output['errors'])) {
       throw new SearchApiException("Error trying to send the following JSON to Solr (REST POST request to '$uri'): " . $command_json .
           "\nError message(s):" . print_r($output['errors'], TRUE));

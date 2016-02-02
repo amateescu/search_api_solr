@@ -1,10 +1,10 @@
 <?php
 /**
  * @file
- * Contains \Drupal\apachesolr_multilingual\EventSubscriber\ConfigSubscriber.
+ * Contains \Drupal\search_api_solr_multilingual\EventSubscriber\ConfigSubscriber.
  */
 
-namespace Drupal\apachesolr_multilingual\EventSubscriber;
+namespace Drupal\search_api_solr_multilingual\EventSubscriber;
 
 use Drupal\Core\Config\ConfigCrudEvent;
 use Drupal\Core\Config\ConfigEvents;
@@ -39,7 +39,7 @@ class ConfigSubscriber implements EventSubscriberInterface {
     if (preg_match('@^language\.entity\.(.+)@', $saved_config->getName(), $matches) &&
         $matches[1] != 'und') {
       $restrict_by_dependency = [
-        'module' => 'apachesolr_multilingual',
+        'module' => 'search_api_solr_multilingual',
       ];
       // installOptionalConfig will not replace existing configs
       // and it contains a dependency check so we need not perform

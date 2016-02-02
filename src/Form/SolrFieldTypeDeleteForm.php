@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains Drupal\apachesolr_multilingual\Form\SolrFieldTypeDeleteForm.
+ * Contains Drupal\search_api_solr_multilingual\Form\SolrFieldTypeDeleteForm.
  */
 
-namespace Drupal\apachesolr_multilingual\Form;
+namespace Drupal\search_api_solr_multilingual\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;

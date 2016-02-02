@@ -2,7 +2,7 @@ langcode: en
 status: true
 dependencies:
   module:
-    - apachesolr_multilingual
+    - search_api_solr_multilingual
     - language
   config:
     - language.entity.en

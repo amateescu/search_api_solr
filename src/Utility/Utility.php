@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\apachesolr_multilingual\Utility.
+ * Contains \Drupal\search_api_solr_multilingual\Utility.
  */
 
-namespace Drupal\apachesolr_multilingual\Utility;
+namespace Drupal\search_api_solr_multilingual\Utility;
 
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 

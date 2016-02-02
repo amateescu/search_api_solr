@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains Drupal\apachesolr_multilingual\SolrFieldTypeInterface.
+ * Contains Drupal\search_api_solr_multilingual\SolrFieldTypeInterface.
  */
 
-namespace Drupal\apachesolr_multilingual;
+namespace Drupal\search_api_solr_multilingual;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 

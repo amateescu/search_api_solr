@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains Drupal\apachesolr_multilingual\Form\SolrFieldTypeForm.
+ * Contains Drupal\search_api_solr_multilingual\Form\SolrFieldTypeForm.
  */
 
-namespace Drupal\apachesolr_multilingual\Form;
+namespace Drupal\search_api_solr_multilingual\Form;
 
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
@@ -13,7 +13,7 @@ use Drupal\Core\Form\FormStateInterface;
 /**
  * Class SolrFieldTypeForm.
  *
- * @package Drupal\apachesolr_multilingual\Form
+ * @package Drupal\search_api_solr_multilingual\Form
  */
 class SolrFieldTypeForm extends EntityForm {
   /**
@@ -36,7 +36,7 @@ class SolrFieldTypeForm extends EntityForm {
       '#type' => 'machine_name',
       '#default_value' => $solr_field_type->id(),
       '#machine_name' => array(
-        'exists' => '\Drupal\apachesolr_multilingual\Entity\SolrFieldType::load',
+        'exists' => '\Drupal\search_api_solr_multilingual\Entity\SolrFieldType::load',
       ),
       '#disabled' => !$solr_field_type->isNew(),
     );

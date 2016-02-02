@@ -11,7 +11,7 @@ entity.solr_field_type.collection:
         type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
-    _apachesolr_multilingual_local_action_access_check: 'TRUE'
+    _search_api_solr_multilingual_local_action_access_check: 'TRUE'
 
 entity.solr_field_type.add_form:
   path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/add'
@@ -24,7 +24,7 @@ entity.solr_field_type.add_form:
         type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
-    _apachesolr_multilingual_local_action_access_check: 'TRUE'
+    _search_api_solr_multilingual_local_action_access_check: 'TRUE'
 
 entity.solr_field_type.edit_form:
   path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}'
@@ -37,7 +37,7 @@ entity.solr_field_type.edit_form:
         type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
-    _apachesolr_multilingual_local_action_access_check: 'TRUE'
+    _search_api_solr_multilingual_local_action_access_check: 'TRUE'
 
 entity.solr_field_type.delete_form:
   path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}/delete'
@@ -50,4 +50,4 @@ entity.solr_field_type.delete_form:
         type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
-    _apachesolr_multilingual_local_action_access_check: 'TRUE'
+    _search_api_solr_multilingual_local_action_access_check: 'TRUE'
