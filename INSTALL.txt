@@ -1,0 +1,24 @@
+Setting up Solr
+---------------
+
+In order for this module to work, you will first need to set up a Solr server.
+See search_api_solr/INSTALL.txt for the basics.
+
+But search_api_solr_multilingual adds some more restrictions and requires a
+different kind of configuration.
+
+search_api_solr_multilingual requires at least solr 5.4.x.
+
+The files in search_api_solr_multilingual/solr-conf/ from this module are
+different from the ones that are part of search_api_solr/solr-conf/!
+
+
+Configuring Drupal
+------------------
+
+apachesolr_multilingual provides it's own backend for search_api. It derives and
+extends the one provides by search_api_solr.
+
+NOTE: It's important that the solr server rund with the right config files for
+a backend. Don't switch between the Solr Backend and the Solr Multilingual
+Backend without adjusting the config files!
