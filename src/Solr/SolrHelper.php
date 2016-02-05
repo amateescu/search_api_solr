@@ -262,6 +262,7 @@ class SolrHelper {
     }
     else {
       $query->setHandler('admin/stats.jsp');
+      $query->setResultClass('\Drupal\search_api_solr\Solr\StatsJspResult');
     }
     $stats = $this->solr->execute($query)->getData();
     if (!empty($stats)) {
