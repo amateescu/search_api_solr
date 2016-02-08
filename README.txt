@@ -5,14 +5,13 @@ Place the search_api_solr module either directly under the /modules directory
 at the root of your Drupal installation, or place it under /modules/contrib
 directory instead, to group all contributed modules together.
 
-Next, run composer update from within the module's root directory in order to
-install all dependencies the module requires to work properly. Alternatively,
-you can use the composer_manager [1] module to install dependencies.
+Next, you need to install the module's composer dependencies, there are
+multiple ways to do this; you can read more in the documentation[1] on d.o.
 
 You can now visit the /admin/modules page on your site and install the Solr
 search module.
 
-[1] https://www.drupal.org/project/composer_manager
+[1] https://www.drupal.org/documentation/install/composer-dependencies
 
 Solr search
 -----------
