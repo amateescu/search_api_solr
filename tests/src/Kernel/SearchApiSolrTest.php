@@ -14,7 +14,7 @@ use Drupal\Tests\search_api_db\Kernel\BackendTest;
 
 /**
  * Tests index and search capabilities using the Solr search backend.
- * 
+ *
  * @group search_api_solr
  */
 class SearchApiSolrTest extends BackendTest {
@@ -53,12 +53,6 @@ class SearchApiSolrTest extends BackendTest {
    */
   public function setUp() {
     parent::setUp();
-    // @todo For some reason the init event (see AutoloaderSubscriber) is not
-    // working in command line tests
-    $filepath = drupal_get_path('module', 'search_api_solr') . '/vendor/autoload.php';
-    if (!class_exists('Solarium\\Client') && ($filepath != DRUPAL_ROOT . '/core/vendor/autoload.php')) {
-      require $filepath;
-    }
 
     $this->installConfig(array('search_api_test_solr'));
 

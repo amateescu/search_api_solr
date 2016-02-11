@@ -70,6 +70,10 @@ class SolrHelper {
       $host = $_SERVER['SERVER_NAME'];
     }
     $url_path = $this->configuration['scheme'] . '://' . $host . ':' . $this->configuration['port'] . $this->configuration['path'];
+
+    if (isset($this->configuration['core'])) {
+      $url_path .= $this->configuration['core'];
+    }
     $url = Url::fromUri($url_path);
 
     return \Drupal::l($url_path, $url);

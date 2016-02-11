@@ -71,6 +71,11 @@ Afterwards, go to [4] in your web browser to ensure Solr is running correctly.
 
 [4] http://localhost:8983/solr/#/
 
+Before enabling this module, you should first install its composer dependencies,
+there are multiple ways to do this, documented on d.o [5].
+
+[5] https://www.drupal.org/documentation/install/composer-dependencies
+
 You can then enable this module and create a new server, using the "Solr search"
 service class. Enter the hostname, port and path corresponding to your Solr
 server in the appropriate fields. The default values already correspond to the
