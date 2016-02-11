@@ -89,6 +89,9 @@ script:
   - composer install
   # go to our Drupal main directory
   - cd $TRAVIS_BUILD_DIR/../drupal
+  # Install solarium.
+  - composer require solarium/solarium:3.4.1
+  - composer update --lock
   - ls -la $TRAVIS_BUILD_DIR/../drupal/sites/default
 
   # Run the tests
