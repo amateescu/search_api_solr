@@ -41,9 +41,8 @@ class ConfigSubscriber implements EventSubscriberInterface {
       $restrict_by_dependency = [
         'module' => 'search_api_solr_multilingual',
       ];
-      // installOptionalConfig will not replace existing configs
-      // and it contains a dependency check so we need not perform
-      // any checks ourselves
+      // installOptionalConfig will not replace existing configs and it contains
+      // a dependency check so we need not perform any checks ourselves.
       $this->configInstaller->installOptionalConfig(NULL, $restrict_by_dependency);
     }
     // drupal_set_message($saved_config->getName());

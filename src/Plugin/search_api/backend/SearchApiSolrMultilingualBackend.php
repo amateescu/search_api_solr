@@ -10,13 +10,13 @@ namespace Drupal\search_api_solr_multilingual\Plugin\search_api\backend;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api_solr_multilingual\Entity\SolrFieldType;
+use Drupal\search_api_solr_multilingual\SearchApiSolrMultilingualException;
 use Drupal\search_api_solr_multilingual\Utility\Utility as SearchApiSolrMultilingualUtility;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
-use Drupal\search_api\SearchApiException;
 use Solarium\Core\Client\Response;
 use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\QueryType\Select\Query\FilterQuery;
@@ -232,17 +232,24 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
       $field_type_name = 'text' . '_' . $language_id;
       $solr_field_type_name = SearchApiSolrUtility::encodeSolrDynamicFieldName($field_type_name);
 
-      // handle field type
-      $this->ensureMultilingualFieldTypeExists($field_type_name, $solr_field_type_name, $index);
+      // Handle field type.
+      try {
+        $this->ensureMultilingualFieldTypeExists($field_type_name, $solr_field_type_name, $index);
+      }
+      catch (SearchApiSolrMultilingualException $e) {
+        // Use non-language-spefific field type as fallback until a
+        // language-specific one exists or a different one has been assigned.
+        $this->ensureMultilingualFieldTypeExists('text_und', $solr_field_type_name, $index);
+      }
 
-      // handle dynamic fields for multilingual tm and ts
+      // Handle dynamic fields for multilingual tm and ts.
       $multilingual_solr_field_name = SearchApiSolrUtility::encodeSolrDynamicFieldName('tm;' . $language_id . ';') . '*';
       $this->ensureMultilingualFieldExists($multilingual_solr_field_name, $solr_field_type_name, $index);
       $multilingual_solr_field_name = SearchApiSolrUtility::encodeSolrDynamicFieldName('ts;' . $language_id . ';') . '*';
       $this->ensureMultilingualFieldExists($multilingual_solr_field_name, $solr_field_type_name, $index);
 
       foreach ($map as $monolingual_solr_field_name => $multilingual_solr_field_name) {
-        // do something field-specific if needed
+        // Do something field-specific if needed.
       }
     }
   }
@@ -250,6 +257,14 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
   protected function ensureMultilingualFieldTypeExists($field_type_name, $solr_field_type_name, IndexInterface $index) {
     if (!$this->solrFieldTypeExists($solr_field_type_name, $index)) {
       $this->createSolrMultilingualFieldType($field_type_name, $solr_field_type_name, $index);
+    }
+    else {
+      // @todo Check if a non-language-spefific field type could be replaced by
+      // a language-specific one that has been missing before or if a concrete
+      // one has been assigned by the adminstrator, for example filed type
+      // text_de for language de_AT.
+
+      // If the field type is exchanged, trigger a re-index process.
     }
   }
 
@@ -297,6 +312,9 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
   protected function createSolrMultilingualFieldType($field_type_name, $solr_field_type_name, IndexInterface $index) {
     // Get the field type definition from Drupal.
     $field_type_entity = SolrFieldType::load($field_type_name);
+    if (!$field_type_entity) {
+      throw new SearchApiSolrMultilingualException("There's no filed type $field_type_name.");
+    }
     $field_type_definition = $field_type_entity->getFieldType();
     $field_type_definition['name'] = $solr_field_type_name;
     $this->tweakFilterConfig($field_type_definition['indexAnalyzer']['filters']);
@@ -340,7 +358,7 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
     $output = Json::decode($result->getBody());
     // \Drupal::logger('search_api_solr_multilingual')->info(print_r($output, true));
     if (!empty($output['errors'])) {
-      throw new SearchApiException("Error trying to send a REST GET request to '$uri'" .
+      throw new SearchApiSolrMultilingualException("Error trying to send a REST GET request to '$uri'" .
         "\nError message(s):" . print_r($output['errors'], TRUE));
     }
     return $output;
@@ -369,7 +387,7 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
     $output = Json::decode($result->getBody());
     // \Drupal::logger('search_api_solr_multilingual')->info(print_r($output, true));
     if (!empty($output['errors'])) {
-      throw new SearchApiException("Error trying to send the following JSON to Solr (REST POST request to '$uri'): " . $command_json .
+      throw new SearchApiSolrMultilingualException("Error trying to send the following JSON to Solr (REST POST request to '$uri'): " . $command_json .
           "\nError message(s):" . print_r($output['errors'], TRUE));
     }
     return $output;
