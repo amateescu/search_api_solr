@@ -16,7 +16,7 @@ different from the ones that are part of search_api_solr/solr-conf/!
 Configuring Drupal
 ------------------
 
-apachesolr_multilingual provides it's own backend for search_api. It derives and
+search_api_solr_multilingual provides it's own backend for search_api. It derives and
 extends the one provides by search_api_solr.
 
 NOTE: It's important that the solr server rund with the right config files for

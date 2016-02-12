@@ -16,7 +16,7 @@ function search_api_solr_multilingual_help($route_name, RouteMatchInterface $rou
     case 'help.page.search_api_solr_multilingual':
       $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('Apache Solr Multilingual.') . '</p>';
+      $output .= '<p>' . t('Search API Multilingual Solr Search.') . '</p>';
       return $output;
 
     default:
