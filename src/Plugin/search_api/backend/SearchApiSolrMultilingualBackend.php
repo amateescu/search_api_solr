@@ -52,6 +52,12 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
    *   search query.
    */
   protected function preQuery(Query $solarium_query, QueryInterface $query) {
+    // Do not modify 'Server index status' queries. @see
+    // https://www.drupal.org/node/2668852
+    if ($query->hasTag('server_index_status')) {
+      return;
+    }
+
     parent::preQuery($solarium_query, $query);
 
     $language_ids = $this->getLanguageIdFiltersFromQuery($solarium_query, $query, TRUE);
