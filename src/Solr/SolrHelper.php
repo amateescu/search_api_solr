@@ -490,10 +490,23 @@ class SolrHelper {
 
   public function setSorts(Query $solarium_query, QueryInterface $query, $field_names_single_value = array()) {
     foreach ($query->getSorts() as $field => $order) {
-      $f = $field_names_single_value[$field];
-      if (substr($f, 0, 3) == 'ss_') {
-        $f = 'sort_' . substr($f, 3);
+      // The default Solr schema provides a virtual field named "random_SEED"
+      // that can be used to randomly sort the results; the field is available
+      // only at query-time.
+      if ($field == 'search_api_random') {
+        $params = $query->getOption('search_api_random_sort', array());
+        // Random seed: getting the value from parameters or computing a new
+        // one.
+        $seed = !empty($params['seed']) ? $params['seed'] : mt_rand();
+        $f = 'random_' . $seed;
       }
+      else {
+        $f = $field_names_single_value[$field];
+        if (substr($f, 0, 3) == 'ss_') {
+          $f = 'sort_' . substr($f, 3);
+        }
+      }
+
       $solarium_query->addSort($f, strtolower($order));
     }
   }

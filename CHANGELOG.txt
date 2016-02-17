@@ -1,5 +1,6 @@
 Search API Solr Search 1.x, dev (xxxx-xx-xx):
 ---------------------------------------------
+- #2313591 by drunken monkey: Added support for random sorting.
 - #2656754 by drunken monkey: Adapted to a change in index class method names.
 - Starting the 8.x port.
 - @todo Finish https://github.com/basdenooijer/solarium/pull/155 and start a new

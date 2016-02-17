@@ -391,6 +391,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       //'search_api_facets_operator_or',
       //'search_api_grouping',
       'search_api_mlt',
+      'search_api_random_sort',
       'search_api_spellcheck',
       //'search_api_data_type_location',
       //'search_api_data_type_geohash',
@@ -952,6 +953,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       $ret = array(
         'search_api_id' => 'item_id',
         'search_api_relevance' => 'score',
+        'search_api_random' => 'random',
       );
 
       // Add the names of any fields configured on the index.
