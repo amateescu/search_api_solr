@@ -8,8 +8,6 @@
 namespace Drupal\search_api_solr\Utility;
 
 use Drupal\Component\Utility\NestedArray;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\search_api\SearchApiException;
 use Drupal\search_api\ServerInterface;
 
 class Utility {
