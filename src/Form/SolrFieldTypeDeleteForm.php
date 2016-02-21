@@ -9,7 +9,6 @@ namespace Drupal\search_api_solr_multilingual\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
 
 /**
  * Builds the form to delete a SolrFieldType.

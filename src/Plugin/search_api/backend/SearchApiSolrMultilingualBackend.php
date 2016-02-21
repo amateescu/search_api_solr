@@ -322,7 +322,7 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
     // Get the field type definition from Drupal.
     $field_type_entity = SolrFieldType::load($field_type_name);
     if (!$field_type_entity) {
-      throw new SearchApiSolrMultilingualException("There's no filed type $field_type_name.");
+      throw new SearchApiSolrMultilingualException("There's no field type $field_type_name.");
     }
     $field_type_definition = $field_type_entity->getFieldType();
     $field_type_definition['name'] = $solr_field_type_name;

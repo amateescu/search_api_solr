@@ -51,3 +51,16 @@ entity.solr_field_type.delete_form:
   requirements:
     _permission: 'administer search_api'
     _search_api_solr_multilingual_local_action_access_check: 'TRUE'
+
+entity.solr_field_type.export_form:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}/export'
+  defaults:
+    _entity_form: 'solr_field_type.export'
+    _title: 'Export SolrFieldType'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
+  requirements:
+    _permission: 'administer search_api'
+    _search_api_solr_multilingual_local_action_access_check: 'TRUE'

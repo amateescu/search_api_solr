@@ -47,4 +47,22 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     uasort($entities, array($this->entityType->getClass(), 'sort'));
     return $entities;
   }
+
+  /**
+   * @inheritdoc
+   */
+  public function getDefaultOperations(EntityInterface $entity) {
+    $operations = parent::getDefaultOperations($entity);
+
+    if ($entity->access('view') && $entity->hasLinkTemplate('export-form')) {
+      $operations['export'] = array(
+        'title' => $this->t('Export'),
+        'weight' => 10,
+        'url' => $entity->urlInfo('export-form'),
+      );
+    }
+
+    return $operations;
+  }
+
 }

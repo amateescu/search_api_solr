@@ -22,7 +22,8 @@ use Drupal\search_api_solr_multilingual\SolrFieldTypeInterface;
  *     "form" = {
  *       "add" = "Drupal\search_api_solr_multilingual\Form\SolrFieldTypeForm",
  *       "edit" = "Drupal\search_api_solr_multilingual\Form\SolrFieldTypeForm",
- *       "delete" = "Drupal\search_api_solr_multilingual\Form\SolrFieldTypeDeleteForm"
+ *       "delete" = "Drupal\search_api_solr_multilingual\Form\SolrFieldTypeDeleteForm",
+ *       "export" = "Drupal\search_api_solr_multilingual\Form\SolrFieldTypeExportForm"
  *     }
  *   },
  *   config_prefix = "solr_field_type",
@@ -35,6 +36,7 @@ use Drupal\search_api_solr_multilingual\SolrFieldTypeInterface;
  *   links = {
  *     "edit-form" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}",
  *     "delete-form" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}/delete",
+ *     "export-form" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}/export",
  *     "collection" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type"
  *   }
  * )
@@ -80,6 +82,37 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     $this->field_type = Json::decode($field_type);
     return $this;
   }
+
+  public function getFieldTypeAsXml() {
+    $root = new \SimpleXMLElement('<fieldType/>');
+
+    $f = function (\SimpleXMLElement $element, array $attributes) use (&$f) {
+      foreach ($attributes as $key => $value) {
+        if (!empty($value)) {
+          if (is_scalar($value)) {
+            $element->addAttribute($key, $value);
+          }
+          elseif (is_array($value)) {
+            if (array_key_exists(0, $value)) {
+              $key = rtrim($key, 's');
+              foreach ($value as $attributes) {
+                $child = $element->addChild($key);
+                $f($child, $attributes);
+              }
+            }
+            else {
+              $child = $element->addChild($key);
+              $f($child, $value);
+            }
+          }
+        }
+      }
+    };
+    $f($root, $this->field_type);
+
+    return $root->asXML();
+  }
+
 
   public function getTextFiles() {
     return $this->text_files;
