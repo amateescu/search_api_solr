@@ -83,4 +83,28 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
     return $build;
   }
+
+  public function getSchemaExtraFieldsXml() {
+    $xml = "<fields>\n";
+    foreach ($this->load() as $entity) {
+      foreach ($entity->getDynamicFields() as $dynamic_field) {
+        $xml .= '<dynamicField ';
+        foreach ($dynamic_field as $attribute => $value) {
+          $xml .= $attribute . '="' . (is_bool($value) ? ($value  ? 'true' : 'false') : $value). '" ';
+        }
+        $xml .= " />\n";
+      }
+    }
+    $xml .= '</fields>';
+
+    $build['file'] = array(
+      '#plain_text' => $xml,
+      '#cache' => [
+        'contexts' => $this->entityType->getListCacheContexts(),
+        'tags' => $this->entityType->getListCacheTags(),
+      ],
+    );
+
+    return $build;
+  }
 }

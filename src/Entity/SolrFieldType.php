@@ -9,7 +9,9 @@ namespace Drupal\search_api_solr_multilingual\Entity;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Drupal\search_api_solr_multilingual\SolrFieldTypeInterface;
+use Drupal\search_api_solr_multilingual\Utility\Utility;
 
 /**
  * Defines the SolrFieldType entity.
@@ -37,8 +39,7 @@ use Drupal\search_api_solr_multilingual\SolrFieldTypeInterface;
  *     "edit-form" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}",
  *     "delete-form" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}/delete",
  *     "export-form" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}/export",
- *     "collection" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type",
- *     "schema-extra-types-collection" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/schema-extra-types-collection"
+ *     "collection" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type"
  *   }
  * )
  */
@@ -114,6 +115,21 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     return preg_replace('/<\?.*?\?>/', '', $root->asXML());
   }
 
+  public function getDynamicFields() {
+    $dynamic_fields = [];
+    foreach (array('ts', 'tm') as $prefix) {
+      $dynamic_fields[] = [
+        'name' => SearchApiSolrUtility::encodeSolrDynamicFieldName(Utility::getLanguageSpecificSolrDynamicFieldPrefix($prefix, $this->langcode)) . '*',
+        'type' => $this->id,
+        'stored' => TRUE,
+        'indexed' => TRUE,
+        'multiValued' => strpos($prefix, 'm') !== FALSE,
+        'termVectors' => strpos($prefix, 't') === 0,
+
+      ];
+    }
+    return $dynamic_fields;
+  }
 
   public function getTextFiles() {
     return $this->text_files;

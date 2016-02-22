@@ -11,12 +11,12 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api_solr_multilingual\Entity\SolrFieldType;
 use Drupal\search_api_solr_multilingual\SearchApiSolrMultilingualException;
-use Drupal\search_api_solr_multilingual\Utility\Utility as SearchApiSolrMultilingualUtility;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
+use Drupal\search_api_solr_multilingual\Utility\Utility;
 use Solarium\Core\Client\Response;
 use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\QueryType\Select\Query\FilterQuery;
@@ -97,7 +97,7 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
 
           $language_specific_fields = [];
           foreach ($language_ids as $language_id) {
-            $language_specific_fields[] = SearchApiSolrMultilingualUtility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id) . $boost;
+            $language_specific_fields[] = Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id) . $boost;
           }
 
           $query_fields = str_replace(
@@ -128,9 +128,9 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
       foreach ($data['response']['docs'] as &$doc) {
         $language_id = $doc[$single_field_names[SEARCH_API_LANGUAGE_FIELD_NAME]];
         foreach (array_keys($doc) as $language_specific_field_name) {
-          $field_name = SearchApiSolrMultilingualUtility::getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($language_specific_field_name);
+          $field_name = Utility::getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($language_specific_field_name);
           if ($field_name != $language_specific_field_name) {
-            if (SearchApiSolrMultilingualUtility::getLangaugeIdFromLanguageSpecificSolrDynamicFieldName($language_specific_field_name) == $language_id) {
+            if (Utility::getLangaugeIdFromLanguageSpecificSolrDynamicFieldName($language_specific_field_name) == $language_id) {
               $doc[$field_name] = $doc[$language_specific_field_name];
             }
             unset($doc[$language_specific_field_name]);
@@ -191,7 +191,7 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
       $language_id = $fields[$single_field_names[SEARCH_API_LANGUAGE_FIELD_NAME]];
       foreach ($fields as $monolingual_solr_field_name => $field_value) {
         if (array_key_exists($monolingual_solr_field_name, $fulltext_field_names)) {
-          $multilingual_solr_field_name = SearchApiSolrMultilingualUtility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($monolingual_solr_field_name, $language_id);
+          $multilingual_solr_field_name = Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($monolingual_solr_field_name, $language_id);
           $field_name_map_per_language[$language_id][$monolingual_solr_field_name] = $multilingual_solr_field_name;
           $document->addField($multilingual_solr_field_name, $field_value, $document->getFieldBoost($monolingual_solr_field_name));
           // @todo removal should be configurable
@@ -252,9 +252,9 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
       }
 
       // Handle dynamic fields for multilingual tm and ts.
-      $multilingual_solr_field_name = SearchApiSolrUtility::encodeSolrDynamicFieldName('tm;' . $language_id . ';') . '*';
+      $multilingual_solr_field_name = SearchApiSolrUtility::encodeSolrDynamicFieldName(Utility::getLanguageSpecificSolrDynamicFieldPrefix('tm', $language_id)) . '*';
       $this->ensureMultilingualFieldExists($multilingual_solr_field_name, $solr_field_type_name, $index);
-      $multilingual_solr_field_name = SearchApiSolrUtility::encodeSolrDynamicFieldName('ts;' . $language_id . ';') . '*';
+      $multilingual_solr_field_name = SearchApiSolrUtility::encodeSolrDynamicFieldName(Utility::getLanguageSpecificSolrDynamicFieldPrefix('ts', $language_id)) . '*';
       $this->ensureMultilingualFieldExists($multilingual_solr_field_name, $solr_field_type_name, $index);
 
       foreach ($map as $monolingual_solr_field_name => $multilingual_solr_field_name) {
@@ -308,12 +308,14 @@ class SearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
   }
 
   protected function createSolrDynamicField($solr_field_name, $solr_field_type_name, IndexInterface $index) {
+    // @todo use SolrFieldType::getDynamicFields()
     $command = ['add-dynamic-field' => [
       'name' => $solr_field_name,
       'type' => $solr_field_type_name,
       'stored' => TRUE,
       'indexed' => TRUE,
       'multiValued' => strpos($solr_field_name, 'tm_') === 0 ? TRUE : FALSE,
+      'termVectors' => strpos($solr_field_name, 't') === 0 ? TRUE : FALSE,
     ]];
     return $this->solrRestPost('schema', Json::encode($command), $index);
   }

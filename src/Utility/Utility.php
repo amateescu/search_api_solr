@@ -63,6 +63,10 @@ class Utility {
     return $field_name;
   }
 
+  public static function getLanguageSpecificSolrDynamicFieldPrefix($prefix, $language_id) {
+    return $prefix . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . $language_id . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR;
+  }
+
   public static function getLangaugeIdFromLanguageSpecificSolrDynamicFieldName($field_name) {
     $encoded = strpos($field_name, SearchApiSolrUtility::encodeSolrDynamicFieldName(SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR));
     if ($encoded) {
