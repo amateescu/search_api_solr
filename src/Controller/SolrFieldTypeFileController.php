@@ -2,23 +2,23 @@
 
 /**
  * @file
- * Contains Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeListController.
+ * Contains Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeFileController.
  */
 
 namespace Drupal\search_api_solr_multilingual\Controller;
 
-use Drupal\Core\Entity\Controller\EntityListController;
+use Drupal\Core\Controller\ControllerBase;
 
 /**
  * Provides a listing of SolrFieldType.
  */
-class SolrFieldTypeListController extends EntityListController {
+class SolrFieldTypeFileController extends ControllerBase {
 
   /**
    * @inheritdoc
    */
-  public function listing($entity_type) {
-    return $this->entityManager()->getListBuilder($entity_type)->getSchemaExtraTypesXml();
+  public function getSchemaExtraTypesXml() {
+    return $this->entityManager()->getListBuilder('solr_field_type')->getSchemaExtraTypesXml();
   }
 
 }

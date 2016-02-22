@@ -14,6 +14,7 @@ use Drupal\Core\Entity\EntityInterface;
  * Provides a listing of SolrFieldType.
  */
 class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
+
   /**
    * {@inheritdoc}
    */
@@ -65,4 +66,21 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     return $operations;
   }
 
+  public function getSchemaExtraTypesXml() {
+    $xml = '<types>';
+    foreach ($this->load() as $entity) {
+      $xml .= "\n" . $entity->getFieldTypeAsXml();
+    }
+    $xml .= "\n</types>";
+
+    $build['file'] = array(
+      '#plain_text' => $xml,
+      '#cache' => [
+        'contexts' => $this->entityType->getListCacheContexts(),
+        'tags' => $this->entityType->getListCacheTags(),
+      ],
+    );
+
+    return $build;
+  }
 }

@@ -37,7 +37,8 @@ use Drupal\search_api_solr_multilingual\SolrFieldTypeInterface;
  *     "edit-form" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}",
  *     "delete-form" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}/delete",
  *     "export-form" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}/export",
- *     "collection" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type"
+ *     "collection" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type",
+ *     "schema-extra-types-collection" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/schema-extra-types-collection"
  *   }
  * )
  */
@@ -110,7 +111,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     };
     $f($root, $this->field_type);
 
-    return $root->asXML();
+    return preg_replace('/<\?.*?\?>/', '', $root->asXML());
   }
 
 
