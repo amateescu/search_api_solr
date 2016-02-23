@@ -1692,7 +1692,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
       }
     }
     catch (HttpException $e) {
-      // @todo Show a message with the exception?
+      watchdog_exception('search_api_solr', $e);
     }
     return FALSE;
   }
