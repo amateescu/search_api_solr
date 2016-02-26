@@ -39,9 +39,9 @@ class Utility {
    * - tm_*
    * See Drupal\search_api_solr\Utility\Utility::encodeSolrDynamicFieldName().
    *
-   * @param type $field_name
-   * @param type $language_id
-   * @return type
+   * @param string $field_name
+   * @param string $language_id
+   * @return string
    */
   public static function getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id) {
     return Utility::_modifySolrDynamicFieldName($field_name, '@^([a-z]+)_@', '$1' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . $language_id . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR);
