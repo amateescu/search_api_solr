@@ -110,8 +110,17 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
             if ($this->isPartOfSchema('dynamicFields', $language_specific_field)) {
               $language_specific_fields[] = Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id) . $boost;
             }
-            elseif ($this->configuration['sasm_language_unspecific_fallback_on_schema_issues']) {
-              $language_specific_fields[] = $field_name . $boost;
+            else {
+              $vars = array(
+                '%field' => $language_specific_field,
+              );
+              if ($this->configuration['sasm_language_unspecific_fallback_on_schema_issues']) {
+                \Drupal::logger('search_api_solr_multilingual')->warning('Error while searching: language specific field dynamic %field is not defined in the schema.xml, fallback to language unspecific field is enabled.', $vars);
+                $language_specific_fields[] = $field_name . $boost;
+              }
+              else {
+                \Drupal::logger('search_api_solr_multilingual')->error('Error while searching: language specific field dynamic %field is not defined in the schema.xml, fallback to language unspecific field is not enabled.', $vars);
+              }
             }
           }
 
@@ -215,9 +224,13 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     foreach ($field_name_map_per_language as $language_id => $map) {
       $solr_field_type_name = 'text' . '_' . $language_id;
       if (!$this->isPartOfSchema('fieldTypes', $solr_field_type_name) &&
-        !$this->createSolrFieldType($solr_field_type_name)
+        !$this->createSolrMultilingualFieldType($solr_field_type_name)
       ) {
         if ($this->configuration['sasm_language_unspecific_fallback_on_schema_issues']) {
+          $vars = array(
+            '%field' => $solr_field_type_name,
+          );
+          \Drupal::logger('search_api_solr_multilingual')->warning('Error while indexing: language specific field type %field is not defined in the schema.xml, fallback to language unspecific field type is enabled.', $vars);
           unset($field_name_map_per_language[$language_id]);
         }
         else {
@@ -239,6 +252,10 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
             !$this->createSolrDynamicField($multilingual_solr_field_name, $solr_field_type_name)
           ) {
             if ($this->configuration['sasm_language_unspecific_fallback_on_schema_issues']) {
+              $vars = array(
+                '%field' => $multilingual_solr_field_name,
+              );
+              \Drupal::logger('search_api_solr_multilingual')->warning('Error while indexing: language specific field dynamic %field is not defined in the schema.xml, fallback to language unspecific field is enabled.', $vars);
               unset($field_name_map_per_language[$language_id][$monolingual_solr_field_name]);
             }
             else {
@@ -250,9 +267,10 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     }
 
     foreach ($documents as $document) {
+      $fields = $document->getFields();
       foreach ($field_name_map_per_language as $language_id => $map) {
         foreach ($map as $monolingual_solr_field_name => $multilingual_solr_field_name) {
-          $document->addField($multilingual_solr_field_name, $document->{'get' . $monolingual_solr_field_name}(), $document->getFieldBoost($monolingual_solr_field_name));
+          $document->addField($multilingual_solr_field_name, $fields[$monolingual_solr_field_name], $document->getFieldBoost($monolingual_solr_field_name));
           // @todo removal should be configurable
           $document->removeField($monolingual_solr_field_name);
         }
