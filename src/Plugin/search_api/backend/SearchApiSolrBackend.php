@@ -282,6 +282,8 @@ class SearchApiSolrBackend extends BackendPluginBase {
         '1' => '1.4',
         '3' => '3.x',
         '4' => '4.x',
+        '5' => '5.x',
+        '6' => '6.x',
       ),
       '#default_value' => $this->configuration['solr_version'],
     );

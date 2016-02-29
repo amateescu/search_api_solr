@@ -191,14 +191,17 @@ class SolrHelper {
   /**
    * Gets the current Solr version.
    *
-   * @return int
-   *   1, 3 or 4. Does not give a more detailed version, for that you need to
-   *   use getSystemInfo().
+   * @return string
+   *   The full Solr version string.
    */
   public function getSolrVersion() {
     // Allow for overrides by the user.
     if (!empty($this->configuration['solr_version'])) {
-      return $this->configuration['solr_version'];
+      // In most cases the already stored solr_version is just the major version
+      // number as integer. In this case we will expand it to the minimum
+      // corresponding full version string.
+      $version = explode('.', $this->configuration['solr_version']) + ['0' ,'0', '0'];
+      return implode('.', $version);
     }
 
     $system_info = $this->getSystemInfo();
@@ -206,7 +209,8 @@ class SolrHelper {
     if (isset($system_info['lucene']['solr-spec-version'])) {
       return $system_info['lucene']['solr-spec-version'];
     }
-    return 0;
+
+    return '0.0.0';
   }
 
   /**
@@ -367,7 +371,7 @@ class SolrHelper {
       // in MLT queries.
       // Date fields don't seem to be supported at all.
       $version = $this->getSolrVersion();
-      if ($fields[$mlt_field][0] === 'd' || ($version == 4 && in_array($fields[$mlt_field][0], array('i', 'f')))) {
+      if ($fields[$mlt_field][0] === 'd' || (version_compare($version, '4', '==') && in_array($fields[$mlt_field][0], array('i', 'f')))) {
         continue;
       }
 
@@ -525,7 +529,7 @@ class SolrHelper {
     foreach ($grouping_options['fields'] as $collapse_field) {
       $type = $index_fields[$collapse_field]['type'];
       // Only single-valued fields are supported.
-      if ($this->getSolrVersion() < 4) {
+      if (version_compare($this->getSolrVersion(), '4', '<')) {
         // For Solr 3.x, only string and boolean fields are supported.
         if (!SearchApiUtility::isTextType($type, array('string', 'boolean', 'uri'))) {
           $warnings[] = $this->t('Grouping is not supported for field @field. ' .
