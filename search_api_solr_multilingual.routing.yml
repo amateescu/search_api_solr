@@ -90,3 +90,16 @@ entity.solr_field_type.schema_extra_fields_collection:
   requirements:
     _permission: 'administer search_api'
     _search_api_solr_multilingual_local_action_access_check: 'TRUE'
+
+entity.solr_field_type.config_zip_collection:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/config-zip-collection'
+  defaults:
+    _title: 'config.zip'
+    _controller: '\Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeFileController::getConfigZip'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
+  requirements:
+    _permission: 'administer search_api'
+    _search_api_solr_multilingual_local_action_access_check: 'TRUE'

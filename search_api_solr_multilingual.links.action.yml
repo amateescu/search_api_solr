@@ -15,3 +15,9 @@ entity.solr_field_type.schema_extra_fields_collection:
   appears_on:
     - entity.solr_field_type.collection
     - entity.search_api_server.canonical
+entity.solr_field_type.config_zip_collection:
+  route_name: 'entity.solr_field_type.config_zip_collection'
+  title: 'Get config.zip'
+  appears_on:
+    - entity.solr_field_type.collection
+    - entity.search_api_server.canonical

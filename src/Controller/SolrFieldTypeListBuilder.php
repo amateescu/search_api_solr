@@ -8,10 +8,9 @@
 namespace Drupal\search_api_solr_multilingual\Controller;
 
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
-use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\search_api_solr_multilingual\Entity\SolrFieldType;
+use ZipStream\ZipStream;
 
 /**
  * Provides a listing of SolrFieldType.
@@ -70,6 +69,10 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   }
 
   public function getSchemaExtraTypesXml() {
+    return $this->getPlainTextRenderArray($this->generateSchemaExtraTypesXml());
+  }
+
+  protected function generateSchemaExtraTypesXml() {
     $xml = '<types>';
     /** @var SolrFieldType $entity */
     foreach ($this->load() as $entity) {
@@ -79,18 +82,14 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     }
     $xml .= "\n</types>";
 
-    $build['file'] = array(
-      '#plain_text' => $xml,
-      '#cache' => [
-        'contexts' => $this->entityType->getListCacheContexts(),
-        'tags' => $this->entityType->getListCacheTags(),
-      ],
-    );
-
-    return $build;
+    return $xml;
   }
 
   public function getSchemaExtraFieldsXml() {
+    return $this->getPlainTextRenderArray($this->generateSchemaExtraFieldsXml());
+  }
+
+  protected function generateSchemaExtraFieldsXml() {
     $xml = "<fields>\n";
     foreach ($this->load() as $entity) {
       if (strpos($entity->id(), 'm_') !== 0) {
@@ -106,14 +105,38 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     }
     $xml .= '</fields>';
 
-    $build['file'] = array(
-      '#plain_text' => $xml,
+    return $xml;
+  }
+
+  protected function getPlainTextRenderArray($plain_text) {
+    return ['file' => [
+      '#plain_text' => $plain_text,
       '#cache' => [
         'contexts' => $this->entityType->getListCacheContexts(),
         'tags' => $this->entityType->getListCacheTags(),
       ],
-    );
+    ],];
+  }
 
-    return $build;
+  /**
+   * @return \ZipStream\ZipStream
+   */
+  public function getConfigZip() {
+    // @todo apply descision taken in https://www.drupal.org/node/2661698
+    require drupal_get_path('module', 'search_api_solr_multilingual') . '/vendor/autoload.php';
+
+    // @todo
+    $solr_major_version = '5';
+    $search_api_solr_conf_path = drupal_get_path('module', 'search_api_solr') . '/solr-conf/' . $solr_major_version . '.x/';
+
+    $zip = new ZipStream('config.zip');
+    $zip->addFile('schema_extra_types.xml', $this->generateSchemaExtraTypesXml());
+    $zip->addFile('schema_extra_fields.xml', $this->generateSchemaExtraFieldsXml());
+    foreach (['elevate.xml', 'mapping-ISOLatin1Accent.txt', 'schema.xml', 'protwords.txt', 'solrconfig.xml', 'solrcore.properties', 'stopwords.txt', 'synonyms.txt'] as $file_name) {
+      $zip->addFileFromPath($file_name, $search_api_solr_conf_path . $file_name);
+    }
+    // @todo add language specific text files
+
+    return $zip;
   }
 }
