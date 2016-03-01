@@ -14,7 +14,7 @@ use Drupal\search_api_solr_multilingual\SearchApiSolrMultilingualException;
 /**
  * @SearchApiBackend(
  *   id = "search_api_solr_multilingual_managed_schema",
- *   label = @Translation("Solr Multilingual Managed Schema"),
+ *   label = @Translation("Solr Multilingual Managed Schema (Experimental, don't use in production."),
  *   description = @Translation("Index items using an Apache Solr Multilingual search server with managed schema.")
  * )
  */

@@ -8,7 +8,10 @@
 namespace Drupal\search_api_solr_multilingual\Controller;
 
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
+use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\search_api_solr_multilingual\Entity\SolrFieldType;
 
 /**
  * Provides a listing of SolrFieldType.
@@ -68,8 +71,11 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
   public function getSchemaExtraTypesXml() {
     $xml = '<types>';
+    /** @var SolrFieldType $entity */
     foreach ($this->load() as $entity) {
-      $xml .= "\n" . $entity->getFieldTypeAsXml();
+      if (strpos($entity->id(), 'm_') !== 0) {
+        $xml .= "\n" . $entity->getFieldTypeAsXml();
+      }
     }
     $xml .= "\n</types>";
 
@@ -87,12 +93,15 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   public function getSchemaExtraFieldsXml() {
     $xml = "<fields>\n";
     foreach ($this->load() as $entity) {
-      foreach ($entity->getDynamicFields() as $dynamic_field) {
-        $xml .= '<dynamicField ';
-        foreach ($dynamic_field as $attribute => $value) {
-          $xml .= $attribute . '="' . (is_bool($value) ? ($value  ? 'true' : 'false') : $value). '" ';
+      if (strpos($entity->id(), 'm_') !== 0) {
+        /** @var SolrFieldType $entity */
+        foreach ($entity->getDynamicFields() as $dynamic_field) {
+          $xml .= '<dynamicField ';
+          foreach ($dynamic_field as $attribute => $value) {
+            $xml .= $attribute . '="' . (is_bool($value) ? ($value ? 'true' : 'false') : $value) . '" ';
+          }
+          $xml .= " />\n";
         }
-        $xml .= " />\n";
       }
     }
     $xml .= '</fields>';
