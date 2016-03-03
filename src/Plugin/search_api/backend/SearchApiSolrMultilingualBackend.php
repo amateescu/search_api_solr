@@ -2,16 +2,16 @@
 
 /**
  * @file
- * Contains \Drupal\as_search\Plugin\search_api\backend\SearchApiSolrMultilingualBackend.
+ * Contains \Drupal\search_api_solr_multilingual\Plugin\search_api\backend\SearchApiSolrMultilingualBackend.
  */
 
 namespace Drupal\search_api_solr_multilingual\Plugin\search_api\backend;
 
 /**
  * @SearchApiBackend(
- *   id = "search_api_solr_multilingual",
- *   label = @Translation("Solr Multilingual"),
- *   description = @Translation("Index items using an Apache Solr Multilingual search server.")
+ *   id = "search_api_solr.multilingual",
+ *   label = @Translation("Multilingual Solr"),
+ *   description = @Translation("Index items using an Solr search server configured for multilingual content.")
  * )
  */
 class SearchApiSolrMultilingualBackend extends AbstractSearchApiSolrMultilingualBackend {

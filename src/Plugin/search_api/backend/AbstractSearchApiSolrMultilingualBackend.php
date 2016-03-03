@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\as_search\Plugin\search_api\backend\AbstractSearchApiSolrMultilingualBackend.
+ * Contains \Drupal\search_api_solr_multilingual\Plugin\search_api\backend\AbstractSearchApiSolrMultilingualBackend.
  */
 
 namespace Drupal\search_api_solr_multilingual\Plugin\search_api\backend;

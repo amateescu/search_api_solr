@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\as_search\Plugin\search_api\backend\SearchApiSolrMultilingualBackend.
+ * Contains \Drupal\search_api_solr_multilingual\Plugin\search_api\backend\SearchApiSolrMultilingualManagedSchemaBackend.
  */
 
 namespace Drupal\search_api_solr_multilingual\Plugin\search_api\backend;
@@ -14,11 +14,11 @@ use Drupal\search_api_solr_multilingual\SearchApiSolrMultilingualException;
 /**
  * @SearchApiBackend(
  *   id = "search_api_solr_multilingual_managed_schema",
- *   label = @Translation("Solr Multilingual Managed Schema (Experimental, don't use in production."),
- *   description = @Translation("Index items using an Apache Solr Multilingual search server with managed schema.")
+ *   label = @Translation("Multilingual Solr Managed Schema (Experimental, don't use in production."),
+ *   description = @Translation("Index items using an Solr search server with managed schema for dynamic configuration for multilingual content.")
  * )
  */
-class SearchApiSolrMultilingualBackend extends AbstractSearchApiSolrMultilingualBackend {
+class SearchApiSolrMultilingualManagedSchemaBackend extends AbstractSearchApiSolrMultilingualBackend {
 
   protected function createSolrDynamicField($solr_field_name, $solr_field_type_name) {
     // @todo use SolrFieldType::getDynamicFields()
