@@ -214,6 +214,27 @@ class SolrHelper {
   }
 
   /**
+   * Gets the current Solr major version.
+   *
+   * @return integer
+   *   The Solr major version.
+   */
+  public function getSolrMajorVersion() {
+    list($major, , ) = explode('.', $this->getSolrVersion());
+    return $major;
+  }
+
+  /**
+   * Gets the current Solr branch name.
+   *
+   * @return string
+   *   The Solr branch string.
+   */
+  public function getSolrBranch() {
+    return $this->getSolrMajorVersion() . '.x';
+  }
+
+  /**
    * Gets information about the Solr Core.
    *
    * @return object
