@@ -21,6 +21,7 @@ use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility as SearchApiUtility;
+use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Drupal\search_api_solr\Solr\SolrHelper;
 use Solarium\Client;
@@ -41,7 +42,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   description = @Translation("Index items using an Apache Solr search server.")
  * )
  */
-class SearchApiSolrBackend extends BackendPluginBase {
+class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInterface {
 
   /**
    * The date format that Solr uses, in PHP date() syntax.
@@ -883,14 +884,14 @@ class SearchApiSolrBackend extends BackendPluginBase {
   }
 
   /**
-   * @return \Drupal\search_api_solr\Solr\SolrHelper
+   * {@inheritdoc}
    */
   public function getSolrHelper() {
     return $this->solrHelper;
   }
 
   /**
-   * @param \Drupal\search_api_solr\Solr\SolrHelper $solrHelper
+   * {@inheritdoc}
    */
   public function setSolrHelper($solrHelper) {
     $this->solrHelper = $solrHelper;
@@ -908,10 +909,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
   }
 
   /**
-   * Returns the Solarium client.
-   *
-   * @return \Solarium\Client
-   *   The solarium instance object.
+   * {@inheritdoc}
    */
   public function getSolr() {
     return $this->solr;
@@ -930,21 +928,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
   }
 
   /**
-   * Creates a list of all indexed field names mapped to their Solr field names.
-   *
-   * @param \Drupal\search_api\IndexInterface $index
-   *   The Search Api index.
-   * @param bool $single_value_name
-   *   (optional) Whether to return names for fields which store only the first
-   *   value of the field. Defaults to FALSE.
-   * @param bool $reset
-   *   (optional) Whether to reset the static cache.
-   *
-   * The special fields "search_api_id" and "search_api_relevance" are also
-   * included. Any Solr fields that exist on search results are mapped back to
-   * to their local field names in the final result set.
-   *
-   * @see SearchApiSolrBackend::search()
+   * {@inheritdoc}
    */
   public function getFieldNames(IndexInterface $index, $single_value_name = FALSE, $reset = FALSE) {
     // @todo The field name mapping should be cached per index because custom
@@ -1426,6 +1410,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
    * Sets the request handler.
    *
    * This should also make the needed adjustments to the request parameters.
+   * @todo SearchApiSolrConnectionInterface doesn't exist!
    *
    * @param $handler
    *   Name of the handler to set.
@@ -1677,9 +1662,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
   }
 
   /**
-   * Ping the Solr server to tell whether it can be accessed.
-   *
-   * Uses the admin/ping request handler.
+   * {@inheritdoc}
    */
   public function ping() {
     $this->connect();
@@ -1700,10 +1683,7 @@ class SearchApiSolrBackend extends BackendPluginBase {
   }
 
   /**
-   * Gets the currently used Solr connection object.
-   *
-   * @return \Solarium\Client
-   *   The solr connection object used by this server.
+   * {@inheritdoc}
    */
   public function getSolrConnection() {
     $this->connect();
@@ -1711,34 +1691,16 @@ class SearchApiSolrBackend extends BackendPluginBase {
   }
 
   /**
-   * Get metadata about fields in the Solr/Lucene index.
-   *
-   * @param int $num_terms
-   *   Number of 'top terms' to return.
-   *
-   * @return array
-   *   An array of SearchApiSolrField objects.
-   *
-   * @see SearchApiSolrConnectionInterface::getFields()
+   * {@inheritdoc}
    */
   public function getFields($num_terms = 0) {
     $this->connect();
+    // @todo getFields() is not defined.
     return $this->solr->getFields($num_terms);
   }
 
   /**
-   * Retrieves a config file or file list from the Solr server.
-   *
-   * Uses the admin/file request handler.
-   *
-   * @param string|null $file
-   *   (optional) The name of the file to retrieve. If the file is a directory,
-   *   the directory contents are instead listed and returned. NULL represents
-   *   the root config directory.
-   *
-   * @return \Solarium\Core\Client\Response
-   *   A Solarium response object containing either the file contents or a file
-   *   list.
+   * {@inheritdoc}
    */
   public function getFile($file = NULL) {
     $this->connect();
