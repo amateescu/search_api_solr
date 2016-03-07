@@ -20,6 +20,10 @@ use Drupal\search_api_solr_multilingual\SearchApiSolrMultilingualException;
  */
 class SearchApiSolrMultilingualManagedSchemaBackend extends AbstractSearchApiSolrMultilingualBackend {
 
+  public function isManagedSchema() {
+    return TRUE;
+  }
+
   protected function createSolrDynamicField($solr_field_name, $solr_field_type_name) {
     // @todo use SolrFieldType::getDynamicFields()
     $command = ['add-dynamic-field' => [

@@ -59,6 +59,20 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   protected $label;
 
   /**
+   * Indicates if the field type requires a managed schema.
+   *
+   * @var boolean
+   */
+  protected $managed_schema;
+
+  /**
+   * Minimum Solr version required by this field type.
+   *
+   * @var string
+   */
+  protected $minimum_solr_version;
+
+  /**
    * Solr Field Type definition
    *
    * @var array
@@ -85,7 +99,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     return $this;
   }
 
-  public function getFieldTypeAsXml() {
+  public function getFieldTypeAsXml($add_commment = TRUE) {
     $root = new \SimpleXMLElement('<fieldType/>');
 
     $f = function (\SimpleXMLElement $element, array $attributes) use (&$f) {
@@ -112,15 +126,25 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     };
     $f($root, $this->field_type);
 
-    return preg_replace('/<\?.*?\?>/', '', $root->asXML());
+    $comment = '';
+    if ($add_commment) {
+      $comment = "<!--\n" . $this->label() . "\n" .
+        ($this->isManagedSchema() ? " for managed schema\n" : '') .
+        $this->getMinimumSolrVersion() .
+        "\n-->\n";
+    }
+
+    return $comment . "\n" . preg_replace('/<\?.*?\?>/', '', $root->asXML());
   }
 
   public function getDynamicFields() {
     $dynamic_fields = [];
     foreach (array('ts', 'tm') as $prefix) {
       $dynamic_fields[] = [
-        'name' => SearchApiSolrUtility::encodeSolrDynamicFieldName(Utility::getLanguageSpecificSolrDynamicFieldPrefix($prefix, $this->langcode)) . '*',
-        'type' => $this->id,
+        'name' => SearchApiSolrUtility::encodeSolrDynamicFieldName(
+            Utility::getLanguageSpecificSolrDynamicFieldPrefix($prefix, $this->langcode)
+          ) . '*',
+        'type' => $this->field_type['name'],
         'stored' => TRUE,
         'indexed' => TRUE,
         'multiValued' => strpos($prefix, 'm') !== FALSE,
@@ -144,6 +168,22 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     foreach ($text_files as $name => $content) {
       $this->addTextFile($name, $content);
     }
+  }
+
+  public function isManagedSchema() {
+    return $this->managed_schema;
+  }
+
+  public function setManagedSchema($managed_schema) {
+    $this->managed_schema = $managed_schema;
+  }
+
+  public function getMinimumSolrVersion() {
+    return $this->minimum_solr_version;
+  }
+
+  public function setMinimumSolrVersion($minimum_solr_version) {
+    $this->minimum_solr_version = $minimum_solr_version;
   }
 
   /**

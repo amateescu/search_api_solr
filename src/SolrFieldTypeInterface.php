@@ -13,6 +13,29 @@ use Drupal\Core\Config\Entity\ConfigEntityInterface;
  * Provides an interface defining a SolrFieldType entity.
  */
 interface SolrFieldTypeInterface extends ConfigEntityInterface {
-  // Add get/set methods for your configuration properties here.
+
+  public function getFieldType();
+
+  public function getFieldTypeAsJson();
+
+  public function setFieldTypeAsJson($field_type);
+
+  public function getFieldTypeAsXml();
+
+  public function getDynamicFields();
+
+  public function getTextFiles();
+
+  public function addTextFile($name, $content);
+
+  public function setTextFiles($text_files);
+
+  public function isManagedSchema();
+
+  public function setManagedSchema($managed_schema);
+
+  public function getMinimumSolrVersion();
+
+  public function setMinimumSolrVersion($minimum_solr_version);
 
 }

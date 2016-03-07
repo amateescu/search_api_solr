@@ -1,10 +1,9 @@
-
 # SolrFieldType routing definition
 entity.solr_field_type.collection:
   path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type'
   defaults:
-    _entity_list: 'solr_field_type'
     _title: 'SolrFieldType Configuration'
+    _controller: '\Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeController::listing'
   options:
     parameters:
       search_api_server:
@@ -69,7 +68,7 @@ entity.solr_field_type.schema_extra_types_collection:
   path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/schema-extra-types-collection'
   defaults:
     _title: 'schema_extra_types.xml'
-    _controller: '\Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeFileController::getSchemaExtraTypesXml'
+    _controller: '\Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeController::getSchemaExtraTypesXml'
   options:
     parameters:
       search_api_server:
@@ -82,7 +81,7 @@ entity.solr_field_type.schema_extra_fields_collection:
   path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/schema-extra-fields-collection'
   defaults:
     _title: 'schema_extra_fields.xml'
-    _controller: '\Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeFileController::getSchemaExtraFieldsXml'
+    _controller: '\Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeController::getSchemaExtraFieldsXml'
   options:
     parameters:
       search_api_server:
@@ -95,7 +94,7 @@ entity.solr_field_type.config_zip_collection:
   path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/config-zip-collection'
   defaults:
     _title: 'config.zip'
-    _controller: '\Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeFileController::getConfigZip'
+    _controller: '\Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeController::getConfigZip'
   options:
     parameters:
       search_api_server:

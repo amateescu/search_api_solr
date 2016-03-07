@@ -15,6 +15,7 @@ use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
+use Drupal\search_api_solr_multilingual\SolrMultilingualBackendInterface;
 use Drupal\search_api_solr_multilingual\Utility\Utility;
 use Solarium\Core\Client\Response;
 use Solarium\Core\Query\Result\ResultInterface;
@@ -33,11 +34,15 @@ define('SEARCH_API_LANGUAGE_FIELD_NAME', 'search_api_language');
    * Class AbstractSearchApiSolrMultilingualBackend
    * @package Drupal\search_api_solr_multilingual\Plugin\search_api\backend
    */
-abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBackend {
+abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBackend implements SolrMultilingualBackendInterface {
 
   abstract protected function createSolrDynamicField($solr_field_name, $solr_field_type_name);
 
   abstract protected function createSolrMultilingualFieldType($solr_field_type_name);
+
+  public function isManagedSchema() {
+    return FALSE;
+  }
 
   /**
    * @inheritdoc
