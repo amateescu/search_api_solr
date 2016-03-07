@@ -887,6 +887,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getSolrHelper() {
+    // Make sure that the SolrHelper has a connection which is required for some
+    // of its functions.
+    $this->connect();
+
     return $this->solrHelper;
   }
 
