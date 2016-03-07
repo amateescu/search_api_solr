@@ -1,4 +1,4 @@
-search_api.backend.plugin.search_api_solr:
+plugin.plugin_configuration.search_api_backend.search_api_solr:
   type: config_object
   label: 'Search API Solr settings'
   mapping:

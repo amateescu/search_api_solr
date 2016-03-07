@@ -1,5 +1,6 @@
 Search API Solr Search 1.x, dev (xxxx-xx-xx):
 ---------------------------------------------
+- #2681363 by drunken monkey: Updated the key of our backend config schema.
 - #2313591 by drunken monkey: Added support for random sorting.
 - #2656754 by drunken monkey: Adapted to a change in index class method names.
 - Starting the 8.x port.
