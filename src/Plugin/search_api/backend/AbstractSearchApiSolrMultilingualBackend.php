@@ -8,6 +8,7 @@
 namespace Drupal\search_api_solr_multilingual\Plugin\search_api\backend;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api_solr_multilingual\SearchApiSolrMultilingualException;
 use Drupal\search_api\IndexInterface;
@@ -45,18 +46,56 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
   }
 
   /**
-   * @inheritdoc
+   * {@inheritdoc}
    */
-  protected function connect() {
-    parent::connect();
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    $form = parent::buildConfigurationForm($form, $form_state);
 
-    // @todo the configurations don't exist yet.
-    $this->configuration['sasm_limit_search_page_to_content_language'] = TRUE;
-    $this->configuration['sasm_language_unspecific_fallback_on_schema_issues'] = TRUE;
+    $form['multilingual'] = array(
+      '#type' => 'fieldset',
+      '#title' => $this->t('Multilingual'),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+    );
+    $form['multilingual']['sasm_limit_search_page_to_content_language'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Limit to current content language.'),
+      '#description' => $this->t('Limit all search results to current content language.'),
+      '#default_value' => isset($this->configuration['sasm_limit_search_page_to_content_language']) ? $this->configuration['sasm_limit_search_page_to_content_language'] : FALSE,
+    );
+    $form['multilingual']['sasm_language_unspecific_fallback_on_schema_issues'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Use language undefined fall back.'),
+      '#description' => $this->t('It might happen that you enable a language within Drupal without updating the Solr field definitions on the Solr server immediately. In this case Drupal will log errors when such a translation gets indexed or if the language is used during searches. If you enable this fall back switch, the language will be mapped to "undefined" until the missing language-specific filed become available on the Solr server.'),
+      '#default_value' => isset($this->configuration['sasm_language_unspecific_fallback_on_schema_issues']) ? $this->configuration['sasm_language_unspecific_fallback_on_schema_issues'] : TRUE,
+    );
 
-    #var_dump($this->getSolrHelper()->getSystemInfo());
+    return $form;
   }
-    /**
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+    $values = $form_state->getValues();
+
+    // Since the form is nested into another, we can't simply use #parents for
+    // doing this array restructuring magic. (At least not without creating an
+    // unnecessary dependency on internal implementation.)
+    foreach ($values['multilingual'] as $key => $value) {
+      $form_state->setValue($key, $value);
+    }
+
+    parent::submitConfigurationForm($form, $form_state);
+  }
+
+  /**
    * Modify the query before it is sent to solr.
    *
    * Replace all language unspecific fulltext query fields by language specific
