@@ -3,3 +3,4 @@
 .settings
 .idea
 nbproject
+composer.lock

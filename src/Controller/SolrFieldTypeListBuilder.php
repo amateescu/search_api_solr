@@ -156,9 +156,6 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    * @return \ZipStream\ZipStream
    */
   public function getConfigZip() {
-    // @todo apply decision taken in https://www.drupal.org/node/2661698
-    require drupal_get_path('module', 'search_api_solr_multilingual') . '/vendor/autoload.php';
-
     $solr_helper = $this->getBackend()->getSolrHelper();
     $solr_major_version = $solr_helper->getSolrMajorVersion();
     $search_api_solr_conf_path = drupal_get_path('module', 'search_api_solr') . '/solr-conf/' . $solr_major_version . '.x/';
