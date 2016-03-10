@@ -25,6 +25,15 @@ For more detailed documentation, see the handbook [2].
 
 [2] https://drupal.org/node/1999280
 
+Running the test suite
+----------------------
+
+This module comes with a suite of automated tests. To execute those, you just
+need to have a (correctly configured) Solr instance running at the following
+address:
+  http://localhost:8983/solr/d8
+(This represents a core named "d8" in a default installation of Solr.)
+
 Supported optional features
 ---------------------------
 

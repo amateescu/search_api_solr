@@ -67,6 +67,9 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
         http_method:
           type: string
           label: 'Use Get or Post for the Solr Queries'
+        site_hash:
+          type: boolean
+          label: 'Restrict searches to current site'
     solr_version:
       type: string
       label: 'Solr version override'
