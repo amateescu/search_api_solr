@@ -531,6 +531,44 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
+  public function updateIndex(IndexInterface $index) {
+    if ($this->indexFieldsUpdated($index)) {
+      $index->reindex();
+    }
+  }
+
+  /**
+   * Checks if the recently updated index had any fields changed.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *
+   * @return bool
+   */
+  protected function indexFieldsUpdated(IndexInterface $index) {
+    // Get the original index, before the update. If it cannot be found, err on
+    // the side of caution.
+    if (!isset($index->original)) {
+      return TRUE;
+    }
+    /** @var \Drupal\search_api\IndexInterface $original */
+    $original = $index->original;
+
+    $old_fields = $original->getFields();
+    $new_fields = $index->getFields();
+    if (!$old_fields && !$new_fields) {
+      return FALSE;
+    }
+    if (array_diff_key($old_fields, $new_fields) || array_diff_key($new_fields, $old_fields)) {
+      return TRUE;
+    }
+    $old_field_names = $this->getFieldNames($original, FALSE, TRUE);
+    $new_field_names = $this->getFieldNames($index, FALSE, TRUE);
+    return $old_field_names != $new_field_names;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function removeIndex($index) {
     // Only delete the index's data if the index isn't read-only.
     if (!is_object($index) || empty($index->read_only)) {
@@ -1167,12 +1205,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   An array describing facets that apply to the current results.
    */
   protected function extractFacets(QueryInterface $query, Result $resultset) {
-    $facets = array();
-
     if (!$resultset->getFacetSet()) {
-      return $facets;
+      return array();
     }
 
+    $facets = array();
     $index = $query->getIndex();
     $field_names = $this->getFieldNames($index);
     $fields = $index->getFields();
@@ -1270,6 +1307,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected function createFilterQueries(ConditionGroupInterface $conditions, array $solr_fields, array $index_fields) {
     $or = $conditions->getConjunction() == 'OR';
     $fq = array();
+    $prefix = '';
     foreach ($conditions->getConditions() as $condition) {
       if ($condition instanceof ConditionInterface) {
         $field = $condition->getField();
@@ -1283,17 +1321,30 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
       else {
         $q = $this->createFilterQueries($condition, $solr_fields, $index_fields);
-        if ($conditions->getConjunction() != $condition->getConjunction()) {
+        if ($conditions->getConjunction() != $condition->getConjunction() && count($q) > 1) {
           // $or == TRUE means the nested filter has conjunction AND, and vice versa
           $sep = $or ? ' ' : ' OR ';
-          $fq[] = count($q) == 1 ? reset($q) : '((' . implode(')' . $sep . '(', $q) . '))';
+          $fq[] = '((' . implode(')' . $sep . '(', $q) . '))';
         }
         else {
           $fq = array_merge($fq, $q);
         }
       }
     }
-    return ($or && count($fq) > 1) ? array('((' . implode(') OR (', $fq) . '))') : $fq;
+    foreach ($conditions->getTags() as $tag) {
+      $prefix = "{!tag=$tag}";
+      // We can only apply one tag per filter.
+      break;
+    }
+    if ($or && count($fq) > 1) {
+      $fq = array('((' . implode(') OR (', $fq) . '))');
+    }
+    if ($prefix) {
+      foreach ($fq as $i => $filters) {
+        $fq[$i] = $prefix . $filters;
+      }
+    }
+    return $fq;
   }
 
   /**
@@ -1347,35 +1398,29 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * Helper method for creating the facet field parameters.
    */
   protected function setFacets(array $facets, array $field_names, Query $solarium_query) {
-    $fq = array();
-    if (!$facets) {
+    if (empty($facets)) {
       return;
     }
+
     $facet_set = $solarium_query->getFacetSet();
     $facet_set->setSort('count');
     $facet_set->setLimit(10);
     $facet_set->setMinCount(1);
     $facet_set->setMissing(FALSE);
 
-    $taggedFields = array();
     foreach ($facets as $info) {
       if (empty($field_names[$info['field']])) {
         continue;
       }
-      // String fields have their own corresponding facet fields.
       $field = $field_names[$info['field']];
-      // Check for the "or" operator.
-      if (isset($info['operator']) && $info['operator'] === 'or') {
-        // Remember that filters for this field should be tagged.
-        $escaped = SearchApiSolrUtility::escapeFieldName($field_names[$info['field']]);
-        $taggedFields[$escaped] = "{!tag=$escaped}";
-        // Add the facet field.
-        $facet_field = $facet_set->createFacetField($field)->setField("{!ex=$escaped}$field");
+      // Create the Solarium facet field object.
+      $facet_field = $facet_set->createFacetField($field)->setField($field);
+
+      // For "OR" facets, add the expected tag for exclusion.
+      if (isset($info['operator']) && strtolower($info['operator']) === 'or') {
+        $facet_field->setExcludes(array('facet:' . $info['field']));
       }
-      else {
-        // Add the facet field.
-        $facet_field = $facet_set->createFacetField($field)->setField($field);
-      }
+
       // Set limit, unless it's the default.
       if ($info['limit'] != 10) {
         $limit = $info['limit'] ? $info['limit'] : -1;
@@ -1385,28 +1430,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       if ($info['min_count'] != 1) {
         $facet_field->setMinCount($info['min_count']);
       }
+
       // Set missing, if specified.
       if ($info['missing']) {
         $facet_field->setMissing(TRUE);
       }
-    }
-    // Tag filters of fields with "OR" facets.
-    foreach ($taggedFields as $field => $tag) {
-      $regex = '#(?<![^( ])' . preg_quote($field, '#') . ':#';
-      foreach ($fq as $i => $conditions) {
-        // Solr can't handle two tags on the same filter, so we don't add two.
-        // Another option here would even be to remove the other tag, too,
-        // since we can be pretty sure that this filter does not originate from
-        // a facet – however, wrong results would still be possible, and this is
-        // definitely an edge case, so don't bother.
-        if (preg_match($regex, $conditions) && substr($conditions, 0, 6) != '{!tag=') {
-          $fq[$i] = $tag . $conditions;
-        }
+      else {
+        $facet_field->setMissing(FALSE);
       }
-    }
-
-    foreach ($fq as $key => $conditions_query) {
-      $solarium_query->createFilterQuery('facets_' . $key)->setQuery($conditions_query);
     }
   }
 

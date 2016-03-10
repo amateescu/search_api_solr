@@ -2,7 +2,7 @@ id: solr_search_index
 name: 'Test index'
 description: 'An index used for testing'
 read_only: false
-fields:
+field_settings:
   id:
     label: ID
     type: integer
@@ -40,25 +40,28 @@ fields:
     property_path: search_api_language
     index_locked: true
     type_locked: true
-processors:
+processor_settings:
   add_url:
-    processor_id: add_url
-    weights:
-      preprocess_index: -30
-    settings: {  }
+    plugin_id: add_url
+    settings:
+      weights:
+        preprocess_index: -30
   language:
-    processor_id: language
-    weights:
-      preprocess_index: -50
-    settings: {  }
+    plugin_id: language
+    settings:
+      weights:
+        preprocess_index: -50
 options:
   cron_limit: -1
   index_directly: false
-datasources:
-  - 'entity:entity_test'
-datasource_configs: {  }
-tracker: default
-tracker_config: {  }
+datasource_settings:
+  'entity:entity_test':
+    plugin_id: 'entity:entity_test'
+    settings: {  }
+tracker_settings:
+  'default':
+    plugin_id: default
+    settings: { }
 server: solr_search_server
 status: true
 langcode: en
