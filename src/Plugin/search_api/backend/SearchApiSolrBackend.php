@@ -306,13 +306,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       ),
     );
 
-    $description = $this->t('Automatically filter all searches to only retrieve results from this Drupal site. This enables you to use the same Solr server (and core) with multiple sites. Disable if you want to retrieve results from multiple sites at once.');
-    $form['advanced']['site_hash'] = array(
-      '#type' => 'checkbox',
-      '#title' => $this->t('Multi-site compatibility'),
-      '#description' => $description,
-      '#default_value' => $this->configuration['site_hash'],
-    );
 
     if ($this->moduleHandler->moduleExists('search_api_autocomplete')) {
       $form['advanced']['autocomplete'] = array(
@@ -334,6 +327,20 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         '#default_value' => $this->configuration['autocorrect_suggest_words'],
       );
     }
+
+    $form['multisite'] = array(
+      '#type' => 'fieldset',
+      '#title' => $this->t('Multi-site compatibility'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $description = $this->t('Automatically filter all searches to only retrieve results from this Drupal site. By default a Solr server (and core) is able to index the data of multiple sites. Disable if you want to retrieve results from multiple sites at once.');
+    $form['multisite']['site_hash'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Retrieve results for this site only'),
+      '#description' => $description,
+      '#default_value' => $this->configuration['site_hash'],
+    );
 
     return $form;
   }
@@ -358,6 +365,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // unnecessary dependency on internal implementation.)
     $values += $values['http'];
     $values += $values['advanced'];
+    $values += $values['multisite'];
     $values += !empty($values['autocomplete']) ? $values['autocomplete'] : array();
     unset($values['http'], $values['advanced'], $values['autocomplete']);
 
