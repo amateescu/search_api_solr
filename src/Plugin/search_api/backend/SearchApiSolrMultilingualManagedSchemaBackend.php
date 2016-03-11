@@ -20,12 +20,18 @@ use Drupal\search_api_solr_multilingual\SearchApiSolrMultilingualException;
  */
 class SearchApiSolrMultilingualManagedSchemaBackend extends AbstractSearchApiSolrMultilingualBackend {
 
+  /**
+   * {@inheritdoc}
+   */
   public function isManagedSchema() {
     return TRUE;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function createSolrDynamicField($solr_field_name, $solr_field_type_name) {
-    // @todo use SolrFieldType::getDynamicFields()
+    // @todo leverage SolrFieldType::getDynamicFields().
     $command = ['add-dynamic-field' => [
       'name' => $solr_field_name,
       'type' => $solr_field_type_name,
@@ -44,6 +50,9 @@ class SearchApiSolrMultilingualManagedSchemaBackend extends AbstractSearchApiSol
     return TRUE;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function createSolrMultilingualFieldType($solr_field_type_name) {
     $field_type_name = 'm_' . $solr_field_type_name;
 

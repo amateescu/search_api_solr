@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\search_api_solr_multilingual\EventSubscriber\ConfigSubscriber.
@@ -11,14 +12,21 @@ use Drupal\Core\Config\ConfigEvents;
 use Drupal\Core\Config\ConfigInstallerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
+/**
+ * Provides a ConfigSubscriber that adds language-specific Solr Field Types.
+ *
+ * Whenever a new language is enabled this EventSubscriber installs all
+ * available Solr Field Types for that language.
+ */
 class ConfigSubscriber implements EventSubscriberInterface {
+
   /**
-   * The config installer.
+   * @var \Drupal\Core\Config\ConfigInstallerInterface
    */
   protected $configInstaller;
 
   /**
-   * @param $configInstaller
+   * @param \Drupal\Core\Config\ConfigInstallerInterface $configInstaller
    *   The Config Installer.
    */
   public function __construct(ConfigInstallerInterface $configInstaller) {
@@ -33,7 +41,12 @@ class ConfigSubscriber implements EventSubscriberInterface {
     return $events;
   }
 
-  function onConfigSave(ConfigCrudEvent $event) {
+  /**
+   * Installs all available Solr Field Types for a new language.
+   *
+   * @param \Drupal\Core\Config\ConfigCrudEvent $event
+   */
+  public function onConfigSave(ConfigCrudEvent $event) {
     $saved_config = $event->getConfig();
 
     if (preg_match('@^language\.entity\.(.+)@', $saved_config->getName(), $matches) &&

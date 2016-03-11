@@ -19,10 +19,13 @@ use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
  */
 define('SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR', ';');
 
+/**
+ * Provides various helper functions for multilingual Solr backends.
+ */
 class Utility {
 
   /**
-   * Maps a solr field name to its language specific equivalent.
+   * Maps a Solr field name to its language-specific equivalent.
    *
    * For example the dynamic field tm* will become tm;en;* for English.
    * Following this pattern we also have fallbacks automatically:
@@ -37,21 +40,65 @@ class Utility {
    * - tm_3b_de_5f_AT_3b_*
    * - tm_3b_de_3b_*
    * - tm_*
-   * See Drupal\search_api_solr\Utility\Utility::encodeSolrDynamicFieldName().
    *
    * @param string $field_name
+   *   The field name.
+   *
    * @param string $language_id
+   *   The Drupal langauge code.
+   *
    * @return string
+   *   The language-specific name.
+   *
+   * @see Drupal\search_api_solr\Utility\Utility::encodeSolrDynamicFieldName().
+   * @see https://wiki.apache.org/solr/SchemaXml#Dynamic_fields
    */
   public static function getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id) {
-    return Utility::_modifySolrDynamicFieldName($field_name, '@^([a-z]+)_@', '$1' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . $language_id . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR);
+    return Utility::modifySolrDynamicFieldName($field_name, '@^([a-z]+)_@', '$1' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . $language_id . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR);
   }
 
+  /**
+   * Maps a language-specific Solr field name to its unspecific equivalent.
+   *
+   * For example the dynamic field tm;en;* for English will become tm*.
+   *
+   * @param string $field_name
+   *   The field name.
+   *
+   * @param string $language_id
+   *   The Drupal langauge code.
+   *
+   * @return string
+   *   The language-specific name.
+   *
+   * @see Drupal\search_api_solr_multilingual\Utility\Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName().
+   * @see Drupal\search_api_solr\Utility\Utility::encodeSolrDynamicFieldName().
+   * @see https://wiki.apache.org/solr/SchemaXml#Dynamic_fields
+   */
   public static function getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($field_name) {
-    return Utility::_modifySolrDynamicFieldName($field_name, '@' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . '.+?' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . '@', '_');
+    return Utility::modifySolrDynamicFieldName($field_name, '@' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . '.+?' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . '@', '_');
   }
 
-  public static function _modifySolrDynamicFieldName($field_name, $pattern, $replacement) {
+  /**
+   * Modifies a dynamic Solr field's name using a regular expression.
+   *
+   * If the field name is encoded it will be decoded before the regular
+   * expression runs and encoded again before the modified is returned.
+   *
+   * @param string $field_name
+   *   The dynamic Solr field name.
+   *
+   * @param $pattern
+   *   The regex.
+   * @param $replacement
+   *   The replacement for the pattern match.
+   *
+   * @return string
+   *   The modified dynamic Solr field name.
+   *
+   * @see Drupal\search_api_solr\Utility\Utility::encodeSolrDynamicFieldName().
+   */
+  protected static function modifySolrDynamicFieldName($field_name, $pattern, $replacement) {
     $encoded = strpos($field_name, SearchApiSolrUtility::encodeSolrDynamicFieldName('_')) | strpos($field_name, SearchApiSolrUtility::encodeSolrDynamicFieldName(SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR));
     if ($encoded) {
       $field_name = SearchApiSolrUtility::decodeSolrDynamicFieldName($field_name);
@@ -63,10 +110,32 @@ class Utility {
     return $field_name;
   }
 
+  /**
+   * Gets the language-specific prefix for a dynamic Solr field.
+   *
+   * @param string $prefix
+   *   The language-unspecific prefix.
+   *
+   * @param string $language_id
+   *   The Drupal language code.
+   *
+   * @return string
+   *   The language-specific prefix.
+   */
   public static function getLanguageSpecificSolrDynamicFieldPrefix($prefix, $language_id) {
     return $prefix . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . $language_id . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR;
   }
 
+  /**
+   * Extracts the language code from a language-specific dynamic Solr field.
+   *
+   * @param string  $field_name
+   *  The language-specific dynamic Solr field name.
+   *
+   * @return mixed
+   *   The Drupal language code as string or boolean FALSE if no langauge code
+   *   could be extracted.
+   */
   public static function getLangaugeIdFromLanguageSpecificSolrDynamicFieldName($field_name) {
     $encoded = strpos($field_name, SearchApiSolrUtility::encodeSolrDynamicFieldName(SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR));
     if ($encoded) {

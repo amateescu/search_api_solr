@@ -31,16 +31,34 @@ use Solarium\QueryType\Select\Result\Result;
  */
 define('SEARCH_API_LANGUAGE_FIELD_NAME', 'search_api_language');
 
-  /**
-   * Class AbstractSearchApiSolrMultilingualBackend
-   * @package Drupal\search_api_solr_multilingual\Plugin\search_api\backend
-   */
+/**
+ * A abstract base class for all multilingual Solr Search API backends.
+ */
 abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBackend implements SolrMultilingualBackendInterface {
 
+  /**
+   * Creates and deploys a missing dynamic Solr field if the server supports it.
+   *
+   * @param string $solr_field_name
+   *   The name of the new dynamic Solr field.
+   *
+   * @param string $solr_field_type_name
+   *   The name of the Solr Field Type to be used for the new dynamic Solr
+   *   field.
+   */
   abstract protected function createSolrDynamicField($solr_field_name, $solr_field_type_name);
 
+  /**
+   * Creates and deploys a missing Solr Field Type if the server supports it.
+   *
+   * @param string $solr_field_type_name
+   *   The name of the Solr Field Type.
+   */
   abstract protected function createSolrMultilingualFieldType($solr_field_type_name);
 
+  /**
+   * {@inheritdoc}
+   */
   public function isManagedSchema() {
     return FALSE;
   }
@@ -91,6 +109,9 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     foreach ($values['multilingual'] as $key => $value) {
       $form_state->setValue($key, $value);
     }
+
+    // Clean-up the form to avoid redundant entries in the stored configuration.
+    $form_state->unsetValue('multilingual');
 
     parent::submitConfigurationForm($form, $form_state);
   }
@@ -214,15 +235,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
   }
 
   /**
-   * Modify the the solr result set.
-   *
-   * @param \Drupal\search_api\Query\ResultSetInterface $results
-   *   The results array that will be returned for the search.
-   * @param \Drupal\search_api\Query\QueryInterface $query
-   *   The \Drupal\search_api\Query\Query object representing the executed
-   *   search query.
-   * @param object $response
-   *   The response object returned by Solr.
+   * {@inheritdoc}
    */
   protected function postQuery(ResultSetInterface $results, QueryInterface $query, $response) {
     parent::postQuery($results, $query, $response);
@@ -356,6 +369,20 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     return array_unique($language_ids);
   }
 
+  /**
+   * Indicates if an 'element' is part of the Solr server's schema.
+   *
+   * @param string $kind
+   *   The kind of the element, for example 'dynamicFields' or 'fieldTypes'.
+   *
+   * @param string $name
+   *   The name of the element.
+   *
+   * @return bool
+   *    True if an element of the given kind and name exists, false otherwise.
+   *
+   * @throws \Drupal\search_api_solr_multilingual\SearchApiSolrMultilingualException
+   */
   protected function isPartOfSchema($kind, $name) {
     static $previous_calls;
 
@@ -383,10 +410,13 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
   }
 
   /**
-   * Sends a REST GET request and return the result.
+   * Sends a REST GET request to the Solr server and returns the result.
    *
-   * @param string $path The path to append to the base URI
-   * @return string The decoded response
+   * @param string $path
+   *   The path to append to the base URI.
+   *
+   * @return string
+   *   The decoded response.
    */
   protected function solrRestGet($path) {
     $uri = $this->solr->getEndpoint()->getBaseUri() . $path;
@@ -402,11 +432,17 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
   }
 
   /**
-   * Sends a REST POST request and return the result.
+   * Sends a REST POST request and returns the result.
    *
-   * @param string $path The path to append to the base URI
-   * @param string $command_json The JSON-encoded data.
-   * @return string The decoded response
+   * @param string $path
+   *   The path to append to the base URI
+   *
+   * @param string $command_json
+   *   The JSON-encoded data.
+   *
+   * @return string
+   *   The decoded response.
+   *
    * @see https://cwiki.apache.org/confluence/display/solr/Schema+API
    */
   protected function solrRestPost($path, $command_json) {

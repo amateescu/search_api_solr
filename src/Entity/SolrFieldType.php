@@ -44,6 +44,7 @@ use Drupal\search_api_solr_multilingual\Utility\Utility;
  * )
  */
 class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
+
   /**
    * The SolrFieldType ID.
    *
@@ -80,25 +81,37 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   protected $field_type;
 
   /**
-   * Array of text files.
+   * Array of various text files required by the Solr Field Type definition.
    *
    * @var array
    */
   protected $text_files;
 
+  /**
+   * {@inheritdoc}
+   */
   public function getFieldType() {
     return $this->field_type;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getFieldTypeAsJson() {
     return Json::encode($this->field_type);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setFieldTypeAsJson($field_type) {
     $this->field_type = Json::decode($field_type);
     return $this;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getFieldTypeAsXml($add_commment = TRUE) {
     $root = new \SimpleXMLElement('<fieldType/>');
 
@@ -134,9 +147,13 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
         "\n-->\n";
     }
 
+    // Remove the XML declaration before returning the XML fragment.
     return $comment . "\n" . preg_replace('/<\?.*?\?>/', '', $root->asXML());
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getDynamicFields() {
     $dynamic_fields = [];
     foreach (array('ts', 'tm') as $prefix) {
@@ -155,14 +172,23 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     return $dynamic_fields;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getTextFiles() {
     return $this->text_files;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function addTextFile($name, $content) {
     $this->text_files[$name] = preg_replace('/\R/u', "\n", $content);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setTextFiles($text_files) {
     $this->text_files = [];
     foreach ($text_files as $name => $content) {
@@ -170,34 +196,36 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function isManagedSchema() {
     return $this->managed_schema;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setManagedSchema($managed_schema) {
     $this->managed_schema = $managed_schema;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getMinimumSolrVersion() {
     return $this->minimum_solr_version;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setMinimumSolrVersion($minimum_solr_version) {
     $this->minimum_solr_version = $minimum_solr_version;
   }
 
   /**
-   * Gets an array of placeholders for this entity.
-   *
-   * Individual entity classes may override this method to add additional
-   * placeholders if desired. If so, they should be sure to replicate the
-   * property caching logic.
-   *
-   * @param string $rel
-   *   The link relationship type, for example: canonical or edit-form.
-   *
-   * @return array
-   *   An array of URI placeholders.
+   * {@inheritdoc}
    */
   protected function urlRouteParameters($rel) {
     $uri_route_parameters = parent::urlRouteParameters($rel);
