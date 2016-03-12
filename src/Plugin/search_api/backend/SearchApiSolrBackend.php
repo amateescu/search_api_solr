@@ -384,6 +384,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $form_state->setValue($key, $value);
     }
 
+    // Clean-up the form to avoid redundant entries in the stored configuration.
+    $form_state->unsetValue('http');
+    $form_state->unsetValue('advanced');
+    $form_state->unsetValue('multisite');
     // The server description is a #type item element, which means it has a
     // value, do not save it.
     $form_state->unsetValue('server_description');
