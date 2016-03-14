@@ -160,11 +160,12 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     $solr_major_version = $solr_helper->getSolrMajorVersion();
     $search_api_solr_conf_path = drupal_get_path('module', 'search_api_solr') . '/solr-conf/' . $solr_major_version . '.x/';
     $solrcore_properties = parse_ini_file($search_api_solr_conf_path . 'solrcore.properties', FALSE, INI_SCANNER_RAW);
+    $schema = file_get_contents($search_api_solr_conf_path . 'schema.xml');
 
     $zip = new ZipStream('config.zip');
     $zip->addFile('schema_extra_types.xml', $this->generateSchemaExtraTypesXml());
     $zip->addFile('schema_extra_fields.xml', $this->generateSchemaExtraFieldsXml());
-    foreach (['elevate.xml', 'mapping-ISOLatin1Accent.txt', 'schema.xml', 'protwords.txt', 'solrconfig.xml', 'stopwords.txt', 'synonyms.txt'] as $file_name) {
+    foreach (['elevate.xml', 'mapping-ISOLatin1Accent.txt', 'protwords.txt', 'solrconfig.xml', 'stopwords.txt', 'synonyms.txt'] as $file_name) {
       $zip->addFileFromPath($file_name, $search_api_solr_conf_path . $file_name);
     }
     // Add language specific text files.
@@ -177,6 +178,10 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
         $solrcore_properties['solr.replication.confFiles'] .= ',' . $language_specific_text_file_name;
       }
     }
+
+    $schema = preg_replace('@<fieldType name="text_und".*?</fieldType>@ms', '<!-- fieldType text_und is moved to schema_extra_types.xml by Search API Multilingual Solr -->', $schema);
+    $schema = preg_replace('@<dynamicField.*?name="([^"]*)".*?type="text_und".*?/>@ms', "<!-- dynamicField $1 is moved to schema_extra_fields.xml by Search API Multilingual Solr -->", $schema);
+    $zip->addFile('schema.xml', $schema);
 
     $solrcore_properties['solr.luceneMatchVersion'] = $solr_helper->getSolrVersion();
     // @todo
