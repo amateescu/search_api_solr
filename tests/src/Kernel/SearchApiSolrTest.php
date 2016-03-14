@@ -55,12 +55,6 @@ class SearchApiSolrTest extends BackendTest {
    */
   public function setUp() {
     parent::setUp();
-    // @todo For some reason the init event (see AutoloaderSubscriber) is not
-    //   working in command line tests
-    $file_path = drupal_get_path('module', 'search_api_solr') . '/vendor/autoload.php';
-    if (!class_exists('Solarium\\Client') && ($file_path != DRUPAL_ROOT . '/core/vendor/autoload.php')) {
-      require_once $file_path;
-    }
 
     $this->installConfig(array('search_api_test_solr'));
 
