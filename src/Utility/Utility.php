@@ -147,6 +147,21 @@ class Utility {
     return FALSE;
   }
 
+  /**
+   * Extracts the language-specific prefix from a dynamic Solr field.
+   *
+   * @param string $field_name
+   *   The field name.
+   *
+   * @return string
+   *   The language-specific prefix.
+   */
+  public static function extractLanguageSpecificSolrDynamicFieldName($field_name) {
+    $separator = SearchApiSolrUtility::encodeSolrDynamicFieldName(SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR);
+    preg_match('@.*' . $separator . '(.+?)' .$separator . '@', $field_name, $matches);
+    return $matches[0] . '*';
+  }
+
 }
 
 

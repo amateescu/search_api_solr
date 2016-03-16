@@ -172,7 +172,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
           $language_specific_fields = [];
           foreach ($language_ids as $language_id) {
             $language_specific_field = Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id);
-            if ($this->isPartOfSchema('dynamicFields', $language_specific_field)) {
+            if ($this->isPartOfSchema('dynamicFields', Utility::extractLanguageSpecificSolrDynamicFieldName($language_specific_field))) {
               $language_specific_fields[] = Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id) . $boost;
             }
             else {
@@ -391,19 +391,17 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     $schema_parts = $state->get($state_key);
     // @todo reset that drupal state from time to time
 
-    if (isset($previous_calls[$kind])) {
-      return in_array($name, $schema_parts[$kind]);
-    }
+    if (!isset($previous_calls[$kind])) {
+      $previous_calls[$kind] = TRUE;
 
-    $previous_calls[$kind] = TRUE;
-
-    if (!is_array($schema_parts) || !isset($schema_parts[$kind]) || !in_array($name, $schema_parts[$kind])) {
-      $schema_parts[$kind] = [];
-      $response = $this->solrRestGet('schema/' . strtolower($kind));
-      foreach ($response[$kind] as $row) {
-        $schema_parts[$kind][] = $row['name'];
+      if (!is_array($schema_parts) || !isset($schema_parts[$kind]) || !in_array($name, $schema_parts[$kind])) {
+        $schema_parts[$kind] = [];
+        $response = $this->solrRestGet('schema/' . strtolower($kind));
+        foreach ($response[$kind] as $row) {
+          $schema_parts[$kind][] = $row['name'];
+        }
+        $state->set($state_key, $schema_parts);
       }
-      $state->set($state_key, $schema_parts);
     }
 
     return in_array($name, $schema_parts[$kind]);
@@ -420,9 +418,10 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
    */
   protected function solrRestGet($path) {
     $uri = $this->solr->getEndpoint()->getBaseUri() . $path;
+    /** @var \GuzzleHttp\Client $client */
     $client = \Drupal::service('http_client');
-    $result = $client->get($uri, ['Accept' => 'application/json']);
-    $output = Json::decode($result->getBody());
+    $response = $client->get($uri, ['Accept' => 'application/json']);
+    $output = Json::decode($response->getBody());
     // \Drupal::logger('search_api_solr_multilingual')->info(print_r($output, true));
     if (!empty($output['errors'])) {
       throw new SearchApiSolrMultilingualException("Error trying to send a REST GET request to '$uri'" .
@@ -449,14 +448,14 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     $uri = $this->solr->getEndpoint()->getBaseUri() . $path;
     /** @var \GuzzleHttp\Client $client */
     $client = \Drupal::service('http_client');
-    $result = $client->post($uri, [
+    $response = $client->post($uri, [
       'body' => $command_json,
       'headers' => [
         'Accept' => 'application/json',
         'Content-type' => 'application/json'
       ],
     ]);
-    $output = Json::decode($result->getBody());
+    $output = Json::decode($response->getBody());
     // \Drupal::logger('search_api_solr_multilingual')->info(print_r($output, true));
     if (!empty($output['errors'])) {
       throw new SearchApiSolrMultilingualException("Error trying to send the following JSON to Solr (REST POST request to '$uri'): " . $command_json .

@@ -54,7 +54,8 @@ class SearchApiSolrMultilingualManagedSchemaBackend extends AbstractSearchApiSol
    * {@inheritdoc}
    */
   protected function createSolrMultilingualFieldType($solr_field_type_name) {
-    $field_type_name = 'm_' . $solr_field_type_name;
+    // @todo replace the hardcoded version extension.
+    $field_type_name = 'm_' . $solr_field_type_name . '_5_2_0';
 
     // Get the field type definition from Drupal.
     /** @var \Drupal\search_api_solr_multilingual\Entity\SolrFieldType $field_type_entity */
