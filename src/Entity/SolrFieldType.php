@@ -98,14 +98,50 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    * {@inheritdoc}
    */
   public function getFieldTypeAsJson() {
-    return Json::encode($this->field_type);
+    // Unfortunately the JSON encoded field type definition still uses the
+    // element names "indexAnalyzer", "queryAnalyzer" and "multiTermAnalyzer"
+    // which are deprecated in the XML format. Therefor we need to add some
+    // conversion logic.
+    $field_type = $this->field_type;
+    unset($field_type['analyzers']);
+
+    foreach ($this->field_type['analyzers'] as $analyzer) {
+      $type = 'analyzer';
+      if (!empty($analyzer['type'])) {
+        if ('multiterm' == $analyzer['type']) {
+          $type = 'multiTermAnalyzer';
+        }
+        else {
+          $type = $analyzer['type'] . 'Analyzer';
+        }
+        unset($analyzer['type']);
+      }
+      $field_type[$type] = $analyzer;
+    }
+
+    return Json::encode($field_type);
   }
 
   /**
    * {@inheritdoc}
    */
   public function setFieldTypeAsJson($field_type) {
-    $this->field_type = Json::decode($field_type);
+    $field_type = $this->field_type = Json::decode($field_type);
+
+    // Unfortunately the JSON encoded field type definition still uses the
+    // element names "indexAnalyzer", "queryAnalyzer" and "multiTermAnalyzer"
+    // which are deprecated in the XML format. Therefor we need to add some
+    // conversion logic.
+    foreach (['index' => 'indexAnalyzer', 'query' => 'queryAnalyzer', 'multiterm' => 'multiTermAnalyzer', 'analyzer' => 'analyzer'] as $type => $analyzer) {
+      if (!empty($field_type[$analyzer])) {
+        unset($this->field_type[$analyzer]);
+        if ($type != $analyzer) {
+          $field_type[$analyzer]['type'] = $type;
+        }
+        $this->field_type['analyzers'][] = $field_type[$analyzer];
+      }
+    }
+
     return $this;
   }
 
@@ -124,9 +160,9 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
           elseif (is_array($value)) {
             if (array_key_exists(0, $value)) {
               $key = rtrim($key, 's');
-              foreach ($value as $attributes) {
+              foreach ($value as $inner_attributes) {
                 $child = $element->addChild($key);
-                $f($child, $attributes);
+                $f($child, $inner_attributes);
               }
             }
             else {
