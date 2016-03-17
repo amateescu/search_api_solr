@@ -8,6 +8,7 @@
 namespace Drupal\search_api_solr_multilingual\Controller;
 
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr_multilingual\SolrFieldTypeInterface;
 use Drupal\search_api_solr_multilingual\SolrMultilingualBackendInterface;
@@ -40,7 +41,8 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function buildRow(SolrFieldTypeInterface $solr_field_type) {
+  public function buildRow(EntityInterface $solr_field_type) {
+    /** @var \Drupal\search_api_solr_multilingual\SolrFieldTypeInterface $solr_field_type */
     $row = [
       'label' => $this->getLabel($solr_field_type),
       'minimum_solr_version' => $solr_field_type->getMinimumSolrVersion(),
@@ -88,7 +90,8 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   /**
    * @inheritdoc
    */
-  public function getDefaultOperations(SolrFieldTypeInterface $solr_field_type) {
+  public function getDefaultOperations(EntityInterface $solr_field_type) {
+    /** @var \Drupal\search_api_solr_multilingual\SolrFieldTypeInterface $solr_field_type */
     $operations = parent::getDefaultOperations($solr_field_type);
 
     if ($solr_field_type->access('view') && $solr_field_type->hasLinkTemplate('export-form')) {
