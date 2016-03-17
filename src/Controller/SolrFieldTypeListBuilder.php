@@ -61,7 +61,9 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   public function load() {
     $solr_version = $this->getBackend()->getSolrHelper()->getSolrVersion();
     $entity_ids = $this->getEntityIds();
-    $entities = $this->storage->loadMultipleOverrideFree($entity_ids);
+    /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $storage */
+    $storage = $this->getStorage();
+    $entities = $storage->loadMultipleOverrideFree($entity_ids);
 
     // We filter to those field types that are relevant for the current server.
     // There are multiple entities having the same field_type.name but different
