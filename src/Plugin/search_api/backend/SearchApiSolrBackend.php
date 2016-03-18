@@ -21,6 +21,7 @@ use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility as SearchApiUtility;
+use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Drupal\search_api_solr\Solr\SolrHelper;
@@ -710,7 +711,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $this->solr->execute($this->getUpdateQuery());
     }
     catch (ExceptionInterface $e) {
-      throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
+      throw new SearchApiSolrException($e->getMessage(), $e->getCode(), $e);
     }
   }
 
@@ -924,8 +925,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       return $results;
     }
-    catch (SearchApiException $e) {
-      throw new SearchApiException(t('An error occurred while trying to search with Solr: @msg.', array('@msg' => $e->getMessage())));
+    catch (\Exception $e) {
+      throw new SearchApiSolrException($this->t('An error occurred while trying to search with Solr: @msg.', array('@msg' => $e->getMessage())), $e->getCode(), $e);
     }
   }
 
@@ -1320,7 +1321,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       if ($condition instanceof ConditionInterface) {
         $field = $condition->getField();
         if (!isset($index_fields[$field])) {
-          throw new SearchApiException(t('Filter term on unknown or unindexed field @field.', array('@field' => $field)));
+          throw new SearchApiException($this->t('Filter term on unknown or unindexed field @field.', array('@field' => $field)));
         }
         $value = $condition->getValue();
         if ($value !== '') {
@@ -1755,7 +1756,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $query->addParam('file', $file);
     }
 
-    return $this->solr->execute($query)->getResponse();
+    try {
+      return $this->solr->execute($query)->getResponse();
+    }
+    catch (HttpException $e) {
+      throw new SearchApiSolrException($this->t('Solr server core @core not found.', ['@core' => $this->solr->getEndpoint()->getBaseUri()]), $e->getCode(), $e);
+    }
   }
 
   /**
