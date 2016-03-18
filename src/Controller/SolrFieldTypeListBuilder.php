@@ -44,7 +44,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   public function buildRow(EntityInterface $solr_field_type) {
     /** @var \Drupal\search_api_solr_multilingual\SolrFieldTypeInterface $solr_field_type */
     $row = [
-      'label' => $this->getLabel($solr_field_type),
+      'label' => $solr_field_type->label(),
       'minimum_solr_version' => $solr_field_type->getMinimumSolrVersion(),
       // @todo format
       'managed_schema' => $solr_field_type->isManagedSchema(),
@@ -100,7 +100,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       $operations['export'] = array(
         'title' => $this->t('Export'),
         'weight' => 10,
-        'url' => $solr_field_type->urlInfo('export-form'),
+        'url' => $solr_field_type->toUrl('export-form'),
       );
     }
 

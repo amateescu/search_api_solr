@@ -96,7 +96,7 @@ class SolrFieldTypeForm extends EntityForm {
         '%label' => $solr_field_type->label(),
       )));
     }
-    $form_state->setRedirectUrl($solr_field_type->urlInfo('collection'));
+    $form_state->setRedirectUrl($solr_field_type->toUrl('collection'));
   }
 
 }

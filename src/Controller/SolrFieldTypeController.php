@@ -90,7 +90,7 @@ class SolrFieldTypeController extends ControllerBase {
    */
   protected function getListBuilder(ServerInterface $search_api_server) {
     /** @var SolrFieldTypeListBuilder $list_builder */
-    $list_builder = $this->entityManager()->getListBuilder('solr_field_type');
+    $list_builder = $this->entityTypeManager()->getListBuilder('solr_field_type');
     $list_builder->setServer($search_api_server);
     return $list_builder;
   }

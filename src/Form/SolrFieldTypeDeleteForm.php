@@ -25,7 +25,7 @@ class SolrFieldTypeDeleteForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    return $this->entity->urlInfo();
+    return $this->entity->toUrl();
   }
 
   /**
