@@ -218,22 +218,28 @@ class SolrHelper {
   /**
    * Gets the current Solr major version.
    *
+   * @param string $version
+   *   An optional Solr version string.
+   *
    * @return integer
    *   The Solr major version.
    */
-  public function getSolrMajorVersion() {
-    list($major, , ) = explode('.', $this->getSolrVersion());
+  public function getSolrMajorVersion($version = '') {
+    list($major, , ) = explode('.', $version ?: $this->getSolrVersion());
     return $major;
   }
 
   /**
    * Gets the current Solr branch name.
    *
+   * @param string $version
+   *   An optional Solr version string.
+   *
    * @return string
    *   The Solr branch string.
    */
-  public function getSolrBranch() {
-    return $this->getSolrMajorVersion() . '.x';
+  public function getSolrBranch($version = '') {
+    return $this->getSolrMajorVersion($version) . '.x';
   }
 
   /**
