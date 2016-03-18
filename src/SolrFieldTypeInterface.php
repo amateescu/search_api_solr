@@ -15,6 +15,14 @@ use Drupal\Core\Config\Entity\ConfigEntityInterface;
 interface SolrFieldTypeInterface extends ConfigEntityInterface {
 
   /**
+   * Gets the Solr Field Type name.
+   *
+   * @return string
+   *   The Solr Field Type name.
+   */
+  public function getFieldTypeName();
+
+  /**
    * Gets the Solr Field Type definition as nested associative array.
    *
    * @return array

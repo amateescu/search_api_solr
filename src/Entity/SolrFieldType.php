@@ -211,6 +211,13 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   /**
    * {@inheritdoc}
    */
+  public function getFieldTypeName() {
+    return isset($this->field_type['name']) ? $this->field_type['name'] : '';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getTextFiles() {
     return $this->text_files;
   }

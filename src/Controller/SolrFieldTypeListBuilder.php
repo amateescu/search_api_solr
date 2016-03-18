@@ -10,6 +10,7 @@ namespace Drupal\search_api_solr_multilingual\Controller;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\search_api\ServerInterface;
+use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr_multilingual\SolrFieldTypeInterface;
 use Drupal\search_api_solr_multilingual\SolrMultilingualBackendInterface;
 use ZipStream\ZipStream;
@@ -23,6 +24,12 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    * @var SolrMultilingualBackendInterface
    */
   protected $backend;
+
+  /**
+   * @var string
+   *   A Solr version string.
+   */
+  protected $assumed_minimum_version = '';
 
   /**
    * {@inheritdoc}
@@ -59,33 +66,73 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    * {@inheritdoc}
    */
   public function load() {
-    $solr_version = $this->getBackend()->getSolrHelper()->getSolrVersion();
-    $entity_ids = $this->getEntityIds();
-    /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $storage */
-    $storage = $this->getStorage();
-    $entities = $storage->loadMultipleOverrideFree($entity_ids);
+    static $entities;
 
-    // We filter to those field types that are relevant for the current server.
-    // There are multiple entities having the same field_type.name but different
-    // values for managed_schema and minimum_solr_version.
-    foreach ($entities as $key => $solr_field_type) {
-      /** @var SolrFieldTypeInterface $solr_field_type */
-      if ($solr_field_type->isManagedSchema() != $this->getBackend()->isManagedSchema() ||
-        version_compare($solr_field_type->getMinimumSolrVersion(), $solr_version, '>')
-      ) {
-        unset($entities[$key]);
+    if (!$entities) {
+      $solr_version = '9999.0.0';
+      $operator = '>=';
+      $warning = FALSE;
+      try {
+        $solr_version = $this->getBackend()->getSolrHelper()->getSolrVersion();
+      } catch (SearchApiSolrException $e) {
+        $operator = '<=';
+        $warning = TRUE;
       }
-      //@todo
+      $entity_ids = $this->getEntityIds();
+      /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $storage */
+      $storage = $this->getStorage();
+      $entities = $storage->loadMultipleOverrideFree($entity_ids);
 
+      // We filter to those field types that are relevant for the current server.
+      // There are multiple entities having the same field_type.name but different
+      // values for managed_schema and minimum_solr_version.
+      $minimium_versions = [];
+      foreach ($entities as $key => $solr_field_type) {
+        /** @var SolrFieldTypeInterface $solr_field_type */
+        $version = $solr_field_type->getMinimumSolrVersion();
+        if ($solr_field_type->isManagedSchema() != $this->getBackend()
+            ->isManagedSchema() ||
+          version_compare($version, $solr_version, '>')
+        ) {
+          unset($entities[$key]);
+        }
+        else {
+          $name = $solr_field_type->getFieldTypeName();
+          if (isset($minimium_versions[$name])) {
+            if (version_compare($version, $minimium_versions[$name]['version'], $operator)) {
+              unset($entities[$minimium_versions[$name]['key']]);
+              $minimium_versions[$name] = [
+                'version' => $version,
+                'key' => $key
+              ];
+            }
+          }
+          else {
+            $minimium_versions[$name] = ['version' => $version, 'key' => $key];
+          }
+        }
+      }
+
+      if ($warning) {
+        $this->assumed_minimum_version = array_reduce($minimium_versions, function ($version, $item) {
+          if (version_compare($item['version'], $version, '<')) {
+            return $item['version'];
+          }
+          return $version;
+        }, $solr_version);
+
+        drupal_set_message(
+          $this->t(
+            'Unable to reach the Solr server (yet). Therefor the lowest supported Solr version %version is assumed. Once the connection works and the real Solr version could be detected it might be necessary to deploy an adjusted config to the server to get the best search results.',
+            ['%version' => $this->assumed_minimum_version]),
+          'warning');
+      }
+
+      // Sort the entities using the entity class's sort() method.
+      // See \Drupal\Core\Config\Entity\ConfigEntityBase::sort().
+      uasort($entities, array($this->entityType->getClass(), 'sort'));
     }
 
-    // managed_schema: true
-    // minimum_solr_version: 5.2.0
-    // field_type.name: text_de
-
-    // Sort the entities using the entity class's sort() method.
-    // See \Drupal\Core\Config\Entity\ConfigEntityBase::sort().
-    uasort($entities, array($this->entityType->getClass(), 'sort'));
     return $entities;
   }
 
@@ -161,21 +208,30 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    * @return \ZipStream\ZipStream
    */
   public function getConfigZip() {
+    $solr_field_types = $this->load();
+
     $solr_helper = $this->getBackend()->getSolrHelper();
-    $solr_major_version = $solr_helper->getSolrMajorVersion();
-    $search_api_solr_conf_path = drupal_get_path('module', 'search_api_solr') . '/solr-conf/' . $solr_major_version . '.x/';
+    $solr_branch = $solr_helper->getSolrBranch($this->assumed_minimum_version);
+    $search_api_solr_conf_path = drupal_get_path('module', 'search_api_solr') . '/solr-conf/' . $solr_branch . '/';
     $solrcore_properties = parse_ini_file($search_api_solr_conf_path . 'solrcore.properties', FALSE, INI_SCANNER_RAW);
     $schema = file_get_contents($search_api_solr_conf_path . 'schema.xml');
+    $schema = preg_replace('@<fieldType name="text_und".*?</fieldType>@ms', '<!-- fieldType text_und is moved to schema_extra_types.xml by Search API Multilingual Solr -->', $schema);
+    $schema = preg_replace('@<dynamicField.*?name="([^"]*)".*?type="text_und".*?/>@ms', "<!-- dynamicField $1 is moved to schema_extra_fields.xml by Search API Multilingual Solr -->", $schema);
 
     $zip = new ZipStream('config.zip');
+    $zip->addFile('schema.xml', $schema);
     $zip->addFile('schema_extra_types.xml', $this->generateSchemaExtraTypesXml());
     $zip->addFile('schema_extra_fields.xml', $this->generateSchemaExtraFieldsXml());
+
     foreach (['elevate.xml', 'mapping-ISOLatin1Accent.txt', 'protwords.txt', 'solrconfig.xml', 'stopwords.txt', 'synonyms.txt'] as $file_name) {
-      $zip->addFileFromPath($file_name, $search_api_solr_conf_path . $file_name);
+      if (file_exists($search_api_solr_conf_path . $file_name)) {
+        $zip->addFileFromPath($file_name, $search_api_solr_conf_path . $file_name);
+      }
     }
+
     // Add language specific text files.
     /** @var SolrFieldTypeInterface $solr_field_type */
-    foreach ($this->load() as $solr_field_type) {
+    foreach ($solr_field_types as $solr_field_type) {
       $text_files = $solr_field_type->getTextFiles();
       foreach ($text_files as $text_file_name => $text_file) {
         $language_specific_text_file_name = $text_file_name . '_' . $solr_field_type->language()->getId() . '.txt';
@@ -184,11 +240,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       }
     }
 
-    $schema = preg_replace('@<fieldType name="text_und".*?</fieldType>@ms', '<!-- fieldType text_und is moved to schema_extra_types.xml by Search API Multilingual Solr -->', $schema);
-    $schema = preg_replace('@<dynamicField.*?name="([^"]*)".*?type="text_und".*?/>@ms', "<!-- dynamicField $1 is moved to schema_extra_fields.xml by Search API Multilingual Solr -->", $schema);
-    $zip->addFile('schema.xml', $schema);
-
-    $solrcore_properties['solr.luceneMatchVersion'] = $solr_helper->getSolrVersion();
+    $solrcore_properties['solr.luceneMatchVersion'] = $this->assumed_minimum_version ?: $solr_helper->getSolrVersion();
     // @todo
     //$solrcore_properties['solr.replication.masterUrl']
 
