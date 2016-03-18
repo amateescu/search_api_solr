@@ -752,6 +752,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
   /**
    * {@inheritdoc}
+   *
+   * Options on $query prefixed by 'solr_param_' will be passed natively to Solr
+   * as query parameter without the prefix. For example you can set the "Minimum
+   * Should Match" parameter 'mm' to '75%' like this:
+   * @code
+   *   $query->setOption('solr_param_mm', '75%');
+   * @endcode
    */
   public function search(QueryInterface $query) {
     // Reset request handler.
@@ -860,6 +867,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     if (!empty($options['search_api_spellcheck'])) {
       $solarium_query->getSpellcheck();
+    }
+
+    foreach ($options as $option => $value) {
+      if (strpos($option, 'solr_param_') === 0) {
+        $solarium_query->addParam(substr($option, 11), $value);
+      }
     }
 
     /**
