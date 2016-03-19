@@ -62,7 +62,7 @@ field_type:
       filters:
         -
           class: solr.SynonymFilterFactory
-          managed: synonyms_en.txt
+          synonyms: synonyms_en.txt
           expand: true
           ignoreCase: true
         -

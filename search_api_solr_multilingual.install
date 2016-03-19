@@ -58,3 +58,31 @@ function search_api_solr_multilingual_requirements($phase) {
 
   return $requirements;
 }
+
+/**
+ * Fixes erroneous left overs from managed field types in unmanaged field types.
+ */
+function search_api_solr_multilingual_update_8001() {
+  $config_factory = \Drupal::configFactory();
+  $has_trusted_data = TRUE;
+
+  $field_tpyes = [
+    'search_api_solr_multilingual.solr_field_type.text_de_4_5_0',
+    'search_api_solr_multilingual.solr_field_type.text_en_4_5_0',
+    'search_api_solr_multilingual.solr_field_type.text_nl_4_5_0',
+    'search_api_solr_multilingual.solr_field_type.text_und_4_5_0',
+  ];
+
+  foreach ($field_tpyes as $name) {
+    $field_type = $config_factory->get($name)->get('field_type');
+    foreach ($field_type['analyzers'][1]['filters'] as &$query_filter) {
+      if (isset($query_filter['managed'])) {
+        $query_filter['synonyms'] = $query_filter['managed'];
+        unset($query_filter['managed']);
+      }
+    }
+    $config_factory->getEditable($name)
+      ->set('field_type', $field_type)
+      ->save($has_trusted_data);
+  }
+}

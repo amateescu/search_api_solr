@@ -123,7 +123,9 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
         drupal_set_message(
           $this->t(
-            'Unable to reach the Solr server (yet). Therefor the lowest supported Solr version %version is assumed. Once the connection works and the real Solr version could be detected it might be necessary to deploy an adjusted config to the server to get the best search results.',
+            'Unable to reach the Solr server (yet). Therefor the lowest supported Solr version %version is assumed.'.
+            ' Once the connection works and the real Solr version could be detected it might be necessary to deploy an adjusted config to the server to get the best search results.' .
+            ' If the server does not start using the downloadable config, you should edit the server add manually set the Solr version override temporarily that fits your server best and download the config again. But it is recommended to remove this override once the server is running.',
             ['%version' => $this->assumed_minimum_version]),
           'warning');
       }
@@ -218,7 +220,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     $schema = preg_replace('@<fieldType name="text_und".*?</fieldType>@ms', '<!-- fieldType text_und is moved to schema_extra_types.xml by Search API Multilingual Solr -->', $schema);
     $schema = preg_replace('@<dynamicField.*?name="([^"]*)".*?type="text_und".*?/>@ms', "<!-- dynamicField $1 is moved to schema_extra_fields.xml by Search API Multilingual Solr -->", $schema);
 
-    $zip = new ZipStream('config.zip');
+    $zip = new ZipStream('solr_' . $solr_branch . '_config.zip');
     $zip->addFile('schema.xml', $schema);
     $zip->addFile('schema_extra_types.xml', $this->generateSchemaExtraTypesXml());
     $zip->addFile('schema_extra_fields.xml', $this->generateSchemaExtraFieldsXml());
