@@ -18,20 +18,20 @@ field_type:
       charFilters:
         -
           class: solr.MappingCharFilterFactory
-          mapping: mapping-ISOLatin1Accent_en.txt
+          mapping: mapping-ISOLatin1Accent.txt
       tokenizer:
         class: solr.WhitespaceTokenizerFactory
       filters:
         -
           class: solr.StopFilterFactory
           ignoreCase: true
-          words: stopwords_en.txt
+          words: stopwords.txt
           enablePositionIncrements: true
         -
           class: solr.WordDelimiterFilterFactory
           catenateNumbers: 1
           generateNumberParts: 1
-          protected: protwords_en.txt
+          protected: protwords.txt
           splitOnCaseChange: 0
           generateWordParts: 1
           preserveOriginal: 1
@@ -46,7 +46,7 @@ field_type:
         -
           class: solr.SnowballPorterFilterFactory
           language: English
-          protected: protwords_en.txt
+          protected: protwords.txt
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
     -
@@ -54,25 +54,25 @@ field_type:
       charFilters:
         -
           class: solr.MappingCharFilterFactory
-          mapping: mapping-ISOLatin1Accent_en.txt
+          mapping: mapping-ISOLatin1Accent.txt
       tokenizer:
         class: solr.WhitespaceTokenizerFactory
       filters:
         -
           class: solr.SynonymFilterFactory
-          synonyms: synonyms_en.txt
+          synonyms: synonyms.txt
           expand: true
           ignoreCase: true
         -
           class: solr.StopFilterFactory
           ignoreCase: true
-          words: stopwords_en.txt
+          words: stopwords.txt
           enablePositionIncrements: true
         -
           class: solr.WordDelimiterFilterFactory
           catenateNumbers: 0
           generateNumberParts: 1
-          protected: protwords_en.txt
+          protected: protwords.txt
           splitOnCaseChange: 0
           generateWordParts: 1
           preserveOriginal: 1
@@ -87,7 +87,7 @@ field_type:
         -
           class: solr.SnowballPorterFilterFactory
           language: English
-          protected: protwords_en.txt
+          protected: protwords.txt
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
 text_files:

@@ -23,7 +23,7 @@ field_type:
       filters:
         -
           class: solr.ManagedStopFilterFactory
-          managed: stopwords_en
+          managed: stopwords
   #        ignoreCase: true
         -
           class: solr.WordDelimiterFilterFactory
@@ -58,12 +58,12 @@ field_type:
       filters:
         -
           class: solr.ManagedSynonymFilterFactory
-          managed: synonyms_en
+          managed: synonyms
           expand: true
   #        ignoreCase: true
         -
           class: solr.ManagedStopFilterFactory
-          managed: stopwords_en
+          managed: stopwords
   #        ignoreCase: true
         -
           class: solr.WordDelimiterFilterFactory
