@@ -179,7 +179,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
               $vars = array(
                 '%field' => $language_specific_field,
               );
-              if ($this->configuration['sasm_language_unspecific_fallback_on_schema_issues']) {
+              if ($this->hasLanguageUndefinedFallback()) {
                 \Drupal::logger('search_api_solr_multilingual')->warning('Error while searching: language specific field dynamic %field is not defined in the schema.xml, fallback to language unspecific field is enabled.', $vars);
                 $language_specific_fields[] = $field_name . $boost;
               }
@@ -283,7 +283,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
       if (!$this->isPartOfSchema('fieldTypes', $solr_field_type_name) &&
         !$this->createSolrMultilingualFieldType($solr_field_type_name)
       ) {
-        if ($this->configuration['sasm_language_unspecific_fallback_on_schema_issues']) {
+        if ($this->hasLanguageUndefinedFallback()) {
           $vars = array(
             '%field' => $solr_field_type_name,
           );
@@ -308,7 +308,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
           if (!$this->isPartOfSchema('dynamicFields', $multilingual_solr_field_name) &&
             !$this->createSolrDynamicField($multilingual_solr_field_name, $solr_field_type_name)
           ) {
-            if ($this->configuration['sasm_language_unspecific_fallback_on_schema_issues']) {
+            if ($this->hasLanguageUndefinedFallback()) {
               $vars = array(
                 '%field' => $multilingual_solr_field_name,
               );
@@ -405,6 +405,27 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     }
 
     return in_array($name, $schema_parts[$kind]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSchemaLanguageStatistics() {
+    $available = $this->ping();
+    $stats = [];
+    foreach (\Drupal::languageManager()->getLanguages() as $language) {
+      $solr_field_type_name = 'text' . '_' . $language->getId();
+      $stats[$language->getId()] = $available ? $this->isPartOfSchema('fieldTypes', $solr_field_type_name) : FALSE;
+    }
+    return $stats;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasLanguageUndefinedFallback() {
+    return isset($this->configuration['sasm_language_unspecific_fallback_on_schema_issues']) ?
+      $this->configuration['sasm_language_unspecific_fallback_on_schema_issues'] : FALSE;
   }
 
   /**

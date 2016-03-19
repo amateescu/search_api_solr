@@ -9,7 +9,7 @@ namespace Drupal\search_api_solr_multilingual\Plugin\search_api\backend;
 
 /**
  * @SearchApiBackend(
- *   id = "search_api_solr.multilingual",
+ *   id = "search_api_solr_multilingual",
  *   label = @Translation("Multilingual Solr"),
  *   description = @Translation("Index items using an Solr search server configured for multilingual content.")
  * )

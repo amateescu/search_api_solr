@@ -15,3 +15,16 @@ function search_api_solr_multilingual_post_update_replace_solr_field_types() {
   ];
   $config_installer->installOptionalConfig(NULL, $restrict_by_dependency);
 }
+
+/**
+ * Fixes erroneous backend IDs.
+ */
+function search_api_solr_multilingual_post_update_fix_backend_ids() {
+  $storage = \Drupal::entityTypeManager()->getStorage('search_api_server');
+  /** @var \Drupal\search_api\ServerInterface[] $servers */
+  $servers = $storage->loadByProperties(['backend' => 'search_api_solr.multilingual']);
+  foreach ($servers as $server) {
+    $server->set('backend', 'search_api_solr_multilingual');
+    $server->save();
+  }
+}
