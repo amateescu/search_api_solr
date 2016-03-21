@@ -31,3 +31,11 @@ function search_api_solr_multilingual_theme() {
 
   return $theme;
 }
+
+/**
+ * Deletes all Solr Field Type and re-installs them from their yml files.
+ */
+function search_api_solr_multilingual_delete_and_reinstall_all_field_types() {
+  module_load_include('php', 'search_api_solr_multilingual', 'search_api_solr_multilingual.post_update');
+  search_api_solr_multilingual_post_update_replace_solr_field_types();
+}
