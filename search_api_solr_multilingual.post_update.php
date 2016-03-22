@@ -25,5 +25,8 @@ function search_api_solr_multilingual_post_update_fix_backend_ids() {
  * Re-installs all Solr Field Types to be compatible to the latest structure.
  */
 function search_api_solr_multilingual_post_update_replace_solr_field_types_2() {
-  search_api_solr_multilingual_delete_and_reinstall_all_field_types();
+  $version = \Drupal::keyValue('system.schema')->get('search_api_solr_multilingual');
+  if ($version < 8002) {
+    search_api_solr_multilingual_delete_and_reinstall_all_field_types();
+  }
 }
