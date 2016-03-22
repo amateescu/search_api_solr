@@ -17,7 +17,7 @@ use Drupal\search_api\Utility;
 /**
  * Tests the overall functionality of the Search API framework and admin UI.
  *
- * @group search_api
+ * @group search_api_solr
  */
 class IntegrationTest extends WebTestBase {
 
