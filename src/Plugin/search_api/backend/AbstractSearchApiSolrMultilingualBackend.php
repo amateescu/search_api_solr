@@ -291,11 +291,11 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
           unset($field_name_map_per_language[$language_id]);
         }
         else {
-          // @todo Check if a non-language-spefific field type could be replaced by
-          // a language-specific one that has been missing before or if a concrete
-          // one has been assigned by the adminstrator, for example filed type
-          // text_de for language de_AT.
-          // If the field type is exchanged, trigger a re-index process.
+          // @todo Check if a non-language-spefific field type could be replaced
+          //   by a language-specific one that has been missing before or if a
+          //   concrete one has been assigned by the adminstrator, for example
+          //   filed type text_de for language de_AT. If the field type is
+          //   exchanged, trigger a re-index process.
 
           throw new SearchApiSolrMultilingualException('Missing field type ' . $solr_field_type_name . ' in schema.');
         }
@@ -326,10 +326,12 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     foreach ($documents as $document) {
       $fields = $document->getFields();
       foreach ($field_name_map_per_language as $language_id => $map) {
-        foreach ($map as $monolingual_solr_field_name => $multilingual_solr_field_name) {
-          $document->addField($multilingual_solr_field_name, $fields[$monolingual_solr_field_name], $document->getFieldBoost($monolingual_solr_field_name));
-          // @todo removal should be configurable
-          $document->removeField($monolingual_solr_field_name);
+        if (/* @todo CLIR || */ $fields[$single_field_names[SEARCH_API_LANGUAGE_FIELD_NAME]] == $language_id) {
+          foreach ($map as $monolingual_solr_field_name => $multilingual_solr_field_name) {
+            $document->addField($multilingual_solr_field_name, $fields[$monolingual_solr_field_name], $document->getFieldBoost($monolingual_solr_field_name));
+            // @todo removal should be configurable
+            $document->removeField($monolingual_solr_field_name);
+          }
         }
       }
     }
