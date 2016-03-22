@@ -368,7 +368,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $values += $values['advanced'];
     $values += $values['multisite'];
     $values += !empty($values['autocomplete']) ? $values['autocomplete'] : array();
-    unset($values['http'], $values['advanced'], $values['autocomplete']);
 
     // Highlighting retrieved data only makes sense when we retrieve data.
     $values['highlight_data'] &= $values['retrieve_data'];
@@ -385,6 +384,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $form_state->setValue($key, $value);
     }
 
+    // Clean-up the form to avoid redundant entries in the stored configuration.
+    $form_state->unsetValue('http');
+    $form_state->unsetValue('advanced');
+    $form_state->unsetValue('multisite');
+    $form_state->unsetValue('autocomplete');
     // The server description is a #type item element, which means it has a
     // value, do not save it.
     $form_state->unsetValue('server_description');
