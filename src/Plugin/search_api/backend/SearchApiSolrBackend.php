@@ -281,11 +281,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#description' => $this->t('Specify the Solr version manually in case it cannot be retrived automatically. The version can be found in the Solr admin interface under "Solr Specification Version" or "solr-spec"'),
       '#options' => array(
         '' => $this->t('Determine automatically'),
-        '1' => '1.4',
-        '3' => '3.x',
         '4' => '4.x',
         '5' => '5.x',
-        '6' => '6.x',
       ),
       '#default_value' => $this->configuration['solr_version'],
     );
@@ -702,8 +699,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       // Do a commitWithin since that is automatically a softCommit with Solr 4
       // and a delayed hard commit with Solr 3.4+.
       // We wait 1 second after the request arrived for solr to parse the commit.
-      // This allows us to return to Drupal and let Solr handle what it
-      // needs to handle
+      // This allows us to return to Drupal and let Solr handle what it needs to
+      // handle.
       // @see http://wiki.apache.org/solr/NearRealtimeSearch
       /** @var \Solarium\Plugin\CustomizeRequest\CustomizeRequest $customizer */
       $customizer = $this->solr->getPlugin('customizerequest');

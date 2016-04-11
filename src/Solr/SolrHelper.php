@@ -320,43 +320,18 @@ class SolrHelper {
     try {
       $stats = $this->solr->execute($query)->getData();
       if (!empty($stats)) {
-        if (version_compare($solr_version, '3', '<=')) {
-          // @todo Needs to be updated by someone who has a Solr 3.x setup.
-          /*
-          $docs_pending_xpath = $stats->xpath('//stat[@name="docsPending"]');
-          $summary['@pending_docs'] = (int) trim(current($docs_pending_xpath));
-          $max_time_xpath = $stats->xpath('//stat[@name="autocommit maxTime"]');
-          $max_time = (int) trim(current($max_time_xpath));
-          // Convert to seconds.
-          $summary['@autocommit_time_seconds'] = $max_time / 1000;
-          $summary['@autocommit_time'] = \Drupal::service('date')->formatInterval($max_time / 1000);
-          $deletes_id_xpath = $stats->xpath('//stat[@name="deletesById"]');
-          $summary['@deletes_by_id'] = (int) trim(current($deletes_id_xpath));
-          $deletes_query_xpath = $stats->xpath('//stat[@name="deletesByQuery"]');
-          $summary['@deletes_by_query'] = (int) trim(current($deletes_query_xpath));
-          $summary['@deletes_total'] = $summary['@deletes_by_id'] + $summary['@deletes_by_query'];
-          $schema = $stats->xpath('/solr/schema[1]');
-          $summary['@schema_version'] = trim($schema[0]);
-          $core = $stats->xpath('/solr/core[1]');
-          $summary['@core_name'] = trim($core[0]);
-          $size_xpath = $stats->xpath('//stat[@name="indexSize"]');
-          $summary['@index_size'] = trim(current($size_xpath));
-          */
-        }
-        else {
-          $update_handler_stats = $stats['solr-mbeans']['UPDATEHANDLER']['updateHandler']['stats'];
-          $summary['@pending_docs'] = (int) $update_handler_stats['docsPending'];
-          $max_time = (int) $update_handler_stats['autocommit maxTime'];
-          // Convert to seconds.
-          $summary['@autocommit_time_seconds'] = $max_time / 1000;
-          $summary['@autocommit_time'] = \Drupal::service('date.formatter')->formatInterval($max_time / 1000);
-          $summary['@deletes_by_id'] = (int) $update_handler_stats['deletesById'];
-          $summary['@deletes_by_query'] = (int) $update_handler_stats['deletesByQuery'];
-          $summary['@deletes_total'] = $summary['@deletes_by_id'] + $summary['@deletes_by_query'];
-          $summary['@schema_version'] = $this->getSystemInfo()['core']['schema'];
-          $summary['@core_name'] = $stats['solr-mbeans']['CORE']['core']['stats']['coreName'];
-          $summary['@index_size'] = $stats['solr-mbeans']['QUERYHANDLER']['/replication']['stats']['indexSize'];
-        }
+        $update_handler_stats = $stats['solr-mbeans']['UPDATEHANDLER']['updateHandler']['stats'];
+        $summary['@pending_docs'] = (int) $update_handler_stats['docsPending'];
+        $max_time = (int) $update_handler_stats['autocommit maxTime'];
+        // Convert to seconds.
+        $summary['@autocommit_time_seconds'] = $max_time / 1000;
+        $summary['@autocommit_time'] = \Drupal::service('date.formatter')->formatInterval($max_time / 1000);
+        $summary['@deletes_by_id'] = (int) $update_handler_stats['deletesById'];
+        $summary['@deletes_by_query'] = (int) $update_handler_stats['deletesByQuery'];
+        $summary['@deletes_total'] = $summary['@deletes_by_id'] + $summary['@deletes_by_query'];
+        $summary['@schema_version'] = $this->getSystemInfo()['core']['schema'];
+        $summary['@core_name'] = $stats['solr-mbeans']['CORE']['core']['stats']['coreName'];
+        $summary['@index_size'] = $stats['solr-mbeans']['QUERYHANDLER']['/replication']['stats']['indexSize'];
       }
       return $summary;
     }
@@ -579,22 +554,11 @@ class SolrHelper {
     foreach ($grouping_options['fields'] as $collapse_field) {
       $type = $index_fields[$collapse_field]['type'];
       // Only single-valued fields are supported.
-      if (version_compare($this->getSolrVersion(), '4', '<')) {
-        // For Solr 3.x, only string and boolean fields are supported.
-        if (!SearchApiUtility::isTextType($type, array('string', 'boolean', 'uri'))) {
-          $warnings[] = $this->t('Grouping is not supported for field @field. ' .
-            'Only single-valued fields of type "String", "Boolean" or "URI" are supported.',
-            array('@field' => $index_fields[$collapse_field]['name']));
-          continue;
-        }
-      }
-      else {
-        if (SearchApiUtility::isTextType($type)) {
-          $warnings[] = $this->t('Grouping is not supported for field @field. ' .
-            'Only single-valued fields not indexed as "Fulltext" are supported.',
-            array('@field' => $index_fields[$collapse_field]['name']));
-          continue;
-        }
+      if (SearchApiUtility::isTextType($type)) {
+        $warnings[] = $this->t('Grouping is not supported for field @field. ' .
+          'Only single-valued fields not indexed as "Fulltext" are supported.',
+          array('@field' => $index_fields[$collapse_field]['name']));
+        continue;
       }
       $group_params['group.field'][] = $field_names[$collapse_field];
     }
