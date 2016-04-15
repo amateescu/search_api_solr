@@ -310,13 +310,7 @@ class SolrHelper {
     $solr_version = $this->getSolrVersion();
     $query = $this->solr->createPing();
     $query->setResponseWriter(Query::WT_PHPS);
-    if (version_compare($solr_version, '4', '>=')) {
-      $query->setHandler('admin/mbeans?stats=true');
-    }
-    else {
-      $query->setHandler('admin/stats.jsp');
-      $query->setResultClass('\Drupal\search_api_solr\Solr\StatsJspResult');
-    }
+    $query->setHandler('admin/mbeans?stats=true');
     try {
       $stats = $this->solr->execute($query)->getData();
       if (!empty($stats)) {
