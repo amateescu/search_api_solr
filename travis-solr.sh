@@ -63,7 +63,7 @@ run_5() {
 
     # go to the solr folder
     cd $dir_name/server
-    ls -l -R
+
     if [ $DEBUG ]
     then
         java -Djetty.port=$solr_port -jar start.jar &
