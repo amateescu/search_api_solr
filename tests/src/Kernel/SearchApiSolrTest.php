@@ -173,10 +173,7 @@ class SearchApiSolrTest extends BackendTest {
    */
   protected function regressionTests() {
     // Regression tests for #2007872.
-    $results = $this->buildSearch('test')
-      ->sort('id', QueryInterface::SORT_ASC)
-      ->sort('type', QueryInterface::SORT_ASC)
-      ->execute();
+    $results = $this->buildSearch('test')->sort('id', QueryInterface::SORT_ASC)->sort('type', QueryInterface::SORT_ASC)->execute();
     $this->assertEquals(4, $results->getResultCount(), 'Sorting on field with NULLs returned correct number of results.');
     $this->assertEquals($this->getItemIds(array(1, 2, 3, 4)), array_keys($results->getResultItems()), 'Sorting on field with NULLs returned correct result.');
     $this->assertIgnored($results);
@@ -342,9 +339,7 @@ class SearchApiSolrTest extends BackendTest {
       'foo',
       'bar',
     );
-    $results = $this->buildSearch($keys)
-      ->sort('search_api_id', QueryInterface::SORT_ASC)
-      ->execute();
+    $results = $this->buildSearch($keys)->sort('search_api_id', QueryInterface::SORT_ASC)->execute();
     $this->assertEquals(2, $results->getResultCount(), 'Negated AND fulltext search returned correct number of results.');
     $this->assertEquals($this->getItemIds(array(3, 4)), array_keys($results->getResultItems()), 'Negated AND fulltext search returned correct result.');
     $this->assertIgnored($results);
@@ -372,9 +367,7 @@ class SearchApiSolrTest extends BackendTest {
         'bar',
       ),
     );
-    $results = $this->buildSearch($keys)
-      ->sort('search_api_id', QueryInterface::SORT_ASC)
-      ->execute();
+    $results = $this->buildSearch($keys)->sort('search_api_id', QueryInterface::SORT_ASC)->execute();
     $this->assertEquals(2, $results->getResultCount(), 'Nested NOT AND fulltext search returned correct number of results.');
     $this->assertEquals($this->getItemIds(array(3, 4)), array_keys($results->getResultItems()), 'Nested NOT AND fulltext search returned correct result.');
     $this->assertIgnored($results);
@@ -431,8 +424,10 @@ class SearchApiSolrTest extends BackendTest {
     $results = $query->execute();
     $expected = array(
       array('count' => 4, 'filter' => '"test"'),
-      array('count' => 3, 'filter' => '"case"'),
+      array('count' => 2, 'filter' => '"Case"'),
+      array('count' => 2, 'filter' => '"casE"'),
       array('count' => 1, 'filter' => '"bar"'),
+      array('count' => 1, 'filter' => '"case"'),
       array('count' => 1, 'filter' => '"foobar"'),
     );
     // We can't guarantee the order of returned facets, since "bar" and "foobar"
@@ -462,20 +457,52 @@ class SearchApiSolrTest extends BackendTest {
     $this->assertEquals($expected, $facets, 'Correct facets were returned');
 
     // Regression tests for #2557291.
-    $results = $this->buildSearch('smile' . json_decode('"\u1F601"'))
-      ->execute();
+    $results = $this->buildSearch('case')->execute();
+    $this->assertEquals(1, $results->getResultCount(), 'Search for lowercase "case" returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1)), array_keys($results->getResultItems()), 'Search for lowercase "case" returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch('Case')->sort('search_api_id')->execute();
+    $this->assertEquals(2, $results->getResultCount(), 'Search for capitalized "Case" returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 3)), array_keys($results->getResultItems()), 'Search for capitalized "Case" returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch('CASE')->execute();
+    $this->assertEquals(0, $results->getResultCount(), 'Search for non-existent uppercase version of "CASE" returned correct number of results.');
+    $this->assertEquals(array(), array_keys($results->getResultItems()), 'Search for non-existent uppercase version of "CASE" returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch('föö')->execute();
     $this->assertEquals(1, $results->getResultCount(), 'Search for keywords with umlauts returned correct number of results.');
     $this->assertEquals($this->getItemIds(array(1)), array_keys($results->getResultItems()), 'Search for keywords with umlauts returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
-    $results = $this->buildSearch()
-      ->addCondition('keywords', 'grape', '<>')
-      ->execute();
+    $results = $this->buildSearch('smile' . json_decode('"\u1F601"'))->execute();
+    $this->assertEquals(1, $results->getResultCount(), 'Search for keywords with umlauts returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1)), array_keys($results->getResultItems()), 'Search for keywords with umlauts returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch()->addCondition('keywords', 'grape', '<>')->execute();
     $this->assertEquals(2, $results->getResultCount(), 'Negated filter on multi-valued field returned correct number of results.');
     $this->assertEquals($this->getItemIds(array(1, 3)), array_keys($results->getResultItems()), 'Negated filter on multi-valued field returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
+
+    // Regression tests for #2511860.
+    $query = $this->buildSearch();
+    $query->addCondition('body', 'ab xy');
+    $results = $query->execute();
+    $this->assertEquals(5, $results->getResultCount(), 'Fulltext filters on short words do not change the result.');
+
+    $query = $this->buildSearch();
+    $query->addCondition('body', 'ab ab');
+    $results = $query->execute();
+    $this->assertEquals(5, $results->getResultCount(), 'Fulltext filters on duplicate short words do not change the result.');
   }
 
   /**
