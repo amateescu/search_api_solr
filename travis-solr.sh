@@ -30,7 +30,7 @@ wait_for_solr(){
     done
 }
 
-run() {
+run_4() {
     dir_name=$1
     solr_port=$2
     solr_core=$3
@@ -49,18 +49,48 @@ run() {
     fi
     wait_for_solr
     cd ../../
-    curl "http://localhost:8983/solr/admin/cores?action=CREATE&name=${solr_core}&instanceDir=${solr_core}&config=solrconfig.xml&schema=schema.xml&dataDir=data"
+    curl "http://localhost:${solr_port}/solr/admin/cores?action=CREATE&name=${solr_core}&instanceDir=${solr_core}&config=solrconfig.xml&schema=schema.xml&dataDir=data"
     echo "Started"
 }
 
+run_5() {
+    dir_name=$1
+    solr_port=$2
+    solr_core=$3
+    # Run solr
+    echo "Running with folder $dir_name"
+    echo "Starting solr on port ${solr_port}..."
+
+    # go to the solr folder
+    cd $1/server
+
+    if [ $DEBUG ]
+    then
+        java -Djetty.port=$solr_port -jar start.jar &
+    else
+        java -Djetty.port=$solr_port -jar start.jar > /dev/null 2>&1 &
+    fi
+    wait_for_solr
+    cd ../../
+    echo "Started"
+}
 
 download_and_run() {
     url="http://archive.apache.org/dist/lucene/solr/$1/solr-$1.tgz"
     dir_name="solr-$1"
 
     download $url $dir_name
-    add_core $dir_name $SOLR_CORE $SOLR_CONFS
-    run $dir_name $SOLR_PORT $SOLR_CORE
+    
+	case `echo "$1" | cut -d . -f 1` in
+	    4)
+		    add_core_4 $dir_name $SOLR_CORE $SOLR_CONFS
+			run_4 $dir_name $SOLR_PORT $SOLR_CORE
+			;;
+		5)
+	        add_core_5 $dir_name $SOLR_CORE $SOLR_CONFS
+            run_5 $dir_name $SOLR_PORT $SOLR_CORE
+			;;
+	esac
 
     if [ -z "${SOLR_DOCS}" ]
     then
@@ -70,7 +100,7 @@ download_and_run() {
     fi
 }
 
-add_core() {
+add_core_4() {
     dir_name=$1
     solr_core=$2
     solr_confs=$3
@@ -93,6 +123,33 @@ add_core() {
         fi
       done
     fi
+}
+
+add_core_5() {
+    dir_name=$1
+    solr_core=$2
+    solr_confs=$3
+    # prepare our folders
+    [[ -d "${dir_name}/server/solr/${solr_core}" ]] || mkdir $dir_name/server/solr/$solr_core
+    [[ -d "${dir_name}/server/solr/${solr_core}/conf" ]] || mkdir $dir_name/server/solr/$solr_core/conf
+
+    # copies custom configurations
+    if [ -d "${solr_confs}" ] ; then
+      cp -R $solr_confs/* $dir_name/server/solr/$solr_core/conf/
+    else
+      for file in $solr_confs
+      do
+        if [ -f "${file}" ]; then
+            cp $file $dir_name/server/solr/$solr_core/conf
+            echo "Copied $file into solr conf directory."
+        else
+            echo "${file} is not valid";
+            exit 1
+        fi
+      done
+    fi
+	
+	echo "name=$solr_core" > $dir_name/server/solr/$solr_core/core.properties
 }
 
 post_documents() {
