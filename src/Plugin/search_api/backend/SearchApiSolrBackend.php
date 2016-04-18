@@ -1379,8 +1379,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     if ($value === NULL) {
       return ($operator == '=' ? '*:* AND -' : '') . "$field:[* TO *]";
     }
-    $value = trim($value);
-    $value = $this->formatFilterValue($value, $index_field->getType());
+
+    if (!is_array($value)) {
+      $value = trim($value);
+      $value = $this->formatFilterValue($value, $index_field->getType());
+    }
+    else {
+      foreach ($value as &$v) {
+        $v = trim($v);
+        $v = $this->formatFilterValue($v, $index_field->getType());
+      }
+    }
     switch ($operator) {
       case '<>':
         return "*:* AND -($field:$value)";
@@ -1392,6 +1401,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         return "$field:[$value TO *]";
       case '>':
         return "$field:{{$value} TO *}";
+      case 'IN':
+        // Group values and use OR conjunction.
+        $conditions = implode(' OR ', $value);
+        return "*:* AND ($field:($conditions))";
+      case 'NOT IN':
+        // Group values and use OR conjunction to negate.
+        $conditions = implode(' OR ', $value);
+        return "*:* AND -($field:($conditions))";
 
       default:
         return "$field:$value";
