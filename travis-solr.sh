@@ -39,7 +39,7 @@ run_4() {
     echo "Starting solr on port ${solr_port}..."
 
     # go to the solr folder
-    cd $1/example
+    cd $dir_name/example
 
     if [ $DEBUG ]
     then
@@ -62,8 +62,8 @@ run_5() {
     echo "Starting solr on port ${solr_port}..."
 
     # go to the solr folder
-    cd $1/server
-
+    cd $dir_name/server
+    ls -l -R
     if [ $DEBUG ]
     then
         java -Djetty.port=$solr_port -jar start.jar &
