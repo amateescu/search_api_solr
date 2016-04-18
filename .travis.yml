@@ -7,21 +7,20 @@ cache:
   apt: true
 
 php:
-  - 5.5
+  #- 5.5
   - 5.6
 
 # This creates a build with each php environment. 4 builds in total.
 env:
-  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=3.6.2 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/3.x"
-  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=4.9.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/4.x"
+  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=4.5.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/4.x"
+  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=5.5.0 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/5.x"
 
 notifications:
-  email:
-    - nick.veenhof@acquia.com
-    - andrei@amateescu.me
+  #email:
+  #  - nick.veenhof@acquia.com
+  #  - andrei@amateescu.me
   irc:
     - "chat.freenode.net#drupal-search-api"
-
 
 # This will create the database
 mysql:
@@ -61,7 +60,7 @@ install:
   - echo "error_log=syslog" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
   # Get latest drupal 8 core
   - cd $TRAVIS_BUILD_DIR/..
-  - git clone --depth 1 --branch 8.0.x http://git.drupal.org/project/drupal.git
+  - git clone --depth 1 --branch 8.1.x http://git.drupal.org/project/drupal.git
   # Restart apache and test it
   - sudo service apache2 restart
   - curl -v "http://localhost"
@@ -72,11 +71,16 @@ before_script:
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
   - cd $TRAVIS_BUILD_DIR/../drupal
   # Update drupal core
-  - git pull origin 8.0.x
+  - git pull origin 8.1.x
+  - composer install
   # Install the site
   - drush -v site-install standard --db-url=mysql://root:@localhost/drupal --yes
   - drush en --yes simpletest
   - git clone --branch 8.x-1.x http://git.drupal.org/project/search_api.git modules/search_api
+  - drush en --yes composer_manager
+  - cd modules/contrib/composer_manager; php scripts/init.php
+  - cd $TRAVIS_BUILD_DIR/../drupal
+  - composer drupal-update
   - drush cr
   # Install Solr
   - curl -sSL https://raw.githubusercontent.com/nickveenhof/travis-solr/master/travis-solr.sh | bash
@@ -85,10 +89,10 @@ script:
   # go to our Drupal module directory
   - mkdir $TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr
   - cp -R $TRAVIS_BUILD_DIR/* $TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr/
-  - cd $TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr/
-  - composer install
   # go to our Drupal main directory
   - cd $TRAVIS_BUILD_DIR/../drupal
+  - composer drupal-rebuild
+  - composer update -n --lock --verbose --no-dev
   - ls -la $TRAVIS_BUILD_DIR/../drupal/sites/default
 
   # Run the tests
