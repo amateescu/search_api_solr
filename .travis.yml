@@ -84,7 +84,7 @@ before_script:
   - composer drupal-update -n
   - drush cr
   # Install Solr
-  - curl -sSL https://raw.githubusercontent.com/nickveenhof/travis-solr/master/travis-solr.sh | bash
+  - cat $TRAVIS_BUILD_DIR/travis-solr.sh | bash
 
 script:
   # go to our Drupal module directory
