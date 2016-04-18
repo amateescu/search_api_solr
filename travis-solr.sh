@@ -55,8 +55,8 @@ run() {
 
 
 download_and_run() {
-    url="http://archive.apache.org/dist/lucene/solr/$1/apache-solr-$1.tgz"
-    dir_name="apache-solr-$1"
+    url="http://archive.apache.org/dist/lucene/solr/$1/solr-$1.tgz"
+    dir_name="solr-$1"
 
     download $url $dir_name
     add_core $dir_name $SOLR_CORE $SOLR_CONFS
