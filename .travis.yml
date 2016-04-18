@@ -78,7 +78,7 @@ before_script:
   - drush en --yes simpletest
   - git clone --branch 8.x-1.x http://git.drupal.org/project/search_api.git modules/search_api
   - drush en --yes composer_manager
-  - cd modules/contrib/composer_manager; php scripts/init.php
+  - cd modules/composer_manager; php scripts/init.php
   - cd $TRAVIS_BUILD_DIR/../drupal
   - composer drupal-update
   - drush cr
@@ -91,8 +91,7 @@ script:
   - cp -R $TRAVIS_BUILD_DIR/* $TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr/
   # go to our Drupal main directory
   - cd $TRAVIS_BUILD_DIR/../drupal
-  - composer drupal-rebuild
-  - composer update -n --lock --verbose --no-dev
+  - composer drupal-update
   - ls -la $TRAVIS_BUILD_DIR/../drupal/sites/default
 
   # Run the tests
