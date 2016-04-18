@@ -80,7 +80,8 @@ before_script:
   - drush en --yes composer_manager
   - cd modules/composer_manager; php scripts/init.php
   - cd $TRAVIS_BUILD_DIR/../drupal
-  - composer drupal-update
+  - composer config discard-changes true
+  - composer drupal-update -n
   - drush cr
   # Install Solr
   - curl -sSL https://raw.githubusercontent.com/nickveenhof/travis-solr/master/travis-solr.sh | bash
@@ -91,7 +92,7 @@ script:
   - cp -R $TRAVIS_BUILD_DIR/* $TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr/
   # go to our Drupal main directory
   - cd $TRAVIS_BUILD_DIR/../drupal
-  - composer drupal-update
+  - composer drupal-update -n
   - ls -la $TRAVIS_BUILD_DIR/../drupal/sites/default
 
   # Run the tests
