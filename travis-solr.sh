@@ -62,17 +62,9 @@ run_5() {
     echo "Starting solr on port ${solr_port}..."
 
     # go to the solr folder
-    cd $dir_name/server
-
-    if [ $DEBUG ]
-    then
-        java -Djetty.port=$solr_port -jar start.jar &
-    else
-        java -Djetty.port=$solr_port -jar start.jar > /dev/null 2>&1 &
-    fi
-    wait_for_solr
-    cd ../../
-    echo "Started"
+    cd $dir_name
+    bin/solr start -p $solr_port
+    cd ../
 }
 
 download_and_run() {
