@@ -219,7 +219,6 @@ class SearchApiSolrTest extends BackendTestBase {
     //    1. min chars in schema.xml is 2 not 3
     //    2. the Solr backend converts the condition to a filter query and
     //       doesn't split the keywords but treats them as phrase.
-    
     $query = $this->buildSearch();
     $query->addCondition('body', 'a test b');
     $results = $query->execute();
