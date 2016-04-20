@@ -9,17 +9,26 @@ namespace Drupal\Tests\search_api_solr\Kernel;
 
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
-use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
-use Drupal\Tests\search_api_db\Kernel\BackendTest;
+use Drupal\Tests\search_api\Kernel\BackendTestBase;
 
 /**
  * Tests index and search capabilities using the Solr search backend.
  *
  * @group search_api_solr
  */
-class SearchApiSolrTest extends BackendTest {
+class SearchApiSolrTest extends BackendTestBase {
+
+  /**
+   * Modules to enable for this test.
+   *
+   * @var string[]
+   */
+  public static $modules = array(
+    'search_api_solr',
+    'search_api_test_solr',
+  );
 
   /**
    * A Search API server ID.
@@ -42,13 +51,6 @@ class SearchApiSolrTest extends BackendTest {
    * @var bool
    */
   protected $solrAvailable = FALSE;
-
-  /**
-   * Modules to enable.
-   *
-   * @var array
-   */
-  public static $modules = array('search_api_solr', 'search_api_test_solr');
 
   /**
    * {@inheritdoc}
@@ -117,7 +119,7 @@ class SearchApiSolrTest extends BackendTest {
   /**
    * {@inheritdoc}
    */
-  protected function checkServerTables() {
+  protected function checkServerBackend() {
     // The Solr backend doesn't create any database tables.
   }
 
@@ -152,14 +154,14 @@ class SearchApiSolrTest extends BackendTest {
   /**
    * {@inheritdoc}
    */
-  protected function editServer() {
+  protected function editServerMinChars() {
     // The parent assertions don't make sense for the Solr backend.
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function searchSuccess2() {
+  protected function searchSuccessMinChars() {
     // This method tests the 'min_chars' option of the Database backend, which
     // we don't have in Solr.
     // @todo Copy tests from the Apachesolr module which create Solr cores on
@@ -167,249 +169,16 @@ class SearchApiSolrTest extends BackendTest {
   }
 
   /**
-   * Tests various previously fixed bugs, mostly from the Database backend.
-   *
-   * Needs to be overridden here since some of the tests don't apply.
+   * Second server.
    */
-  protected function regressionTests() {
-    // Regression tests for #2007872.
-    $results = $this->buildSearch('test')->sort('id', QueryInterface::SORT_ASC)->sort('type', QueryInterface::SORT_ASC)->execute();
-    $this->assertEquals(4, $results->getResultCount(), 'Sorting on field with NULLs returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 2, 3, 4)), array_keys($results->getResultItems()), 'Sorting on field with NULLs returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+  protected function regressionTestSecondServer() {
+    // @todo
+  }
 
-    $query = $this->buildSearch();
-    $conditions = $query->createConditionGroup('OR');
-    $conditions->addCondition('id', 3);
-    $conditions->addCondition('type', 'article');
-    $query->addConditionGroup($conditions);
-    $query->sort('id', QueryInterface::SORT_ASC);
-    $results = $query->execute();
-    $this->assertEquals(3, $results->getResultCount(), 'OR filter on field with NULLs returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(3, 4, 5)), array_keys($results->getResultItems()), 'OR filter on field with NULLs returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
-
-    // Regression tests for #1863672.
-    $query = $this->buildSearch();
-    $conditions = $query->createConditionGroup('OR');
-    $conditions->addCondition('keywords', 'orange');
-    $conditions->addCondition('keywords', 'apple');
-    $query->addConditionGroup($conditions);
-    $query->sort('id', QueryInterface::SORT_ASC);
-    $results = $query->execute();
-    $this->assertEquals(4, $results->getResultCount(), 'OR filter on multi-valued field returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 2, 4, 5)), array_keys($results->getResultItems()), 'OR filter on multi-valued field returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
-
-    $query = $this->buildSearch();
-    $conditions = $query->createConditionGroup('OR');
-    $conditions->addCondition('keywords', 'orange');
-    $conditions->addCondition('keywords', 'strawberry');
-    $query->addConditionGroup($conditions);
-    $conditions = $query->createConditionGroup('OR');
-    $conditions->addCondition('keywords', 'apple');
-    $conditions->addCondition('keywords', 'grape');
-    $query->addConditionGroup($conditions);
-    $query->sort('id', QueryInterface::SORT_ASC);
-    $results = $query->execute();
-    $this->assertEquals(3, $results->getResultCount(), 'Multiple OR filters on multi-valued field returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(2, 4, 5)), array_keys($results->getResultItems()), 'Multiple OR filters on multi-valued field returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
-
-    $query = $this->buildSearch();
-    $conditions1 = $query->createConditionGroup('OR');
-    $conditions = $query->createConditionGroup('AND');
-    $conditions->addCondition('keywords', 'orange');
-    $conditions->addCondition('keywords', 'apple');
-    $conditions1->addConditionGroup($conditions);
-    $conditions = $query->createConditionGroup('AND');
-    $conditions->addCondition('keywords', 'strawberry');
-    $conditions->addCondition('keywords', 'grape');
-    $conditions1->addConditionGroup($conditions);
-    $query->addConditionGroup($conditions1);
-    $query->sort('id', QueryInterface::SORT_ASC);
-    $results = $query->execute();
-    $this->assertEquals(3, $results->getResultCount(), 'Complex nested filters on multi-valued field returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(2, 4, 5)), array_keys($results->getResultItems()), 'Complex nested filters on multi-valued field returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
-
-    // Regression tests for #2040543.
-    $query = $this->buildSearch();
-    $facets['category'] = array(
-      'field' => 'category',
-      'limit' => 0,
-      'min_count' => 1,
-      'missing' => TRUE,
-    );
-    $query->setOption('search_api_facets', $facets);
-    $query->range(0, 0);
-    $results = $query->execute();
-    $expected = array(
-      array('count' => 2, 'filter' => '"article_category"'),
-      array('count' => 2, 'filter' => '"item_category"'),
-      array('count' => 1, 'filter' => '!'),
-    );
-    $type_facets = $results->getExtraData('search_api_facets')['category'];
-    usort($type_facets, array($this, 'facetCompare'));
-    $this->assertEquals($expected, $type_facets, 'Correct facets were returned');
-
-    $query = $this->buildSearch();
-    $facets['category']['missing'] = FALSE;
-    $query->setOption('search_api_facets', $facets);
-    $query->range(0, 0);
-    $results = $query->execute();
-    $expected = array(
-      array('count' => 2, 'filter' => '"article_category"'),
-      array('count' => 2, 'filter' => '"item_category"'),
-    );
-    $type_facets = $results->getExtraData('search_api_facets')['category'];
-    usort($type_facets, array($this, 'facetCompare'));
-    $this->assertEquals($expected, $type_facets, 'Correct facets were returned');
-
-    // Regression tests for #2111753.
-    $keys = array(
-      '#conjunction' => 'OR',
-      'foo',
-      'test',
-    );
-    $query = $this->buildSearch($keys, array(), array('name'));
-    $query->sort('id', QueryInterface::SORT_ASC);
-    $results = $query->execute();
-    $this->assertEquals(3, $results->getResultCount(), 'OR keywords returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 2, 4)), array_keys($results->getResultItems()), 'OR keywords returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
-
-    $query = $this->buildSearch($keys, array(), array('name', 'body'));
-    $query->range(0, 0);
-    $results = $query->execute();
-    $this->assertEquals(5, $results->getResultCount(), 'Multi-field OR keywords returned correct number of results.');
-    $this->assertFalse($results->getResultItems(), 'Multi-field OR keywords returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
-
-    $keys = array(
-      '#conjunction' => 'OR',
-      'foo',
-      'test',
-      array(
-        '#conjunction' => 'AND',
-        'bar',
-        'baz',
-      ),
-    );
-    $query = $this->buildSearch($keys, array(), array('name'));
-    $query->sort('id', QueryInterface::SORT_ASC);
-    $results = $query->execute();
-    $this->assertEquals(4, $results->getResultCount(), 'Nested OR keywords returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 2, 4, 5)), array_keys($results->getResultItems()), 'Nested OR keywords returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
-
-    $keys = array(
-      '#conjunction' => 'OR',
-      array(
-        '#conjunction' => 'AND',
-        'foo',
-        'test',
-      ),
-      array(
-        '#conjunction' => 'AND',
-        'bar',
-        'baz',
-      ),
-    );
-    $query = $this->buildSearch($keys, array(), array('name', 'body'));
-    $query->sort('id', QueryInterface::SORT_ASC);
-    $results = $query->execute();
-    $this->assertEquals(4, $results->getResultCount(), 'Nested multi-field OR keywords returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 2, 4, 5)), array_keys($results->getResultItems()), 'Nested multi-field OR keywords returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
-
-    // Regression tests for #2127001.
-    $keys = array(
-      '#conjunction' => 'AND',
-      '#negation' => TRUE,
-      'foo',
-      'bar',
-    );
-    $results = $this->buildSearch($keys)->sort('search_api_id', QueryInterface::SORT_ASC)->execute();
-    $this->assertEquals(2, $results->getResultCount(), 'Negated AND fulltext search returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(3, 4)), array_keys($results->getResultItems()), 'Negated AND fulltext search returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
-
-    $keys = array(
-      '#conjunction' => 'OR',
-      '#negation' => TRUE,
-      'foo',
-      'baz',
-    );
-    $results = $this->buildSearch($keys)->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'Negated OR fulltext search returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(3)), array_keys($results->getResultItems()), 'Negated OR fulltext search returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
-
-    $keys = array(
-      '#conjunction' => 'AND',
-      'test',
-      array(
-        '#conjunction' => 'AND',
-        '#negation' => TRUE,
-        'foo',
-        'bar',
-      ),
-    );
-    $results = $this->buildSearch($keys)->sort('search_api_id', QueryInterface::SORT_ASC)->execute();
-    $this->assertEquals(2, $results->getResultCount(), 'Nested NOT AND fulltext search returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(3, 4)), array_keys($results->getResultItems()), 'Nested NOT AND fulltext search returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
-
-    // Regression tests for #2136409.
-    $query = $this->buildSearch();
-    $query->addCondition('category', NULL);
-    $query->sort('search_api_id', QueryInterface::SORT_ASC);
-    $results = $query->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'NULL filter returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(3)), array_keys($results->getResultItems()), 'NULL filter returned correct result.');
-
-    $query = $this->buildSearch();
-    $query->addCondition('category', NULL, '<>');
-    $query->sort('search_api_id', QueryInterface::SORT_ASC);
-    $results = $query->execute();
-    $this->assertEquals(4, $results->getResultCount(), 'NOT NULL filter returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 2, 4, 5)), array_keys($results->getResultItems()), 'NOT NULL filter returned correct result.');
-
-    // Regression tests for #1658964.
-    $query = $this->buildSearch();
-    $facets['type'] = array(
-      'field' => 'type',
-      'limit' => 0,
-      'min_count' => 0,
-      'missing' => TRUE,
-    );
-    $query->setOption('search_api_facets', $facets);
-    $query->addCondition('type', 'article');
-    $query->range(0, 0);
-    $results = $query->execute();
-    $expected = array(
-      array('count' => 2, 'filter' => '"article"'),
-      array('count' => 0, 'filter' => '!'),
-      array('count' => 0, 'filter' => '"item"'),
-    );
-    $facets = $results->getExtraData('search_api_facets', array())['type'];
-    usort($facets, array($this, 'facetCompare'));
-    $this->assertEquals($expected, $facets, 'Correct facets were returned');
-
-    // Regression tests for #2469547.
+  /**
+   * Regression tests for #2469547.
+   */
+  protected function regressionTest2469547() {
     $query = $this->buildSearch();
     $facets = array();
     $facets['body'] = array(
@@ -424,10 +193,8 @@ class SearchApiSolrTest extends BackendTest {
     $results = $query->execute();
     $expected = array(
       array('count' => 4, 'filter' => '"test"'),
-      array('count' => 2, 'filter' => '"Case"'),
-      array('count' => 2, 'filter' => '"casE"'),
+      array('count' => 3, 'filter' => '"case"'),
       array('count' => 1, 'filter' => '"bar"'),
-      array('count' => 1, 'filter' => '"case"'),
       array('count' => 1, 'filter' => '"foobar"'),
     );
     // We can't guarantee the order of returned facets, since "bar" and "foobar"
@@ -435,75 +202,35 @@ class SearchApiSolrTest extends BackendTest {
     $facets = $results->getExtraData('search_api_facets', array())['body'];
     usort($facets, array($this, 'facetCompare'));
     $this->assertEquals($expected, $facets, 'Correct facets were returned for a fulltext field.');
-
-    // Regression tests for #1403916.
-    $query = $this->buildSearch('test foo');
-    $facets = array();
-    $facets['type'] = array(
-      'field' => 'type',
-      'limit' => 0,
-      'min_count' => 1,
-      'missing' => TRUE,
-    );
-    $query->setOption('search_api_facets', $facets);
-    $query->range(0, 0);
-    $results = $query->execute();
-    $expected = array(
-      array('count' => 2, 'filter' => '"item"'),
-      array('count' => 1, 'filter' => '"article"'),
-    );
-    $facets = $results->getExtraData('search_api_facets', array())['type'];
-    usort($facets, array($this, 'facetCompare'));
-    $this->assertEquals($expected, $facets, 'Correct facets were returned');
-
-    // Regression tests for #2557291.
-    $results = $this->buildSearch('case')->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'Search for lowercase "case" returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1)), array_keys($results->getResultItems()), 'Search for lowercase "case" returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
-
-    $results = $this->buildSearch('Case')->sort('search_api_id')->execute();
-    $this->assertEquals(2, $results->getResultCount(), 'Search for capitalized "Case" returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 3)), array_keys($results->getResultItems()), 'Search for capitalized "Case" returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
-
-    $results = $this->buildSearch('CASE')->execute();
-    $this->assertEquals(0, $results->getResultCount(), 'Search for non-existent uppercase version of "CASE" returned correct number of results.');
-    $this->assertEquals(array(), array_keys($results->getResultItems()), 'Search for non-existent uppercase version of "CASE" returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
-
-    $results = $this->buildSearch('föö')->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'Search for keywords with umlauts returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1)), array_keys($results->getResultItems()), 'Search for keywords with umlauts returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
-
-    $results = $this->buildSearch('smile' . json_decode('"\u1F601"'))->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'Search for keywords with umlauts returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1)), array_keys($results->getResultItems()), 'Search for keywords with umlauts returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
-
-    $results = $this->buildSearch()->addCondition('keywords', 'grape', '<>')->execute();
-    $this->assertEquals(2, $results->getResultCount(), 'Negated filter on multi-valued field returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 3)), array_keys($results->getResultItems()), 'Negated filter on multi-valued field returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
-
-    // Regression tests for #2511860.
-    $query = $this->buildSearch();
-    $query->addCondition('body', 'ab xy');
-    $results = $query->execute();
-    $this->assertEquals(5, $results->getResultCount(), 'Fulltext filters on short words do not change the result.');
-
-    $query = $this->buildSearch();
-    $query->addCondition('body', 'ab ab');
-    $results = $query->execute();
-    $this->assertEquals(5, $results->getResultCount(), 'Fulltext filters on duplicate short words do not change the result.');
   }
+
+  /**
+   * Regression tests for #2557291.
+   */
+  protected function regressionTest2557291() {
+    // @todo the default search on Solr is case-insensitive.
+  }
+
+  /**
+   * Regression tests for #2511860.
+   */
+  protected function regressionTest2511860() {
+    // @todo multiple incompatible behaviors compared to database backend:
+    //    1. min chars in schema.xml is 2 not 3
+    //    2. the Solr backend converts the condition to a filter query and
+    //       doesn't split the keywords but treats them as phrase.
+    
+    $query = $this->buildSearch();
+    $query->addCondition('body', 'a test b');
+    $results = $query->execute();
+    $this->assertEquals(4, $results->getResultCount(), 'Fulltext filters on short words do not change the result.');
+
+    $query = $this->buildSearch();
+    $query->addCondition('body', 'a test a');
+    $results = $query->execute();
+    $this->assertEquals(4, $results->getResultCount(), 'Fulltext filters on duplicate short words do not change the result.');
+  }
+
 
   /**
    * {@inheritdoc}

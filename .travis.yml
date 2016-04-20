@@ -77,6 +77,12 @@ before_script:
   - drush -v site-install standard --db-url=mysql://root:@localhost/drupal --yes
   - drush en --yes simpletest
   - git clone --branch 8.x-1.x http://git.drupal.org/project/search_api.git modules/search_api
+  #########################################
+  # to be removed once #2709951 is resolved
+  - cd modules/search_api
+  - curl https://www.drupal.org/files/issues/2709951_4.patch | git apply
+  - cd $TRAVIS_BUILD_DIR/../drupal
+  #########################################
   - drush en --yes composer_manager
   - cd modules/composer_manager; php scripts/init.php
   - cd $TRAVIS_BUILD_DIR/../drupal
