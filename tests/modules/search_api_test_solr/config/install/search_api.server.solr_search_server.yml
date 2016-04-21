@@ -7,7 +7,8 @@ backend_config:
   scheme: http
   host: localhost
   port: '8983'
-  path: /solr/d8
+  path: /solr
+  core: d8
   http_user: ''
   http_pass: ''
   excerpt: false
