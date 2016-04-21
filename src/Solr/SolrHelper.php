@@ -7,15 +7,17 @@
 
 namespace Drupal\search_api_solr\Solr;
 
+use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Utility as SearchApiUtility;
 use Drupal\search_api_solr\SearchApiSolrException;
-use Solarium\Client;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
+use Solarium\Client;
 use Solarium\Core\Query\Helper as SolariumHelper;
 use Solarium\Exception\HttpException;
+use Solarium\Exception\OutOfBoundsException;
 use Solarium\QueryType\Select\Query\Query;
-use Drupal\search_api\Utility as SearchApiUtility;
 
 /**
  * Contains helper methods for working with Solr.
@@ -37,7 +39,14 @@ class SolrHelper {
   protected $configuration;
 
   /**
-   * Stores Solr system information.
+   * Stores Solr server information.
+   *
+   * @var array
+   */
+  protected $serverInfo;
+
+  /**
+   * Stores Solr core system information.
    *
    * @var array
    */
@@ -58,27 +67,60 @@ class SolrHelper {
    */
   public function setSolr(Client $solr) {
     $this->solr = $solr;
+    try {
+      $this->solr->getEndpoint('server');
+    }
+    catch (OutOfBoundsException $e) {
+      $this->attachServerEndpoint();
+    }
   }
 
   /**
-   * Returns a link to the Solr server, if the necessary options are set.
+   * Attaches an endpoint to the Solr connection to communicate with the server.
+   *
+   * This endpoint is different from the core endpoint which is the default one.
+   * The default endpoint for the core is used to communicate with the index.
+   * But for some administrative tasks the server itself needs to be contacted.
+   * This function is meant to be overwritten as soon as we deal with Solr
+   * service provider specific implementations of SolrHelper.
+   */
+  public function attachServerEndpoint() {
+    $configuration = $this->configuration;
+    $configuration['core'] = NULL;
+    $configuration['key'] = 'server';
+    $this->solr->createEndpoint($configuration);
+  }
+
+  /**
+   * Returns a the Solr server URI.
+   */
+  protected function getServerUri() {
+    $url_path = $this->solr->getEndpoint('server')->getBaseUri();
+    if ($this->configuration['host'] == 'localhost' && !empty($_SERVER['SERVER_NAME'])) {
+      $url_path = str_replace('localhost', $_SERVER['SERVER_NAME'], $url_path);
+    }
+
+    return $url_path;
+  }
+
+  /**
+   * Returns a link to the Solr server.
    */
   public function getServerLink() {
-    if (!$this->configuration) {
-      return '';
-    }
-    $host = $this->configuration['host'];
-    if ($host == 'localhost' && !empty($_SERVER['SERVER_NAME'])) {
-      $host = $_SERVER['SERVER_NAME'];
-    }
-    $url_path = $this->configuration['scheme'] . '://' . $host . ':' . $this->configuration['port'] . $this->configuration['path'];
-
-    if (isset($this->configuration['core'])) {
-      $url_path .= $this->configuration['core'];
-    }
+    $url_path = $this->getServerUri();
     $url = Url::fromUri($url_path);
 
-    return \Drupal::l($url_path, $url);
+    return Link::fromTextAndUrl($url_path, $url);
+  }
+
+  /**
+   * Returns a link to the Solr core, if the necessary options are set.
+   */
+  public function getCoreLink() {
+    $url_path = $this->getServerUri() . '#/' . $this->configuration['core'];
+    $url = Url::fromUri($url_path);
+
+    return Link::fromTextAndUrl($url_path, $url);
   }
 
   /**
@@ -193,12 +235,15 @@ class SolrHelper {
   /**
    * Gets the current Solr version.
    *
+   * @param bool $force_auto_detect
+   *   If TRUE, ignore user overwrites.
+   *
    * @return string
    *   The full Solr version string.
    */
-  public function getSolrVersion() {
+  public function getSolrVersion($force_auto_detect = FALSE) {
     // Allow for overrides by the user.
-    if (!empty($this->configuration['solr_version'])) {
+    if (!$force_auto_detect && !empty($this->configuration['solr_version'])) {
       // In most cases the already stored solr_version is just the major version
       // number as integer. In this case we will expand it to the minimum
       // corresponding full version string.
@@ -206,10 +251,10 @@ class SolrHelper {
       return implode('.', $version);
     }
 
-    $system_info = $this->getSystemInfo();
+    $server_info = $this->getServerInfo();
     // Get our solr version number
-    if (isset($system_info['lucene']['solr-spec-version'])) {
-      return $system_info['lucene']['solr-spec-version'];
+    if (isset($server_info['lucene']['solr-spec-version'])) {
+      return $server_info['lucene']['solr-spec-version'];
     }
 
     return '0.0.0';
@@ -243,6 +288,31 @@ class SolrHelper {
   }
 
   /**
+   * Gets information about the Solr server.
+   *
+   * @return object
+   *   A response object with server information.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   */
+  public function getServerInfo() {
+    // @todo Add back persistent cache?
+    if (!isset($this->serverInfo)) {
+      // @todo Finish https://github.com/solariumphp/solarium/pull/155 and stop
+      // abusing the ping query for this.
+      $query = $this->solr->createPing(array('handler' => 'admin/info/system'));
+      try {
+        $this->serverInfo = $this->solr->execute($query, 'server')->getData();
+      }
+      catch (HttpException $e) {
+        throw new SearchApiSolrException(t('Solr server @server not found.', ['@server' => $this->solr->getEndpoint('server')->getBaseUri()]), $e->getCode(), $e);
+      }
+    }
+
+    return $this->serverInfo;
+  }
+
+  /**
    * Gets information about the Solr Core.
    *
    * @return object
@@ -253,7 +323,7 @@ class SolrHelper {
   public function getSystemInfo() {
     // @todo Add back persistent cache?
     if (!isset($this->systemInfo)) {
-      // @todo Finish https://github.com/basdenooijer/solarium/pull/155 and stop
+      // @todo Finish https://github.com/solariumphp/solarium/pull/155 and stop
       // abusing the ping query for this.
       $query = $this->solr->createPing(array('handler' => 'admin/system'));
       try {

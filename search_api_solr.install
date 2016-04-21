@@ -44,3 +44,26 @@ function search_api_solr_requirements($phase) {
 
   return $ret;
 }
+
+/**
+ * Split Solr paths stored in configurations into server and core parts.
+ */
+function search_api_solr_update_8001() {
+  $config_factory = \Drupal::configFactory();
+  $has_trusted_data = TRUE;
+
+  foreach ($config_factory->listAll('search_api.server.') as $server_name) {
+    $server = $config_factory->get($server_name);
+    if (strpos($server->get('backend'), 'search_api_solr') === 0) {
+      $backend_config = $server->get('backend_config');
+      $parts = explode('/', $backend_config['path']);
+      if ($parts > 1) {
+        $backend_config['core'] = array_pop($parts);
+        $backend_config['path'] = implode('/', $parts);
+        $config_factory->getEditable($server_name)
+          ->set('backend_config', $backend_config)
+          ->save($has_trusted_data);
+      }
+    }
+  }
+}

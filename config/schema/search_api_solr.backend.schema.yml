@@ -13,7 +13,10 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
       label: 'The port of the Solr server'
     path:
       type: string
-      label: 'The path that identifies the Solr instance to use on the server'
+      label: 'The path of the Solr server'
+    core:
+      type: string
+      label: 'The name that identifies the Solr core to use on the server'
     excerpt:
       type: boolean
       label: 'Return an excerpt for all results'
