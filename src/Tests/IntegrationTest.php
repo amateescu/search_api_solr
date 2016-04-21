@@ -125,7 +125,8 @@ class IntegrationTest extends WebTestBase {
     $edit = [
       'backend_config[host]' => 'localhost',
       'backend_config[port]' =>'8983',
-      'backend_config[path]' =>'/solr/d8',
+      'backend_config[path]' =>'/solr',
+      'backend_config[core]' =>'d8',
     ];
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
