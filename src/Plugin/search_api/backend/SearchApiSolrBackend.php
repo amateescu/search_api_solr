@@ -13,6 +13,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Item\FieldInterface;
+use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Query\ConditionInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
@@ -627,8 +628,55 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function indexItems(IndexInterface $index, array $items) {
+    $documents = $this->getDocuments($index, $items);
+    if (!$documents) {
+      return array();
+    }
+    try {
+      $this->getUpdateQuery()->addDocuments($documents);
+      // Do a commitWithin since that is automatically a softCommit with Solr 4
+      // and a delayed hard commit with Solr 3.4+.
+      // We wait 1 second after the request arrived for solr to parse the commit.
+      // This allows us to return to Drupal and let Solr handle what it
+      // needs to handle
+      // @see http://wiki.apache.org/solr/NearRealtimeSearch
+      /** @var \Solarium\Plugin\CustomizeRequest\CustomizeRequest $customizer */
+      $customizer = $this->solr->getPlugin('customizerequest');
+      $customizer->createCustomization('id')
+        ->setType('param')
+        ->setName('commitWithin')
+        ->setValue('1000');
+
+      $this->solr->execute($this->getUpdateQuery());
+
+      // Reset the Update query for further calls.
+      static::$updateQuery = NULL;
+
+      $ret = [];
+      foreach ($documents as $document) {
+        $ret[] = $document->getFields()['item_id'];
+      }
+      return $ret;
+    }
+    catch (\Exception $e) {
+      watchdog_exception('search_api_solr', $e, "%type while indexing: @message in %function (line %line of %file).");
+    }
+    return array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDocument(IndexInterface $index, ItemInterface $item) {
+    $documents = $this->getDocuments($index, [$item->getId() => $itme]);
+    return reset($documents);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDocuments(IndexInterface $index, array $items) {
     $documents = array();
-    $ret = array();
     $index_id = $this->getIndexId($index->id());
     $field_names = $this->getFieldNames($index);
     $field_names_single_value = $this->getFieldNames($index, TRUE);
@@ -682,7 +730,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       if ($doc) {
         $documents[] = $doc;
-        $ret[] = $id;
       }
     }
 
@@ -690,34 +737,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $this->moduleHandler->alter('search_api_solr_documents', $documents, $index, $items);
     $this->alterSolrDocuments($documents, $index, $items);
 
-    if (!$documents) {
-      return array();
-    }
-    try {
-      $this->getUpdateQuery()->addDocuments($documents);
-      // Do a commitWithin since that is automatically a softCommit with Solr 4
-      // and a delayed hard commit with Solr 3.4+.
-      // We wait 1 second after the request arrived for solr to parse the commit.
-      // This allows us to return to Drupal and let Solr handle what it
-      // needs to handle
-      // @see http://wiki.apache.org/solr/NearRealtimeSearch
-      /** @var \Solarium\Plugin\CustomizeRequest\CustomizeRequest $customizer */
-      $customizer = $this->solr->getPlugin('customizerequest');
-      $customizer->createCustomization('id')
-        ->setType('param')
-        ->setName('commitWithin')
-        ->setValue('1000');
-
-      $this->solr->execute($this->getUpdateQuery());
-
-      // Reset the Update query for further calls.
-      static::$updateQuery = NULL;
-      return $ret;
-    }
-    catch (\Exception $e) {
-      watchdog_exception('search_api_solr', $e, "%type while indexing: @message in %function (line %line of %file).");
-    }
-    return array();
+    return $documents;
   }
 
   /**

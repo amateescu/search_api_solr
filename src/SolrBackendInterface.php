@@ -9,6 +9,7 @@ namespace Drupal\search_api_solr;
 
 use Drupal\search_api\Backend\BackendInterface;
 use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Item\ItemInterface;
 
 /**
  * Defines an interface for Solr search backend plugins.
@@ -122,5 +123,27 @@ interface SolrBackendInterface extends BackendInterface {
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function getFile($file = NULL);
+
+  /**
+   * Gets a Solr document from an search api index item.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *
+   * @param \Drupal\search_api\Item\ItemInterface $item
+   *
+   * @return \Solarium\QueryType\Update\Query\Document\Document
+   */
+  public function getDocument(IndexInterface $index, ItemInterface $item);
+
+  /**
+   * Gets Solr documents from search api index items.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *
+   * @param \Drupal\search_api\Item\ItemInterface[] $items
+   *
+   * @return \Solarium\QueryType\Update\Query\Document\Document[]
+   */
+  public function getDocuments(IndexInterface $index, array $items);
 
 }
