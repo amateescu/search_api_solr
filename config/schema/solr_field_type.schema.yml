@@ -1,0 +1,24 @@
+search_api_solr_multilingual.solr_field_type.*:
+  type: config_entity
+  label: 'Solr Field Type Config'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    uuid:
+      type: string
+    managed_schema:
+      type: boolean
+      label: 'Managed Schema'
+    minimum_solr_version:
+      type: string
+      label: 'Minimum Solr Version'
+    field_type:
+      type: mapping
+      label: 'Field Type'
+    text_files:
+      type: mapping
+      label: 'Text Files'

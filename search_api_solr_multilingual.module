@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * @file
+ * Contains search_api_solr_multilingual.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function search_api_solr_multilingual_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the search_api_solr_multilingual module.
+    case 'help.page.search_api_solr_multilingual':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Search API Multilingual Solr Search.') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function search_api_solr_multilingual_theme() {
+  $theme = [];
+
+  return $theme;
+}
+
+/**
+ * Deletes all Solr Field Type and re-installs them from their yml files.
+ */
+function search_api_solr_multilingual_delete_and_reinstall_all_field_types() {
+  $storage = \Drupal::entityTypeManager()->getStorage('solr_field_type');
+  $storage->delete($storage->loadMultiple());
+
+  /** @var \Drupal\Core\Config\ConfigInstallerInterface $config_installer */
+  $config_installer = \Drupal::service('config.installer');
+  $config_installer->installDefaultConfig('module', 'search_api_solr_multilingual');
+  $restrict_by_dependency = [
+    'module' => 'search_api_solr_multilingual',
+  ];
+  $config_installer->installOptionalConfig(NULL, $restrict_by_dependency);
+}

@@ -1,0 +1,49 @@
+Setting up Solr
+---------------
+
+In order for this module to work, you will first need to set up a Solr server.
+See search_api_solr/INSTALL.txt for the basics.
+
+But don't install any drupal configs or schemas right now!
+
+search_api_solr_multilingual adds some more restrictions and requires a
+different (but easier) kind of configuration.
+
+search_api_solr_multilingual requires at least solr 4.5.x.
+
+
+Installing search_api_solr_multilingual and configuring Drupal
+--------------------------------------------------------------
+
+While search_api_solr itself only supports the "classic schema mode",
+search_api_solr_multilingual adds (experimental) support for the "managed
+schema mode".
+
+No matter which mode you choose, the order of the installation process changes
+with search_api_solr_multilingual:
+
+1. Install the search_api_solr_multilingual module (and its module
+   dependencies).
+
+2. Install the module's composer dependencies, there are multiple ways to do
+   this; you can read more in the documentation[1] on drupal.org.
+
+3. Create a Search API Server according to the search_api documentation using
+   "Multilingual Solr" or "Multilingual Solr Managed Schema" as Backend.
+
+4. Download the config.zip from the server's details page and deploy it on your
+   Solr server. Therefor you have to follow the instructions in
+   search_api_solr/INSTALL.txt but use the files extracted from the downloaded
+   config.zip instead of the ones from the search_api_solr/solr-conf/ folder.
+
+NOTE: If you use the "Multilingual Solr" backend you have to repeat step 4
+every time you add a new language to your Drupal instance.
+
+NOTE: It's important that the Solr server runs with the right config files for
+a backend. Don't switch between the Solr Backend and the Solr Multilingual
+Backend without adjusting the config files!
+
+For configuring indexes and searches you have to follow the documention of
+search_api.
+
+[1] https://www.drupal.org/documentation/install/composer-dependencies
