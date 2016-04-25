@@ -29,6 +29,13 @@ class IntegrationTest extends WebTestBase {
   protected $serverId;
 
   /**
+   * The backend of the search server used for this test.
+   *
+   * @var string
+   */
+  protected $serverBackend = 'search_api_solr';
+
+  /**
    * A storage instance for indexes.
    *
    * @var \Drupal\Core\Entity\EntityStorageInterface
@@ -89,7 +96,7 @@ class IntegrationTest extends WebTestBase {
       'name' => '',
       'status' => 1,
       'description' => 'A server used for testing.',
-      'backend' => 'search_api_solr',
+      'backend' => $this->serverBackend,
     );
 
     $this->drupalPostForm($edit_path, $edit, $this->t('Save'));
@@ -99,7 +106,7 @@ class IntegrationTest extends WebTestBase {
       'name' => $server_name,
       'status' => 1,
       'description' => $server_description,
-      'backend' => 'search_api_solr',
+      'backend' => $this->serverBackend,
     );
     $this->drupalPostForm($edit_path, $edit, $this->t('Save'));
     $this->assertText($this->t('@name field is required.', array('@name' => $this->t('Machine-readable name'))));
@@ -109,7 +116,7 @@ class IntegrationTest extends WebTestBase {
       'id' => $this->serverId,
       'status' => 1,
       'description' => $server_description,
-      'backend' => 'search_api_solr',
+      'backend' => $this->serverBackend,
     );
 
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
