@@ -66,7 +66,7 @@ before_script:
   #########################################
   # to be removed once #2709951 is resolved
   - cd modules/search_api
-  - curl https://www.drupal.org/files/issues/2709951_4.patch | git apply
+  - curl https://www.drupal.org/files/issues/2709951-6--generic_base_backend_test.patch | git apply
   - cd $TRAVIS_BUILD_DIR/../drupal
   #########################################
   - drush en --yes composer_manager
