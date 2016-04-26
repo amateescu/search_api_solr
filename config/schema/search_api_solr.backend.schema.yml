@@ -29,9 +29,6 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
     skip_schema_check:
       type: boolean
       label: 'Skip schema verification'
-    site_hash:
-      type: boolean
-      label: 'Restrict searches to current site'
     http_user:
       type: string
       label: 'Username for basic HTTP authentication'
