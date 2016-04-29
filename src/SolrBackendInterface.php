@@ -63,28 +63,6 @@ interface SolrBackendInterface extends BackendInterface {
   public function getFieldNames(IndexInterface $index, $single_value_name = FALSE, $reset = FALSE);
 
   /**
-   * Pings the Solr server to tell whether the configured core can be accessed.
-   *
-   * Uses the admin/ping request handler.
-   *
-   * @return mixed
-   *   The latency in milliseconds if the core can be accessed,
-   *   otherwise FALSE.
-   */
-  public function ping();
-
-  /**
-   * Pings the Solr server to tell whether it can be accessed.
-   *
-   * Uses the admin/ping request handler.
-   *
-   * @return mixed
-   *   The latency in milliseconds if the core can be accessed,
-   *   otherwise FALSE.
-   */
-  public function pingServer();
-
-  /**
    * Gets the currently used Solr connection object.
    *
    * @return \Solarium\Client

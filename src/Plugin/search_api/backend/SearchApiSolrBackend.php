@@ -463,112 +463,113 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     if ($this->server->status()) {
       // If the server is enabled, check whether Solr can be reached.
-      $ping = $this->pingServer();
+      $ping = $this->getSolrHelper()->pingServer();
       if ($ping) {
         $msg = $this->t('The Solr server could be reached.');
       }
       else {
-        $msg = $this->t('The Solr core could not be reached. Further data is therefore unavailable.');
+        $msg = $this->t('The Solr server could not be reached or is protected by your service provider.');
       }
       $info[] = array(
-        'label' => $this->t('Connection'),
+        'label' => $this->t('Server Connection'),
         'info' => $msg,
         'status' => $ping ? 'ok' : 'error',
       );
+
+      $ping = $this->getSolrHelper()->pingCore();
+      if ($ping) {
+        $msg = $this->t('The Solr core could be accessed (latency: @millisecs ms).', array('@millisecs' => $ping * 1000));
+      }
+      else {
+        $msg = $this->t('The Solr core could not be accessed. Further data is therefore unavailable.');
+      }
       $info[] = array(
-        'label' => $this->t('Configured Solr Version'),
-        'info' => $this->getSolrHelper()->getSolrVersion(),
+        'label' => $this->t('Core Connection'),
+        'info' => $msg,
         'status' => $ping ? 'ok' : 'error',
       );
+
+      $version = $this->getSolrHelper()->getSolrVersion();
       $info[] = array(
-        'label' => $this->t('Detected Solr Version'),
-        'info' => $this->getSolrHelper()->getSolrVersion(TRUE),
-        'status' => $ping ? 'ok' : 'error',
+        'label' => $this->t('Configured Solr Version'),
+        'info' => $version,
+        'status' => version_compare($version, '0.0.0', '>') ? 'ok' : 'error',
       );
 
       if ($ping) {
-        $ping = $this->ping();
-        if ($ping) {
-          $msg = $this->t('The Solr core could be accessed (latency: @millisecs ms).', array('@millisecs' => $ping * 1000));
-        }
-        else {
-          $msg = $this->t('The Solr core could not be accessed. Further data is therefore unavailable.');
-        }
         $info[] = array(
-          'label' => $this->t('Core'),
-          'info' => $msg,
-          'status' => $ping ? 'ok' : 'error',
+          'label' => $this->t('Detected Solr Version'),
+          'info' => $this->getSolrHelper()->getSolrVersion(TRUE),
+          'status' => 'ok',
         );
 
-        if ($ping) {
-          try {
-            // If Solr can be reached, provide more information. This isn't done
-            // often (only when an admin views the server details), so we clear the
-            // cache to get the current data.
-            $this->connect();
-            $data = $this->getSolrHelper()->getLuke();
-            if (isset($data['index']['numDocs'])) {
-              // Collect the stats
-              $stats_summary = $this->getSolrHelper()->getStatsSummary();
+        try {
+          // If Solr can be reached, provide more information. This isn't done
+          // often (only when an admin views the server details), so we clear the
+          // cache to get the current data.
+          $this->connect();
+          $data = $this->getSolrHelper()->getLuke();
+          if (isset($data['index']['numDocs'])) {
+            // Collect the stats
+            $stats_summary = $this->getSolrHelper()->getStatsSummary();
 
-              $pending_msg = $stats_summary['@pending_docs'] ? $this->t('(@pending_docs sent but not yet processed)', $stats_summary) : '';
-              $index_msg = $stats_summary['@index_size'] ? $this->t('(@index_size on disk)', $stats_summary) : '';
-              $indexed_message = $this->t('@num items @pending @index_msg', array(
-                '@num' => $data['index']['numDocs'],
-                '@pending' => $pending_msg,
-                '@index_msg' => $index_msg,
-              ));
+            $pending_msg = $stats_summary['@pending_docs'] ? $this->t('(@pending_docs sent but not yet processed)', $stats_summary) : '';
+            $index_msg = $stats_summary['@index_size'] ? $this->t('(@index_size on disk)', $stats_summary) : '';
+            $indexed_message = $this->t('@num items @pending @index_msg', array(
+              '@num' => $data['index']['numDocs'],
+              '@pending' => $pending_msg,
+              '@index_msg' => $index_msg,
+            ));
+            $info[] = array(
+              'label' => $this->t('Indexed'),
+              'info' => $indexed_message,
+            );
+
+            if (!empty($stats_summary['@deletes_total'])) {
               $info[] = array(
-                'label' => $this->t('Indexed'),
-                'info' => $indexed_message,
+                'label' => $this->t('Pending Deletions'),
+                'info' => $stats_summary['@deletes_total'],
               );
+            }
 
-              if (!empty($stats_summary['@deletes_total'])) {
-                $info[] = array(
-                  'label' => $this->t('Pending Deletions'),
-                  'info' => $stats_summary['@deletes_total'],
-                );
+            $info[] = array(
+              'label' => $this->t('Delay'),
+              'info' => $this->t('@autocommit_time before updates are processed.', $stats_summary),
+            );
+
+            $status = 'ok';
+            if (empty($this->configuration['skip_schema_check'])) {
+              if (substr($stats_summary['@schema_version'], 0, 10) == 'search-api') {
+                drupal_set_message($this->t('Your schema.xml version is too old. Please replace all configuration files with the ones packaged with this module and re-index you data.'), 'error');
+                $status = 'error';
               }
-
-              $info[] = array(
-                'label' => $this->t('Delay'),
-                'info' => $this->t('@autocommit_time before updates are processed.', $stats_summary),
-              );
-
-              $status = 'ok';
-              if (empty($this->configuration['skip_schema_check'])) {
-                if (substr($stats_summary['@schema_version'], 0, 10) == 'search-api') {
-                  drupal_set_message($this->t('Your schema.xml version is too old. Please replace all configuration files with the ones packaged with this module and re-index you data.'), 'error');
-                  $status = 'error';
-                }
-                elseif (substr($stats_summary['@schema_version'], 0, 9) != 'drupal-4.') {
-                  $variables['@url'] = Url::fromUri('internal:/' . drupal_get_path('module', 'search_api_solr') . '/INSTALL.txt')
-                    ->toString();
-                  $message = $this->t('You are using an incompatible schema.xml configuration file. Please follow the instructions in the <a href="@url">INSTALL.txt</a> file for setting up Solr.', $variables);
-                  drupal_set_message($message, 'error');
-                  $status = 'error';
-                }
-              }
-              $info[] = array(
-                'label' => $this->t('Schema'),
-                'info' => $stats_summary['@schema_version'],
-                'status' => $status,
-              );
-
-              if (!empty($stats_summary['@core_name'])) {
-                $info[] = array(
-                  'label' => $this->t('Solr Core Name'),
-                  'info' => $stats_summary['@core_name'],
-                );
+              elseif (substr($stats_summary['@schema_version'], 0, 9) != 'drupal-4.') {
+                $variables['@url'] = Url::fromUri('internal:/' . drupal_get_path('module', 'search_api_solr') . '/INSTALL.txt')
+                  ->toString();
+                $message = $this->t('You are using an incompatible schema.xml configuration file. Please follow the instructions in the <a href="@url">INSTALL.txt</a> file for setting up Solr.', $variables);
+                drupal_set_message($message, 'error');
+                $status = 'error';
               }
             }
-          } catch (SearchApiException $e) {
             $info[] = array(
-              'label' => $this->t('Additional information'),
-              'info' => $this->t('An error occurred while trying to retrieve additional information from the Solr server: @msg.', array('@msg' => $e->getMessage())),
-              'status' => 'error',
+              'label' => $this->t('Schema'),
+              'info' => $stats_summary['@schema_version'],
+              'status' => $status,
             );
+
+            if (!empty($stats_summary['@core_name'])) {
+              $info[] = array(
+                'label' => $this->t('Solr Core Name'),
+                'info' => $stats_summary['@core_name'],
+              );
+            }
           }
+        } catch (SearchApiException $e) {
+          $info[] = array(
+            'label' => $this->t('Additional information'),
+            'info' => $this->t('An error occurred while trying to retrieve additional information from the Solr server: @msg.', array('@msg' => $e->getMessage())),
+            'status' => 'error',
+          );
         }
       }
     }
@@ -668,7 +669,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getDocument(IndexInterface $index, ItemInterface $item) {
-    $documents = $this->getDocuments($index, [$item->getId() => $itme]);
+    $documents = $this->getDocuments($index, [$item->getId() => $item]);
     return reset($documents);
   }
 
@@ -1793,48 +1794,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     return $suggestions;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function ping() {
-    return $this->doPing();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function pingServer() {
-    return $this->doPing(['handler' => 'admin/info/system'], 'server');
-  }
-
-  /**
-   * Pings the Solr server to tell whether it can be accessed.
-   *
-   * @param string $endpoint_name
-   *   The endpoint to be pinged on the Solr server.
-   *
-   * @return mixed
-   *   The latency in milliseconds if the core can be accessed,
-   *   otherwise FALSE.
-   */
-  protected function doPing($options = [], $endpoint_name = 'core') {
-    $this->connect();
-    $query = $this->solr->createPing($options);
-
-    try {
-      $start = microtime(TRUE);
-      $result = $this->solr->execute($query, $endpoint_name);
-      if ($result->getResponse()->getStatusCode() == 200) {
-        // Add 1 µs to the ping time so we never return 0.
-        return (microtime(TRUE) - $start) + 1E-6;
-      }
-    }
-    catch (HttpException $e) {
-      watchdog_exception('search_api_solr', $e);
-    }
-    return FALSE;
   }
 
   /**

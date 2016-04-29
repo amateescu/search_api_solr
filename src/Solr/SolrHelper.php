@@ -251,10 +251,20 @@ class SolrHelper {
       return implode('.', $version);
     }
 
-    $server_info = $this->getServerInfo();
+    $info = [];
+    try {
+      $info = $this->getCoreInfo();
+    }
+    catch (SearchApiSolrException $e) {
+      try {
+        $info = $this->getServerInfo();
+      }
+      catch (SearchApiSolrException $e) {}
+    }
+
     // Get our solr version number
-    if (isset($server_info['lucene']['solr-spec-version'])) {
-      return $server_info['lucene']['solr-spec-version'];
+    if (isset($info['lucene']['solr-spec-version'])) {
+      return $info['lucene']['solr-spec-version'];
     }
 
     return '0.0.0';
@@ -320,7 +330,7 @@ class SolrHelper {
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public function getSystemInfo() {
+  public function getCoreInfo() {
     // @todo Add back persistent cache?
     if (!isset($this->systemInfo)) {
       // @todo Finish https://github.com/solariumphp/solarium/pull/155 and stop
@@ -358,6 +368,55 @@ class SolrHelper {
   }
 
   /**
+   * Pings the Solr core to tell whether it can be accessed.
+   *
+   * @return mixed
+   *   The latency in milliseconds if the core can be accessed,
+   *   otherwise FALSE.
+   */
+  public function pingCore() {
+    return $this->doPing();
+  }
+
+  /**
+   * Pings the Solr server to tell whether it can be accessed.
+   *
+   * @return mixed
+   *   The latency in milliseconds if the core can be accessed,
+   *   otherwise FALSE.
+   */
+  public function pingServer() {
+    return $this->doPing(['handler' => 'admin/info/system'], 'server');
+  }
+
+  /**
+   * Pings the Solr server to tell whether it can be accessed.
+   *
+   * @param string $endpoint_name
+   *   The endpoint to be pinged on the Solr server.
+   *
+   * @return mixed
+   *   The latency in milliseconds if the core can be accessed,
+   *   otherwise FALSE.
+   */
+  protected function doPing($options = [], $endpoint_name = 'core') {
+    // Default is ['handler' => 'admin/ping'].
+    $query = $this->solr->createPing($options);
+
+    try {
+      $start = microtime(TRUE);
+      $result = $this->solr->execute($query, $endpoint_name);
+      if ($result->getResponse()->getStatusCode() == 200) {
+        // Add 1 µs to the ping time so we never return 0.
+        return (microtime(TRUE) - $start) + 1E-6;
+      }
+    }
+    catch (HttpException $e) {}
+    
+    return FALSE;
+  }
+
+  /**
    * Gets summary information about the Solr Core.
    *
    * @return array
@@ -377,7 +436,6 @@ class SolrHelper {
       '@index_size' => '',
     );
 
-    $solr_version = $this->getSolrVersion();
     $query = $this->solr->createPing();
     $query->setResponseWriter(Query::WT_PHPS);
     $query->setHandler('admin/mbeans?stats=true');
@@ -393,7 +451,7 @@ class SolrHelper {
         $summary['@deletes_by_id'] = (int) $update_handler_stats['deletesById'];
         $summary['@deletes_by_query'] = (int) $update_handler_stats['deletesByQuery'];
         $summary['@deletes_total'] = $summary['@deletes_by_id'] + $summary['@deletes_by_query'];
-        $summary['@schema_version'] = $this->getSystemInfo()['core']['schema'];
+        $summary['@schema_version'] = $this->getCoreInfo()['core']['schema'];
         $summary['@core_name'] = $stats['solr-mbeans']['CORE']['core']['stats']['coreName'];
         $summary['@index_size'] = $stats['solr-mbeans']['QUERYHANDLER']['/replication']['stats']['indexSize'];
       }
