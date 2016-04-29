@@ -103,18 +103,6 @@ function search_api_solr_search_api_server_update(ServerInterface $server) {
 }
 
 /**
- * Implements hook_form_FORM_ID_alter().
- */
-function search_api_solr_form_search_api_index_edit_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
-  /** @var \Drupal\search_api\IndexInterface $index */
-  $index = $form_state->getFormObject()->getEntity();
-  $backend = $index->hasValidServer() ? $index->getServerInstance()->getBackend() : NULL;
-  if ($backend instanceof SearchApiSolrBackend) {
-    $form['options']['index_directly']['#description'] .= ' ' . t('This feature is well supported for Solr 4 and above, but could cause latency and timeout problems with Solr 3. Not recommended with that version.');
-  }
-}
-
-/**
  * Implements hook_entity_type_alter().
  */
 function search_api_solr_entity_type_alter(array &$entity_types) {
