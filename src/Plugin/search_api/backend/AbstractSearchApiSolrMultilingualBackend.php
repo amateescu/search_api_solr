@@ -7,7 +7,6 @@
 
 namespace Drupal\search_api_solr_multilingual\Plugin\search_api\backend;
 
-use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api_solr_multilingual\SearchApiSolrMultilingualException;
@@ -398,7 +397,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
 
       if (!is_array($schema_parts) || !isset($schema_parts[$kind]) || !in_array($name, $schema_parts[$kind])) {
         $schema_parts[$kind] = [];
-        $response = $this->solrRestGet('schema/' . strtolower($kind));
+        $response = $this->solrHelper->coreRestGet('schema/' . strtolower($kind));
         foreach ($response[$kind] as $row) {
           $schema_parts[$kind][] = $row['name'];
         }
@@ -428,61 +427,6 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
   public function hasLanguageUndefinedFallback() {
     return isset($this->configuration['sasm_language_unspecific_fallback_on_schema_issues']) ?
       $this->configuration['sasm_language_unspecific_fallback_on_schema_issues'] : FALSE;
-  }
-
-  /**
-   * Sends a REST GET request to the Solr server and returns the result.
-   *
-   * @param string $path
-   *   The path to append to the base URI.
-   *
-   * @return string
-   *   The decoded response.
-   */
-  protected function solrRestGet($path) {
-    $uri = $this->solr->getEndpoint()->getBaseUri() . $path;
-    $client = \Drupal::httpClient();
-    $response = $client->get($uri, ['Accept' => 'application/json']);
-    $output = Json::decode($response->getBody());
-    // \Drupal::logger('search_api_solr_multilingual')->info(print_r($output, true));
-    if (!empty($output['errors'])) {
-      throw new SearchApiSolrMultilingualException("Error trying to send a REST GET request to '$uri'" .
-        "\nError message(s):" . print_r($output['errors'], TRUE));
-    }
-    return $output;
-  }
-
-  /**
-   * Sends a REST POST request and returns the result.
-   *
-   * @param string $path
-   *   The path to append to the base URI
-   *
-   * @param string $command_json
-   *   The JSON-encoded data.
-   *
-   * @return string
-   *   The decoded response.
-   *
-   * @see https://cwiki.apache.org/confluence/display/solr/Schema+API
-   */
-  protected function solrRestPost($path, $command_json) {
-    $uri = $this->solr->getEndpoint()->getBaseUri() . $path;
-    $client = \Drupal::httpClient();
-    $response = $client->post($uri, [
-      'body' => $command_json,
-      'headers' => [
-        'Accept' => 'application/json',
-        'Content-type' => 'application/json'
-      ],
-    ]);
-    $output = Json::decode($response->getBody());
-    // \Drupal::logger('search_api_solr_multilingual')->info(print_r($output, true));
-    if (!empty($output['errors'])) {
-      throw new SearchApiSolrMultilingualException("Error trying to send the following JSON to Solr (REST POST request to '$uri'): " . $command_json .
-          "\nError message(s):" . print_r($output['errors'], TRUE));
-    }
-    return $output;
   }
 
 }

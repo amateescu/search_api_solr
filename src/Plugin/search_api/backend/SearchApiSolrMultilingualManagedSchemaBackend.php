@@ -41,7 +41,7 @@ class SearchApiSolrMultilingualManagedSchemaBackend extends AbstractSearchApiSol
       'termVectors' => strpos($solr_field_name, 't') === 0 ? TRUE : FALSE,
     ]];
     try {
-      $this->solrRestPost('schema', Json::encode($command));
+      $this->solrHelper()->coreRestPost('schema', Json::encode($command));
     }
     catch (SearchApiSolrMultilingualException $e) {
       watchdog_exception('solr', $e);
@@ -70,7 +70,7 @@ class SearchApiSolrMultilingualManagedSchemaBackend extends AbstractSearchApiSol
     $command_json = '{ "add-field-type": ' . Json::encode($field_type_definition) . '}';
     $command_json = str_replace('"'.$field_type_name.'"', '"'.$solr_field_type_name.'"', $command_json);
     try {
-      $this->solrRestPost('schema', $command_json);
+      $this->solrHelper()->coreRestPost('schema', $command_json);
     }
     catch (SearchApiSolrMultilingualException $e) {
       watchdog_exception('solr', $e);
