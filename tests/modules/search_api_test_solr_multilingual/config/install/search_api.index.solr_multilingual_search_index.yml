@@ -1,4 +1,4 @@
-id: solr_search_index
+id: solr_multilingual_search_index
 name: 'Test index'
 description: 'An index used for testing'
 read_only: false
@@ -67,7 +67,7 @@ tracker_settings:
   'default':
     plugin_id: default
     settings: { }
-server: solr_search_server
+server: solr_multilingual_search_server
 status: true
 langcode: en
 dependencies:
@@ -84,6 +84,6 @@ dependencies:
     - field.storage.entity_test.keywords
     - field.storage.entity_test.category
     - field.storage.entity_test.width
-    - search_api.server.solr_search_server
+    - search_api.server.solr_multilingual_search_server
   module:
     - entity_test

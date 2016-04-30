@@ -1,5 +1,5 @@
-id: solr_search_server
-name: 'Solr search server'
+id: solr_multilingual_search_server
+name: 'Multilingual Solr search server'
 description: 'A server used for testing.'
 backend: search_api_solr_multilingual
 backend_config:
