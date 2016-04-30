@@ -60,6 +60,13 @@ class SearchApiSolrTest extends BackendTestBase {
 
     $this->installConfig(array('search_api_test_solr'));
 
+    $this->detectSolrAvailability();
+  }
+
+  /**
+   * Detects the availability of a Solr Server and sets $this->solrAvailable.
+   */
+  protected function detectSolrAvailability() {
     // Because this is a kernel test, the routing isn't built by default, so
     // we have to force it.
     \Drupal::service('router.builder')->rebuild();
