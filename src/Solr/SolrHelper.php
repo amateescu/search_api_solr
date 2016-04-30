@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api_solr\Solr;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\search_api\Query\QueryInterface;
