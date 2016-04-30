@@ -9,10 +9,8 @@ namespace Drupal\search_api_solr\Tests;
 
 use Drupal\Component\Utility\Html;
 use Drupal\search_api\Entity\Index;
-use Drupal\search_api\Entity\Server;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Tests\WebTestBase;
-use Drupal\search_api\Utility;
 
 /**
  * Tests the overall functionality of the Search API framework and admin UI.
