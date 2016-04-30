@@ -26,4 +26,18 @@ class IntegrationTest extends \Drupal\search_api_solr\Tests\IntegrationTest {
     'search_api_solr_multilingual',
   );
 
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
+    parent::setUp();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function testFramework() {
+    parent::testFramework();
+  }
+
 }
