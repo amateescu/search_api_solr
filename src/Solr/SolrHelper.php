@@ -14,6 +14,7 @@ use Drupal\search_api\Utility as SearchApiUtility;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Solarium\Client;
+use Solarium\Core\Client\Request;
 use Solarium\Core\Query\Helper as SolariumHelper;
 use Solarium\Exception\HttpException;
 use Solarium\Exception\OutOfBoundsException;
@@ -652,6 +653,101 @@ class SolrHelper {
     foreach ($group_params as $param_id => $param_value) {
       $solarium_query->addParam($param_id, $param_value);
     }
+  }
+
+  /**
+   * Sends a REST GET request to the Solr core and returns the result.
+   *
+   * @param string $path
+   *   The path to append to the base URI.
+   *
+   * @return string
+   *   The decoded response.
+   */
+  public function coreRestGet($path) {
+    return $this->restRequest('core', $path);
+  }
+
+  /**
+   * Sends a REST POST request to the Solr core and returns the result.
+   *
+   * @param string $path
+   *   The path to append to the base URI.
+   *
+   * @param string $command_json
+   *   The command to send encoded as JSON.
+   *
+   * @return string
+   *   The decoded response.
+   */
+  public function coreRestPost($path, $command_json = '') {
+    return $this->restRequest('core', $path, Request::METHOD_POST, $command_json);
+  }
+
+  /**
+   * Sends a REST GET request to the Solr server and returns the result.
+   *
+   * @param string $path
+   *   The path to append to the base URI.
+   *
+   * @return string
+   *   The decoded response.
+   */
+  public function serverRestGet($path) {
+    return $this->restRequest('server', $path);
+  }
+
+  /**
+   * Sends a REST POST request to the Solr server and returns the result.
+   *
+   * @param string $path
+   *   The path to append to the base URI.
+   *
+   * @param string $command_json
+   *   The command to send encoded as JSON.
+   *
+   * @return string
+   *   The decoded response.
+   */
+  public function serverRestPost($path, $command_json = '') {
+    return $this->restRequest('server', $path, Request::METHOD_POST, $command_json);
+  }
+
+  /**
+   * Sends a REST request to the Solr server endpoint and returns the result.
+   *
+   * @param string $endpoint
+   *   The endpoint that refelcts the base URI.
+   *
+   * @param string $path
+   *   The path to append to the base URI.
+   *
+   * @param string $method
+   *   The HTTP request method.
+   *
+   * @param string $command_json
+   *   The command to send encoded as JSON.
+   *
+   * @return string
+   *   The decoded response.
+   */
+  protected function restRequest($endpoint, $path, $method = Request::METHOD_GET, $command_json = '') {
+    $request = new Request();
+    $request->setMethod($method);
+    $request->addHeader('Accept: application/json');
+    if (Request::METHOD_POST == $method) {
+      $request->addHeader('Content-type: application/json');
+      $request->setRawData($command_json);
+    }
+    $request->setHandler($path);
+    $response = $this->solr->executeRequest($request, $endpoint);
+    $output = Json::decode($response->getBody());
+    // \Drupal::logger('search_api_solr')->info(print_r($output, true));
+    if (!empty($output['errors'])) {
+      throw new SearchApiSolrException('Error trying to send a REST request.' .
+        "\nError message(s):" . print_r($output['errors'], TRUE));
+    }
+    return $output;
   }
 
 }
