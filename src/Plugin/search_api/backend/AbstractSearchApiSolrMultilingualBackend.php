@@ -441,8 +441,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
    */
   protected function solrRestGet($path) {
     $uri = $this->solr->getEndpoint()->getBaseUri() . $path;
-    /** @var \GuzzleHttp\Client $client */
-    $client = \Drupal::service('http_client');
+    $client = \Drupal::httpClient();
     $response = $client->get($uri, ['Accept' => 'application/json']);
     $output = Json::decode($response->getBody());
     // \Drupal::logger('search_api_solr_multilingual')->info(print_r($output, true));
@@ -469,8 +468,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
    */
   protected function solrRestPost($path, $command_json) {
     $uri = $this->solr->getEndpoint()->getBaseUri() . $path;
-    /** @var \GuzzleHttp\Client $client */
-    $client = \Drupal::service('http_client');
+    $client = \Drupal::httpClient();
     $response = $client->post($uri, [
       'body' => $command_json,
       'headers' => [
