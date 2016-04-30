@@ -7,6 +7,7 @@
 
 namespace Drupal\Tests\search_api_solr_multilingual\Kernel;
 
+use Drupal\Tests\search_api\Kernel\BackendTestBase;
 use Drupal\Tests\search_api_solr\Kernel\SearchApiSolrTest;
 
 /**
@@ -45,8 +46,11 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
    * {@inheritdoc}
    */
   public function setUp() {
+    BackendTestBase::setUp();
+
     $this->installConfig(array('search_api_test_solr_multilingual'));
-    parent::setUp();
+
+    $this->detectSolrAvailability();
   }
 
 }
