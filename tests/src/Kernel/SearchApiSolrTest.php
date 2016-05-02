@@ -73,7 +73,7 @@ class SearchApiSolrTest extends BackendTestBase {
 
     try {
       $backend = Server::load($this->serverId)->getBackend();
-      if ($backend instanceof SearchApiSolrBackend && $backend->ping()) {
+      if ($backend instanceof SearchApiSolrBackend && $backend->getSolrHelper()->pingCore()) {
         $this->solrAvailable = TRUE;
       }
     }
