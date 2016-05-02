@@ -73,7 +73,7 @@ class SearchApiSolrTest extends BackendTestBase {
 
     try {
       $backend = Server::load($this->serverId)->getBackend();
-      if ($backend instanceof SearchApiSolrBackend && $backend->getSolrHelper()->pingCore()) {
+      if ($backend instanceof SearchApiSolrBackend && $backend->ping()) {
         $this->solrAvailable = TRUE;
       }
     }
@@ -138,44 +138,6 @@ class SearchApiSolrTest extends BackendTestBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  protected function checkMultiValuedInfo() {
-    // We don't keep multi-valued (or any other) field information.
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function editServerPartial($enable = TRUE) {
-    // There is no "partial matching" option for Solr servers (yet).
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function searchSuccessPartial() {
-    // There is no "partial matching" option for Solr servers (yet).
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function editServerMinChars() {
-    // The parent assertions don't make sense for the Solr backend.
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function searchSuccessMinChars() {
-    // This method tests the 'min_chars' option of the Database backend, which
-    // we don't have in Solr.
-    // @todo Copy tests from the Apachesolr module which create Solr cores on
-    // the fly with various schemas.
-  }
-
-  /**
    * Second server.
    */
   protected function regressionTestSecondServer() {
@@ -210,33 +172,6 @@ class SearchApiSolrTest extends BackendTestBase {
     usort($facets, array($this, 'facetCompare'));
     $this->assertEquals($expected, $facets, 'Correct facets were returned for a fulltext field.');
   }
-
-  /**
-   * Regression tests for #2557291.
-   */
-  protected function regressionTest2557291() {
-    // @todo the default search on Solr is case-insensitive.
-  }
-
-  /**
-   * Regression tests for #2511860.
-   */
-  protected function regressionTest2511860() {
-    // @todo multiple incompatible behaviors compared to database backend:
-    //    1. min chars in schema.xml is 2 not 3
-    //    2. the Solr backend converts the condition to a filter query and
-    //       doesn't split the keywords but treats them as phrase.
-    $query = $this->buildSearch();
-    $query->addCondition('body', 'a test b');
-    $results = $query->execute();
-    $this->assertEquals(4, $results->getResultCount(), 'Fulltext filters on short words do not change the result.');
-
-    $query = $this->buildSearch();
-    $query->addCondition('body', 'a test a');
-    $results = $query->execute();
-    $this->assertEquals(4, $results->getResultCount(), 'Fulltext filters on duplicate short words do not change the result.');
-  }
-
 
   /**
    * {@inheritdoc}
