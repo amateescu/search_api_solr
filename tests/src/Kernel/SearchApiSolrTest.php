@@ -140,7 +140,7 @@ class SearchApiSolrTest extends BackendTestBase {
   /**
    * Second server.
    */
-  protected function regressionTestSecondServer() {
+  protected function checkSecondServer() {
     // @todo
   }
 
