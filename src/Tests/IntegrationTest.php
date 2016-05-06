@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_solr\Tests\IntegrationTest.
- */
-
 namespace Drupal\search_api_solr\Tests;
 
 use Drupal\Component\Utility\Html;
@@ -129,9 +124,9 @@ class IntegrationTest extends WebTestBase {
     $this->drupalGet($edit_path);
     $edit = [
       'backend_config[host]' => 'localhost',
-      'backend_config[port]' =>'8983',
-      'backend_config[path]' =>'/solr',
-      'backend_config[core]' =>'d8',
+      'backend_config[port]' => '8983',
+      'backend_config[path]' => '/solr',
+      'backend_config[core]' => 'd8',
     ];
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
@@ -160,7 +155,6 @@ class IntegrationTest extends WebTestBase {
     $this->assertText($this->t('@name field is required.', array('@name' => $this->t('Index name'))));
     $this->assertText($this->t('@name field is required.', array('@name' => $this->t('Machine-readable name'))));
     $this->assertText($this->t('@name field is required.', array('@name' => $this->t('Data sources'))));
-
 
     $edit = array(
       'name' => $index_name,

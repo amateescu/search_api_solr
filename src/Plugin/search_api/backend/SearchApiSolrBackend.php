@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend.
- */
-
 namespace Drupal\search_api_solr\Plugin\search_api\backend;
 
 use Drupal\Core\Config\Config;
@@ -38,6 +33,8 @@ use Solarium\QueryType\Update\Query\Document\Document;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
+ * Apache Solr backend for search api.
+ *
  * @SearchApiBackend(
  *   id = "search_api_solr",
  *   label = @Translation("Solr"),
@@ -52,20 +49,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   const SOLR_DATE_FORMAT = 'Y-m-d\TH:i:s\Z';
 
   /**
-   * Static cache for getFieldNames().
-   *
-   * @var array
-   */
-  protected $fieldNames = array();
-
-  /**
    * Metadata describing fields on the Solr/Lucene index.
    *
-   * @see SearchApiSolrBackend::getFields().
-   *
-   * @var array
+   * @var string[][]
    */
-  protected $field_names;
+  protected $fieldNames = array();
 
   /**
    * A Solarium Update query.
@@ -93,7 +81,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *
    * @var string
    */
-  protected $request_handler = NULL;
+  protected $requestHandler = NULL;
 
   /**
    * The module handler.
@@ -186,7 +174,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     if (!$this->server->isNew()) {
-      // Editing this server
+      // Editing this server.
       $form['server_description'] = array(
         '#type' => 'item',
         '#title' => $this->t('Solr server URI'),
@@ -259,16 +247,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $form['advanced']['excerpt'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Return an excerpt for all results'),
-      '#description' => $this->t("If search keywords are given, use Solr's capabilities to create a highlighted search excerpt for each result. " .
-          'Whether the excerpts will actually be displayed depends on the settings of the search, though.'),
+      '#description' => $this->t("If search keywords are given, use Solr's capabilities to create a highlighted search excerpt for each result. Whether the excerpts will actually be displayed depends on the settings of the search, though."),
       '#default_value' => $this->configuration['excerpt'],
     );
     $form['advanced']['retrieve_data'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Retrieve result data from Solr'),
-      '#description' => $this->t('When checked, result data will be retrieved directly from the Solr server. ' .
-          'This might make item loads unnecessary. Only indexed fields can be retrieved. ' .
-          'Note also that the returned field data might not always be correct, due to preprocessing and caching issues.'),
+      '#description' => $this->t('When checked, result data will be retrieved directly from the Solr server. This might make item loads unnecessary. Only indexed fields can be retrieved. Note also that the returned field data might not always be correct, due to preprocessing and caching issues.'),
       '#default_value' => $this->configuration['retrieve_data'],
     );
     $form['advanced']['highlight_data'] = array(
@@ -297,8 +282,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Highlighting retrieved data only makes sense when we retrieve data.
     // (Actually, internally it doesn't really matter. However, from a user's
     // perspective, having to check both probably makes sense.)
-    $form['advanced']['highlight_data']['#states']['invisible']
-        [':input[name="options[form][advanced][retrieve_data]"]']['checked'] = FALSE;
+    $form['advanced']['highlight_data']['#states']['invisible'][':input[name="options[form][advanced][retrieve_data]"]']['checked'] = FALSE;
 
     $form['advanced']['http_method'] = array(
       '#type' => 'select',
@@ -311,7 +295,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         'GET' => 'GET',
       ),
     );
-
 
     if ($this->moduleHandler->moduleExists('search_api_autocomplete')) {
       $form['advanced']['autocomplete'] = array(
@@ -505,12 +488,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
         try {
           // If Solr can be reached, provide more information. This isn't done
-          // often (only when an admin views the server details), so we clear the
-          // cache to get the current data.
+          // often (only when an admin views the server details), so we clear
+          // the cache to get the current data.
           $this->connect();
           $data = $this->getSolrHelper()->getLuke();
           if (isset($data['index']['numDocs'])) {
-            // Collect the stats
+            // Collect the stats.
             $stats_summary = $this->getSolrHelper()->getStatsSummary();
 
             $pending_msg = $stats_summary['@pending_docs'] ? $this->t('(@pending_docs sent but not yet processed)', $stats_summary) : '';
@@ -564,7 +547,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
               );
             }
           }
-        } catch (SearchApiException $e) {
+        }
+        catch (SearchApiException $e) {
           $info[] = array(
             'label' => $this->t('Additional information'),
             'info' => $this->t('An error occurred while trying to retrieve additional information from the Solr server: @msg.', array('@msg' => $e->getMessage())),
@@ -590,8 +574,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * Checks if the recently updated index had any fields changed.
    *
    * @param \Drupal\search_api\IndexInterface $index
+   *   The index that was just updated.
    *
    * @return bool
+   *   TRUE if any of the fields were updated, FALSE otherwise.
    */
   protected function indexFieldsUpdated(IndexInterface $index) {
     // Get the original index, before the update. If it cannot be found, err on
@@ -637,9 +623,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $this->getUpdateQuery()->addDocuments($documents);
       // Do a commitWithin since that is automatically a softCommit with Solr 4
       // and a delayed hard commit with Solr 3.4+.
-      // We wait 1 second after the request arrived for solr to parse the commit.
-      // This allows us to return to Drupal and let Solr handle what it
-      // needs to handle
+      // We wait 1 second after the request arrived for solr to parse the
+      // commit. This allows us to return to Drupal and let Solr handle what it
+      // needs to handle.
       // @see http://wiki.apache.org/solr/NearRealtimeSearch
       /** @var \Solarium\Plugin\CustomizeRequest\CustomizeRequest $customizer */
       $customizer = $this->solr->getPlugin('customizerequest');
@@ -756,9 +742,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       // Do a commitWithin since that is automatically a softCommit with Solr 4
       // and a delayed hard commit with Solr 3.4+.
-      // We wait 1 second after the request arrived for solr to parse the commit.
-      // This allows us to return to Drupal and let Solr handle what it needs to
-      // handle.
+      // We wait 1 second after the request arrived for solr to parse the
+      // commit. This allows us to return to Drupal and let Solr handle what it
+      // needs to handle.
       // @see http://wiki.apache.org/solr/NearRealtimeSearch
       /** @var \Solarium\Plugin\CustomizeRequest\CustomizeRequest $customizer */
       $customizer = $this->solr->getPlugin('customizerequest');
@@ -797,7 +783,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // and a delayed hard commit with Solr 3.4+.
     // We wait 1 second after the request arrived for solr to parse the commit.
     // This allows us to return to Drupal and let Solr handle what it
-    // needs to handle
+    // needs to handle.
     // @see http://wiki.apache.org/solr/NearRealtimeSearch
     /** @var \Solarium\Plugin\CustomizeRequest\CustomizeRequest $customizer */
     $customizer = $this->solr->getPlugin('customizerequest');
@@ -821,7 +807,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function search(QueryInterface $query) {
     // Reset request handler.
-    $this->request_handler = NULL;
+    $this->requestHandler = NULL;
     // Get field information.
     /** @var \Drupal\search_api\Entity\Index $index */
     $index = $query->getIndex();
@@ -840,7 +826,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     if (is_array($keys)) {
       $keys = $this->getSolrHelper()->flattenKeys($keys);
     }
-    // Set them
+    // Set them.
     $solarium_query->setQuery($keys);
     unset($keys);
 
@@ -864,16 +850,16 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
     $solarium_query->getEDisMax()->setQueryFields(implode(' ', $query_fields));
 
-    // Handle More Like This requests
+    // Handle More Like This requests.
     $mlt_options = $query->getOption('search_api_mlt');
     if ($mlt_options) {
       $index_fields = $index->getFields();
       $this->getSolrHelper()->setMoreLikeThis($solarium_query, $query, $mlt_options, $index_fields, $field_names);
 
       // Override the search key by setting it to the solr document id
-      // we want to compare it with
+      // we want to compare it with.
       // @todo. Figure out how we can set MLT earlier in the process
-      // so we do not do unnecessary function calls
+      // so we do not do unnecessary function calls.
       $id = $this->createId($index_id, $mlt_options['id']);
       $id = static::getQueryHelper()->escapePhrase($id);
       $solarium_query->setQuery('id:' . $id);
@@ -885,7 +871,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $solarium_query->createFilterQuery('filters_' . $id)->setQuery($conditions_query);
     }
 
-    // Set the Index filter
+    // Set the Index filter.
     $solarium_query->createFilterQuery('index_id')->setQuery('index_id:' . static::getQueryHelper($solarium_query)->escapePhrase($index_id));
 
     // Set the site hash filter, if enabled.
@@ -902,8 +888,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $this->setFacets($facets, $field_names, $solarium_query);
 
     // Set highlighting.
-    $excerpt = !empty($this->configuration['excerpt']) ? true : false;
-    $highlight_data = !empty($this->configuration['highlight_data']) ? true : false;
+    $excerpt = !empty($this->configuration['excerpt']) ? TRUE : FALSE;
+    $highlight_data = !empty($this->configuration['highlight_data']) ? TRUE : FALSE;
     $this->getSolrHelper()->setHighlighting($solarium_query, $query, $excerpt, $highlight_data);
 
     // Handle spatial filters.
@@ -942,7 +928,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $solarium_query->setFields(array('*', 'score'));
     }
 
-    // Allow modules to alter the query
+    // Allow modules to alter the query.
     try {
       $this->moduleHandler->alter('search_api_solr_query', $solarium_query, $query);
       $this->preQuery($solarium_query, $query);
@@ -1016,7 +1002,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
-  public function setSolrHelper($solrHelper) {
+  public function setSolrHelper(SolrHelper $solrHelper) {
     $this->solrHelper = $solrHelper;
   }
 
@@ -1069,7 +1055,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $fields = $index->getFields();
       foreach ($fields as $key => $field) {
         // Generate a field name; this corresponds with naming conventions in
-        // our schema.xml
+        // our schema.xml.
         $type = $field->getType();
         $type_info = SearchApiSolrUtility::getDataTypeInfo($type);
         $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
@@ -1382,8 +1368,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
-   * Transforms a query filter into a flat array of Solr filter queries, using
-   * the field names in $field_names.
+   * Transforms a query filter into a flat array of Solr filter queries.
    */
   protected function createFilterQueries(ConditionGroupInterface $conditions, array $solr_fields, array $index_fields) {
     $or = $conditions->getConjunction() == 'OR';
@@ -1403,7 +1388,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       else {
         $q = $this->createFilterQueries($condition, $solr_fields, $index_fields);
         if ($conditions->getConjunction() != $condition->getConjunction() && count($q) > 1) {
-          // $or == TRUE means the nested filter has conjunction AND, and vice versa
+          // $or == TRUE means the nested filter has conjunction AND, and vice
+          // versa.
           $sep = $or ? ' ' : ' OR ';
           $fq[] = '((' . implode(')' . $sep . '(', $q) . '))';
         }
@@ -1429,8 +1415,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
-   * Create a single search query string according to the given field, value
-   * and operator.
+   * Create a single search query string.
    */
   protected function createFilterQuery($field, $value, $operator, FieldInterface $index_field) {
     $field = SearchApiSolrUtility::escapeFieldName($field);
@@ -1451,20 +1436,27 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     switch ($operator) {
       case '<>':
         return "*:* AND -($field:$value)";
+
       case '<':
         return "$field:{* TO $value}";
+
       case '<=':
         return "$field:[* TO $value]";
+
       case '>=':
         return "$field:[$value TO *]";
+
       case '>':
         return "$field:{{$value} TO *}";
+
       case 'BETWEEN':
-        return "$field:[" . $value[0] . ' TO ' . $value[1]. ']';
+        return "$field:[" . $value[0] . ' TO ' . $value[1] . ']';
+
       case 'IN':
         // Group values and use OR conjunction.
         $conditions = implode(' OR ', $value);
         return "*:* AND ($field:($conditions))";
+
       case 'NOT IN':
         // Group values and use OR conjunction to negate.
         $conditions = implode(' OR ', $value);
@@ -1483,6 +1475,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       case 'boolean':
         $value = $value ? 'true' : 'false';
         break;
+
       case 'date':
         $value = is_numeric($value) ? (int) $value : strtotime($value);
         if ($value === FALSE) {
@@ -1545,9 +1538,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * Sets the request handler.
    *
    * This should also make the needed adjustments to the request parameters.
+   *
    * @todo SearchApiSolrConnectionInterface doesn't exist!
    *
-   * @param $handler
+   * @param string $handler
    *   Name of the handler to set.
    * @param array $call_args
    *   An associative array containing all three arguments to the
@@ -1583,7 +1577,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
-   * Empty method to allow subclasses to apply custom changes before search results are returned.
+   * Allow custom changes before search results are returned for subclasses.
    *
    * Works exactly like hook_search_api_solr_search_results_alter().
    *
@@ -1598,18 +1592,15 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected function postQuery(ResultSetInterface $results, QueryInterface $query, $response) {
   }
 
-  //
-  // Autocompletion feature
-  //
-
   /**
-   * Implements SearchApiAutocompleteInterface::getAutocompleteSuggestions().
+   * Implements autocomplete suggestions.
+   *
+   * Largely copied from the apachesolr_autocomplete module.
    */
-  // Largely copied from the apachesolr_autocomplete module.
   public function getAutocompleteSuggestions(QueryInterface $query, SearchApiAutocompleteSearch $search, $incomplete_key, $user_input) {
     $suggestions = array();
-    // Reset request handler
-    $this->request_handler = NULL;
+    // Reset request handler.
+    $this->requestHandler = NULL;
     // Turn inputs to lower case, otherwise we get case sensivity problems.
     $incomp = Unicode::strtolower($incomplete_key);
 
@@ -1617,7 +1608,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $field_names = $this->getFieldNames($index);
     $complete = $query->getOriginalKeys();
 
-    // Extract keys
+    // Extract keys.
     $keys = $query->getKeys();
     if (is_array($keys)) {
       $keys_array = array();
@@ -1645,7 +1636,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $keys = NULL;
     }
 
-    // Set searched fields
+    // Set searched fields.
     $options = $query->getOptions();
     $search_fields = $query->getFulltextFields();
     $qf = array();
@@ -1653,7 +1644,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $qf[] = $field_names[$f];
     }
 
-    // Extract filters
+    // Extract filters.
     $fq = $this->createFilterQueries($query->getFilter(), $field_names, $index->getOption('fields', array()));
     $index_id = $this->getIndexId($index->id());
     $fq[] = 'index_id:' . $this->getQueryHelper()->escapePhrase($index_id);
@@ -1662,7 +1653,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $fq[] = 'hash:' . $site_hash;
     }
 
-    // Autocomplete magic
+    // Autocomplete magic.
     $facet_fields = array();
     foreach ($search_fields as $f) {
       $facet_fields[] = $field_names[$f];
@@ -1690,13 +1681,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'params'      => &$params,
       'http_method' => &$http_method,
     );
-    if ($this->request_handler) {
-      $this->setRequestHandler($this->request_handler, $call_args);
+    if ($this->requestHandler) {
+      $this->setRequestHandler($this->requestHandler, $call_args);
     }
     $second_pass = !isset($this->configuration['autocorrect_suggest_words']) || $this->configuration['autocorrect_suggest_words'];
     for ($i = 0; $i < ($second_pass ? 2 : 1); ++$i) {
       try {
-        // Send search request
+        // Send search request.
         $this->connect();
         $this->moduleHandler->alter('search_api_solr_query', $call_args, $query);
         $this->preQuery($call_args, $query);
@@ -1710,7 +1701,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $corrected = str_ireplace(array_keys($replace), array_values($replace), $user_input);
           if ($corrected != $user_input) {
             array_unshift($suggestions, array(
-              'prefix' => $this->t('Did you mean') . ':',
+              'prefix' => $this->t('Did you mean:'),
               'user_input' => $corrected,
             ));
           }
@@ -1760,7 +1751,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $additional_matches = array_slice($matches, $limit - count($suggestions), NULL, TRUE);
             $matches = array_slice($matches, 0, $limit, TRUE);
 
-            // Build suggestions using returned facets
+            // Build suggestions using returned facets.
             $incomp_length = strlen($incomp);
             foreach ($matches as $term => $count) {
               if (Unicode::strtolower(substr($term, 0, $incomp_length)) == $incomp) {
@@ -1790,7 +1781,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
       // Change parameters for second query.
       unset($params['facet.prefix']);
-      $keys = trim ($keys . ' ' . $incomplete_key);
+      $keys = trim($keys . ' ' . $incomplete_key);
     }
 
     return $suggestions;
@@ -1892,4 +1883,5 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     return static::$queryHelper;
   }
+
 }

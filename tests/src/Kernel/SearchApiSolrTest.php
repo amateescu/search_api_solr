@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_solr\Tests\SearchApiSolrTest.
- */
-
 namespace Drupal\Tests\search_api_solr\Kernel;
 
 use Drupal\search_api\Entity\Index;
@@ -45,8 +40,10 @@ class SearchApiSolrTest extends BackendTestBase {
   protected $indexId = 'solr_search_index';
 
   /**
-   * Whether a Solr core is available for testing. Mostly needed because Drupal
-   * testbots do not support this.
+   * Whether a Solr core is available for testing.
+   *
+   * Drupal testbots do not support having a solr server, so they can't execute
+   * these tests.
    *
    * @var bool
    */
@@ -77,7 +74,8 @@ class SearchApiSolrTest extends BackendTestBase {
         $this->solrAvailable = TRUE;
       }
     }
-    catch (\Exception $e) {}
+    catch (\Exception $e) {
+    }
   }
 
   /**

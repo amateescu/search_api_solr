@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_solr\Form\SolrConfigForm.
- */
-
 namespace Drupal\search_api_solr\Form;
 
 use Drupal\Component\Utility\SafeMarkup;
@@ -90,7 +85,7 @@ class SolrConfigForm extends FormBase {
    * Checks access for the Solr config form.
    *
    * @param \Drupal\search_api\ServerInterface $search_api_server
-  *   The server for which access should be tested.
+   *   The server for which access should be tested.
    *
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.

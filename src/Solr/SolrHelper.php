@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_solr\Solr\SolrHelper.
- */
-
 namespace Drupal\search_api_solr\Solr;
 
 use Drupal\Component\Serialization\Json;
@@ -126,7 +121,7 @@ class SolrHelper {
   }
 
   /**
-   * Extract and format highlighting information for a specific item from a Solr response.
+   * Extract and format highlighting information for a specific item.
    *
    * Will also use highlighted fields to replace retrieved field data, if the
    * corresponding option is set.
@@ -216,8 +211,7 @@ class SolrHelper {
     // AND          | FALSE     | A B C
     // AND          | TRUE      | -(A AND B AND C)
     // OR           | FALSE     | ((A) OR (B) OR (C))
-    // OR           | TRUE      | -A -B -C
-
+    // OR           | TRUE      | -A -B -C.
     // If there was just a single, unnested key, we can ignore all this.
     if (count($k) == 1 && empty($nested_expressions)) {
       $k = reset($k);
@@ -249,7 +243,9 @@ class SolrHelper {
       // In most cases the already stored solr_version is just the major version
       // number as integer. In this case we will expand it to the minimum
       // corresponding full version string.
-      $version = explode('.', $this->configuration['solr_version']) + ['0' ,'0', '0'];
+      $min_version = ['0', '0', '0'];
+      $version = explode('.', $this->configuration['solr_version']) + $min_version;
+
       return implode('.', $version);
     }
 
@@ -261,10 +257,11 @@ class SolrHelper {
       try {
         $info = $this->getServerInfo();
       }
-      catch (SearchApiSolrException $e) {}
+      catch (SearchApiSolrException $e) {
+      }
     }
 
-    // Get our solr version number
+    // Get our solr version number.
     if (isset($info['lucene']['solr-spec-version'])) {
       return $info['lucene']['solr-spec-version'];
     }
@@ -278,11 +275,11 @@ class SolrHelper {
    * @param string $version
    *   An optional Solr version string.
    *
-   * @return integer
+   * @return int
    *   The Solr major version.
    */
   public function getSolrMajorVersion($version = '') {
-    list($major, , ) = explode('.', $version ?: $this->getSolrVersion());
+    list($major, ,) = explode('.', $version ?: $this->getSolrVersion());
     return $major;
   }
 
@@ -413,8 +410,9 @@ class SolrHelper {
         return (microtime(TRUE) - $start) + 1E-6;
       }
     }
-    catch (HttpException $e) {}
-    
+    catch (HttpException $e) {
+    }
+
     return FALSE;
   }
 
@@ -422,6 +420,7 @@ class SolrHelper {
    * Gets summary information about the Solr Core.
    *
    * @return array
+   *   An array of stats about the solr core.
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
@@ -470,12 +469,16 @@ class SolrHelper {
    * (The $query parameter currently isn't used and only here for the potential
    * sake of subclasses.)
    *
-   * @param \Drupal\search_api\Query\QueryInterface $query
-   *   The query object.
    * @param \Solarium\QueryType\Select\Query\Query $solarium_query
    *   The Solarium select query object.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The query object.
+   * @param bool $highlight
+   *   TRUE when highlighting is enabled.
+   * @param bool $excerpt
+   *   TRUE when a query should return an excerpt.
    */
-  public function setHighlighting(Query $solarium_query, QueryInterface $query, $highlight = true, $excerpt = true) {
+  public function setHighlighting(Query $solarium_query, QueryInterface $query, $highlight = TRUE, $excerpt = TRUE) {
     if ($excerpt || $highlight) {
       $hl = $solarium_query->getHighlighting();
       $hl->setFields('spell');
@@ -505,9 +508,20 @@ class SolrHelper {
   }
 
   /**
-   * Changes the query to a "More Like This"  query.
+   * Changes the query to a "More Like This" query.
+   *
+   * @param \Solarium\QueryType\Select\Query\Query $solarium_query
+   *   The solr query to add MLT for.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The search api query to add MLT for.
+   * @param array $mlt_options
+   *   The mlt options.
+   * @param array $index_fields
+   *   The fields in the index to add mlt for.
+   * @param array $fields
+   *   The fields to add mlt for.
    */
-  public function setMoreLikeThis(Query &$solarium_query, QueryInterface $query, $mlt_options = array(), $index_fields = array(), $fields) {
+  public function setMoreLikeThis(Query &$solarium_query, QueryInterface $query, $mlt_options = array(), $index_fields = array(), $fields = array()) {
     $solarium_query = $this->solr->createMoreLikeThis(array('handler' => 'select'));
     // The fields to look for similarities in.
     if (empty($mlt_options['fields'])) {
@@ -546,10 +560,19 @@ class SolrHelper {
 
   /**
    * Adds spatial features to the search query.
+   *
+   * @param \Solarium\QueryType\Select\Query\Query $solarium_query
+   *   The solr query.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The search api query.
+   * @param array $spatial_options
+   *   The spatial options to add.
+   * @param $field_names
+   *   The field names, to add the spatial options for.
    */
-  public function setSpatial(Query $solarium_query, QueryInterface $query, $spatial_options = array(), $field_names) {
+  public function setSpatial(Query $solarium_query, QueryInterface $query, $spatial_options = array(), $field_names = array()) {
     foreach ($spatial_options as $i => $spatial) {
-      // reset radius for each option
+      // Reset radius for each option.
       unset($radius);
 
       if (empty($spatial['field']) || empty($spatial['lat']) || empty($spatial['lon'])) {
@@ -641,6 +664,9 @@ class SolrHelper {
     }
   }
 
+  /**
+   * Sets sorting for the query.
+   */
   public function setSorts(Query $solarium_query, QueryInterface $query, $field_names_single_value = array()) {
     foreach ($query->getSorts() as $field => $order) {
       // The default Solr schema provides a virtual field named "random_SEED"
@@ -664,6 +690,9 @@ class SolrHelper {
     }
   }
 
+  /**
+   * Sets grouping for the query.
+   */
   public function setGrouping(Query $solarium_query, QueryInterface $query, $grouping_options = array(), $index_fields = array(), $field_names = array()) {
     $group_params['group'] = 'true';
     // We always want the number of groups returned so that we get pagers done
@@ -679,8 +708,7 @@ class SolrHelper {
       $type = $index_fields[$collapse_field]['type'];
       // Only single-valued fields are supported.
       if (SearchApiUtility::isTextType($type)) {
-        $warnings[] = $this->t('Grouping is not supported for field @field. ' .
-          'Only single-valued fields not indexed as "Fulltext" are supported.',
+        $warnings[] = $this->t('Grouping is not supported for field @field. Only single-valued fields not indexed as "Fulltext" are supported.',
           array('@field' => $index_fields[$collapse_field]['name']));
         continue;
       }
@@ -732,7 +760,6 @@ class SolrHelper {
    *
    * @param string $path
    *   The path to append to the base URI.
-   *
    * @param string $command_json
    *   The command to send encoded as JSON.
    *
@@ -761,7 +788,6 @@ class SolrHelper {
    *
    * @param string $path
    *   The path to append to the base URI.
-   *
    * @param string $command_json
    *   The command to send encoded as JSON.
    *
@@ -777,13 +803,10 @@ class SolrHelper {
    *
    * @param string $endpoint
    *   The endpoint that refelcts the base URI.
-   *
    * @param string $path
    *   The path to append to the base URI.
-   *
    * @param string $method
    *   The HTTP request method.
-   *
    * @param string $command_json
    *   The command to send encoded as JSON.
    *
