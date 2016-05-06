@@ -697,7 +697,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       // Add the site hash and language-specific base URL.
       $doc->setField('hash', SearchApiSolrUtility::getSiteHash());
-      $lang = $item->getLanguage();
+      $lang = $item->getField('search_api_language')->getValues();
+      $lang = reset($lang);
       if (empty($base_urls[$lang])) {
         $url_options = array('absolute' => TRUE);
         if (isset($languages[$lang])) {
