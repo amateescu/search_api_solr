@@ -43,8 +43,7 @@ function hook_search_api_solr_field_mapping_alter(\Drupal\search_api\IndexInterf
 }
 
 /**
- * Change the way the index's field names are mapped to Solr field names that
- * store only the first value of the field.
+ * Change the way the index's field names are mapped to Solr field names.
  *
  * @param \Drupal\search_api\IndexInterface $index
  *   The index whose field mappings are altered.
@@ -108,7 +107,7 @@ function hook_search_api_solr_search_results_alter(\Drupal\search_api\Query\Resu
  *     two existing dynamic fields definitions with names "{PREFIX}s_*" and
  *     "{PREFIX}m_*".
  *
- *@see hook_search_api_data_type_info()
+ * @see hook_search_api_data_type_info()
  */
 function search_api_solr_hook_search_api_data_type_info() {
   return array(

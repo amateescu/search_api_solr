@@ -1,20 +1,13 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_solr\Controller\DevelController.
- */
-
 namespace Drupal\search_api_solr\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Field;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\search_api\Backend\BackendPluginManager;
 use Drupal\search_api\Utility;
-use Drupal\search_api_solr\SolrBackendInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -141,7 +134,7 @@ class DevelController extends ControllerBase {
                           '%langcode' => $langcode,
                           '%index' => $index->label(),
                           '%server' => $server->label(),
-                        ]))
+                        ])),
                       ];
                     }
                   }

@@ -1,15 +1,11 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_solr\SolrBackendInterface.
- */
-
 namespace Drupal\search_api_solr;
 
 use Drupal\search_api\Backend\BackendInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\ItemInterface;
+use Drupal\search_api_solr\Solr\SolrHelper;
 
 /**
  * Defines an interface for Solr search backend plugins.
@@ -23,7 +19,7 @@ interface SolrBackendInterface extends BackendInterface {
    * Returns the solr helper class.
    *
    * @return \Drupal\search_api_solr\Solr\SolrHelper
-   *  The Solr helper class.
+   *   The Solr helper class.
    */
   public function getSolrHelper();
 
@@ -31,9 +27,9 @@ interface SolrBackendInterface extends BackendInterface {
    * Sets the Solr helper class.
    *
    * @param \Drupal\search_api_solr\Solr\SolrHelper $solrHelper
-   *  The Solr helper class.
+   *   The Solr helper class.
    */
-  public function setSolrHelper($solrHelper);
+  public function setSolrHelper(SolrHelper $solrHelper);
 
   /**
    * Returns the Solarium client.
@@ -71,7 +67,8 @@ interface SolrBackendInterface extends BackendInterface {
   public function getSolrConnection();
 
   /**
-   * Gets metadata about fields in the Solr/Lucene index.
+   * Retrieves metadata about fields in the Solr/Lucene index.
+   *
    * @todo SearchApiSolrConnectionInterface and SearchApiSolrField don't exist!
    *
    * @param int $num_terms
@@ -103,24 +100,28 @@ interface SolrBackendInterface extends BackendInterface {
   public function getFile($file = NULL);
 
   /**
-   * Gets a Solr document from an search api index item.
+   * Retrieves a Solr document from an search api index item.
    *
    * @param \Drupal\search_api\IndexInterface $index
-   *
+   *   The search api index.
    * @param \Drupal\search_api\Item\ItemInterface $item
+   *   An item to get documents for.
    *
    * @return \Solarium\QueryType\Update\Query\Document\Document
+   *   A solr document.
    */
   public function getDocument(IndexInterface $index, ItemInterface $item);
 
   /**
-   * Gets Solr documents from search api index items.
+   * Retrieves Solr documents from search api index items.
    *
    * @param \Drupal\search_api\IndexInterface $index
-   *
+   *   The search api index.
    * @param \Drupal\search_api\Item\ItemInterface[] $items
+   *   An array of items to get documents for.
    *
    * @return \Solarium\QueryType\Update\Query\Document\Document[]
+   *   An array of solr documents.
    */
   public function getDocuments(IndexInterface $index, array $items);
 

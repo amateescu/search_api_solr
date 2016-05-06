@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_solr\Routing\DevelRouteSubscriber.
- */
-
 namespace Drupal\search_api_solr\Routing;
 
 use Drupal\Core\Entity\EntityTypeInterface;

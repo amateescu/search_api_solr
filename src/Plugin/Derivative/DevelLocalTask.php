@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_solr\Plugin\Derivative\DevelLocalTask.
- */
-
 namespace Drupal\search_api_solr\Plugin\Derivative;
 
 use Drupal\Component\Plugin\Derivative\DeriverBase;
@@ -22,7 +17,7 @@ class DevelLocalTask extends DeriverBase implements ContainerDeriverInterface {
   use StringTranslationTrait;
 
   /**
-   * The entity manager
+   * The entity manager.
    *
    * @var \Drupal\Core\Entity\EntityManagerInterface
    */
