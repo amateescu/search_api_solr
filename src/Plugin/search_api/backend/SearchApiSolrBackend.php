@@ -683,8 +683,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       // Add the site hash and language-specific base URL.
       $doc->setField('hash', SearchApiSolrUtility::getSiteHash());
-      $lang = $item->getField('search_api_language')->getValues();
-      $lang = reset($lang);
+      $lang = $item->getLanguage();
       if (empty($base_urls[$lang])) {
         $url_options = array('absolute' => TRUE);
         if (isset($languages[$lang])) {
@@ -697,9 +696,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $base_urls[$lang] = Url::fromRoute('<front>', array(), $url_options)->toString(TRUE)->getGeneratedUrl();
       }
       $doc->setField('site', $base_urls[$lang]);
-
+      $item_fields = $item->getFields();
+      $item_fields += $this->getSpecialFields($index, $item);
       /** @var \Drupal\search_api\Item\FieldInterface $field */
-      foreach ($item as $name => $field) {
+      foreach ($item_fields as $name => $field) {
         // If the field is not known for the index, something weird has
         // happened. We refuse to index the items and hope that the others are
         // OK.
@@ -841,6 +841,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $search_fields = $this->getQueryFulltextFields($query);
     // Get the index fields to be able to retrieve boosts.
     $index_fields = $index->getFields();
+    $index_fields += $this->getSpecialFields($index);
     $query_fields = array();
     foreach ($search_fields as $search_field) {
       /** @var \Solarium\QueryType\Update\Query\Document\Document $document */
@@ -853,7 +854,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Handle More Like This requests.
     $mlt_options = $query->getOption('search_api_mlt');
     if ($mlt_options) {
-      $index_fields = $index->getFields();
       $this->getSolrHelper()->setMoreLikeThis($solarium_query, $query, $mlt_options, $index_fields, $field_names);
 
       // Override the search key by setting it to the solr document id
@@ -866,7 +866,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     // Set basic filters.
-    $conditions_queries = $this->createFilterQueries($query->getConditionGroup(), $field_names, $index->getFields());
+    $conditions_queries = $this->createFilterQueries($query->getConditionGroup(), $field_names, $index_fields);
     foreach ($conditions_queries as $id => $conditions_query) {
       $solarium_query->createFilterQuery('filters_' . $id)->setQuery($conditions_query);
     }
@@ -1053,6 +1053,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       // Add the names of any fields configured on the index.
       $fields = $index->getFields();
+      $fields += $this->getSpecialFields($index);
       foreach ($fields as $key => $field) {
         // Generate a field name; this corresponds with naming conventions in
         // our schema.xml.
@@ -1166,6 +1167,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $index = $query->getIndex();
     $field_names = $this->getFieldNames($index);
     $fields = $index->getFields();
+    $fields += $this->getSpecialFields($index);
     $site_hash = SearchApiSolrUtility::getSiteHash();
     // We can find the item ID and the score in the special 'search_api_*'
     // properties. Mappings are provided for these properties in
@@ -1280,6 +1282,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $index = $query->getIndex();
     $field_names = $this->getFieldNames($index);
     $fields = $index->getFields();
+    $fields += $this->getSpecialFields($index);
 
     $extract_facets = $query->getOption('search_api_facets', array());
 
