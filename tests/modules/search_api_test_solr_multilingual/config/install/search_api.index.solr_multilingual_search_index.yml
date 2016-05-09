@@ -39,12 +39,6 @@ field_settings:
     type: decimal
     datasource_id: 'entity:entity_test'
     property_path: width
-  search_api_language:
-    label: 'Item language'
-    type: string
-    property_path: search_api_language
-    index_locked: true
-    type_locked: true
 processor_settings:
   add_url:
     plugin_id: add_url
