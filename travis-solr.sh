@@ -72,17 +72,21 @@ download_and_run() {
     dir_name="solr-$1"
 
     download $url $dir_name
-    
-	case `echo "$1" | cut -d . -f 1` in
-	    4)
-		    add_core_4 $dir_name $SOLR_CORE $SOLR_CONFS
-			run_4 $dir_name $SOLR_PORT $SOLR_CORE
-			;;
-		5)
-	        add_core_5 $dir_name $SOLR_CORE $SOLR_CONFS
+
+    case `echo "$1" | cut -d . -f 1` in
+        4)
+            add_core_4 $dir_name $SOLR_CORE $SOLR_CONFS
+            run_4 $dir_name $SOLR_PORT $SOLR_CORE
+            ;;
+        5)
+            add_core_5 $dir_name $SOLR_CORE $SOLR_CONFS
             run_5 $dir_name $SOLR_PORT $SOLR_CORE
-			;;
-	esac
+            ;;
+        6)
+            add_core_5 $dir_name $SOLR_CORE $SOLR_CONFS
+            run_5 $dir_name $SOLR_PORT $SOLR_CORE
+            ;;
+    esac
 
     if [ -z "${SOLR_DOCS}" ]
     then
@@ -140,7 +144,7 @@ add_core_5() {
         fi
       done
     fi
-	
+
 	echo "name=$solr_core" > $dir_name/server/solr/$solr_core/core.properties
 }
 
