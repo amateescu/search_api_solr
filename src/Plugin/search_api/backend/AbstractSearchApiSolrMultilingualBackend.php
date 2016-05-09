@@ -409,7 +409,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
    * {@inheritdoc}
    */
   public function getSchemaLanguageStatistics() {
-    $available = $this->ping();
+    $available = $this->getSolrHelper()->pingCore();
     $stats = [];
     foreach (\Drupal::languageManager()->getLanguages() as $language) {
       $solr_field_type_name = 'text' . '_' . $language->getId();
