@@ -855,7 +855,6 @@
        <str name="wt">json</str>
        <str name="indent">true</str>
        <str name="df">text</str>
-       <str name="q.op">AND</str>
      </lst>
   </requestHandler>
 
@@ -986,7 +985,6 @@
   <requestHandler name="mlt" class="solr.MoreLikeThisHandler">
     <lst name="defaults">
       <str name="df">content</str>
-      <str name="q.op">AND</str>
       <str name="mlt.mintf">1</str>
       <str name="mlt.mindf">1</str>
       <str name="mlt.minwl">3</str>
@@ -1004,7 +1002,6 @@
        <str name="df">content</str>
        <str name="echoParams">explicit</str>
        <bool name="omitHeader">true</bool>
-       <str name="q.op">AND</str>
      </lst>
   </requestHandler>
 
@@ -1240,7 +1237,6 @@
       <str name="omitHeader">true</str>
       <str name="wt">json</str>
       <str name="indent">true</str>
-      <str name="q.op">AND</str>
     </lst>
   </requestHandler>
 

@@ -910,7 +910,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     if (!empty($options['search_api_spellcheck'])) {
       $solarium_query->getSpellcheck();
     }
-    
+
     foreach ($options as $option => $value) {
       if (strpos($option, 'solr_param_') === 0) {
         $solarium_query->addParam(substr($option, 11), $value);
@@ -1378,11 +1378,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * Transforms a query filter into a flat array of Solr filter queries.
    */
   protected function createFilterQueries(ConditionGroupInterface $conditions, array $solr_fields, array $index_fields) {
-    $or = $conditions->getConjunction() == 'OR';
-    $fq = array();
-    $prefix = '';
+    $fq = [];
+
     foreach ($conditions->getConditions() as $condition) {
       if ($condition instanceof ConditionInterface) {
+        // Nested condition.
         $field = $condition->getField();
         if (!isset($index_fields[$field])) {
           throw new SearchApiException($this->t('Filter term on unknown or unindexed field @field.', array('@field' => $field)));
@@ -1393,31 +1393,21 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
       }
       else {
-        $q = $this->createFilterQueries($condition, $solr_fields, $index_fields);
-        if ($conditions->getConjunction() != $condition->getConjunction() && count($q) > 1) {
-          // $or == TRUE means the nested filter has conjunction AND, and vice
-          // versa.
-          $sep = $or ? ' ' : ' OR ';
-          $fq[] = '((' . implode(')' . $sep . '(', $q) . '))';
-        }
-        else {
-          $fq = array_merge($fq, $q);
-        }
+        // Nested condition group.
+        $pre = $condition->getConjunction() == 'OR' ? '' : '+';
+        $fq[] = '(' . $pre . implode(' ' . $pre, $this->createFilterQueries($condition, $solr_fields, $index_fields)) . ')';
       }
     }
+
     foreach ($conditions->getTags() as $tag) {
-      $prefix = "{!tag=$tag}";
+      array_walk($fq, function(&$value, $key, $tag) {
+        $value = $tag . $value;
+      }, "{!tag=$tag}");
+
       // We can only apply one tag per filter.
       break;
     }
-    if ($or && count($fq) > 1) {
-      $fq = array('((' . implode(') OR (', $fq) . '))');
-    }
-    if ($prefix) {
-      foreach ($fq as $i => $filters) {
-        $fq[$i] = $prefix . $filters;
-      }
-    }
+
     return $fq;
   }
 
@@ -1427,7 +1417,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected function createFilterQuery($field, $value, $operator, FieldInterface $index_field) {
     $field = SearchApiSolrUtility::escapeFieldName($field);
     if ($value === NULL) {
-      return ($operator == '=' ? '*:* AND -' : '') . "$field:[* TO *]";
+      return ($operator == '=' ? '-' : '') . "$field:[* TO *]";
     }
 
     if (!is_array($value)) {
@@ -1442,7 +1432,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
     switch ($operator) {
       case '<>':
-        return "*:* AND -($field:$value)";
+        return "-($field:$value)";
 
       case '<':
         return "$field:{* TO $value}";
@@ -1460,14 +1450,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         return "$field:[" . $value[0] . ' TO ' . $value[1] . ']';
 
       case 'IN':
-        // Group values and use OR conjunction.
-        $conditions = implode(' OR ', $value);
-        return "*:* AND ($field:($conditions))";
+        return "$field:" . implode(" $field:", $value);
 
       case 'NOT IN':
-        // Group values and use OR conjunction to negate.
-        $conditions = implode(' OR ', $value);
-        return "*:* AND -($field:($conditions))";
+        return "-$field:" . implode(" -$field:", $value);
 
       default:
         return "$field:$value";
