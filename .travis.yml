@@ -38,7 +38,7 @@ before_install:
 
 install:
   # Grab Drush
-  - composer global require drush/drush:dev-master --prefer-source
+  - composer global require drush/drush
   - cd /home/travis/.composer/vendor/drush/drush && cd -
   # Make sure we don't fail when checking out projects
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
