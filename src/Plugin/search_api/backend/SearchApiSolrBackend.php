@@ -1578,7 +1578,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The \Drupal\search_api\Query\Query object.
-   *
    */
   protected function alterSearchApiQuery(QueryInterface $query) {
   }
