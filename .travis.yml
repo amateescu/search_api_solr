@@ -15,6 +15,7 @@ php:
 env:
   - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=4.5.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/4.x"
   - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=5.4.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/5.x"
+  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=6.0.0 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/6.x"
 
 notifications:
   irc:

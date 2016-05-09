@@ -276,6 +276,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         '' => $this->t('Determine automatically'),
         '4' => '4.x',
         '5' => '5.x',
+        '6' => '6.x',
       ),
       '#default_value' => $this->configuration['solr_version'],
     );
@@ -909,7 +910,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     if (!empty($options['search_api_spellcheck'])) {
       $solarium_query->getSpellcheck();
     }
-
+    
     foreach ($options as $option => $value) {
       if (strpos($option, 'solr_param_') === 0) {
         $solarium_query->addParam(substr($option, 11), $value);
