@@ -958,7 +958,6 @@
     <lst name="defaults">
       <str name="defType">edismax</str>
       <str name="df">content</str>
-      <str name="q.op">AND</str>
       <str name="echoParams">explicit</str>
       <bool name="omitHeader">true</bool>
       <float name="tie">0.01</float>

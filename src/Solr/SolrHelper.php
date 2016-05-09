@@ -164,9 +164,6 @@ class SolrHelper {
    * @param array $keys
    *   The keys array to flatten, formatted as specified by
    *   \Drupal\search_api\Query\QueryInterface::getKeys().
-   * @param bool $is_nested
-   *   (optional) Whether the function is called for a nested condition.
-   *   Defaults to FALSE.
    *
    * @return string
    *   A Solr query string representing the same keys.
