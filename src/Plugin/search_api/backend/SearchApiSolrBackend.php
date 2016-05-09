@@ -806,6 +806,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @endcode
    */
   public function search(QueryInterface $query) {
+    // Call an object oriented equivalent to hook_search_api_query_alter().
+    $this->alterSearchApiQuery($query);
     // Reset request handler.
     $this->requestHandler = NULL;
     // Get field information.
@@ -829,12 +831,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Set them.
     $solarium_query->setQuery($keys);
     unset($keys);
-
-    $returned_fields = array('item_id', 'score');
-    if (!$this->configuration['site_hash']) {
-      $returned_fields[] = 'hash';
-    }
-    $solarium_query->setFields($returned_fields);
 
     // Set searched fields.
     $options = $query->getOptions();
@@ -925,11 +921,18 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
      * it wants to fetch
      */
     if (!empty($this->configuration['retrieve_data'])) {
-      $solarium_query->setFields(array('*', 'score'));
+      $solarium_query->setFields(['*', 'score']);
+    }
+    else {
+      $returned_fields = ['item_id', 'score'];
+      if (!$this->configuration['site_hash']) {
+        $returned_fields[] = 'hash';
+      }
+      $solarium_query->setFields($returned_fields);
     }
 
-    // Allow modules to alter the query.
     try {
+      // Allow modules to alter the solarium query.
       $this->moduleHandler->alter('search_api_solr_query', $solarium_query, $query);
       $this->preQuery($solarium_query, $query);
 
@@ -1565,7 +1568,23 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
-   * Empty method called before sending a search query to Solr.
+   * Allow custom changes before converting a SearchAPI query into a Solr query.
+   *
+   * This is an object oriented equivalent to hook_search_api_query_alter() to
+   * avoid that any logic needs to be split between the backend class and a
+   * module file.
+   *
+   * @see hook_search_api_query_alter().
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The \Drupal\search_api\Query\Query object.
+   *
+   */
+  protected function alterSearchApiQuery(QueryInterface $query) {
+  }
+
+  /**
+   * Allow custom changes before sending a search query to Solr.
    *
    * This allows subclasses to apply custom changes before the query is sent to
    * Solr. Works exactly like hook_search_api_solr_query_alter().
