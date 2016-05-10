@@ -11,11 +11,6 @@ php:
 #  - 5.6
   - 7.0
 
-addons:
-  apt:
-    packages:
-      - oracle-java8-installer
-
 # This creates a build with each php environment. 12 builds in total.
 env:
 #  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=4.5.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/4.x"
@@ -23,9 +18,9 @@ env:
 #  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=5.5.0 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/5.x"
   - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=6.0.0 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/6.x"
 
-notifications:
-  irc:
-    - "chat.freenode.net#drupal-search-api"
+#notifications:
+#  irc:
+#    - "chat.freenode.net#drupal-search-api"
 
 # This will create the database
 mysql:
@@ -39,6 +34,7 @@ mysql:
 before_install:
   - composer self-update
   - sudo apt-get update -qq > /dev/null
+  - sudo apt-get install -y oracle-java8-installer
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
 
