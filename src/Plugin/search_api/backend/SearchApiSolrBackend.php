@@ -1400,8 +1400,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     foreach ($conditions->getTags() as $tag) {
-      array_walk($fq, function(&$value, $key, $tag) {
-        $value = $tag . $value;
+      array_walk($fq, function(&$value, $key, $prefix) {
+        $value = $prefix . $value;
       }, "{!tag=$tag}");
 
       // We can only apply one tag per filter.
