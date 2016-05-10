@@ -63,6 +63,24 @@ run_5() {
 
     # go to the solr folder
     cd $dir_name
+    bin/solr start -p $solr_port
+    cd ../
+}
+
+run_6() {
+    dir_name=$1
+    solr_port=$2
+    solr_core=$3
+    # Install Java 8
+    sudo apt-get install -y oracle-java8-installer
+    sudo apt-get install -y oracle-java8-set-default
+
+    # Run solr
+    echo "Running with folder $dir_name"
+    echo "Starting solr on port ${solr_port}..."
+
+    # go to the solr folder
+    cd $dir_name
     bin/solr start -p $solr_port -f
     cd ../
 }
@@ -84,7 +102,7 @@ download_and_run() {
             ;;
         6)
             add_core_5 $dir_name $SOLR_CORE $SOLR_CONFS
-            run_5 $dir_name $SOLR_PORT $SOLR_CORE
+            run_6 $dir_name $SOLR_PORT $SOLR_CORE
             ;;
     esac
 
