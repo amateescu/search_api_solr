@@ -1458,6 +1458,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       case 'BETWEEN':
         return "$field:[" . $value[0] . ' TO ' . $value[1] . ']';
 
+      case 'NOT BETWEEN':
+        return "-$field:[" . $value[0] . ' TO ' . $value[1] . ']';
+
       case 'IN':
         // Group values and use OR conjunction.
         $conditions = implode(' OR ', $value);
