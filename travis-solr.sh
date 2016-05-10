@@ -74,14 +74,14 @@ run_6() {
     # Install Java 8
     sudo apt-get install -y oracle-java8-installer
     sudo apt-get install -y oracle-java8-set-default
-
+    export SOLR_JAVA_HOME=/usr/lib/jvm/java-8-oracle
     # Run solr
     echo "Running with folder $dir_name"
     echo "Starting solr on port ${solr_port}..."
 
     # go to the solr folder
     cd $dir_name
-    bin/solr start -p $solr_port -f
+    bin/solr start -p $solr_port
     cd ../
 }
 
