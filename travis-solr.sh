@@ -63,7 +63,7 @@ run_5() {
 
     # go to the solr folder
     cd $dir_name
-    bin/solr start -p $solr_port
+    bin/solr start -p $solr_port -f
     cd ../
 }
 
