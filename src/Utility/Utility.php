@@ -218,9 +218,13 @@ class Utility {
    * digits or underscores are already avoided by our schema.
    *
    * This function therfore encodes all forbidden characters in their
-   * hexadecimal equivalent encapsulted by underscores. Example:
-   * "tm_entity:node/body" becomes "tm_5f_entity_3a_node_2f_body"
+   * hexadecimal equivalent encapsulted by a leading sequence of '_X' and a
+   * termination charachter '_'. Example:
+   * "tm_entity:node/body" becomes "tm_entity_X3a_node_X2f_body".
    *
+   * As a consequence the sequence '_X' itself needs to be encoded if it occurs
+   * within a field name. Example: "last_XMas" becomes "last_X5f58_Mas".
+   * 
    * @param string $field_name
    *   The field name.
    *
@@ -228,11 +232,9 @@ class Utility {
    *   The encoded field name.
    */
   public static function encodeSolrDynamicFieldName($field_name) {
-    return preg_replace_callback('/([^\da-zA-Z])/u',
+    return preg_replace_callback('/([^\da-zA-Z_]|_X)/u',
       function ($matches) {
-        // Convert non Java identifiers and '$' into byte-wise hexadecimal
-        // values encapsulated by '_'.
-        return '_' . bin2hex($matches[1]) . '_';
+        return '_X' . bin2hex($matches[1]) . '_';
       },
       $field_name);
   }
@@ -249,7 +251,7 @@ class Utility {
    *   The decoded field name
    */
   public static function decodeSolrDynamicFieldName($field_name) {
-    return preg_replace_callback('/_([\dabcdef]+?)_/',
+    return preg_replace_callback('/_X([\dabcdef]+?)_/',
       function ($matches) {
         // Convert byte-wise hexadecimal values encapsulated by '_' back into
         // characters.
