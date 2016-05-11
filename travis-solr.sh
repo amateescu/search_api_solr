@@ -67,22 +67,44 @@ run_5() {
     cd ../
 }
 
+run_6() {
+    dir_name=$1
+    solr_port=$2
+    solr_core=$3
+    # Install Java 8
+    sudo apt-get install -y oracle-java8-installer
+    sudo apt-get install -y oracle-java8-set-default
+    export SOLR_JAVA_HOME=/usr/lib/jvm/java-8-oracle
+    # Run solr
+    echo "Running with folder $dir_name"
+    echo "Starting solr on port ${solr_port}..."
+
+    # go to the solr folder
+    cd $dir_name
+    bin/solr start -p $solr_port
+    cd ../
+}
+
 download_and_run() {
     url="http://archive.apache.org/dist/lucene/solr/$1/solr-$1.tgz"
     dir_name="solr-$1"
 
     download $url $dir_name
-    
-	case `echo "$1" | cut -d . -f 1` in
-	    4)
-		    add_core_4 $dir_name $SOLR_CORE $SOLR_CONFS
-			run_4 $dir_name $SOLR_PORT $SOLR_CORE
-			;;
-		5)
-	        add_core_5 $dir_name $SOLR_CORE $SOLR_CONFS
+
+    case `echo "$1" | cut -d . -f 1` in
+        4)
+            add_core_4 $dir_name $SOLR_CORE $SOLR_CONFS
+            run_4 $dir_name $SOLR_PORT $SOLR_CORE
+            ;;
+        5)
+            add_core_5 $dir_name $SOLR_CORE $SOLR_CONFS
             run_5 $dir_name $SOLR_PORT $SOLR_CORE
-			;;
-	esac
+            ;;
+        6)
+            add_core_5 $dir_name $SOLR_CORE $SOLR_CONFS
+            run_6 $dir_name $SOLR_PORT $SOLR_CORE
+            ;;
+    esac
 
     if [ -z "${SOLR_DOCS}" ]
     then
@@ -140,7 +162,7 @@ add_core_5() {
         fi
       done
     fi
-	
+
 	echo "name=$solr_core" > $dir_name/server/solr/$solr_core/core.properties
 }
 

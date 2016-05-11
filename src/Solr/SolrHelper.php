@@ -164,17 +164,15 @@ class SolrHelper {
    * @param array $keys
    *   The keys array to flatten, formatted as specified by
    *   \Drupal\search_api\Query\QueryInterface::getKeys().
-   * @param bool $is_nested
-   *   (optional) Whether the function is called for a nested condition.
-   *   Defaults to FALSE.
    *
    * @return string
    *   A Solr query string representing the same keys.
    */
-  public function flattenKeys(array $keys, $is_nested = FALSE) {
-    $k = array();
-    $or = $keys['#conjunction'] == 'OR';
-    $neg = !empty($keys['#negation']);
+  public function flattenKeys(array $keys) {
+    $k = [];
+    $pre = ($keys['#conjunction'] == 'OR') ? '' : '+';
+    $neg = empty($keys['#negation']) ? '' : '-';
+
     foreach ($keys as $key_nr => $key) {
       // We cannot use \Drupal\Core\Render\Element::children() anymore because
       // $keys is not a valid render array.
@@ -182,50 +180,38 @@ class SolrHelper {
         continue;
       }
       if (is_array($key)) {
-        $subkeys = $this->flattenKeys($key, TRUE);
+        $subkeys = $this->flattenKeys($key);
         if ($subkeys) {
           $nested_expressions = TRUE;
-          // If this is a negated OR expression, we can't just use nested keys
-          // as-is, but have to put them into parantheses.
-          if ($or && $neg) {
-            $subkeys = "($subkeys)";
-          }
-          $k[] = $subkeys;
+          $k[] = "($subkeys)";
         }
       }
       else {
         $solariumHelper = new SolariumHelper();
-        $key = $solariumHelper->escapePhrase(trim($key));
-        $k[] = $key;
+        $k[] = $solariumHelper->escapePhrase(trim($key));
       }
     }
     if (!$k) {
       return '';
     }
 
-    // Formatting the keys into a Solr query can be a bit complex. The following
-    // code will produce filters that look like this:
+    // Formatting the keys into a Solr query can be a bit complex. Keep in mind
+    // that the default operator is OR. The following code will produce filters
+    // that look like this:
     //
     // #conjunction | #negation | return value
     // ----------------------------------------------------------------
-    // AND          | FALSE     | A B C
-    // AND          | TRUE      | -(A AND B AND C)
-    // OR           | FALSE     | ((A) OR (B) OR (C))
-    // OR           | TRUE      | -A -B -C.
+    // AND          | FALSE     | (+A +B +C)
+    // AND          | TRUE      | -(+A +B +C)
+    // OR           | FALSE     | (A B C)
+    // OR           | TRUE      | -(A B C)
+    //
     // If there was just a single, unnested key, we can ignore all this.
     if (count($k) == 1 && empty($nested_expressions)) {
-      $k = reset($k);
-      return $neg ? "*:* AND -$k" : $k;
+      return $neg . reset($k);
     }
 
-    if ($or) {
-      if ($neg) {
-        return '*:* AND -' . implode(' AND -', $k);
-      }
-      return '((' . implode(') OR (', $k) . '))';
-    }
-    $k = implode($neg || $is_nested ? ' AND ' : ' ', $k);
-    return $neg ? "*:* AND -($k)" : $k;
+    return $neg . '(' . $pre . implode(' ' . $pre, $k) . ')';
   }
 
   /**
