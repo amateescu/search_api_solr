@@ -217,14 +217,14 @@ class Utility {
    * underscores (e.g. _version_) are reserved." Field names starting with
    * digits or underscores are already avoided by our schema.
    *
-   * This function therfore encodes all forbidden characters in their
+   * This function therefore encodes all forbidden characters in their
    * hexadecimal equivalent encapsulted by a leading sequence of '_X' and a
    * termination charachter '_'. Example:
    * "tm_entity:node/body" becomes "tm_entity_X3a_node_X2f_body".
    *
    * As a consequence the sequence '_X' itself needs to be encoded if it occurs
    * within a field name. Example: "last_XMas" becomes "last_X5f58_Mas".
-   * 
+   *
    * @param string $field_name
    *   The field name.
    *
@@ -242,7 +242,11 @@ class Utility {
   /**
    * Decodes solr field names.
    *
-   * See encodeSolrDynamicFieldName() for details.
+   * This function therefore decodes all forbidden characters from their
+   * hexadecimal equivalent encapsulted by a leading sequence of '_X' and a
+   * termination charachter '_'. Example:
+   * "tm_entity_X3a_node_X2f_body" becomes "tm_entity:node/body".
+   * @ee encodeSolrDynamicFieldName() for details.
    *
    * @param string $field_name
    *   Encoded field name.
@@ -253,8 +257,6 @@ class Utility {
   public static function decodeSolrDynamicFieldName($field_name) {
     return preg_replace_callback('/_X([\dabcdef]+?)_/',
       function ($matches) {
-        // Convert byte-wise hexadecimal values encapsulated by '_' back into
-        // characters.
         return hex2bin($matches[1]);
       },
       $field_name);
