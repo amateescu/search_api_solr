@@ -4,6 +4,7 @@ namespace Drupal\Tests\search_api_solr\Kernel;
 
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
+use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
@@ -76,6 +77,27 @@ class SearchApiSolrTest extends BackendTestBase {
     }
     catch (\Exception $e) {
     }
+  }
+
+  /**
+   * Executes a query and skips search_api post processing of results.
+   *
+   * A light weight alternative to $query->execute() if we don't want to get
+   * heavy weight search_api results here, but more or less raw solr results.
+   * The data as it is returned by Solr could be accessed by calling
+   * getExtraData('search_api_solr_response') on the result set returned here.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The query to be executed.
+   *
+   * @return \Drupal\search_api\Query\ResultSetInterface
+   */
+  protected function executeQueryWithoutPostProcessing(QueryInterface $query) {
+    /** @var \Drupal\search_api\IndexInterface $index */
+    $index = Index::load($this->indexId);
+
+    $query->preExecute();
+    return $index->getServerInstance()->search($query);
   }
 
   /**
