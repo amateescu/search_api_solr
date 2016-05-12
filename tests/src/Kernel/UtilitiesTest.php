@@ -43,5 +43,7 @@ class UtilitiesTest extends KernelTestBase {
     $decoded_field_name = Utility::decodeSolrDynamicFieldName($encoded_field_name);
 
     $this->assertEquals($decoded_field_name, $forbidden_field_name);
+
+    $this->assertEquals('ss_field_foo', Utility::encodeSolrDynamicFieldName('ss_field_foo'));
   }
 }
