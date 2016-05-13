@@ -23,7 +23,7 @@ class SearchApiSolrTest extends BackendTestBase {
    */
   public static $modules = array(
     'search_api_solr',
-    'search_api_test_solr',
+    'search_api_solr_test',
   );
 
   /**
@@ -56,7 +56,7 @@ class SearchApiSolrTest extends BackendTestBase {
   public function setUp() {
     parent::setUp();
 
-    $this->installConfig(array('search_api_test_solr'));
+    $this->installConfig(array('search_api_solr_test'));
 
     $this->detectSolrAvailability();
   }
@@ -134,13 +134,15 @@ class SearchApiSolrTest extends BackendTestBase {
    * {@inheritdoc}
    */
   protected function clearIndex() {
-    /** @var \Drupal\search_api\IndexInterface $index */
-    $index = Index::load($this->indexId);
-    $index->clear();
-    // Deleting items take at least 1 second for Solr to parse it so that drupal
-    // doesn't get timeouts while waiting for Solr. Lets give it 2 seconds to
-    // make sure we are in bounds.
-    sleep(2);
+    if ($this->solrAvailable) {
+      /** @var \Drupal\search_api\IndexInterface $index */
+      $index = Index::load($this->indexId);
+      $index->clear();
+      // Deleting items take at least 1 second for Solr to parse it so that drupal
+      // doesn't get timeouts while waiting for Solr. Lets give it 2 seconds to
+      // make sure we are in bounds.
+      sleep(2);
+    }
   }
 
   /**
