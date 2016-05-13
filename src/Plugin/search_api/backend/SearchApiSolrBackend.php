@@ -343,6 +343,26 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     if (isset($values['port']) && (!is_numeric($values['port']) || $values['port'] < 0 || $values['port'] > 65535)) {
       $form_state->setError($form['port'], $this->t('The port has to be an integer between 0 and 65535.'));
     }
+    if (!empty($values['path']) && strpos($values['path'], '/') !== 0) {
+      $form_state->setError($form['path'], $this->t('If provided the path has to start with "/".'));
+    }
+    if (!empty($values['core']) && strpos($values['core'], '/') === 0) {
+      $form_state->setError($form['core'], $this->t('The core must not start with "/".'));
+    }
+
+    if (!$form_state->hasAnyErrors()) {
+      // Try to orchestrate a server link from form values.
+      $solr = new Client();
+      $solr->createEndpoint($values + ['key' => 'core'], TRUE);
+      $this->getSolrHelper()->setSolr($solr);
+      try {
+        $this->getSolrHelper()->getServerLink();
+      } catch (\InvalidArgumentException $e) {
+        foreach (['scheme', 'host', 'port', 'path', 'core'] as $part) {
+          $form_state->setError($form[$part], $this->t('The server link generated from the form values is illegal.'));
+        }
+      }
+    }
   }
 
   /**
