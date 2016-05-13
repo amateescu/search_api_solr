@@ -64,6 +64,8 @@ before_script:
   - drush en --yes simpletest
   - git clone --branch 8.x-1.x http://git.drupal.org/project/search_api.git modules/search_api
   - git clone --branch 8.x-1.x http://git.drupal.org/project/search_api_solr.git modules/search_api_solr
+  - mkdir $TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr_multilingual
+  - cp -R $TRAVIS_BUILD_DIR/* $TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr_multilingual/
   - drush en --yes composer_manager
   - cd modules/composer_manager; php scripts/init.php
   - cd $TRAVIS_BUILD_DIR/../drupal
@@ -72,9 +74,9 @@ before_script:
   - drush cr
   # Generate a multilingual Solr configuration.
   # Therefor we have to install the test modules before the tests.
-  - cp -r core/modules/system/tests/modules/entity_test core/modules/system/entity_test
-  - cp -r modules/search_api/tests/search_api_test_example_content modules/search_api/search_api_test_example_content
-  - cp -r modules/search_api_solr_multilingual/tests/modules/search_api_solr_multilingual_test modules/search_api_solr_multilingual/search_api_solr_multilingual_test
+  - cp -R core/modules/system/tests/modules/entity_test core/modules/system/entity_test
+  - cp -R modules/search_api/tests/search_api_test_example_content modules/search_api/search_api_test_example_content
+  - cp -R modules/search_api_solr_multilingual/tests/modules/search_api_solr_multilingual_test modules/search_api_solr_multilingual/search_api_solr_multilingual_test
   - drush en --yes search_api_solr_multilingual_test
   - drush sasm-gsc d8 conf.zip
   - unzip -o conf.zip -d $SOLR_CONFS
@@ -83,14 +85,8 @@ before_script:
   - cat modules/search_api_solr/travis-solr.sh | bash
 
 script:
-  # go to our Drupal module directory
-  - mkdir $TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr_multilingual
-  - cp -R $TRAVIS_BUILD_DIR/* $TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr_multilingual/
   # go to our Drupal main directory
   - cd $TRAVIS_BUILD_DIR/../drupal
-  - composer drupal-update -n
-  - ls -la $TRAVIS_BUILD_DIR/../drupal/sites/default
-
   # Run the tests
   - export SIMPLETEST_DB=mysql://root:@localhost/drupal
   - php core/scripts/run-tests.sh --verbose --color --concurrency 4 --php `which php` --url http://localhost:8888 --class "\Drupal\search_api_solr_multilingual\Tests\IntegrationTest" | tee /tmp/test.txt ; export TEST_EXIT=${PIPESTATUS[0]} ; echo $TEST_EXI
