@@ -78,7 +78,7 @@ before_script:
   - cp -R modules/search_api/tests/search_api_test_example_content modules/search_api/search_api_test_example_content
   - cp -R modules/search_api_solr_multilingual/tests/modules/search_api_solr_multilingual_test modules/search_api_solr_multilingual/search_api_solr_multilingual_test
   - drush en --yes search_api_solr_multilingual_test
-  - drush sasm-gsc solr_multilingual_search_server conf.zip SOLR_VERSION
+  - drush sasm-gsc solr_multilingual_search_server conf.zip $SOLR_VERSION
   - unzip -o conf.zip -d $SOLR_CONFS
   - ls -lh $SOLR_CONFS
   # Install Solr
