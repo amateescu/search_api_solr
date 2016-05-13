@@ -26,6 +26,7 @@ function search_api_solr_multilingual_drush_command() {
     'arguments' => array(
       'server_id' => dt('The numeric ID or machine name of a search server to enable.'),
       'file_name' =>  dt('The file name of the config zip.'),
+      'solr_version' =>  dt('The targeted Solr version.'),
     ),
     'aliases' => array('sasm-gsc'),
   );
@@ -48,11 +49,17 @@ function drush_search_api_solr_multilingual_delete_and_reinstall_all_field_types
  *   The ID of the server.
  * @param string $file_name
  *   The file name of the config zip that should be created.
+ * @param string $solr_version
+ *   The targeted Solr version.
  */
-function drush_search_api_solr_multilingual_get_server_config($server_id, $file_name) {
+function drush_search_api_solr_multilingual_get_server_config($server_id, $file_name, $solr_version = NULL) {
   /** @var Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeListBuilder $list_builder */
   $list_builder = Drupal::entityTypeManager()->getListBuilder('solr_field_type');
-  $list_builder->setServer(Server::load($server_id));
+  $server = Server::load($server_id);
+  if ($solr_version) {
+    $server->setBackendConfig(['solr_version' => $solr_version] + $server->getBackendConfig());
+  }
+  $list_builder->setServer($server);
   ob_end_clean();
   ob_start();
   $zip = $list_builder->getConfigZip();
