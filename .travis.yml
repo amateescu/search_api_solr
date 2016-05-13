@@ -70,6 +70,15 @@ before_script:
   - composer config discard-changes true
   - composer drupal-update -n
   - drush cr
+  # Generate a multilingual Solr configuration.
+  # Therefor we have to install the test modules before the tests.
+  - cp -r core/modules/system/tests/modules/entity_test core/modules/system/entity_test
+  - cp -r modules/search_api/tests/search_api_test_example_content modules/search_api/search_api_test_example_content
+  - cp -r modules/search_api_solr_multilingual/tests/modules/search_api_solr_multilingual_test modules/search_api_solr_multilingual/search_api_solr_multilingual_test
+  - drush en --yes search_api_solr_multilingual_test
+  - drush sasm-gsc d8 conf.zip
+  - unzip -o conf.zip -d $SOLR_CONFS
+  - ls -lh $SOLR_CONFS
   # Install Solr
   - cat modules/search_api_solr/travis-solr.sh | bash
 
