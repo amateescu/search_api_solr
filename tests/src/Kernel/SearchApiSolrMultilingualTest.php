@@ -23,6 +23,7 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
    * @var string[]
    */
   public static $modules = array(
+    'language',
     'search_api_solr_multilingual',
     'search_api_solr_multilingual_test',
   );
@@ -48,7 +49,7 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
   public function setUp() {
     BackendTestBase::setUp();
 
-    $this->installConfig(array('search_api_solr_multilingual_test'));
+    $this->installConfig('search_api_solr_multilingual_test');
 
     $this->detectSolrAvailability();
   }

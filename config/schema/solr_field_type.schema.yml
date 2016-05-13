@@ -120,7 +120,7 @@ search_api_solr_multilingual.solr_field_type.*:
                       label: 'DictionaryCompoundWordTokenFilter::maxSubwordSize'
                       nullable: true
                     onlyLongestMatch:
-                      type: integer
+                      type: boolean
                       label: 'DictionaryCompoundWordTokenFilter::onlyLongestMatch'
                       nullable: true
                     ignoreCase:
@@ -166,3 +166,6 @@ search_api_solr_multilingual.solr_field_type.*:
         synonyms:
           type: string
           label: 'Synonym words'
+        nouns:
+          type: string
+          label: 'Nouns'
