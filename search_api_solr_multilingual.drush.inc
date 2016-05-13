@@ -1,15 +1,6 @@
 <?php
 
-/**
- * @file
- * Drush commands for Search API Multilingual Solr.
- */
-
-use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
-use Drupal\search_api\IndexBatchHelper;
-use Drupal\search_api\IndexInterface;
-use Drupal\search_api\SearchApiException;
 
 /**
  * Implements hook_drush_command().
@@ -26,6 +17,20 @@ function search_api_solr_multilingual_drush_command() {
     'aliases' => array('sasm-reinstall-ft'),
   );
 
+  $items['search-api-solr-multilingual-get-server-config'] = array(
+    'description' => 'Get Solr config files as zip for a search server.',
+    'examples' => array(
+      'drush search-api-solr-multilingual-get-server-config my_solr_server' => dt('Get the config files for @server search server.', array('@server' => 'my_solr_server')),
+      'drush sasm-gsc my_solr_server' => dt('Alias to get the config files for @server search server.', array('@server' => 'my_solr_server')),
+    ),
+    'arguments' => array(
+      'server_id' => dt('The numeric ID or machine name of a search server to enable.'),
+      'file_name' =>  dt('The file name of the config zip.'),
+    ),
+    'aliases' => array('sasm-gsc'),
+  );
+
+
   return $items;
 }
 
@@ -34,4 +39,23 @@ function search_api_solr_multilingual_drush_command() {
  */
 function drush_search_api_solr_multilingual_delete_and_reinstall_all_field_types() {
   search_api_solr_multilingual_delete_and_reinstall_all_field_types();
+}
+
+/**
+ * Gets the config far a Solr search server.
+ *
+ * @param string $server_id
+ *   The ID of the server.
+ * @param string $file_name
+ *   The file name of the config zip that should be created.
+ */
+function drush_search_api_solr_multilingual_get_server_config($server_id, $file_name) {
+  /** @var Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeListBuilder $list_builder */
+  $list_builder = Drupal::entityTypeManager()->getListBuilder('solr_field_type');
+  $list_builder->setServer(Server::load($server_id));
+  ob_end_clean();
+  ob_start();
+  $zip = $list_builder->getConfigZip();
+  $zip->finish();
+  file_put_contents($file_name, ob_get_clean());
 }
