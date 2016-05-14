@@ -105,13 +105,6 @@ download_and_run() {
             run_6 $dir_name $SOLR_PORT $SOLR_CORE
             ;;
     esac
-
-    if [ -z "${SOLR_DOCS}" ]
-    then
-        echo "$solr_docs not defined, skipping initial indexing"
-    else
-        post_documents $dir_name $SOLR_DOCS $SOLR_CORE $SOLR_PORT
-    fi
 }
 
 add_core_4() {
@@ -121,22 +114,8 @@ add_core_4() {
     # prepare our folders
     [[ -d "${dir_name}/example/multicore/${solr_core}" ]] || mkdir $dir_name/example/multicore/$solr_core
     [[ -d "${dir_name}/example/multicore/${solr_core}/conf" ]] || mkdir $dir_name/example/multicore/$solr_core/conf
-
     # copies custom configurations
-    if [ -d "${solr_confs}" ] ; then
-      cp -R $solr_confs/* $dir_name/example/multicore/$solr_core/conf/
-    else
-      for file in $solr_confs
-      do
-        if [ -f "${file}" ]; then
-            cp $file $dir_name/example/multicore/$solr_core/conf
-            echo "Copied $file into solr conf directory."
-        else
-            echo "${file} is not valid";
-            exit 1
-        fi
-      done
-    fi
+    cp -R $solr_confs/* $dir_name/example/multicore/$solr_core/conf/
 }
 
 add_core_5() {
@@ -146,39 +125,10 @@ add_core_5() {
     # prepare our folders
     [[ -d "${dir_name}/server/solr/${solr_core}" ]] || mkdir $dir_name/server/solr/$solr_core
     [[ -d "${dir_name}/server/solr/${solr_core}/conf" ]] || mkdir $dir_name/server/solr/$solr_core/conf
-
     # copies custom configurations
-    if [ -d "${solr_confs}" ] ; then
-      cp -R $solr_confs/* $dir_name/server/solr/$solr_core/conf/
-    else
-      for file in $solr_confs
-      do
-        if [ -f "${file}" ]; then
-            cp $file $dir_name/server/solr/$solr_core/conf
-            echo "Copied $file into solr conf directory."
-        else
-            echo "${file} is not valid";
-            exit 1
-        fi
-      done
-    fi
-
-	echo "name=$solr_core" > $dir_name/server/solr/$solr_core/core.properties
+    cp -R $solr_confs/* $dir_name/server/solr/$solr_core/conf/
+    echo "name=$solr_core" > $dir_name/server/solr/$solr_core/core.properties
 }
 
-post_documents() {
-    dir_name=$1
-    solr_docs=$2
-    solr_core=$3
-    solr_port=$4
-      # Post documents
-    if [ -z "${solr_docs}" ]
-    then
-        echo "$solr_docs not defined, skipping initial indexing"
-    else
-        echo "Indexing $solr_docs"
-        java -Dtype=application/json -Durl=http://localhost:$solr_port/solr/$solr_core/update/json -jar $dir_name/example/exampledocs/post.jar $solr_docs
-    fi
-}
 
 download_and_run $SOLR_VERSION

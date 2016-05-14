@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\search_api\Kernel;
+namespace Drupal\Tests\search_api_solr\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api_solr\Utility\Utility;
