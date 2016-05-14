@@ -203,7 +203,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
           $language_specific_fields = [];
           foreach ($language_ids as $language_id) {
             $language_specific_field = Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id);
-            if ($this->isPartOfSchema('dynamicFields', Utility::extractLanguageSpecificSolrDynamicFieldName($language_specific_field))) {
+            if ($this->isPartOfSchema('dynamicFields', Utility::extractLanguageSpecificSolrDynamicFieldDefinition($language_specific_field))) {
               $language_specific_fields[] = Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id) . $boost;
             }
             else {
@@ -249,7 +249,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
         foreach (array_keys($doc) as $language_specific_field_name) {
           $field_name = Utility::getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($language_specific_field_name);
           if ($field_name != $language_specific_field_name) {
-            if (Utility::getLangaugeIdFromLanguageSpecificSolrDynamicFieldName($language_specific_field_name) == $language_id) {
+            if (Utility::getLanguageIdFromLanguageSpecificSolrDynamicFieldName($language_specific_field_name) == $language_id) {
               $doc[$field_name] = $doc[$language_specific_field_name];
             }
             unset($doc[$language_specific_field_name]);
