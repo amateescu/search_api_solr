@@ -214,9 +214,9 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
     $solr_helper = $this->getBackend()->getSolrHelper();
     $solr_branch = $solr_helper->getSolrBranch($this->assumed_minimum_version);
-    $search_api_solr_conf_path = drupal_get_path('module', 'search_api_solr') . '/solr-conf/' . $solr_branch . '/';
-    $solrcore_properties = parse_ini_file($search_api_solr_conf_path . 'solrcore.properties', FALSE, INI_SCANNER_RAW);
-    $schema = file_get_contents($search_api_solr_conf_path . 'schema.xml');
+    $search_api_solr_conf_path = drupal_get_path('module', 'search_api_solr') . '/solr-conf/' . $solr_branch;
+    $solrcore_properties = parse_ini_file($search_api_solr_conf_path . '/solrcore.properties', FALSE, INI_SCANNER_RAW);
+    $schema = file_get_contents($search_api_solr_conf_path . '/schema.xml');
     $schema = preg_replace('@<fieldType name="text_und".*?</fieldType>@ms', '<!-- fieldType text_und is moved to schema_extra_types.xml by Search API Multilingual Solr -->', $schema);
     $schema = preg_replace('@<dynamicField name="([^"]*)".*?type="text_und".*?/>@', "<!-- dynamicField $1 is moved to schema_extra_fields.xml by Search API Multilingual Solr -->", $schema);
 
@@ -224,12 +224,6 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     $zip->addFile('schema.xml', $schema);
     $zip->addFile('schema_extra_types.xml', $this->generateSchemaExtraTypesXml());
     $zip->addFile('schema_extra_fields.xml', $this->generateSchemaExtraFieldsXml());
-
-    foreach (['elevate.xml', 'mapping-ISOLatin1Accent.txt', 'protwords.txt', 'solrconfig.xml', 'stopwords.txt', 'synonyms.txt'] as $file_name) {
-      if (file_exists($search_api_solr_conf_path . $file_name)) {
-        $zip->addFileFromPath($file_name, $search_api_solr_conf_path . $file_name);
-      }
-    }
 
     // Add language specific text files.
     /** @var SolrFieldTypeInterface $solr_field_type */
@@ -242,7 +236,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       }
     }
 
-    $solrcore_properties['solr.luceneMatchVersion'] = $this->assumed_minimum_version ?: $solr_helper->getSolrVersion();
+    $solrcore_properties['solr.luceneMatchVersion'] = $solr_helper->getLuceneMatchVersion($this->assumed_minimum_version ?: '');
     // @todo
     //$solrcore_properties['solr.replication.masterUrl']
 
@@ -253,6 +247,20 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     $zip->addFile('solrcore.properties', $solrcore_properties_string);
 
     // @todo provide a hook to add more things.
+
+    // Now add all remaining static files from the conf dir that have not been
+    // generated dynamically above.
+    foreach (scandir($search_api_solr_conf_path) as $file) {
+      if (strpos($file, '.') !== 0) {
+        foreach ($zip->files as $zipped_file) {
+          /* @see \ZipStream\ZipStream::addToCdr() */
+          if ($file == $zipped_file[0]) {
+            continue(2);
+          }
+        }
+        $zip->addFileFromPath($file, $search_api_solr_conf_path . '/' . $file);
+      }
+    }
 
     return $zip;
   }
