@@ -228,11 +228,6 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
         }
         $edismax->setQueryFields($query_fields);
       }
-
-      $fq = new FilterQuery();
-      $fq->setKey('sasm_language_filter');
-      $fq->setQuery($single_field_names[SEARCH_API_LANGUAGE_FIELD_NAME] . ':("' . implode('" OR "', $language_ids) . '")');
-      $solarium_query->addFilterQuery($fq);
     }
   }
 
