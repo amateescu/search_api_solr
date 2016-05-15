@@ -883,7 +883,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     // Set basic filters.
-    $conditions_queries = $this->createFilterQueries($query->getConditionGroup(), $field_names, $index_fields);
+    $condition_group = $query->getConditionGroup();
+    $languages = $query->getLanguages();
+    if ($languages !== NULL) {
+        $condition_group->addCondition('search_api_language', $languages, 'IN');
+    }
+    $conditions_queries = $this->createFilterQueries($condition_group, $field_names, $index_fields);
     foreach ($conditions_queries as $id => $conditions_query) {
       $solarium_query->createFilterQuery('filters_' . $id)->setQuery($conditions_query);
     }
