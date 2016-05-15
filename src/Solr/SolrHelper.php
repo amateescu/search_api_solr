@@ -283,6 +283,20 @@ class SolrHelper {
   }
 
   /**
+   * Gets the LuceneMatchVersion string.
+   *
+   * @param string $version
+   *   An optional Solr version string.
+   *
+   * @return string
+   *   The lucene match version in V.V format.
+   */
+  public function getLuceneMatchVersion($version = '') {
+    list($major, $minor,) = explode('.', $version ?: $this->getSolrVersion());
+    return $major . '.' . $minor;
+  }
+
+  /**
    * Gets information about the Solr server.
    *
    * @return object
