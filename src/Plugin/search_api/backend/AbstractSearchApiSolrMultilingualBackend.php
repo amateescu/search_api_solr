@@ -19,7 +19,6 @@ use Drupal\search_api_solr_multilingual\SolrMultilingualBackendInterface;
 use Drupal\search_api_solr_multilingual\Utility\Utility;
 use Solarium\Core\Client\Response;
 use Solarium\Core\Query\Result\ResultInterface;
-use Solarium\QueryType\Select\Query\FilterQuery;
 use Solarium\QueryType\Select\Query\Query;
 use Solarium\QueryType\Select\Result\Result;
 
@@ -140,6 +139,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
         $query->setLanguages([\Drupal::languageManager()->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)->getId()]);
       }
       else {
+        $language_ids = [LanguageInterface::LANGCODE_NOT_SPECIFIED];
         foreach (\Drupal::languageManager()->getLanguages() as $language) {
           $language_ids[] = $language->getId();
         }
@@ -187,24 +187,23 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     if (!empty($language_ids)) {
       $edismax = $solarium_query->getEDisMax();
       $query_fields = $edismax->getQueryFields();
-
       $index = $query->getIndex();
       $fulltext_fields = $index->getFulltextFields();
-      $multiple_field_names = $this->getFieldNames($index);
-      $single_field_names = $this->getFieldNames($index, TRUE);
+      $multiple_field_names = $this->getSolrFieldNames($index);
+      $single_field_names = $this->getSolrFieldNames($index, TRUE);
 
       foreach($fulltext_fields as $fulltext_field) {
         foreach ([$single_field_names[$fulltext_field], $multiple_field_names[$fulltext_field]] as $field_name) {
           $boost = '';
-          if (preg_match('@' . $field_name . '(^[\d.]?)@', $query_fields, $matches)) {
+          if (preg_match('@' . $field_name . '(\^[\d.]+)@', $query_fields, $matches)) {
             $boost = $matches[1];
           }
 
           $language_specific_fields = [];
           foreach ($language_ids as $language_id) {
-            $language_specific_field = Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id);
+            $language_specific_field = SearchApiSolrUtility::encodeSolrDynamicFieldName(Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id));
             if ($this->isPartOfSchema('dynamicFields', Utility::extractLanguageSpecificSolrDynamicFieldDefinition($language_specific_field))) {
-              $language_specific_fields[] = Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id) . $boost;
+              $language_specific_fields[] = $language_specific_field . $boost;
             }
             else {
               $vars = array(
@@ -212,7 +211,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
               );
               if ($this->hasLanguageUndefinedFallback()) {
                 \Drupal::logger('search_api_solr_multilingual')->warning('Error while searching: language specific field dynamic %field is not defined in the schema.xml, fallback to language unspecific field is enabled.', $vars);
-                $language_specific_fields[] = $field_name . $boost;
+                $language_specific_fields[] = $language_specific_field . $boost;
               }
               else {
                 \Drupal::logger('search_api_solr_multilingual')->error('Error while searching: language specific field dynamic %field is not defined in the schema.xml, fallback to language unspecific field is not enabled.', $vars);
@@ -221,14 +220,55 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
           }
 
           $query_fields = str_replace(
-            $field_name,
-            implode(',', array_unique($language_specific_fields)),
+            $field_name . $boost,
+            implode(' ', array_unique($language_specific_fields)),
             $query_fields
           );
         }
-        $edismax->setQueryFields($query_fields);
       }
+      $edismax->setQueryFields($query_fields);
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected  function getFilterQueries(QueryInterface $query, array $solr_fields, array $index_fields) {
+    $condition_group = $query->getConditionGroup();
+    $conditions = $condition_group->getConditions();
+    if (empty($conditions)) {
+      return parent::getFilterQueries($query, $solr_fields, $index_fields);
+    }
+
+    $fq = [];
+    foreach ($query->getLanguages() as $langcode) {
+      $language_specific_condition_group = $query->createConditionGroup();
+      $language_specific_condition_group->addCondition('search_api_language', $langcode);
+      $language_specific_condition_group->addConditionGroup($condition_group);
+      $fq[] = '(' . implode(' +', $this->createFilterQueries($language_specific_condition_group, $this->getLanguageSpecificSolrFieldNames($langcode, $solr_fields, reset($index_fields)->getIndex()), $index_fields)). ')';
+    }
+    return [implode(' ', $fq)];
+  }
+
+  /**
+   * Gets a langauge-specific mapping from Drupal to Solr field names.
+   *
+   * @param string $langcode
+   *   The lanaguage to get the mapping for.
+   * @param array $solr_fields
+   *   The mapping from Drupal to Solr field names.
+   * @param \Drupal\search_api\IndexInterface $index_fields
+   *   The fields handled by the curent index.
+   *
+   * @return array
+   *    The language-specific mapping from Drupal to Solr field names.
+   */
+  protected function getLanguageSpecificSolrFieldNames($lancgcode, array $solr_fields, IndexInterface $index) {
+    // @todo Caching.
+    foreach ($index->getFulltextFields() as $fulltext_field) {
+      $solr_fields[$fulltext_field] = SearchApiSolrUtility::encodeSolrDynamicFieldName(Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($solr_fields[$fulltext_field], $lancgcode));
+    }
+    return $solr_fields;
   }
 
   /**
@@ -237,7 +277,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
   protected function extractResults(QueryInterface $query, ResultInterface $result) {
     if ($this->configuration['retrieve_data']) {
       $index = $query->getIndex();
-      $single_field_names = $this->getFieldNames($index, TRUE);
+      $single_field_names = $this->getSolrFieldNames($index, TRUE);
       $data = $result->getData();
       foreach ($data['response']['docs'] as &$doc) {
         $language_id = $doc[$single_field_names[SEARCH_API_LANGUAGE_FIELD_NAME]];
@@ -283,8 +323,8 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     parent::alterSolrDocuments($documents, $index, $items);
 
     $fulltext_fields = $index->getFulltextFields();
-    $multiple_field_names = $this->getFieldNames($index);
-    $single_field_names = $this->getFieldNames($index, TRUE);
+    $multiple_field_names = $this->getSolrFieldNames($index);
+    $single_field_names = $this->getSolrFieldNames($index, TRUE);
     $fulltext_field_names = array_filter(array_flip($multiple_field_names) + array_flip($single_field_names),
       function($value) use ($fulltext_fields) {
         return in_array($value, $fulltext_fields);
@@ -298,7 +338,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
       foreach ($fields as $monolingual_solr_field_name => $field_value) {
         if (array_key_exists($monolingual_solr_field_name, $fulltext_field_names)) {
           $multilingual_solr_field_name = Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($monolingual_solr_field_name, $language_id);
-          $field_name_map_per_language[$language_id][$monolingual_solr_field_name] = $multilingual_solr_field_name;
+          $field_name_map_per_language[$language_id][$monolingual_solr_field_name] = SearchApiSolrUtility::encodeSolrDynamicFieldName($multilingual_solr_field_name);
         }
       }
     }
@@ -318,8 +358,8 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
         else {
           // @todo Check if a non-language-spefific field type could be replaced
           //   by a language-specific one that has been missing before or if a
-          //   concrete one has been assigned by the adminstrator, for example
-          //   filed type text_de for language de_AT. If the field type is
+          //   concrete one has been assigned by the administrator, for example
+          //   field type text_de for language de-AT. If the field type is
           //   exchanged, trigger a re-index process.
 
           throw new SearchApiSolrMultilingualException('Missing field type ' . $solr_field_type_name . ' in schema.');

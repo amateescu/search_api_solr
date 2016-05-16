@@ -43,7 +43,7 @@ class UtilitiesTest extends KernelTestBase {
   }
 
   /**
-   * Tests all convertion and extraction funtions.
+   * Tests all conversion and extraction functions.
    *
    * @param string $prefix
    *   The Solr field prefix.

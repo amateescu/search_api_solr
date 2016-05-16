@@ -36,7 +36,7 @@ interface SolrMultilingualBackendInterface extends SolrBackendInterface {
 
   /**
    * Indicates if the fallback for not supportes languages is active.
-   * 
+   *
    * @return boolean
    */
   public function hasLanguageUndefinedFallback();
