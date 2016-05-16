@@ -883,12 +883,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     // Set basic filters.
-    $condition_group = $query->getConditionGroup();
-    $languages = $query->getLanguages();
-    if ($languages !== NULL) {
-        $condition_group->addCondition('search_api_language', $languages, 'IN');
-    }
-    $conditions_queries = $this->createFilterQueries($condition_group, $field_names, $index_fields);
+    $conditions_queries = $this->getFilterQueries($query, $field_names, $index_fields);
     foreach ($conditions_queries as $id => $conditions_query) {
       $solarium_query->createFilterQuery('filters_' . $id)->setQuery($conditions_query);
     }
@@ -1400,7 +1395,57 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
-   * Transforms a query filter into a flat array of Solr filter queries.
+   * Adds item language conditions to the condition group, if applicable.
+   *
+   * @param \Drupal\search_api\Query\ConditionGroupInterface $condition_group
+   *   The condition group on which to set conditions.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The query to inspect for language settings.
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::getLanguages()
+   */
+  protected function addLanguageConditions(ConditionGroupInterface $condition_group, QueryInterface $query) {
+    $languages = $query->getLanguages();
+    if ($languages !== NULL) {
+      $condition_group->addCondition('search_api_language', $languages, 'IN');
+    }
+  }
+
+  /**
+   * Serializes a query's conditions as Solr filter queries.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The query to get the conditions from.
+   * @param array $solr_fields
+   *   The mapping from Drupal to Solr field names.
+   * @param \Drupal\search_api\Item\FieldInterface[] $index_fields
+   *   The fields handled by the curent index.
+   *
+   * @return array
+   *    Array of filter query strings.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   */
+  protected  function getFilterQueries(QueryInterface $query, array $solr_fields, array $index_fields) {
+    $condition_group = $query->getConditionGroup();
+    $this->addLanguageConditions($condition_group, $query);
+    return $this->createFilterQueries($condition_group, $solr_fields, $index_fields);
+  }
+
+  /**
+   * Recursively transforms conditions into a flat array of Solr filter queries.
+   *
+   * @param \Drupal\search_api\Query\ConditionGroupInterface $conditions
+   *   The group of conditions.
+   * @param array $solr_fields
+   *   The mapping from Drupal to Solr field names.
+   * @param \Drupal\search_api\Item\FieldInterface[] $index_fields
+   *   The fields handled by the curent index.
+   *
+   * @return array
+   *    Array of filter query strings.
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   protected function createFilterQueries(ConditionGroupInterface $conditions, array $solr_fields, array $index_fields) {
     $fq = [];
