@@ -617,8 +617,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     if (array_diff_key($old_fields, $new_fields) || array_diff_key($new_fields, $old_fields)) {
       return TRUE;
     }
-    $old_field_names = $this->getFieldNames($original, FALSE, TRUE);
-    $new_field_names = $this->getFieldNames($index, FALSE, TRUE);
+    $old_field_names = $this->getSolrFieldNames($original, FALSE, TRUE);
+    $new_field_names = $this->getSolrFieldNames($index, FALSE, TRUE);
     return $old_field_names != $new_field_names;
   }
 
@@ -686,8 +686,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   public function getDocuments(IndexInterface $index, array $items) {
     $documents = array();
     $index_id = $this->getIndexId($index->id());
-    $field_names = $this->getFieldNames($index);
-    $field_names_single_value = $this->getFieldNames($index, TRUE);
+    $field_names = $this->getSolrFieldNames($index);
+    $field_names_single_value = $this->getSolrFieldNames($index, TRUE);
     $languages = $this->languageManager->getLanguages();
     $base_urls = array();
 
@@ -835,8 +835,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     /** @var \Drupal\search_api\Entity\Index $index */
     $index = $query->getIndex();
     $index_id = $this->getIndexId($index->id());
-    $field_names = $this->getFieldNames($index);
-    $field_names_single_value = $this->getFieldNames($index, TRUE);
+    $field_names = $this->getSolrFieldNames($index);
+    $field_names_single_value = $this->getSolrFieldNames($index, TRUE);
 
     // Get Solr connection.
     $this->connect();
@@ -883,12 +883,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     // Set basic filters.
-    $condition_group = $query->getConditionGroup();
-    $languages = $query->getLanguages();
-    if ($languages !== NULL) {
-        $condition_group->addCondition('search_api_language', $languages, 'IN');
-    }
-    $conditions_queries = $this->createFilterQueries($condition_group, $field_names, $index_fields);
+    $conditions_queries = $this->getFilterQueries($query, $field_names, $index_fields);
     foreach ($conditions_queries as $id => $conditions_query) {
       $solarium_query->createFilterQuery('filters_' . $id)->setQuery($conditions_query);
     }
@@ -1068,7 +1063,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
-  public function getFieldNames(IndexInterface $index, $single_value_name = FALSE, $reset = FALSE) {
+  public function getSolrFieldNames(IndexInterface $index, $single_value_name = FALSE, $reset = FALSE) {
     // @todo The field name mapping should be cached per index because custom
     // queries needs to access it on every query.
     $subkey = (int) $single_value_name;
@@ -1194,7 +1189,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected function extractResults(QueryInterface $query, ResultInterface $result) {
     $index = $query->getIndex();
-    $field_names = $this->getFieldNames($index);
+    $field_names = $this->getSolrFieldNames($index);
     $fields = $index->getFields();
     $fields += $this->getSpecialFields($index);
     $site_hash = SearchApiSolrUtility::getSiteHash();
@@ -1309,7 +1304,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     $facets = array();
     $index = $query->getIndex();
-    $field_names = $this->getFieldNames($index);
+    $field_names = $this->getSolrFieldNames($index);
     $fields = $index->getFields();
     $fields += $this->getSpecialFields($index);
 
@@ -1400,7 +1395,57 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
-   * Transforms a query filter into a flat array of Solr filter queries.
+   * Adds item language conditions to the condition group, if applicable.
+   *
+   * @param \Drupal\search_api\Query\ConditionGroupInterface $condition_group
+   *   The condition group on which to set conditions.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The query to inspect for language settings.
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::getLanguages()
+   */
+  protected function addLanguageConditions(ConditionGroupInterface $condition_group, QueryInterface $query) {
+    $languages = $query->getLanguages();
+    if ($languages !== NULL) {
+      $condition_group->addCondition('search_api_language', $languages, 'IN');
+    }
+  }
+
+  /**
+   * Serializes a query's conditions as Solr filter queries.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The query to get the conditions from.
+   * @param array $solr_fields
+   *   The mapping from Drupal to Solr field names.
+   * @param \Drupal\search_api\Item\FieldInterface[] $index_fields
+   *   The fields handled by the curent index.
+   *
+   * @return array
+   *    Array of filter query strings.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   */
+  protected  function getFilterQueries(QueryInterface $query, array $solr_fields, array $index_fields) {
+    $condition_group = $query->getConditionGroup();
+    $this->addLanguageConditions($condition_group, $query);
+    return $this->createFilterQueries($condition_group, $solr_fields, $index_fields);
+  }
+
+  /**
+   * Recursively transforms conditions into a flat array of Solr filter queries.
+   *
+   * @param \Drupal\search_api\Query\ConditionGroupInterface $conditions
+   *   The group of conditions.
+   * @param array $solr_fields
+   *   The mapping from Drupal to Solr field names.
+   * @param \Drupal\search_api\Item\FieldInterface[] $index_fields
+   *   The fields handled by the curent index.
+   *
+   * @return array
+   *    Array of filter query strings.
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   protected function createFilterQueries(ConditionGroupInterface $conditions, array $solr_fields, array $index_fields) {
     $fq = [];
@@ -1641,7 +1686,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $incomp = Unicode::strtolower($incomplete_key);
 
     $index = $query->getIndex();
-    $field_names = $this->getFieldNames($index);
+    $field_names = $this->getSolrFieldNames($index);
     $complete = $query->getOriginalKeys();
 
     // Extract keys.
@@ -1829,15 +1874,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   public function getSolrConnection() {
     $this->connect();
     return $this->solr;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getFields($num_terms = 0) {
-    $this->connect();
-    // @todo getFields() is not defined.
-    return $this->solr->getFields($num_terms);
   }
 
   /**

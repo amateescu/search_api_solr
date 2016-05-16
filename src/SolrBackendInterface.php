@@ -56,7 +56,7 @@ interface SolrBackendInterface extends BackendInterface {
    *
    * @see SearchApiSolrBackend::search()
    */
-  public function getFieldNames(IndexInterface $index, $single_value_name = FALSE, $reset = FALSE);
+  public function getSolrFieldNames(IndexInterface $index, $single_value_name = FALSE, $reset = FALSE);
 
   /**
    * Gets the currently used Solr connection object.
@@ -65,21 +65,6 @@ interface SolrBackendInterface extends BackendInterface {
    *   The solr connection object used by this server.
    */
   public function getSolrConnection();
-
-  /**
-   * Retrieves metadata about fields in the Solr/Lucene index.
-   *
-   * @todo SearchApiSolrConnectionInterface and SearchApiSolrField don't exist!
-   *
-   * @param int $num_terms
-   *   Number of 'top terms' to return.
-   *
-   * @return array
-   *   An array of SearchApiSolrField objects.
-   *
-   * @see SearchApiSolrConnectionInterface::getFields()
-   */
-  public function getFields($num_terms = 0);
 
   /**
    * Retrieves a config file or file list from the Solr server.
