@@ -26,7 +26,6 @@ field_type:
           class: solr.StopFilterFactory
           ignoreCase: true
           words: stopwords.txt
-          enablePositionIncrements: true
         -
           class: solr.WordDelimiterFilterFactory
           catenateNumbers: 1
@@ -67,7 +66,6 @@ field_type:
           class: solr.StopFilterFactory
           ignoreCase: true
           words: stopwords.txt
-          enablePositionIncrements: true
         -
           class: solr.WordDelimiterFilterFactory
           catenateNumbers: 0
