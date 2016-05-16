@@ -617,8 +617,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     if (array_diff_key($old_fields, $new_fields) || array_diff_key($new_fields, $old_fields)) {
       return TRUE;
     }
-    $old_field_names = $this->getFieldNames($original, FALSE, TRUE);
-    $new_field_names = $this->getFieldNames($index, FALSE, TRUE);
+    $old_field_names = $this->getSolrFieldNames($original, FALSE, TRUE);
+    $new_field_names = $this->getSolrFieldNames($index, FALSE, TRUE);
     return $old_field_names != $new_field_names;
   }
 
@@ -686,8 +686,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   public function getDocuments(IndexInterface $index, array $items) {
     $documents = array();
     $index_id = $this->getIndexId($index->id());
-    $field_names = $this->getFieldNames($index);
-    $field_names_single_value = $this->getFieldNames($index, TRUE);
+    $field_names = $this->getSolrFieldNames($index);
+    $field_names_single_value = $this->getSolrFieldNames($index, TRUE);
     $languages = $this->languageManager->getLanguages();
     $base_urls = array();
 
@@ -835,8 +835,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     /** @var \Drupal\search_api\Entity\Index $index */
     $index = $query->getIndex();
     $index_id = $this->getIndexId($index->id());
-    $field_names = $this->getFieldNames($index);
-    $field_names_single_value = $this->getFieldNames($index, TRUE);
+    $field_names = $this->getSolrFieldNames($index);
+    $field_names_single_value = $this->getSolrFieldNames($index, TRUE);
 
     // Get Solr connection.
     $this->connect();
@@ -1063,7 +1063,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
-  public function getFieldNames(IndexInterface $index, $single_value_name = FALSE, $reset = FALSE) {
+  public function getSolrFieldNames(IndexInterface $index, $single_value_name = FALSE, $reset = FALSE) {
     // @todo The field name mapping should be cached per index because custom
     // queries needs to access it on every query.
     $subkey = (int) $single_value_name;
@@ -1189,7 +1189,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected function extractResults(QueryInterface $query, ResultInterface $result) {
     $index = $query->getIndex();
-    $field_names = $this->getFieldNames($index);
+    $field_names = $this->getSolrFieldNames($index);
     $fields = $index->getFields();
     $fields += $this->getSpecialFields($index);
     $site_hash = SearchApiSolrUtility::getSiteHash();
@@ -1304,7 +1304,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     $facets = array();
     $index = $query->getIndex();
-    $field_names = $this->getFieldNames($index);
+    $field_names = $this->getSolrFieldNames($index);
     $fields = $index->getFields();
     $fields += $this->getSpecialFields($index);
 
@@ -1686,7 +1686,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $incomp = Unicode::strtolower($incomplete_key);
 
     $index = $query->getIndex();
-    $field_names = $this->getFieldNames($index);
+    $field_names = $this->getSolrFieldNames($index);
     $complete = $query->getOriginalKeys();
 
     // Extract keys.
@@ -1874,15 +1874,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   public function getSolrConnection() {
     $this->connect();
     return $this->solr;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getFields($num_terms = 0) {
-    $this->connect();
-    // @todo getFields() is not defined.
-    return $this->solr->getFields($num_terms);
   }
 
   /**
