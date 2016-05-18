@@ -398,10 +398,12 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
       $fields = $document->getFields();
       foreach ($field_name_map_per_language as $language_id => $map) {
         if (/* @todo CLIR || */ $fields[$single_field_names[SEARCH_API_LANGUAGE_FIELD_NAME]] == $language_id) {
-          foreach ($map as $monolingual_solr_field_name => $multilingual_solr_field_name) {
-            $document->addField($multilingual_solr_field_name, $fields[$monolingual_solr_field_name], $document->getFieldBoost($monolingual_solr_field_name));
-            // @todo removal should be configurable
-            $document->removeField($monolingual_solr_field_name);
+          foreach ($fields as $monolingual_solr_field_name => $value) {
+            if (isset($map[$monolingual_solr_field_name])) {
+              $document->addField($map[$monolingual_solr_field_name], $value, $document->getFieldBoost($monolingual_solr_field_name));
+              // @todo removal should be configurable
+              $document->removeField($monolingual_solr_field_name);
+            }
           }
         }
       }
