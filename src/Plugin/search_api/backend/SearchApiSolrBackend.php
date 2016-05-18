@@ -1426,7 +1426,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *
    * @throws \Drupal\search_api\SearchApiException
    */
-  protected  function getFilterQueries(QueryInterface $query, array $solr_fields, array $index_fields) {
+  protected function getFilterQueries(QueryInterface $query, array $solr_fields, array $index_fields) {
     $condition_group = $query->getConditionGroup();
     $this->addLanguageConditions($condition_group, $query);
     return $this->createFilterQueries($condition_group, $solr_fields, $index_fields);
@@ -1447,10 +1447,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *
    * @throws \Drupal\search_api\SearchApiException
    */
-  protected function createFilterQueries(ConditionGroupInterface $conditions, array $solr_fields, array $index_fields) {
+  protected function createFilterQueries(ConditionGroupInterface $condition_group, array $solr_fields, array $index_fields) {
     $fq = [];
 
-    foreach ($conditions->getConditions() as $condition) {
+    $conditions = $condition_group->getConditions();
+    foreach ($conditions as $condition) {
       if ($condition instanceof ConditionInterface) {
         // Nested condition.
         $field = $condition->getField();
@@ -1464,12 +1465,26 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
       else {
         // Nested condition group.
-        $pre = $condition->getConjunction() == 'OR' ? '' : '+';
-        $fq[] = '(' . $pre . implode(' ' . $pre, $this->createFilterQueries($condition, $solr_fields, $index_fields)) . ')';
+        $nested_fq = $this->createFilterQueries($condition, $solr_fields, $index_fields);
+        if (count($nested_fq) > 1) {
+          array_walk_recursive($nested_fq, function (&$query, $key, $pre) {
+            if (strpos($query, '-') !== 0) {
+              $query = $pre . $query;
+            }
+            elseif (!$pre) {
+              $query = '(' . $query . ')';
+            }
+          }, $condition->getConjunction() == 'OR' ? '' : '+');
+          $fq[] = '(' . implode(' ', $nested_fq) . ')';
+        }
+        else {
+          $fq[] = $nested_fq[0];
+        }
       }
     }
 
-    foreach ($conditions->getTags() as $tag) {
+    // @todo The tagging needs a complete review.
+    foreach ($condition_group->getTags() as $tag) {
       array_walk($fq, function(&$value, $key, $prefix) {
         $value = $prefix . $value;
       }, "{!tag=$tag}");
@@ -1502,7 +1517,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
     switch ($operator) {
       case '<>':
-        return "-($field:$value)";
+        return "-$field:$value";
 
       case '<':
         return "$field:{* TO $value}";
@@ -1523,10 +1538,20 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         return "-$field:[" . $value[0] . ' TO ' . $value[1] . ']';
 
       case 'IN':
-        return "$field:" . implode(" $field:", $value);
+        if (count($value) > 1) {
+          return "($field:" . implode(" $field:", $value) . ')';
+        }
+        else {
+          return "$field:". $value[0];
+        }
 
       case 'NOT IN':
-        return "-$field:" . implode(" -$field:", $value);
+        if (count($value) > 1) {
+          return "(*:* -$field:" . implode(" -$field:", $value) . ')';
+        }
+        else {
+          return "-$field:". $value[0];
+        }
 
       default:
         return "$field:$value";

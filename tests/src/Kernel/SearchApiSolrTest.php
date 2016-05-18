@@ -6,7 +6,9 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
+use Drupal\search_api\Utility;
 use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
+use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
 
 /**
@@ -221,6 +223,181 @@ class SearchApiSolrTest extends BackendTestBase {
   protected function assertIgnored(ResultSetInterface $results, array $ignored = array(), $message = 'No keys were ignored.') {
     // Nothing to do here since the Solr backend doesn't keep a list of ignored
     // fields.
+  }
+
+  /**
+   * Calls protected/private method of a class.
+   *
+   * @param object &$object
+   *   Instantiated object that we will run method on.
+   * @param string
+   *  Method name to call.
+   * @param array $parameters
+   *   Array of parameters to pass into method.
+   *
+   * @return mixed
+   *   Method return.
+   */
+  protected function invokeMethod(&$object, $methodName, array $parameters = []) {
+    $reflection = new \ReflectionClass(get_class($object));
+    $method = $reflection->getMethod($methodName);
+    $method->setAccessible(true);
+
+    return $method->invokeArgs($object, $parameters);
+  }
+
+  /**
+   * Gets the Drupal Fields and their Solr mapping.
+   *
+   * @param \Drupal\search_api_solr\SolrBackendInterface $backend
+   *    The backend the mapping is used for.
+   *
+   * @return array
+   *   [$fields, $mapping]
+   */
+  protected function getFieldsAndMapping(SolrBackendInterface $backend) {
+    /** @var \Drupal\search_api\IndexInterface $index */
+    $index = Index::load($this->indexId);
+    $fields = $index->getFields();
+    $fields += $this->invokeMethod($backend, 'getSpecialFields', [$index]);
+    $field_info = array(
+      'type' => 'string',
+      'original type' => 'string',
+    );
+    $fields['x'] = Utility::createField($index, 'x', $field_info);
+    $fields['y'] = Utility::createField($index, 'y', $field_info);
+    $fields['z'] = Utility::createField($index, 'z', $field_info);
+
+    $mapping = $backend->getSolrFieldNames($index) + [
+      'x' => 'solr_x',
+      'y' => 'solr_y',
+      'z' => 'solr_z',
+    ];
+
+    return [$fields, $mapping];
+  }
+
+  /**
+   * Tests the conversion of Search API queries into Solr queries.
+   */
+  public function testQueryConditions() {
+    /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
+    $backend = Server::load($this->serverId)->getBackend();
+    list($fields, $mapping) = $this->getFieldsAndMapping($backend);
+
+    $query = $this->buildSearch();
+    $query->addCondition('x', 5, '=');
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
+    $this->assertEquals('solr_x:"5"', $fq[0]);
+    $this->assertFalse(isset($fq[1]));
+
+    $query = $this->buildSearch();
+    $query->addCondition('x', 5, '<>');
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
+    $this->assertEquals('-solr_x:"5"', $fq[0]);
+    $this->assertFalse(isset($fq[1]));
+
+    $query = $this->buildSearch();
+    $query->addCondition('x', 3, '<>');
+    $query->addCondition('x', 5, '<>');
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
+    $this->assertEquals('-solr_x:"3"', $fq[0]);
+    $this->assertEquals('-solr_x:"5"', $fq[1]);
+
+    $query = $this->buildSearch();
+    $condition_group = $query->createConditionGroup();
+    $condition_group->addCondition('x', 3, '<>');
+    $condition_group->addCondition('x', 5, '<>');
+    $query->addConditionGroup($condition_group);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
+    $this->assertEquals('(-solr_x:"3" -solr_x:"5")', $fq[0]);
+    $this->assertFalse(isset($fq[1]));
+
+    $query = $this->buildSearch();
+    $condition_group = $query->createConditionGroup();
+    $condition_group->addCondition('x', 5, '<>');
+    $condition_group->addCondition('y', 3);
+    $condition_group->addCondition('z', 7);
+    $query->addConditionGroup($condition_group);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
+    $this->assertEquals('(-solr_x:"5" +solr_y:"3" +solr_z:"7")', $fq[0]);
+    $this->assertFalse(isset($fq[1]));
+
+    $query = $this->buildSearch();
+    $condition_group = $query->createConditionGroup();
+    $inner_condition_group = $query->createConditionGroup('OR');
+    $condition_group->addCondition('x', 5, '<>');
+    $inner_condition_group->addCondition('y', 3);
+    $inner_condition_group->addCondition('z', 7);
+    $condition_group->addConditionGroup($inner_condition_group);
+    $query->addConditionGroup($condition_group);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
+    $this->assertEquals('(-solr_x:"5" +(solr_y:"3" solr_z:"7"))', $fq[0]);
+    $this->assertFalse(isset($fq[1]));
+
+    $query = $this->buildSearch();
+    $condition_group = $query->createConditionGroup();
+    $inner_condition_group_or = $query->createConditionGroup('OR');
+    $inner_condition_group_or->addCondition('x', 3);
+    $inner_condition_group_or->addCondition('y', 7, '<>');
+    $inner_condition_group_and = $query->createConditionGroup();
+    $inner_condition_group_and->addCondition('x', 1);
+    $inner_condition_group_and->addCondition('y', 2, '<>');
+    $inner_condition_group_and->addCondition('z', 5, '<');
+    $condition_group->addConditionGroup($inner_condition_group_or);
+    $condition_group->addConditionGroup($inner_condition_group_and);
+    $query->addConditionGroup($condition_group);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
+    $this->assertEquals('(+(solr_x:"3" (-solr_y:"7")) +(+solr_x:"1" -solr_y:"2" +solr_z:{* TO "5"}))', $fq[0]);
+    $this->assertFalse(isset($fq[1]));
+
+    $query = $this->buildSearch();
+    $condition_group = $query->createConditionGroup();
+    $condition_group->addCondition('x', 5);
+    $condition_group->addCondition('y', [1,2 ,3], 'NOT IN');
+    $query->addConditionGroup($condition_group);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
+    $this->assertEquals('(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))', $fq[0]);
+    $this->assertFalse(isset($fq[1]));
+
+    $query = $this->buildSearch();
+    $condition_group = $query->createConditionGroup();
+    $condition_group->addCondition('x', 5);
+    $inner_condition_group = $query->createConditionGroup();
+    $inner_condition_group->addCondition('y', [1,2 ,3], 'NOT IN');
+    $condition_group->addConditionGroup($inner_condition_group);
+    $query->addConditionGroup($condition_group);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
+    $this->assertEquals('(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))', $fq[0]);
+    $this->assertFalse(isset($fq[1]));
+  }
+
+  /**
+   * Tests the conversion of language aware queries into Solr queries.
+   */
+  public function testQueryConditionsAndLanguageFilter() {
+    /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
+    $backend = Server::load($this->serverId)->getBackend();
+    list($fields, $mapping) = $this->getFieldsAndMapping($backend);
+
+    $query = $this->buildSearch();
+    $query->setLanguages(['en']);
+    $query->addCondition('x', 5, '=');
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
+    $this->assertEquals('solr_x:"5"', $fq[0]);
+    $this->assertEquals('sm_search_api_language:"en"', $fq[1]);
+
+    $query = $this->buildSearch();
+    $query->setLanguages(['en', 'de']);
+    $condition_group = $query->createConditionGroup();
+    $condition_group->addCondition('x', 5);
+    $inner_condition_group = $query->createConditionGroup();
+    $inner_condition_group->addCondition('y', [1, 2, 3], 'NOT IN');
+    $condition_group->addConditionGroup($inner_condition_group);
+    $query->addConditionGroup($condition_group);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
+    $this->assertEquals('(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))', $fq[0]);
+    $this->assertEquals('(sm_search_api_language:"en" sm_search_api_language:"de")', $fq[1]);
   }
 
 }
