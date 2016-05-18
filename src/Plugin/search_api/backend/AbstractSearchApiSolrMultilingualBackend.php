@@ -236,7 +236,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
   protected  function getFilterQueries(QueryInterface $query, array $solr_fields, array $index_fields) {
     $condition_group = $query->getConditionGroup();
     $conditions = $condition_group->getConditions();
-    if (empty($conditions)) {
+    if (empty($conditions) || empty($query->getLanguages())) {
       return parent::getFilterQueries($query, $solr_fields, $index_fields);
     }
 
@@ -245,7 +245,13 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
       $language_specific_condition_group = $query->createConditionGroup();
       $language_specific_condition_group->addCondition('search_api_language', $langcode);
       $language_specific_condition_group->addConditionGroup($condition_group);
-      $fq[] = '(' . implode(' +', $this->createFilterQueries($language_specific_condition_group, $this->getLanguageSpecificSolrFieldNames($langcode, $solr_fields, reset($index_fields)->getIndex()), $index_fields)). ')';
+      $nested_fq = $this->createFilterQueries($language_specific_condition_group, $this->getLanguageSpecificSolrFieldNames($langcode, $solr_fields, reset($index_fields)->getIndex()), $index_fields);
+      array_walk_recursive($nested_fq, function (&$query, $key) {
+        if (strpos($query, '-') !== 0) {
+          $query = '+' . $query;
+        }
+      });
+      $fq[] = '(' . implode(' ', $nested_fq) . ')';
     }
     return [implode(' ', $fq)];
   }

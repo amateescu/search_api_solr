@@ -7,6 +7,9 @@
 
 namespace Drupal\Tests\search_api_solr_multilingual\Kernel;
 
+use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Entity\Server;
+use Drupal\search_api\Utility;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
 use Drupal\Tests\search_api_solr\Kernel\SearchApiSolrTest;
 
@@ -54,4 +57,45 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
     $this->detectSolrAvailability();
   }
 
+  /**
+   * Tests the conversion of language aware queries into Solr queries.
+   */
+  public function testQueryConditionsAndLanguageFilter() {
+    /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
+    $backend = Server::load($this->serverId)->getBackend();
+    list($fields, $mapping) = $this->getFieldsAndMapping($backend);
+
+    $query = $this->buildSearch();
+    $query->setLanguages(['en']);
+    $query->addCondition('x', 5, '=');
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
+    $this->assertEquals('(+sm_search_api_language:"en" +solr_x:"5")', $fq[0]);
+    $this->assertFalse(isset($fq[1]));
+
+    $query = $this->buildSearch();
+    $query->setLanguages(['en', 'de']);
+    $condition_group = $query->createConditionGroup();
+    $condition_group->addCondition('x', 5);
+    $inner_condition_group = $query->createConditionGroup();
+    $inner_condition_group->addCondition('y', [1, 2, 3], 'NOT IN');
+    $condition_group->addConditionGroup($inner_condition_group);
+    $query->addConditionGroup($condition_group);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
+    $this->assertEquals('(+sm_search_api_language:"en" +(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))) (+sm_search_api_language:"de" +(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3")))', $fq[0]);
+    $this->assertFalse(isset($fq[1]));
+  }
+
+  /**
+   * Tests whether facets work correctly.
+   */
+  protected function checkFacets() {
+    // @todo facets are currently broken.
+  }
+
+  /**
+   * Regression tests for #2469547.
+   */
+  protected function regressionTest2469547() {
+    // @todo facets are currently broken.
+  }
 }
