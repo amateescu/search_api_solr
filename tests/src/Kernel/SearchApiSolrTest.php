@@ -354,7 +354,7 @@ class SearchApiSolrTest extends BackendTestBase {
     $query = $this->buildSearch();
     $condition_group = $query->createConditionGroup();
     $condition_group->addCondition('x', 5);
-    $condition_group->addCondition('y', [1,2 ,3], 'NOT IN');
+    $condition_group->addCondition('y', [1, 2 ,3], 'NOT IN');
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
     $this->assertEquals('(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))', $fq[0]);
@@ -364,7 +364,7 @@ class SearchApiSolrTest extends BackendTestBase {
     $condition_group = $query->createConditionGroup();
     $condition_group->addCondition('x', 5);
     $inner_condition_group = $query->createConditionGroup();
-    $inner_condition_group->addCondition('y', [1,2 ,3], 'NOT IN');
+    $inner_condition_group->addCondition('y', [1, 2 ,3], 'NOT IN');
     $condition_group->addConditionGroup($inner_condition_group);
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
