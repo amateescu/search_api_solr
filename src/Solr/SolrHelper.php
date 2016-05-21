@@ -43,13 +43,6 @@ class SolrHelper {
   protected $serverInfo;
 
   /**
-   * Stores Solr core system information.
-   *
-   * @var array
-   */
-  protected $systemInfo;
-
-  /**
    * {@inheritdoc}
    */
   public function __construct(array $configuration) {
@@ -299,51 +292,31 @@ class SolrHelper {
   /**
    * Gets information about the Solr server.
    *
+   * @param boolean $reset
+   *   If TRUE the server will be asked regardless if a previous call is cached.
+   *
    * @return object
    *   A response object with server information.
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public function getServerInfo() {
-    // @todo Add back persistent cache?
-    if (!isset($this->serverInfo)) {
-      // @todo Finish https://github.com/solariumphp/solarium/pull/155 and stop
-      // abusing the ping query for this.
-      $query = $this->solr->createPing(array('handler' => 'admin/info/system'));
-      try {
-        $this->serverInfo = $this->solr->execute($query, 'server')->getData();
-      }
-      catch (HttpException $e) {
-        throw new SearchApiSolrException(t('Solr server @server not found.', ['@server' => $this->solr->getEndpoint('server')->getBaseUri()]), $e->getCode(), $e);
-      }
-    }
-
-    return $this->serverInfo;
+  public function getServerInfo($reset = FALSE) {
+    return $this->getDataFromHandler('server', 'admin/info/system', $reset);
   }
 
   /**
    * Gets information about the Solr Core.
+   *
+   * @param boolean $reset
+   *   If TRUE the server will be asked regardless if a previous call is cached.
    *
    * @return object
    *   A response object with system information.
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public function getCoreInfo() {
-    // @todo Add back persistent cache?
-    if (!isset($this->systemInfo)) {
-      // @todo Finish https://github.com/solariumphp/solarium/pull/155 and stop
-      // abusing the ping query for this.
-      $query = $this->solr->createPing(array('handler' => 'admin/system'));
-      try {
-        $this->systemInfo = $this->solr->execute($query)->getData();
-      }
-      catch (HttpException $e) {
-        throw new SearchApiSolrException(t('Solr server core @core not found.', ['@core' => $this->solr->getEndpoint()->getBaseUri()]), $e->getCode(), $e);
-      }
-    }
-
-    return $this->systemInfo;
+  public function getCoreInfo($reset = FALSE) {
+    return $this->getDataFromHandler('core', 'admin/system', $reset);
   }
 
   /**
@@ -355,15 +328,48 @@ class SolrHelper {
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function getLuke() {
-    // @todo Write a patch for Solarium to have a separate Luke query and stop
-    // abusing the ping query for this.
-    $query = $this->solr->createPing(array('handler' => 'admin/luke'));
-    try {
-      return $this->solr->execute($query)->getData();
+    return $this->getDataFromHandler('core', 'admin/luke', TRUE);
+  }
+
+  /**
+   * Gets data from a Solr endpoint using a given handler.
+   *
+   * @param boolean $reset
+   *   If TRUE the server will be asked regardless if a previous call is cached.
+   *
+   * @return object
+   *   A response object with system information.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   */
+  protected function getDataFromHandler($endpoint, $handler, $reset = FALSE) {
+    static $previous_calls = [];
+
+    $endpoint_uri = $this->solr->getEndpoint($endpoint)->getBaseUri();
+    $state_key = 'search_api_solr.endpoint.data';
+    $state = \Drupal::state();
+    $endpoint_data = $state->get($state_key);
+
+    if (!isset($previous_calls[$endpoint_uri][$handler]) || $reset) {
+      // Don't retry multiple times in case of an exception.
+      $previous_calls[$endpoint] = TRUE;
+
+      if (!is_array($endpoint_data) || !isset($endpoint_data[$endpoint_uri][$handler]) || $reset) {
+        // @todo Finish https://github.com/solariumphp/solarium/pull/155 and stop
+        // abusing the ping query for this.
+        $query = $this->solr->createPing(array('handler' => $handler));
+        try {
+          $endpoint_data[$endpoint_uri][$handler] = $this->solr->execute($query, $endpoint)->getData();
+        }
+        catch (HttpException $e) {
+          throw new SearchApiSolrException(t('Solr endpoint @endpoint not found.', ['@endpoint' => $endpoint_uri]), $e->getCode(), $e);
+        }
+
+        $state->set($state_key, $endpoint_data);
+      }
     }
-    catch (HttpException $e) {
-      throw new SearchApiSolrException(t('Solr server core @core not found.', ['@core' => $this->solr->getEndpoint()->getBaseUri()]), $e->getCode(), $e);
-    }
+
+    return $endpoint_data[$endpoint_uri][$handler];
   }
 
   /**
@@ -452,7 +458,7 @@ class SolrHelper {
         $summary['@deletes_by_id'] = (int) $update_handler_stats['deletesById'];
         $summary['@deletes_by_query'] = (int) $update_handler_stats['deletesByQuery'];
         $summary['@deletes_total'] = $summary['@deletes_by_id'] + $summary['@deletes_by_query'];
-        $summary['@schema_version'] = $this->getCoreInfo()['core']['schema'];
+        $summary['@schema_version'] = $this->getCoreInfo(TRUE)['core']['schema'];
         $summary['@core_name'] = $stats['solr-mbeans']['CORE']['core']['stats']['coreName'];
         $summary['@index_size'] = $stats['solr-mbeans']['QUERYHANDLER']['/replication']['stats']['indexSize'];
       }
