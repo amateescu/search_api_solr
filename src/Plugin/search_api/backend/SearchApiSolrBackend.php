@@ -952,6 +952,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $solarium_query->setFields($returned_fields);
     }
 
+    $this->applySearchWorkarounds($solarium_query, $query);
+
     try {
       // Allow modules to alter the solarium query.
       $this->moduleHandler->alter('search_api_solr_query', $solarium_query, $query);
@@ -1009,6 +1011,37 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
     catch (\Exception $e) {
       throw new SearchApiSolrException($this->t('An error occurred while trying to search with Solr: @msg.', array('@msg' => $e->getMessage())), $e->getCode(), $e);
+    }
+  }
+
+  /**
+   * Apply workarounds for special Solr versions before searching.
+   *
+   * @param \Solarium\QueryType\Select\Query\Query $solarium_query
+   *   The Solarium select query object.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The \Drupal\search_api\Query\Query object representing the executed
+   *   search query.
+   */
+  protected function applySearchWorkarounds(Query $solarium_query, QueryInterface $query) {
+    // Do not modify 'Server index status' queries.
+    // @see https://www.drupal.org/node/2668852
+    if ($query->hasTag('server_index_status')) {
+      return;
+    }
+
+    $schema_version = $this->solrHelper->getSchemaVersion();
+    $solr_version = $this->solrHelper->getSolrVersion();
+
+    // Schema versions before 4.4 set the default query operator to 'AND'. But
+    // incompatibilities since Solr 5.5.0 required a new query builder that
+    // bases on 'OR'.
+    // @see https://www.drupal.org/node/2724117
+    if (version_compare($schema_version, '4.4', '<')) {
+      $params = $solarium_query->getParams();
+      if (!isset($params['q.op'])) {
+        $solarium_query->addParam('q.op', 'OR');
+      }
     }
   }
 

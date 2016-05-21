@@ -36,13 +36,6 @@ class SolrHelper {
   protected $configuration;
 
   /**
-   * Stores Solr server information.
-   *
-   * @var array
-   */
-  protected $serverInfo;
-
-  /**
    * {@inheritdoc}
    */
   public function __construct(array $configuration) {
@@ -332,6 +325,33 @@ class SolrHelper {
   }
 
   /**
+   * Gets the full schema version string the core is using.
+   *
+   * @param boolean $reset
+   *   If TRUE the server will be asked regardless if a previous call is cached.
+   *
+   * @return string
+   *   The full schema version string.
+   */
+  public function getSchemaVersionString($reset = FALSE) {
+    return $this->getCoreInfo($reset)['core']['schema'];
+  }
+
+  /**
+   * Gets the schema version number.
+   *
+   * @param boolean $reset
+   *   If TRUE the server will be asked regardless if a previous call is cached.
+   *
+   * @return string
+   *   The full schema version string.
+   */
+  public function getSchemaVersion($reset = FALSE) {
+    $parts = explode('-', $this->getSchemaVersionString($reset));
+    return $parts[1];
+  }
+
+  /**
    * Gets data from a Solr endpoint using a given handler.
    *
    * @param boolean $reset
@@ -458,7 +478,7 @@ class SolrHelper {
         $summary['@deletes_by_id'] = (int) $update_handler_stats['deletesById'];
         $summary['@deletes_by_query'] = (int) $update_handler_stats['deletesByQuery'];
         $summary['@deletes_total'] = $summary['@deletes_by_id'] + $summary['@deletes_by_query'];
-        $summary['@schema_version'] = $this->getCoreInfo(TRUE)['core']['schema'];
+        $summary['@schema_version'] = $this->getSchemaVersionString(TRUE);
         $summary['@core_name'] = $stats['solr-mbeans']['CORE']['core']['stats']['coreName'];
         $summary['@index_size'] = $stats['solr-mbeans']['QUERYHANDLER']['/replication']['stats']['indexSize'];
       }
