@@ -3,6 +3,8 @@
 namespace Drupal\search_api_solr\Tests;
 
 use Drupal\Component\Utility\Html;
+use Drupal\facets\Tests\BlockTestTrait;
+use Drupal\facets\Tests\ExampleContentTrait;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Tests\WebTestBase;
@@ -13,6 +15,9 @@ use Drupal\search_api\Tests\WebTestBase;
  * @group search_api_solr
  */
 class IntegrationTest extends WebTestBase {
+
+  use BlockTestTrait;
+  use ExampleContentTrait;
 
   /**
    * The ID of the search server used for this test.
@@ -42,7 +47,11 @@ class IntegrationTest extends WebTestBase {
     'node',
     'search_api',
     'search_api_solr',
+    'search_api_solr_test',
     'field_ui',
+    'block',
+    'facets',
+    'views',
   );
 
   /**
@@ -53,17 +62,17 @@ class IntegrationTest extends WebTestBase {
     $this->indexStorage = \Drupal::entityTypeManager()->getStorage('search_api_index');
 
     $this->drupalLogin($this->adminUser);
+
+    $filepath = drupal_get_path('module', 'search_api_solr') . '/vendor/autoload.php';
+    if (!class_exists('Solarium\\Client') && ($filepath != DRUPAL_ROOT . '/core/vendor/autoload.php')) {
+      require $filepath;
+    }
   }
 
   /**
    * Tests various operations via the Search API's admin UI.
    */
   public function testFramework() {
-    $filepath = drupal_get_path('module', 'search_api_solr') . '/vendor/autoload.php';
-    if (!class_exists('Solarium\\Client') && ($filepath != DRUPAL_ROOT . '/core/vendor/autoload.php')) {
-      require $filepath;
-    }
-
     // Login as an admin user for the rest of the tests.
     $this->drupalLogin($this->adminUser);
 
@@ -71,6 +80,48 @@ class IntegrationTest extends WebTestBase {
     $this->createIndex();
     $this->checkContentEntityTracking();
     $this->changeIndexServer();
+  }
+
+  /**
+   * Tests basic facets integration.
+   */
+  public function testFacets() {
+    // Create the users used for the tests.
+    $admin_user = $this->drupalCreateUser([
+      'administer search_api',
+      'administer facets',
+      'access administration pages',
+      'administer blocks',
+    ]);
+    $this->drupalLogin($admin_user);
+    $this->indexId = 'solr_search_index';
+
+    // Check that the test index is on the admin overview
+    $this->drupalGet('admin/config/search/search-api');
+    $this->assertText('Test index');
+
+    $this->setUpExampleStructure();
+    $this->insertExampleContent();
+
+    /** @var \Drupal\search_api\IndexInterface $index */
+    $index = $this->indexStorage->load($this->indexId);
+    $indexed_items = $index->indexItems();
+    $this->assertEqual($indexed_items, 5, 'Five items are indexed.');
+
+    // Create a facet, enable 'show numbers'.
+    $this->createFacet('Owl', 'owl');
+    $edit = ['widget' => 'links', 'widget_configs[show_numbers]' => '1'];
+    $this->drupalPostForm('admin/config/search/facets/owl/edit', $edit, $this->t('Save'));
+
+    // Verify that the facet results are correct.
+    $this->drupalGet('search-api-test-fulltext');
+    $this->assertResponse(200);
+    $this->assertText('item (3)');
+    $this->assertText('article (2)');
+    $this->assertText('Displaying 5 search results');
+    $this->clickLinkPartialName('item');
+    $this->assertResponse(200);
+    $this->assertText('Displaying 3 search results');
   }
 
   /**

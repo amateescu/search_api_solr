@@ -412,7 +412,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // First, check the features we always support.
     $supported = array(
       //'search_api_autocomplete',
-      //'search_api_facets',
+      'search_api_facets',
       //'search_api_facets_operator_or',
       //'search_api_grouping',
       'search_api_mlt',
