@@ -111,15 +111,27 @@ class SolrHelper {
    *
    * Will also use highlighted fields to replace retrieved field data, if the
    * corresponding option is set.
+   *
+   * @param array $data
+   *   The data extracted from a Solr result.
+   * @param string $solr_id
+   *   The ID of the result item.
+   * @param \Drupal\search_api\Item\ItemInterface $fields
+   *   The fields of the result item.
+   * @param array $field_mapping
+   *   Mapping from search_api field names to Solr field names.
+   *
+   * @return bool|string
+   *   FALSE if no excerpt is returned from Solr, the excerpt string otherwise.
    */
-  public function getExcerpt($response, $solr_id, array $fields, array $field_mapping) {
-    if (!isset($response['highlighting'][$solr_id])) {
+  public function getExcerpt($data, $solr_id, array $fields, array $field_mapping) {
+    if (!isset($data['highlighting'][$solr_id])) {
       return FALSE;
     }
     $output = '';
-
-    if (!empty($this->configuration['excerpt']) && !empty($response['highlighting'][$solr_id]->spell)) {
-      foreach ($response['highlighting'][$solr_id]->spell as $snippet) {
+    // @todo using the spell field is not the optimal solution.
+    if (!empty($this->configuration['excerpt']) && !empty($data['highlighting'][$solr_id]['spell'])) {
+      foreach ($data['highlighting'][$solr_id]['spell'] as $snippet) {
         $snippet = strip_tags($snippet);
         $snippet = preg_replace('/^.*>|<.*$/', '', $snippet);
         $snippet = SearchApiSolrUtility::formatHighlighting($snippet);
@@ -132,11 +144,16 @@ class SolrHelper {
     }
     if (!empty($this->configuration['highlight_data'])) {
       foreach ($field_mapping as $search_api_property => $solr_property) {
-        if (substr($solr_property, 0, 3) == 'tm_' && !empty($response['highlighting'][$solr_id][$solr_property])) {
-          // Contrary to above, we here want to preserve HTML, so we just
-          // replace the [HIGHLIGHT] tags with the appropriate format.
-          $snippet = SearchApiSolrUtility::formatHighlighting($response['highlighting'][$solr_id][$solr_property]);
-          $fields[$search_api_property] = $snippet;
+        if (strpos($solr_property, 'tm_') === 0 && !empty($data['highlighting'][$solr_id][$solr_property])) {
+          $snippets = [];
+          foreach ($data['highlighting'][$solr_id][$solr_property] as $value) {
+            // Contrary to above, we here want to preserve HTML, so we just
+            // replace the [HIGHLIGHT] tags with the appropriate format.
+            $snippets[] = SearchApiSolrUtility::formatHighlighting($value);
+          }
+          if ($snippets) {
+            $fields[$search_api_property]->setValues($snippets);
+          }
         }
       }
     }
@@ -499,36 +516,55 @@ class SolrHelper {
    *   The Solarium select query object.
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The query object.
-   * @param bool $highlight
-   *   TRUE when highlighting is enabled.
-   * @param bool $excerpt
-   *   TRUE when a query should return an excerpt.
    */
-  public function setHighlighting(Query $solarium_query, QueryInterface $query, $highlight = TRUE, $excerpt = TRUE) {
-    if ($excerpt || $highlight) {
+  public function setHighlighting(Query $solarium_query, QueryInterface $query) {
+    $excerpt = !empty($this->configuration['excerpt']);
+    $highlight = !empty($this->configuration['highlight_data']);
+
+    if ($highlight || $excerpt) {
+      $highlighter = \Drupal::config('search_api_solr.standard_highlighter');
+
       $hl = $solarium_query->getHighlighting();
-      $hl->setFields('spell');
       $hl->setSimplePrefix('[HIGHLIGHT]');
       $hl->setSimplePostfix('[/HIGHLIGHT]');
-      $hl->setSnippets(3);
-      $hl->setFragSize(70);
-      $hl->setMergeContiguous(TRUE);
-    }
-
-    if ($highlight) {
-      $hl = $solarium_query->getHighlighting();
-      $hl->setFields('tm_*');
-      $hl->setSnippets(1);
-      $hl->setFragSize(0);
-      if (!empty($this->configuration['excerpt'])) {
-        // If we also generate a "normal" excerpt, set the settings for the
-        // "spell" field (which we use to generate the excerpt) back to the
-        // above values.
-        $hl->getField('spell')->setSnippets(3);
-        $hl->getField('spell')->setFragSize(70);
+      if ($highlighter->get('maxAnalyzedChars') != $highlighter->getOriginal('maxAnalyzedChars')) {
+        $hl->setMaxAnalyzedChars($highlighter->get('maxAnalyzedChars'));
+      }
+      if ($highlighter->get('fragmenter') != $highlighter->getOriginal('fragmenter')) {
+        $hl->setFragmenter($highlighter->get('fragmenter'));
+      }
+      if ($highlighter->get('usePhraseHighlighter') != $highlighter->getOriginal('usePhraseHighlighter')) {
+        $hl->setUsePhraseHighlighter($highlighter->get('usePhraseHighlighter'));
+      }
+      if ($highlighter->get('highlightMultiTerm') != $highlighter->getOriginal('highlightMultiTerm')) {
+        $hl->setHighlightMultiTerm($highlighter->get('highlightMultiTerm'));
+      }
+      if ($highlighter->get('preserveMulti') != $highlighter->getOriginal('preserveMulti')) {
+        $hl->setPreserveMulti($highlighter->get('preserveMulti'));
+      }
+      if ($highlighter->get('regex.slop') != $highlighter->getOriginal('regex.slop')) {
+        $hl->setRegexSlop($highlighter->get('regex.slop'));
+      }
+      if ($highlighter->get('regex.pattern') != $highlighter->getOriginal('regex.pattern')) {
+        $hl->setRegexPattern($highlighter->get('regex.pattern'));
+      }
+      if ($highlighter->get('regex.maxAnalyzedChars') != $highlighter->getOriginal('regex.maxAnalyzedChars')) {
+        $hl->setRegexMaxAnalyzedChars($highlighter->get('regex.maxAnalyzedChars'));
+      }
+      if ($excerpt) {
+        $excerpt_field = $hl->getField('spell');
+        $excerpt_field->setSnippets($highlighter->get('excerpt.snippets'));
+        $excerpt_field->setFragSize($highlighter->get('excerpt.fragsize'));
+        $excerpt_field->setMergeContiguous($highlighter->get('excerpt.mergeContiguous'));
+      }
+      if ($highlight) {
         // It regrettably doesn't seem to be possible to set hl.fl to several
-        // values, if one contains wild cards (i.e., "t_*,spell" wouldn't work).
-        $hl->setFields('*');
+        // values, if one contains wild cards, i.e., "tm_*,spell" wouldn't work.
+        $hl->setFields([$excerpt ? '*' : 'tm_*']);
+        $hl->setSnippets(1);
+        $hl->setFragSize(0);
+        $hl->setMergeContiguous($highlighter->get('highlight.mergeContiguous'));
+        $hl->setRequireFieldMatch($highlighter->get('highlight.requireFieldMatch'));
       }
     }
   }

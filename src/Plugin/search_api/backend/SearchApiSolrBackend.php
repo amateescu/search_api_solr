@@ -847,7 +847,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Extract keys.
     $keys = $query->getKeys();
     if (is_array($keys)) {
-      $keys = $this->getSolrHelper()->flattenKeys($keys);
+      $keys = $this->solrHelper->flattenKeys($keys);
     }
     // Set them.
     $solarium_query->setQuery($keys);
@@ -871,7 +871,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Handle More Like This requests.
     $mlt_options = $query->getOption('search_api_mlt');
     if ($mlt_options) {
-      $this->getSolrHelper()->setMoreLikeThis($solarium_query, $query, $mlt_options, $index_fields, $field_names);
+      $this->solrHelper->setMoreLikeThis($solarium_query, $query, $mlt_options, $index_fields, $field_names);
 
       // Override the search key by setting it to the solr document id
       // we want to compare it with.
@@ -905,9 +905,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $this->setFacets($facets, $field_names, $solarium_query);
 
     // Set highlighting.
-    $excerpt = !empty($this->configuration['excerpt']) ? TRUE : FALSE;
-    $highlight_data = !empty($this->configuration['highlight_data']) ? TRUE : FALSE;
-    $this->getSolrHelper()->setHighlighting($solarium_query, $query, $excerpt, $highlight_data);
+    $this->solrHelper->setHighlighting($solarium_query, $query);
 
     // Handle spatial filters.
     $spatial_options = $query->getOption('search_api_location');
@@ -1953,6 +1951,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     catch (HttpException $e) {
       throw new SearchApiSolrException($this->t('Solr server core @core not found.', ['@core' => $this->solr->getEndpoint()->getBaseUri()]), $e->getCode(), $e);
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setConfiguration(array $configuration) {
+    parent::setConfiguration($configuration);
+    // Update the configuration of the solrHelper as well by replacing it by a
+    // new instance.
+    $solr_helper = new SolrHelper($this->configuration);
+    $this->setSolrHelper($solr_helper);
   }
 
   /**
