@@ -228,6 +228,13 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
       }
       $edismax->setQueryFields($query_fields);
     }
+
+    if (empty($this->configuration['retrieve_data'])) {
+      // We need the language to be part of the result to modify the result
+      // accordingly in extractResults().
+      $solarium_query->addField($single_field_names[SEARCH_API_LANGUAGE_FIELD_NAME]);
+    }
+
   }
 
   /**
@@ -243,7 +250,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     $fq = [];
     foreach ($query->getLanguages() as $langcode) {
       $language_specific_condition_group = $query->createConditionGroup();
-      $language_specific_condition_group->addCondition('search_api_language', $langcode);
+      $language_specific_condition_group->addCondition(SEARCH_API_LANGUAGE_FIELD_NAME, $langcode);
       $language_specific_condition_group->addConditionGroup($condition_group);
       $nested_fq = $this->createFilterQueries($language_specific_condition_group, $this->getLanguageSpecificSolrFieldNames($langcode, $solr_fields, reset($index_fields)->getIndex()), $index_fields);
       array_walk_recursive($nested_fq, function (&$query, $key) {
@@ -281,26 +288,40 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
    * @inheritdoc
    */
   protected function extractResults(QueryInterface $query, ResultInterface $result) {
-    if ($this->configuration['retrieve_data']) {
-      $index = $query->getIndex();
-      $single_field_names = $this->getSolrFieldNames($index, TRUE);
-      $data = $result->getData();
-      foreach ($data['response']['docs'] as &$doc) {
-        $language_id = $doc[$single_field_names[SEARCH_API_LANGUAGE_FIELD_NAME]];
-        foreach (array_keys($doc) as $language_specific_field_name) {
-          $field_name = Utility::getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($language_specific_field_name);
-          if ($field_name != $language_specific_field_name) {
-            if (Utility::getLanguageIdFromLanguageSpecificSolrDynamicFieldName($language_specific_field_name) == $language_id) {
-              $doc[$field_name] = $doc[$language_specific_field_name];
-            }
+    $index = $query->getIndex();
+    $single_field_names = $this->getSolrFieldNames($index, TRUE);
+    $data = $result->getData();
+    $doc_languages = [];
+
+    foreach ($data['response']['docs'] as &$doc) {
+      $language_id = $doc_languages[$this->createId($index->id(), $doc['item_id'])] = $doc[$single_field_names[SEARCH_API_LANGUAGE_FIELD_NAME]];
+      foreach (array_keys($doc) as $language_specific_field_name) {
+        $field_name = Utility::getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($language_specific_field_name);
+        if ($field_name != $language_specific_field_name) {
+          if (Utility::getLanguageIdFromLanguageSpecificSolrDynamicFieldName($language_specific_field_name) == $language_id) {
+            $doc[$field_name] = $doc[$language_specific_field_name];
             unset($doc[$language_specific_field_name]);
           }
         }
       }
-
-      $new_response = new Response(json_encode($data), $result->getResponse()->getHeaders());
-      $result = new Result(NULL, $result->getQuery(), $new_response);
     }
+
+    if (isset($data['highlighting'])) {
+      foreach ($data['highlighting'] as $solr_id => &$item) {
+        foreach (array_keys($item) as $language_specific_field_name) {
+          $field_name = Utility::getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($language_specific_field_name);
+          if ($field_name != $language_specific_field_name) {
+            if (Utility::getLanguageIdFromLanguageSpecificSolrDynamicFieldName($language_specific_field_name) == $doc_languages[$solr_id]) {
+              $item[$field_name] = $item[$language_specific_field_name];
+              $item[$language_specific_field_name];
+            }
+          }
+        }
+      }
+    }
+
+    $new_response = new Response(json_encode($data), $result->getResponse()->getHeaders());
+    $result = new Result(NULL, $result->getQuery(), $new_response);
 
     return parent::extractResults($query, $result);
   }
