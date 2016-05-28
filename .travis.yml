@@ -63,6 +63,7 @@ before_script:
   - drush -v site-install standard --db-url=mysql://root:@localhost/drupal --yes
   - drush en --yes simpletest
   - git clone --branch 8.x-1.x http://git.drupal.org/project/search_api.git modules/search_api
+  - git clone --branch 8.x-1.x http://git.drupal.org/project/facets.git modules/facets
   - git clone --branch 8.x-1.x http://git.drupal.org/project/search_api_solr.git modules/search_api_solr
   - mkdir $TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr_multilingual
   - cp -R $TRAVIS_BUILD_DIR/* $TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr_multilingual/
