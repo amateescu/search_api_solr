@@ -10,6 +10,7 @@ use Drupal\search_api\Utility;
 use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
+use Drupal\user\Entity\User;
 
 /**
  * Tests index and search capabilities using the Solr search backend.
@@ -26,6 +27,7 @@ class SearchApiSolrTest extends BackendTestBase {
   public static $modules = array(
     'search_api_solr',
     'search_api_solr_test',
+    'user',
   );
 
   /**
@@ -58,8 +60,8 @@ class SearchApiSolrTest extends BackendTestBase {
   public function setUp() {
     parent::setUp();
 
-    $this->installConfig(array('search_api_solr'));
-    $this->installConfig(array('search_api_solr_test'));
+    $this->installEntitySchema('user');
+    $this->installConfig(['search_api_solr', 'search_api_solr_test']);
 
     $this->detectSolrAvailability();
   }
@@ -141,9 +143,9 @@ class SearchApiSolrTest extends BackendTestBase {
       /** @var \Drupal\search_api\IndexInterface $index */
       $index = Index::load($this->indexId);
       $index->clear();
-      // Deleting items take at least 1 second for Solr to parse it so that drupal
-      // doesn't get timeouts while waiting for Solr. Lets give it 2 seconds to
-      // make sure we are in bounds.
+      // Deleting items take at least 1 second for Solr to parse it so that
+      // drupal doesn't get timeouts while waiting for Solr. Lets give it 2
+      // seconds to make sure we are in bounds.
       sleep(2);
     }
   }
@@ -242,7 +244,7 @@ class SearchApiSolrTest extends BackendTestBase {
   protected function invokeMethod(&$object, $methodName, array $parameters = []) {
     $reflection = new \ReflectionClass(get_class($object));
     $method = $reflection->getMethod($methodName);
-    $method->setAccessible(true);
+    $method->setAccessible(TRUE);
 
     return $method->invokeArgs($object, $parameters);
   }
@@ -355,7 +357,7 @@ class SearchApiSolrTest extends BackendTestBase {
     $query = $this->buildSearch();
     $condition_group = $query->createConditionGroup();
     $condition_group->addCondition('x', 5);
-    $condition_group->addCondition('y', [1, 2 ,3], 'NOT IN');
+    $condition_group->addCondition('y', [1, 2, 3], 'NOT IN');
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
     $this->assertEquals('(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))', $fq[0]);
@@ -365,7 +367,7 @@ class SearchApiSolrTest extends BackendTestBase {
     $condition_group = $query->createConditionGroup();
     $condition_group->addCondition('x', 5);
     $inner_condition_group = $query->createConditionGroup();
-    $inner_condition_group->addCondition('y', [1, 2 ,3], 'NOT IN');
+    $inner_condition_group->addCondition('y', [1, 2, 3], 'NOT IN');
     $condition_group->addConditionGroup($inner_condition_group);
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
@@ -405,48 +407,130 @@ class SearchApiSolrTest extends BackendTestBase {
    * Tests highlight and excerpt options.
    */
   public function testHighlightAndExcerpt() {
-    $config =  $this->getIndex()->getServerInstance()->getBackendConfig();
+    // Only run the tests if we have a Solr core available.
+    if ($this->solrAvailable) {
+      $config = $this->getIndex()->getServerInstance()->getBackendConfig();
 
-    $this->insertExampleContent();
-    $this->indexItems($this->indexId);
+      $this->insertExampleContent();
+      $this->indexItems($this->indexId);
 
-    $config['highlight_data'] = TRUE;
-    $config['excerpt'] = FALSE;
-    $query = $this->buildSearch('foobar');
-    $query->getIndex()->getServerInstance()->setBackendConfig($config);
-    $results = $query->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
-    /** @var \Drupal\search_api\Item\ItemInterface $result */
-    foreach ($results as $result) {
-      $this->assertContains('<strong>foobar</strong>', $result->getField('body')->getValues()[0]);
-      $this->assertNull($result->getExcerpt());
+      $config['highlight_data'] = TRUE;
+      $config['excerpt'] = FALSE;
+      $query = $this->buildSearch('foobar');
+      $query->getIndex()->getServerInstance()->setBackendConfig($config);
+      $results = $query->execute();
+      $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
+      /** @var \Drupal\search_api\Item\ItemInterface $result */
+      foreach ($results as $result) {
+        $this->assertContains('<strong>foobar</strong>', $result->getField('body')->getValues()[0]);
+        $this->assertNull($result->getExcerpt());
+      }
+
+      $config['highlight_data'] = FALSE;
+      $config['excerpt'] = TRUE;
+      $query = $this->buildSearch('foobar');
+      $query->getIndex()->getServerInstance()->setBackendConfig($config);
+      $results = $query->execute();
+      $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
+      /** @var \Drupal\search_api\Item\ItemInterface $result */
+      foreach ($results as $result) {
+        $this->assertNotContains('<strong>foobar</strong>', $result->getField('body')->getValues()[0]);
+        $this->assertContains('<strong>foobar</strong>', $result->getExcerpt());
+      }
+
+      $config['highlight_data'] = TRUE;
+      $config['excerpt'] = TRUE;
+      $query = $this->buildSearch('foobar');
+      $query->getIndex()->getServerInstance()->setBackendConfig($config);
+      $results = $query->execute();
+      $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
+      /** @var \Drupal\search_api\Item\ItemInterface $result */
+      foreach ($results as $result) {
+        $this->assertContains('<strong>foobar</strong>', $result->getField('body')->getValues()[0]);
+        $this->assertContains('<strong>foobar</strong>', $result->getExcerpt());
+      }
+
+      $this->clearIndex();
+    }
+    else {
+      $this->assertTrue(TRUE, 'Error: The Solr instance could not be found. Please enable a multi-core one on http://localhost:8983/solr/d8');
+    }
+  }
+
+  /**
+   * Tests addition and deletion of a data source.
+   */
+  public function testDatasourceAdditionAndDeletion() {
+    // Only run the tests if we have a Solr core available.
+    if ($this->solrAvailable) {
+      $this->insertExampleContent();
+      $this->indexItems($this->indexId);
+
+      $results = $this->buildSearch()->execute();
+      $this->assertEquals(5, $results->getResultCount(), 'Number of indexed entities is correct.');
+
+      $previous_index_id = $this->indexId;
+
+      $this->indexId = 'multi_datasource_solr_search_index';
+
+      $this->indexItems($this->indexId);
+
+      User::create(array(
+        'uid' => 1,
+        'name' => 'root',
+        'langcode' => 'en',
+      ))->save();
+
+      $this->indexItems($this->indexId);
+
+      $results = $this->buildSearch()->execute();
+      $this->assertEquals(6, $results->getResultCount(), 'Number of indexed entities in multi datasource index is correct.');
+
+      $results = $this->buildSearch()->addCondition('uid', 0, '>')->execute();
+      $this->assertEquals(1, $results->getResultCount(), 'Search for users returned correct number of results.');
+
+      $this->indexId = $previous_index_id;
+
+      $results = $this->buildSearch()->execute();
+      $this->assertEquals(5, $results->getResultCount(), 'Number of indexed entities in multi datasource index is correct.');
+
+      try {
+        $results = $this->buildSearch()->addCondition('uid', 0, '>')->execute();
+        $this->fail('Field uid must not exists in this index.');
+      }
+      catch (\Exception $e) {
+        $this->assertEquals('Filter term on unknown or unindexed field uid.', $e->getMessage());
+      }
+
+      $this->indexId = 'multi_datasource_solr_search_index';
+
+      $index = $this->getIndex();
+      $datasources = $index->getDatasources();
+      unset($datasources['entity:entity_test']);
+      $index->setDatasources($datasources)->save();
+
+      // Wait for the commitWithin 1 second to complete the deletion.
+      sleep(2);
+
+      $results = $this->buildSearch()->execute();
+      $this->assertEquals(1, $results->getResultCount(), 'Number of indexed entities is correct.');
+
+      $results = $this->buildSearch()->addCondition('uid', 0, '>')->execute();
+      $this->assertEquals(1, $results->getResultCount(), 'Search for users returned correct number of results.');
+
+      $this->clearIndex();
+
+      $this->indexId = $previous_index_id;
+
+      $results = $this->buildSearch()->execute();
+      $this->assertEquals(5, $results->getResultCount(), 'Number of indexed entities is correct.');
+
+      $this->clearIndex();
+    }
+    else {
+      $this->assertTrue(TRUE, 'Error: The Solr instance could not be found. Please enable a multi-core one on http://localhost:8983/solr/d8');
     }
 
-    $config['highlight_data'] = FALSE;
-    $config['excerpt'] = TRUE;
-    $query = $this->buildSearch('foobar');
-    $query->getIndex()->getServerInstance()->setBackendConfig($config);
-    $results = $query->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
-    /** @var \Drupal\search_api\Item\ItemInterface $result */
-    foreach ($results as $result) {
-      $this->assertNotContains('<strong>foobar</strong>', $result->getField('body')->getValues()[0]);
-      $this->assertContains('<strong>foobar</strong>', $result->getExcerpt());
-    }
-
-    $config['highlight_data'] = TRUE;
-    $config['excerpt'] = TRUE;
-    $query = $this->buildSearch('foobar');
-    $query->getIndex()->getServerInstance()->setBackendConfig($config);
-    $results = $query->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
-    /** @var \Drupal\search_api\Item\ItemInterface $result */
-    foreach ($results as $result) {
-      $this->assertContains('<strong>foobar</strong>', $result->getField('body')->getValues()[0]);
-      $this->assertContains('<strong>foobar</strong>', $result->getExcerpt());
-    }
-
-    $this->clearIndex();
   }
 
 }

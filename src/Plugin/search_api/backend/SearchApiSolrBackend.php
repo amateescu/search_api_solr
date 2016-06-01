@@ -784,21 +784,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
-  public function deleteAllIndexItems(IndexInterface $index = NULL) {
+  public function deleteAllIndexItems(IndexInterface $index, $datasource_id = NULL) {
     $this->connect();
-    if ($index) {
-      // Since the index ID we use for indexing can contain arbitrary
-      // prefixes, we have to escape it for use in the query.
-      $index_id = $this->getQueryHelper()->escapePhrase($index->id());
-      $index_id = $this->getIndexId($index_id);
-      $query = '(index_id:' . $index_id . ')';
-      $site_hash = $this->getQueryHelper()->escapePhrase(SearchApiSolrUtility::getSiteHash());
-      $query .= ' AND (hash:' . $site_hash . ')';
-      $this->getUpdateQuery()->addDeleteQuery($query);
+
+    // Since the index ID we use for indexing can contain arbitrary
+    // prefixes, we have to escape it for use in the query.
+    $query = '+index_id:' . $this->getIndexId($this->getQueryHelper()->escapePhrase($index->id()));
+    $query .= ' +hash:' . $this->getQueryHelper()->escapePhrase(SearchApiSolrUtility::getSiteHash());
+    if ($datasource_id) {
+      $query .= ' +' .$this->getSolrFieldNames($index, TRUE)['search_api_datasource'] . ':' . $this->getQueryHelper()->escapePhrase($datasource_id);
     }
-    else {
-      $this->getUpdateQuery()->addDeleteQuery('*:*');
-    }
+    $this->getUpdateQuery()->addDeleteQuery($query);
 
     // Do a commitWithin since that is automatically a softCommit with Solr 4
     // and a delayed hard commit with Solr 3.4+.
@@ -810,6 +806,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $customizer = $this->solr->getPlugin('customizerequest');
     $customizer->createCustomization('id')
       ->setType('param')
+      // @todo commitWithin should be configurable or removed for Solr > 4.0.x.
       ->setName('commitWithin')
       ->setValue('1000');
 
