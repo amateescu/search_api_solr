@@ -48,15 +48,12 @@ interface SolrBackendInterface extends BackendInterface {
    *
    * @param \Drupal\search_api\IndexInterface $index
    *   The Search Api index.
-   * @param bool $single_value_name
-   *   (optional) Whether to return names for fields which store only the first
-   *   value of the field. Defaults to FALSE.
    * @param bool $reset
    *   (optional) Whether to reset the static cache.
    *
    * @see SearchApiSolrBackend::search()
    */
-  public function getSolrFieldNames(IndexInterface $index, $single_value_name = FALSE, $reset = FALSE);
+  public function getSolrFieldNames(IndexInterface $index, $reset = FALSE);
 
   /**
    * Gets the currently used Solr connection object.

@@ -43,22 +43,6 @@ function hook_search_api_solr_field_mapping_alter(\Drupal\search_api\IndexInterf
 }
 
 /**
- * Change the way the index's field names are mapped to Solr field names.
- *
- * @param \Drupal\search_api\IndexInterface $index
- *   The index whose field mappings are altered.
- * @param array $fields
- *   An associative array containing the index field names mapped to their Solr
- *   counterparts. The special fields 'search_api_id' and 'search_api_relevance'
- *   are also included.
- */
-function hook_search_api_solr_single_value_field_mapping_alter(\Drupal\search_api\IndexInterface $index, array &$fields) {
-  if (in_array('entity:node', $index->getDatasourceIds()) && isset($fields['entity:node|body'])) {
-    $fields['entity:node|body'] = 'ts_entity$node|body_value';
-  }
-}
-
-/**
  * Alter Solr documents before they are sent to Solr for indexing.
  *
  * @param \Solarium\QueryType\Update\Query\Document\Document[] $documents

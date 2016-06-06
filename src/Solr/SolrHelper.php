@@ -144,7 +144,7 @@ class SolrHelper {
     }
     if (!empty($this->configuration['highlight_data'])) {
       foreach ($field_mapping as $search_api_property => $solr_property) {
-        if (strpos($solr_property, 'tm_') === 0 && !empty($data['highlighting'][$solr_id][$solr_property])) {
+        if ((strpos($solr_property, 'ts_') === 0 || strpos($solr_property, 'tm_') === 0) && !empty($data['highlighting'][$solr_id][$solr_property])) {
           $snippets = [];
           foreach ($data['highlighting'][$solr_id][$solr_property] as $value) {
             // Contrary to above, we here want to preserve HTML, so we just
@@ -559,8 +559,9 @@ class SolrHelper {
       }
       if ($highlight) {
         // It regrettably doesn't seem to be possible to set hl.fl to several
-        // values, if one contains wild cards, i.e., "tm_*,spell" wouldn't work.
-        $hl->setFields([$excerpt ? '*' : 'tm_*']);
+        // values, if one contains wild cards, i.e., "ts_*,tm_*,spell" wouldn't
+        // work.
+        $hl->setFields('*');
         $hl->setSnippets(1);
         $hl->setFragSize(0);
         $hl->setMergeContiguous($highlighter->get('highlight.mergeContiguous'));

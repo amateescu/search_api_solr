@@ -7,6 +7,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Url;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Query\ConditionInterface;
@@ -617,8 +618,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     if (array_diff_key($old_fields, $new_fields) || array_diff_key($new_fields, $old_fields)) {
       return TRUE;
     }
-    $old_field_names = $this->getSolrFieldNames($original, FALSE, TRUE);
-    $new_field_names = $this->getSolrFieldNames($index, FALSE, TRUE);
+    $old_field_names = $this->getSolrFieldNames($original, TRUE);
+    $new_field_names = $this->getSolrFieldNames($index, TRUE);
     return $old_field_names != $new_field_names;
   }
 
@@ -687,7 +688,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $documents = array();
     $index_id = $this->getIndexId($index->id());
     $field_names = $this->getSolrFieldNames($index);
-    $field_names_single_value = $this->getSolrFieldNames($index, TRUE);
     $languages = $this->languageManager->getLanguages();
     $base_urls = array();
 
@@ -733,7 +733,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $doc = NULL;
           break;
         }
-        $this->addIndexField($doc, $field_names[$name], $field_names_single_value[$name], $field->getValues(), $field->getType());
+        $this->addIndexField($doc, $field_names[$name], $field->getValues(), $field->getType());
       }
 
       if ($doc) {
@@ -792,7 +792,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $query = '+index_id:' . $this->getIndexId($this->getQueryHelper()->escapePhrase($index->id()));
     $query .= ' +hash:' . $this->getQueryHelper()->escapePhrase(SearchApiSolrUtility::getSiteHash());
     if ($datasource_id) {
-      $query .= ' +' .$this->getSolrFieldNames($index, TRUE)['search_api_datasource'] . ':' . $this->getQueryHelper()->escapePhrase($datasource_id);
+      $query .= ' +' .$this->getSolrFieldNames($index)['search_api_datasource'] . ':' . $this->getQueryHelper()->escapePhrase($datasource_id);
     }
     $this->getUpdateQuery()->addDeleteQuery($query);
 
@@ -833,7 +833,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $index = $query->getIndex();
     $index_id = $this->getIndexId($index->id());
     $field_names = $this->getSolrFieldNames($index);
-    $field_names_single_value = $this->getSolrFieldNames($index, TRUE);
 
     // Get Solr connection.
     $this->connect();
@@ -895,7 +894,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     // Set sorts.
-    $this->solrHelper->setSorts($solarium_query, $query, $field_names_single_value);
+    // @todo we can't sort on multi valued fields.
+    $this->solrHelper->setSorts($solarium_query, $query, $field_names);
 
     // Set facet fields.
     $facets = $query->getOption('search_api_facets', array());
@@ -1091,11 +1091,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
-  public function getSolrFieldNames(IndexInterface $index, $single_value_name = FALSE, $reset = FALSE) {
+  public function getSolrFieldNames(IndexInterface $index, $reset = FALSE) {
     // @todo The field name mapping should be cached per index because custom
     // queries needs to access it on every query.
-    $subkey = (int) $single_value_name;
-    if (!isset($this->fieldNames[$index->id()][$subkey]) || $reset) {
+    if (!isset($this->fieldNames[$index->id()]) || $reset) {
       // This array maps "local property name" => "solr doc property name".
       $ret = array(
         'search_api_id' => 'item_id',
@@ -1112,19 +1111,41 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $type = $field->getType();
         $type_info = SearchApiSolrUtility::getDataTypeInfo($type);
         $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
-        $pref .= ($single_value_name) ? 's' : 'm';
+        try {
+          if (SearchApiUtility::isFieldIdReserved($key)) {
+            $pref .= 's';
+          }
+          else {
+            if ($field->getDataDefinition()->isList()) {
+              $pref .= 'm';
+            }
+            else {
+              $field_storage_config = FieldStorageConfig::loadByName($field->getDatasource()->getEntityTypeId(), $key);
+              if (is_null($field_storage_config)) {
+                // Base fields without storage config should be single values.
+                $pref .= 's';
+              }
+              else {
+                $pref .= $field_storage_config->getCardinality() != 1 ? 'm' : 's';
+              }
+            }
+          }
+        }
+        catch (SearchApiException $e) {
+          // Assume multi value to be safe.
+          $pref .= 'm';
+        }
         $name = $pref . '_' . $key;
         $ret[$key] = SearchApiSolrUtility::encodeSolrDynamicFieldName($name);
       }
 
       // Let modules adjust the field mappings.
-      $hook_name = $single_value_name ? 'search_api_solr_single_value_field_mapping' : 'search_api_solr_field_mapping';
-      $this->moduleHandler->alter($hook_name, $index, $ret);
+      $this->moduleHandler->alter('search_api_solr_field_mapping', $index, $ret);
 
-      $this->fieldNames[$index->id()][$subkey] = $ret;
+      $this->fieldNames[$index->id()] = $ret;
     }
 
-    return $this->fieldNames[$index->id()][$subkey];
+    return $this->fieldNames[$index->id()];
   }
 
   /**
@@ -1134,7 +1155,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * is the same as specified in
    * \Drupal\search_api\Backend\BackendSpecificInterface::indexItems().
    */
-  protected function addIndexField(Document $doc, $key, $key_single, $values, $type) {
+  protected function addIndexField(Document $doc, $key, $values, $type) {
     // Don't index empty values (i.e., when field is missing).
     if (!isset($values)) {
       return;
@@ -1176,13 +1197,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $doc->addField($key, $value);
       }
     }
-
-    $field_value = $doc->{$key};
-    $first_value = (is_array($field_value)) ? reset($field_value) : $field_value;
-    if ($type == 'tokenized_text' && is_array($first_value) && isset($first_value['value'])) {
-      $first_value = $first_value['value'];
-    }
-    $doc->setField($key_single, $first_value);
   }
 
   /**

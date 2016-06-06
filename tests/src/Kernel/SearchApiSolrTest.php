@@ -388,7 +388,7 @@ class SearchApiSolrTest extends BackendTestBase {
     $query->addCondition('x', 5, '=');
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
     $this->assertEquals('solr_x:"5"', $fq[0]);
-    $this->assertEquals('sm_search_api_language:"en"', $fq[1]);
+    $this->assertEquals('ss_search_api_language:"en"', $fq[1]);
 
     $query = $this->buildSearch();
     $query->setLanguages(['en', 'de']);
@@ -400,7 +400,7 @@ class SearchApiSolrTest extends BackendTestBase {
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
     $this->assertEquals('(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))', $fq[0]);
-    $this->assertEquals('(sm_search_api_language:"en" sm_search_api_language:"de")', $fq[1]);
+    $this->assertEquals('(ss_search_api_language:"en" ss_search_api_language:"de")', $fq[1]);
   }
 
   /**
