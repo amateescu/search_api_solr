@@ -209,20 +209,11 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
               '%field' => $language_specific_field,
             );
             if ($this->hasLanguageUndefinedFallback()) {
-              \Drupal::logger('search_api_solr_multilingual')->warning('Error while searching: language specific field dynamic %field is not defined in the schema.xml, fallback to language unspecific field is enabled.', $vars);
+              \Drupal::logger('search_api_solr_multilingual')->warning('Error while searching: language-specific dynamic field %field is not defined in the schema.xml, fallback to language-unspecific field is enabled.', $vars);
               $language_specific_fields[] = $language_specific_field . $boost;
             }
             else {
-              $vars = array(
-                '%field' => $language_specific_field,
-              );
-              if ($this->hasLanguageUndefinedFallback()) {
-                \Drupal::logger('search_api_solr_multilingual')->warning('Error while searching: language-specific dynamic field %field is not defined in the schema.xml, fallback to language-unspecific field is enabled.', $vars);
-                $language_specific_fields[] = $language_specific_field . $boost;
-              }
-              else {
-                \Drupal::logger('search_api_solr_multilingual')->error('Error while searching: language-specific dynamic field %field is not defined in the schema.xml, fallback to language-unspecific field is not enabled.', $vars);
-              }
+              \Drupal::logger('search_api_solr_multilingual')->error('Error while searching: language-specific dynamic field %field is not defined in the schema.xml, fallback to language-unspecific field is not enabled.', $vars);
             }
           }
         }
