@@ -1295,16 +1295,20 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       // SearchApiSolrBackend::getFieldNames().
       foreach ($field_names as $search_api_property => $solr_property) {
         if (isset($doc_fields[$solr_property]) && isset($fields[$search_api_property])) {
+          $doc_field = is_array($doc_fields[$solr_property]) ? $doc_fields[$solr_property] : [$doc_fields[$solr_property]];
           $field = clone $fields[$search_api_property];
 
           // Date fields need some special treatment to become valid date values
           // (i.e., timestamps) again.
-          if ($field->getType() == 'date'
-              && preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $doc_fields[$solr_property][0])) {
-            $doc_fields[$solr_property][0] = strtotime($doc_fields[$solr_property][0]);
+          if ($field->getType() == 'date') {
+            foreach ($doc_field as &$date) {
+              if (preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $date)) {
+                $date = strtotime($date);
+              }
+            }
           }
 
-          $field->setValues($doc_fields[$solr_property]);
+          $field->setValues($doc_field);
           $result_item->setField($search_api_property, $field);
         }
       }
