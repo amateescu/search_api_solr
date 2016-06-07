@@ -401,7 +401,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
               $vars = array(
                 '%field' => $multilingual_solr_field_name,
               );
-              \Drupal::logger('search_api_solr_multilingual')->warning('Error while indexing: language specific field dynamic %field is not defined in the schema.xml, fallback to language unspecific field is enabled.', $vars);
+              \Drupal::logger('search_api_solr_multilingual')->warning('Error while indexing: language specific dynamic field %field is not defined in the schema.xml, fallback to language unspecific field is enabled.', $vars);
               unset($field_name_map_per_language[$language_id][$monolingual_solr_field_name]);
             }
             else {
