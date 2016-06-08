@@ -1120,19 +1120,25 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
               $pref .= 'm';
             }
             else {
-              $field_storage_config = FieldStorageConfig::loadByName($field->getDatasource()->getEntityTypeId(), $key);
-              if (is_null($field_storage_config)) {
-                // Base fields without storage config should be single values.
-                $pref .= 's';
+              $datasource = $field->getDatasource();
+              if (!$datasource) {
+                throw new SearchApiException();
               }
               else {
-                $pref .= $field_storage_config->getCardinality() != 1 ? 'm' : 's';
+                $field_storage_config = FieldStorageConfig::loadByName($datasource->getEntityTypeId(), $key);
+                if (is_null($field_storage_config)) {
+                  // Base fields without storage config should be single values.
+                  $pref .= 's';
+                }
+                else {
+                  $pref .= $field_storage_config->getCardinality() != 1 ? 'm' : 's';
+                }
               }
             }
           }
         }
         catch (SearchApiException $e) {
-          // Assume multi value to be safe.
+          // Thrown by $field->getDatasource(). Assume multi value to be safe.
           $pref .= 'm';
         }
         $name = $pref . '_' . $key;
