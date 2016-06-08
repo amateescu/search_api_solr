@@ -20,6 +20,9 @@ This module provides an implementation of the Search API which uses an Apache
 Solr search server for indexing and searching. Before enabling or using this
 module, you'll have to follow the instructions given in INSTALL.txt first.
 
+The minimum support version for Search API Solr 8.x is Solr 4.5.1.
+Any version below might work if you use your own Solr config.
+
 For more detailed documentation, see the handbook [2].
 
 [2] https://drupal.org/node/1999280
