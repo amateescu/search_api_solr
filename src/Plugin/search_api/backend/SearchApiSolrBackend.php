@@ -4,10 +4,13 @@ namespace Drupal\search_api_solr\Plugin\search_api\backend;
 
 use Drupal\Core\Config\Config;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\Url;
-use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\field\FieldConfigInterface;
+use Drupal\field\FieldStorageConfigInterface;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Query\ConditionInterface;
@@ -1125,14 +1128,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                 throw new SearchApiException();
               }
               else {
-                $field_storage_config = FieldStorageConfig::loadByName($datasource->getEntityTypeId(), $key);
-                if (is_null($field_storage_config)) {
-                  // Base fields without storage config should be single values.
-                  $pref .= 's';
-                }
-                else {
-                  $pref .= $field_storage_config->getCardinality() != 1 ? 'm' : 's';
-                }
+                $pref .= $this->getPropertyPathCardinality($field->getPropertyPath(), $datasource->getPropertyDefinitions()) != 1 ? 'm' : 's';
               }
             }
           }
@@ -1152,6 +1148,44 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     return $this->fieldNames[$index->id()];
+  }
+
+  /**
+   * Computes the cardinality of a complete property path.
+   *
+   * @param string $property_path
+   *   The property path of the property.
+   * @param \Drupal\Core\TypedData\DataDefinitionInterface[] $properties
+   *   The properties which form the basis for the property path.
+   * @param integer $cardinality
+   *   The cardinality of the property path so far (for recursion).
+   *
+   * @return integer
+   *   The cardinality.
+   */
+  protected function getPropertyPathCardinality($property_path, array $properties, $cardinality = 1) {
+    list($key, $nested_path) = SearchApiUtility::splitPropertyPath($property_path, FALSE);
+    if (isset($properties[$key])) {
+      $property = $properties[$key];
+      if ($property instanceof FieldConfigInterface) {
+        $storage = $property->getFieldStorageDefinition();
+        if ($storage instanceof FieldStorageConfigInterface) {
+          if ($storage->getCardinality() == FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED) {
+            // Shortcut. We reached the maximum.
+            return FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED;
+          }
+          $cardinality *= $storage->getCardinality();
+        }
+      }
+
+      if (isset($nested_path)) {
+        $property = SearchApiUtility::getInnerProperty($property);
+        if ($property instanceof ComplexDataDefinitionInterface) {
+          $cardinality = $this->getPropertyPathCardinality($nested_path, SearchApiUtility::getNestedProperties($property), $cardinality);
+        }
+      }
+    }
+    return $cardinality;
   }
 
   /**
