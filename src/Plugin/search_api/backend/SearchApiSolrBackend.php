@@ -388,8 +388,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // For password fields, there is no default value, they're empty by default.
     // Therefore we ignore empty submissions if the user didn't change either.
     if ($values['http_pass'] === ''
-        && isset($this->configuration['http_user'])
-        && $values['http_user'] === $this->configuration['http_user']) {
+      && isset($this->configuration['http_user'])
+      && $values['http_user'] === $this->configuration['http_user']) {
       $values['http_pass'] = $this->configuration['http_pass'];
     }
 
@@ -1223,19 +1223,21 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         case 'decimal':
           $value = (float) $value;
           break;
+
+        case 'tokenized_text':
+          if (is_array($value)) {
+            $tokens = [];
+            foreach ($value as $tokenized_value) {
+              // @todo handle token boosts
+              // @see https://www.drupal.org/node/2746263
+              #$doc->addField($boost_key, $tokenized_value['value'], $tokenized_value['score']);
+              $tokens[] = $tokenized_value['value'];
+            }
+            $value = implode(' ', $tokens);
+          }
       }
 
-      // For tokenized text, add each word separately.
-      if ($type == 'tokenized_text' && is_array($value)) {
-        foreach ($value as $tokenizd_value) {
-          // @todo Score is tracked by key, not for each value, how to handle
-          //   this?
-          $doc->addField($key, $tokenizd_value['value'], $tokenizd_value['score']);
-        }
-      }
-      else {
-        $doc->addField($key, $value);
-      }
+      $doc->addField($key, $value);
     }
   }
 
