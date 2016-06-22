@@ -573,6 +573,9 @@ class SolrHelper {
         // values, if one contains wild cards, i.e., "ts_*,tm_*,spell" wouldn't
         // work.
         $hl->setFields('*');
+        // @todo the amount of snippets need to be increased to get highlighting
+        //   of multi value fields to work.
+        // @see hhtps://drupal.org/node/2753635
         $hl->setSnippets(1);
         $hl->setFragSize(0);
         $hl->setMergeContiguous($highlighter->get('highlight.mergeContiguous'));

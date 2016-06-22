@@ -72,11 +72,6 @@ class Utility {
         'uri' => array(
           'prefix' => 's',
         ),
-        // @todo handle token boosts
-        // @see https://www.drupal.org/node/2746263
-        'tokens' => array(
-          'prefix' => 't',
-        ),
       ));
 
       // Extra data type info.

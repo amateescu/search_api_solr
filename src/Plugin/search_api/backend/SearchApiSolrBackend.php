@@ -13,6 +13,7 @@ use Drupal\field\FieldConfigInterface;
 use Drupal\field\FieldStorageConfigInterface;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\ItemInterface;
+use Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface;
 use Drupal\search_api\Query\ConditionInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
@@ -1224,17 +1225,21 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $value = (float) $value;
           break;
 
-        case 'tokenized_text':
-          if (is_array($value)) {
-            $tokens = [];
-            foreach ($value as $tokenized_value) {
+        case 'text':
+          /** @var TextValueInterface $value */
+          /*
+          $tokens = $value->getTokens();
+          if (is_array($tokens)) {
+            foreach ($tokens as $token) {
               // @todo handle token boosts
               // @see https://www.drupal.org/node/2746263
               #$doc->addField($boost_key, $tokenized_value['value'], $tokenized_value['score']);
-              $tokens[] = $tokenized_value['value'];
+              $token->getText();
+              $token->getBoost();
             }
-            $value = implode(' ', $tokens);
           }
+          */
+          $value = $value->toText();
       }
 
       $doc->addField($key, $value);

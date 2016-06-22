@@ -450,7 +450,6 @@ class SearchApiSolrTest extends BackendTestBase {
         $this->assertContains('<strong>foobar</strong>', $result->getExcerpt());
       }
 
-      $this->clearIndex();
     }
     else {
       $this->assertTrue(TRUE, 'Error: The Solr instance could not be found. Please enable a multi-core one on http://localhost:8983/solr/d8');
