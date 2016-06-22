@@ -161,14 +161,14 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   }
 
   protected function generateSchemaExtraTypesXml() {
-    $xml = '<types>';
+    $xml = $this->getExtraFileHead();
     /** @var SolrFieldTypeInterface $solr_field_type */
     foreach ($this->load() as $solr_field_type) {
       if (!$solr_field_type->isManagedSchema()) {
         $xml .= "\n" . $solr_field_type->getFieldTypeAsXml();
       }
     }
-    $xml .= "\n</types>";
+    $xml .= "\n" . $this->getExtraFileFoot();
 
     return $xml;
   }
@@ -178,12 +178,12 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   }
 
   protected function generateSchemaExtraFieldsXml() {
-    $xml = "<fields>\n";
+    $xml = $this->getExtraFileHead();
     /** @var SolrFieldTypeInterface $solr_field_type */
     foreach ($this->load() as $solr_field_type) {
       if (!$solr_field_type->isManagedSchema()) {
         foreach ($solr_field_type->getDynamicFields() as $dynamic_field) {
-          $xml .= '<dynamicField ';
+          $xml .= '    <dynamicField ';
           foreach ($dynamic_field as $attribute => $value) {
             $xml .= $attribute . '="' . (is_bool($value) ? ($value ? 'true' : 'false') : $value) . '" ';
           }
@@ -191,7 +191,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
         }
       }
     }
-    $xml .= '</fields>';
+    $xml .= $this->getExtraFileFoot();
 
     return $xml;
   }
@@ -204,6 +204,27 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
         'tags' => $this->entityType->getListCacheTags(),
       ],
     ],];
+  }
+
+  protected function getExtraFileHead() {
+    $head = <<<'EOD'
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!-- An XML file always requires a single root element.
+     The additional <xi:include> which points to a nonexistent(!) file became our
+     required single root element. See https://drupal.org/node/2145969 -->
+<xi:include href="InMemoriamOfPinkPony.rip" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:fallback>
+EOD;
+    return $head;
+  }
+
+  protected function getExtraFileFoot() {
+    $foot = <<<'EOD'
+  </xi:fallback>
+</xi:include>
+EOD;
+    return $foot;
   }
 
   /**
