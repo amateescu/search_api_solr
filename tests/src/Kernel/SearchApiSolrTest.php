@@ -422,7 +422,7 @@ class SearchApiSolrTest extends BackendTestBase {
       $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
       /** @var \Drupal\search_api\Item\ItemInterface $result */
       foreach ($results as $result) {
-        $this->assertContains('<strong>foobar</strong>', $result->getField('body')->getValues()[0]);
+        $this->assertContains('<strong>foobar</strong>', (string) $result->getField('body')->getValues()[0]);
         $this->assertNull($result->getExcerpt());
       }
 
@@ -434,7 +434,7 @@ class SearchApiSolrTest extends BackendTestBase {
       $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
       /** @var \Drupal\search_api\Item\ItemInterface $result */
       foreach ($results as $result) {
-        $this->assertNotContains('<strong>foobar</strong>', $result->getField('body')->getValues()[0]);
+        $this->assertNotContains('<strong>foobar</strong>', (string) $result->getField('body')->getValues()[0]);
         $this->assertContains('<strong>foobar</strong>', $result->getExcerpt());
       }
 
@@ -446,7 +446,7 @@ class SearchApiSolrTest extends BackendTestBase {
       $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
       /** @var \Drupal\search_api\Item\ItemInterface $result */
       foreach ($results as $result) {
-        $this->assertContains('<strong>foobar</strong>', $result->getField('body')->getValues()[0]);
+        $this->assertContains('<strong>foobar</strong>', (string) $result->getField('body')->getValues()[0]);
         $this->assertContains('<strong>foobar</strong>', $result->getExcerpt());
       }
 

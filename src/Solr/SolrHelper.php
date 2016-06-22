@@ -149,10 +149,21 @@ class SolrHelper {
           foreach ($data['highlighting'][$solr_id][$solr_property] as $value) {
             // Contrary to above, we here want to preserve HTML, so we just
             // replace the [HIGHLIGHT] tags with the appropriate format.
-            $snippets[] = SearchApiSolrUtility::formatHighlighting($value);
+            $snippets[] = [
+              'raw' => preg_replace('#\[(/?)HIGHLIGHT\]#', '', $value),
+              'replace' => SearchApiSolrUtility::formatHighlighting($value),
+            ];
           }
           if ($snippets) {
-            $fields[$search_api_property]->setValues($snippets);
+            $values = $fields[$search_api_property]->getValues();
+            foreach ($values as $value) {
+              foreach ($snippets as $snippet) {
+                if ($value->getText() === $snippet['raw']) {
+                  $value->setText($snippet['replace']);
+                }
+              }
+            }
+            $fields[$search_api_property]->setValues($values);
           }
         }
       }
