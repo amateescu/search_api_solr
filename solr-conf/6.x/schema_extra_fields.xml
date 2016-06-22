@@ -1,23 +1,31 @@
-<fields>
-<!--
-  Example: Adding German dynamic field types to our Solr Schema.
-  If you enable this, make sure you have a folder called lang containing
-  stopwords_de.txt and synonyms_de.txt.
-  This also requires to enable the content in schema_extra_types.xml.
--->
-<!--
-   <field name="label_de" type="text_de" indexed="true" stored="true" termVectors="true" omitNorms="true"/>
-   <field name="content_de" type="text_de" indexed="true" stored="true" termVectors="true"/>
-   <field name="teaser_de" type="text_de" indexed="false" stored="true"/>
-   <field name="path_alias_de" type="text_de" indexed="true" stored="true" termVectors="true" omitNorms="true"/>
-   <field name="taxonomy_names_de" type="text_de" indexed="true" stored="false" termVectors="true" multiValued="true" omitNorms="true"/>
-   <field name="spell_de" type="text_de" indexed="true" stored="true" multiValued="true"/>
-   <copyField source="label_de" dest="spell_de"/>
-   <copyField source="content_de" dest="spell_de"/>
-   <dynamicField name="tags_de_*" type="text_de" indexed="true" stored="false" omitNorms="true"/>
-   <dynamicField name="ts_de_*" type="text_de" indexed="true" stored="true" multiValued="false" termVectors="true"/>
-   <dynamicField name="tm_de_*" type="text_de" indexed="true" stored="true" multiValued="true" termVectors="true"/>
-   <dynamicField name="tos_de_*" type="text_de" indexed="true" stored="true" multiValued="false" termVectors="true" omitNorms="true"/>
-   <dynamicField name="tom_de_*" type="text_de" indexed="true" stored="true" multiValued="true" termVectors="true" omitNorms="true"/>
--->
-</fields>
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!-- An xml file always requires a single root element.
+     We need multiple field, copyField and dynamicField entries.
+     The additional <xi:include> which points to a nonexistent(!) file became our
+     required single root element. See https://drupal.org/node/2145969 -->
+<xi:include href="InMemoriamOfPinkPony.rip" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:fallback>
+    <!--
+      Example: Adding German dynamic field types to our Solr Schema.
+      If you enable this, make sure you have a folder called lang containing
+      stopwords_de.txt and synonyms_de.txt.
+      This also requires to enable the content in schema_extra_types.xml.
+    -->
+    <!--
+       <field name="label_de" type="text_de" indexed="true" stored="true" termVectors="true" omitNorms="true"/>
+       <field name="content_de" type="text_de" indexed="true" stored="true" termVectors="true"/>
+       <field name="teaser_de" type="text_de" indexed="false" stored="true"/>
+       <field name="path_alias_de" type="text_de" indexed="true" stored="true" termVectors="true" omitNorms="true"/>
+       <field name="taxonomy_names_de" type="text_de" indexed="true" stored="false" termVectors="true" multiValued="true" omitNorms="true"/>
+       <field name="spell_de" type="text_de" indexed="true" stored="true" multiValued="true"/>
+       <copyField source="label_de" dest="spell_de"/>
+       <copyField source="content_de" dest="spell_de"/>
+       <dynamicField name="tags_de_*" type="text_de" indexed="true" stored="false" omitNorms="true"/>
+       <dynamicField name="ts_de_*" type="text_de" indexed="true" stored="true" multiValued="false" termVectors="true"/>
+       <dynamicField name="tm_de_*" type="text_de" indexed="true" stored="true" multiValued="true" termVectors="true"/>
+       <dynamicField name="tos_de_*" type="text_de" indexed="true" stored="true" multiValued="false" termVectors="true" omitNorms="true"/>
+       <dynamicField name="tom_de_*" type="text_de" indexed="true" stored="true" multiValued="true" termVectors="true" omitNorms="true"/>
+    -->
+  </xi:fallback>
+</xi:include>
