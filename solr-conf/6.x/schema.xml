@@ -145,6 +145,9 @@
   <!-- This field is used to build the spellchecker index -->
   <field name="spell" type="textSpell" indexed="true" stored="true" multiValued="true"/>
 
+  <field name="site" type="string" indexed="true" stored="true"/>
+  <field name="hash" type="string" indexed="true" stored="true"/>
+
   <!-- copyField commands copy one field to another at the time a document
        is added to the index.  It's used either to index the same field differently,
        or to add multiple fields to the same field for easier/faster searching.  -->
@@ -208,20 +211,9 @@
   <!-- In rare cases a date rather than tdate is needed for sortMissingLast -->
   <dynamicField name="dds_*" type="date"    indexed="true"  stored="true" multiValued="false"/>
   <dynamicField name="ddm_*" type="date"    indexed="true"  stored="true" multiValued="true"/>
-  <!-- Sortable fields, good for sortMissingLast support &
-       We use long for integer since 64 bit ints are now common in PHP. -->
-  <dynamicField name="iss_*" type="slong"   indexed="true"  stored="true" multiValued="false"/>
-  <dynamicField name="ism_*" type="slong"   indexed="true"  stored="true" multiValued="true"/>
-  <!-- In rare cases a sfloat rather than tfloat is needed for sortMissingLast -->
-  <dynamicField name="fss_*" type="sfloat"  indexed="true"  stored="true" multiValued="false"/>
-  <dynamicField name="fsm_*" type="sfloat"  indexed="true"  stored="true" multiValued="true"/>
-  <dynamicField name="pss_*" type="sdouble" indexed="true"  stored="true" multiValued="false"/>
-  <dynamicField name="psm_*" type="sdouble" indexed="true"  stored="true" multiValued="true"/>
   <!-- In case a 32 bit int is really needed, we provide these fields. 'h' is mnemonic for 'half word', i.e. 32 bit on 64 arch -->
   <dynamicField name="hs_*" type="int" indexed="true"  stored="true" multiValued="false"/>
   <dynamicField name="hm_*" type="int" indexed="true"  stored="true" multiValued="true"/>
-  <dynamicField name="hss_*" type="sint"   indexed="true"  stored="true" multiValued="false"/>
-  <dynamicField name="hsm_*" type="sint"   indexed="true"  stored="true" multiValued="true"/>
   <dynamicField name="hts_*" type="tint"   indexed="true"  stored="true" multiValued="false"/>
   <dynamicField name="htm_*" type="tint"   indexed="true"  stored="true" multiValued="true"/>
 
@@ -253,7 +245,7 @@
   <dynamicField name="sort_*" type="alphaOnlySort" indexed="true" stored="false"/>
 
   <!-- A random sort field -->
-  <dynamicField name="random_*" type="rand" indexed="true" stored="true"/>
+  <dynamicField name="random_*" type="random" indexed="true" stored="true"/>
 
   <!-- This field is used to store access information (e.g. node access grants), as opposed to field data -->
   <dynamicField name="access_*" type="int" indexed="true" stored="false" multiValued="true"/>
@@ -708,27 +700,41 @@
                             ratesFileLocation: URL or path to rates JSON file (default latest.json on the web)
                             refreshInterval: Number of minutes between each rates fetch (default: 1440, min: 60)
   -->
-  <fieldType name="currency" class="solr.CurrencyField" precisionStep="8" defaultCurrency="USD" currencyConfig="currency.xml" />
+<!--  <fieldType name="currency" class="solr.CurrencyField" precisionStep="8" defaultCurrency="USD" currencyConfig="currency.xml" /> -->
 
   <!-- Following is a dynamic way to include other fields, added by other contrib modules -->
   <xi:include href="schema_extra_fields.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
     <xi:fallback></xi:fallback>
   </xi:include>
 
-  <!-- Following is a dynamic way to include other fields, added by other contrib modules -->
+<!--
+  Enable the following only if you need backwards compatibility with
+  Drupal 6 or Drupal 7 versions of search_api or apachesolr,
+  e.g. if you are running a multi-site search that mixes
+  Drupal 8 and earlier versions.
+-->
+<!--
   <xi:include href="schema_legacy_fields.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
     <xi:fallback></xi:fallback>
   </xi:include>
+-->
 
   <!-- Following is a dynamic way to include other types, added by other contrib modules -->
   <xi:include href="schema_extra_types.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
     <xi:fallback></xi:fallback>
   </xi:include>
 
-  <!-- Following is a dynamic way to include other types, added by other contrib modules -->
+  <!--
+    Enable the following only if you need backwards compatibility with
+    Drupal 6 or Drupal 7 versions of search_api or apachesolr,
+    e.g. if you are running a multi-site search that mixes
+    Drupal 8 and earlier versions.
+  -->
+<!--
   <xi:include href="schema_legacy_types.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
     <xi:fallback></xi:fallback>
   </xi:include>
+-->
 
   <!-- Field to use to determine and enforce document uniqueness.
        Unless this field is marked with required="false", it will be a required field
