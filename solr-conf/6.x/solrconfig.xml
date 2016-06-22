@@ -205,7 +205,7 @@
         </mergePolicyFactory>
      -->
 
-    <mergePolicyFactory class="solr.LogByteSizeMergePolicyFactory">
+    <mergePolicyFactory class="org.apache.solr.index.LogByteSizeMergePolicyFactory">
       <!-- Merge Factor
          The merge factor controls how many segments will get merged at a time.
          For LogByteSizeMergePolicy, mergeFactor decides how many new segments
