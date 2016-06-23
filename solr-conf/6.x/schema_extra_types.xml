@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
 <!-- An xml file always requires a single root element.
-     We need multiple field, copyField and dynamicField entries.
+     We need multiple entries on one level.
      The additional <xi:include> which points to a nonexistent(!) file became our
      required single root element. See https://drupal.org/node/2145969 -->
 <xi:include href="InMemoriamOfPinkPony.rip" xmlns:xi="http://www.w3.org/2001/XInclude">

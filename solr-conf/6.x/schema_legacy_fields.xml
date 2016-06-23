@@ -58,5 +58,11 @@
     <dynamicField name="pss_*" type="sdouble" indexed="true"  stored="true" multiValued="false"/>
     <dynamicField name="psm_*" type="sdouble" indexed="true"  stored="true" multiValued="true"/>
 
+    <!--
+      A set of fields to contain text extracted from HTML tag contents which we
+      can boost at query time.
+    -->
+    <dynamicField name="tags_*" type="text"   indexed="true" stored="false" omitNorms="true"/>
+
   </xi:fallback>
 </xi:include>
