@@ -64,6 +64,7 @@ before_script:
   # start the built-in php web server (mysql is already started)
   - php -S localhost:8888 &
   # Install the site
+  - mv modules/contrib/search_api_solr modules/search_api_solr
   - mv modules/contrib/search_api_solr_multilingual modules/search_api_solr_multilingual
   - ../vendor/bin/drush -v site-install minimal --db-url=mysql://root:@localhost/drupal --yes
   - ../vendor/bin/drush en --yes simpletest
