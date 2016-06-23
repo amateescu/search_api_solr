@@ -1280,7 +1280,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $index = $query->getIndex();
     $field_names = $this->getSolrFieldNames($index);
     $fields = $index->getFields();
-    $fields += $this->getSpecialFields($index);
     $site_hash = SearchApiSolrUtility::getSiteHash();
     // We can find the item ID and the score in the special 'search_api_*'
     // properties. Mappings are provided for these properties in
@@ -1362,7 +1361,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       $index_id = $this->getIndexId($index->id());
       $solr_id = $this->createId($index_id, $result_item->getId());
-      $item_fields = $result_item->getFields();
+      $item_fields = $result_item->getFields(FALSE);
       $excerpt = $this->getSolrHelper()->getExcerpt($result->getData(), $solr_id, $item_fields, $field_names);
       if ($excerpt) {
         $result_item->setExcerpt($excerpt);
@@ -1399,7 +1398,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $index = $query->getIndex();
     $field_names = $this->getSolrFieldNames($index);
     $fields = $index->getFields();
-    $fields += $this->getSpecialFields($index);
 
     $extract_facets = $query->getOption('search_api_facets', array());
 
