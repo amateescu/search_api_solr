@@ -74,8 +74,8 @@ before_script:
   - cp -R core/modules/system/tests/modules/entity_test core/modules/system/entity_test
   - cp -R modules/search_api/tests/search_api_test_example_content modules/search_api/search_api_test_example_content
   - cp -R modules/search_api_solr_multilingual/tests/modules/search_api_solr_multilingual_test modules/search_api_solr_multilingual/search_api_solr_multilingual_test
-  - drush en --yes search_api_solr_multilingual_test
-  - drush sasm-gsc solr_multilingual_search_server conf.zip $SOLR_VERSION
+  - ../vendor/bin/drush en --yes search_api_solr_multilingual_test
+  - ../vendor/bin/drush sasm-gsc solr_multilingual_search_server conf.zip $SOLR_VERSION
   - unzip -o conf.zip -d $SOLR_CONFS
   - ls -lh $SOLR_CONFS
   # Install Solr
