@@ -286,12 +286,12 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
    */
   protected function extractResults(QueryInterface $query, ResultInterface $result) {
     $index = $query->getIndex();
-    $single_field_names = $this->getSolrFieldNames($index, TRUE);
+    $field_names = $this->getSolrFieldNames($index, TRUE);
     $data = $result->getData();
     $doc_languages = [];
 
     foreach ($data['response']['docs'] as &$doc) {
-      $language_id = $doc_languages[$this->createId($index->id(), $doc['item_id'])] = $doc[$single_field_names[SEARCH_API_LANGUAGE_FIELD_NAME]];
+      $language_id = $doc_languages[$this->createId($index->id(), $doc['item_id'])] = $doc[$field_names[SEARCH_API_LANGUAGE_FIELD_NAME]];
       foreach (array_keys($doc) as $language_specific_field_name) {
         $field_name = Utility::getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($language_specific_field_name);
         if ($field_name != $language_specific_field_name) {
@@ -348,8 +348,8 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
 
     $fulltext_fields = $index->getFulltextFields();
     $multiple_field_names = $this->getSolrFieldNames($index);
-    $single_field_names = $this->getSolrFieldNames($index, TRUE);
-    $fulltext_field_names = array_filter(array_flip($multiple_field_names) + array_flip($single_field_names),
+    $field_names = $this->getSolrFieldNames($index, TRUE);
+    $fulltext_field_names = array_filter(array_flip($multiple_field_names) + array_flip($field_names),
       function($value) use ($fulltext_fields) {
         return in_array($value, $fulltext_fields);
       }
@@ -358,7 +358,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     $field_name_map_per_language = [];
     foreach ($documents as $document) {
       $fields = $document->getFields();
-      $language_id = $fields[$single_field_names[SEARCH_API_LANGUAGE_FIELD_NAME]];
+      $language_id = $fields[$field_names[SEARCH_API_LANGUAGE_FIELD_NAME]];
       foreach ($fields as $monolingual_solr_field_name => $field_value) {
         if (array_key_exists($monolingual_solr_field_name, $fulltext_field_names)) {
           $multilingual_solr_field_name = Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($monolingual_solr_field_name, $language_id);
@@ -415,7 +415,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     foreach ($documents as $document) {
       $fields = $document->getFields();
       foreach ($field_name_map_per_language as $language_id => $map) {
-        if (/* @todo CLIR || */ $fields[$single_field_names[SEARCH_API_LANGUAGE_FIELD_NAME]] == $language_id) {
+        if (/* @todo CLIR || */ $fields[$field_names[SEARCH_API_LANGUAGE_FIELD_NAME]] == $language_id) {
           foreach ($fields as $monolingual_solr_field_name => $value) {
             if (isset($map[$monolingual_solr_field_name])) {
               $document->addField($map[$monolingual_solr_field_name], $value, $document->getFieldBoost($monolingual_solr_field_name));
