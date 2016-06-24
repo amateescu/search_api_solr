@@ -1005,8 +1005,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       $this->moduleHandler->alter('search_api_solr_search_results', $results, $query, $resultset);
       $this->postQuery($results, $query, $resultset);
-
-      return $results;
     }
     catch (\Exception $e) {
       throw new SearchApiSolrException($this->t('An error occurred while trying to search with Solr: @msg.', array('@msg' => $e->getMessage())), $e->getCode(), $e);
@@ -1288,7 +1286,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $score_field = $field_names['search_api_relevance'];
 
     // Set up the results array.
-    $result_set = SearchApiUtility::createSearchResultSet($query);
+    $result_set = $query->getResults();
     $result_set->setExtraData('search_api_solr_response', $result->getData());
 
     // In some rare cases (e.g., MLT query with nonexistent ID) the response
