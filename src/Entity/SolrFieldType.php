@@ -177,14 +177,19 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
 
     $comment = '';
     if ($add_commment) {
-      $comment = "<!--\n" . $this->label() . "\n" .
-        ($this->isManagedSchema() ? " for managed schema\n" : '') .
+      $comment = "<!--\n  " . $this->label() . "\n  " .
+        ($this->isManagedSchema() ? " for managed schema\n  " : '') .
         $this->getMinimumSolrVersion() .
         "\n-->\n";
     }
 
+    // create formatted string
+    $dom = dom_import_simplexml($root)->ownerDocument;
+    $dom->formatOutput = TRUE;
+    $formatted_xml_string = $dom->saveXML();
+
     // Remove the XML declaration before returning the XML fragment.
-    return $comment . "\n" . preg_replace('/<\?.*?\?>/', '', $root->asXML());
+    return $comment . preg_replace('/<\?.*?\?>\s*\n?/', '', $formatted_xml_string);
   }
 
   /**
