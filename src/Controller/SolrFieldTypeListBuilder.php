@@ -161,14 +161,19 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   }
 
   protected function generateSchemaExtraTypesXml() {
-    $xml = $this->getExtraFileHead();
+    $target_solr_version = $this->getBackend()->getServer()->getBackendConfig()['solr_version'];
+    $indentation = '  ';
+    if (version_compare($target_solr_version, '6.0.0', '>=')) {
+      $indentation .= '  ';
+    }
+    $xml = $this->getExtraFileHead($target_solr_version, 'types');
     /** @var SolrFieldTypeInterface $solr_field_type */
     foreach ($this->load() as $solr_field_type) {
       if (!$solr_field_type->isManagedSchema()) {
-        $xml .= "\n" . $solr_field_type->getFieldTypeAsXml();
+        $xml .= "\n" . $indentation . $solr_field_type->getFieldTypeAsXml();
       }
     }
-    $xml .= "\n" . $this->getExtraFileFoot();
+    $xml .= "\n" . $this->getExtraFileFoot($target_solr_version, 'types');
 
     return $xml;
   }
@@ -178,12 +183,18 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   }
 
   protected function generateSchemaExtraFieldsXml() {
-    $xml = $this->getExtraFileHead();
+    $target_solr_version = $this->getBackend()->getServer()->getBackendConfig()['solr_version'];
+    $xml = $this->getExtraFileHead($target_solr_version, 'fields');
+    $indentation = '  ';
+    if (version_compare($target_solr_version, '6.0.0', '>=')) {
+      $indentation .= '  ';
+    }
+
     /** @var SolrFieldTypeInterface $solr_field_type */
     foreach ($this->load() as $solr_field_type) {
       if (!$solr_field_type->isManagedSchema()) {
         foreach ($solr_field_type->getDynamicFields() as $dynamic_field) {
-          $xml .= '    <dynamicField ';
+          $xml .= $indentation . '<dynamicField ';
           foreach ($dynamic_field as $attribute => $value) {
             $xml .= $attribute . '="' . (is_bool($value) ? ($value ? 'true' : 'false') : $value) . '" ';
           }
@@ -191,7 +202,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
         }
       }
     }
-    $xml .= $this->getExtraFileFoot();
+    $xml .= $this->getExtraFileFoot($target_solr_version, 'fields');
 
     return $xml;
   }
@@ -206,24 +217,56 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     ],];
   }
 
-  protected function getExtraFileHead() {
+  /**
+   * Creates the head part of an extra file XML (not wellformed on its own).
+   *
+   * @param $target_solr_version string The version string of the Solr version to
+   *                                    create the file for.
+   * @param $legacy_element string The XML element to use as a wrapper for versions of
+   *                               Solr below 6.0.0.
+   * @return string The created fragment.
+   */
+  protected function getExtraFileHead($target_solr_version, $legacy_element) {
     $head = <<<'EOD'
 <?xml version="1.0" encoding="UTF-8" ?>
+EOD;
+    $head .= "\n\n";
 
+    if (version_compare($target_solr_version, '6.0.0', '>=')) {
+      $head .= <<<'EOD'
 <!-- An XML file always requires a single root element.
      The additional <xi:include> which points to a nonexistent(!) file became our
      required single root element. See https://drupal.org/node/2145969 -->
 <xi:include href="InMemoriamOfPinkPony.rip" xmlns:xi="http://www.w3.org/2001/XInclude">
   <xi:fallback>
 EOD;
+    }
+    else {
+      $head .= "<$legacy_element>\n";
+    }
     return $head;
   }
 
-  protected function getExtraFileFoot() {
-    $foot = <<<'EOD'
+  /**
+   * Creates the foot part of an extra file XML (not wellformed on its own).
+   *
+   * @param $target_solr_version string The version string of the Solr version to
+   *                                    create the file for.
+   * @param $legacy_element string The XML element to use as a wrapper for versions of
+   *                               Solr below 6.0.0.
+   * @return string The created fragment.
+   */
+  protected function getExtraFileFoot($target_solr_version, $legacy_element) {
+    $foot = '';
+    if (version_compare($target_solr_version, '6.0.0', '>=')) {
+      $foot .= <<<'EOD'
   </xi:fallback>
 </xi:include>
 EOD;
+    }
+    else {
+      $foot .= "</$legacy_element>";
+    }
     return $foot;
   }
 
