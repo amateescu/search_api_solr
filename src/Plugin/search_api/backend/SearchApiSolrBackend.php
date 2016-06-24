@@ -1359,8 +1359,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       $index_id = $this->getIndexId($index->id());
       $solr_id = $this->createId($index_id, $result_item->getId());
-      $item_fields = $result_item->getFields(FALSE);
-      $excerpt = $this->getSolrHelper()->getExcerpt($result->getData(), $solr_id, $item_fields, $field_names);
+      $excerpt = $this->getSolrHelper()->getExcerpt($result->getData(), $solr_id, $result_item, $field_names);
       if ($excerpt) {
         $result_item->setExcerpt($excerpt);
       }

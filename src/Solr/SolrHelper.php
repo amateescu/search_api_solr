@@ -5,6 +5,7 @@ namespace Drupal\search_api_solr\Solr;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
+use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Utility as SearchApiUtility;
 use Drupal\search_api_solr\SearchApiSolrException;
@@ -116,7 +117,7 @@ class SolrHelper {
    *   The data extracted from a Solr result.
    * @param string $solr_id
    *   The ID of the result item.
-   * @param \Drupal\search_api\Item\ItemInterface $fields
+   * @param \Drupal\search_api\Item\ItemInterface $item
    *   The fields of the result item.
    * @param array $field_mapping
    *   Mapping from search_api field names to Solr field names.
@@ -124,7 +125,7 @@ class SolrHelper {
    * @return bool|string
    *   FALSE if no excerpt is returned from Solr, the excerpt string otherwise.
    */
-  public function getExcerpt($data, $solr_id, array $fields, array $field_mapping) {
+  public function getExcerpt($data, $solr_id, ItemInterface $item, array $field_mapping) {
     if (!isset($data['highlighting'][$solr_id])) {
       return FALSE;
     }
@@ -143,6 +144,7 @@ class SolrHelper {
       }
     }
     if (!empty($this->configuration['highlight_data'])) {
+      $item_fields = $item->getFields();
       foreach ($field_mapping as $search_api_property => $solr_property) {
         if ((strpos($solr_property, 'ts_') === 0 || strpos($solr_property, 'tm_') === 0) && !empty($data['highlighting'][$solr_id][$solr_property])) {
           $snippets = [];
@@ -155,7 +157,7 @@ class SolrHelper {
             ];
           }
           if ($snippets) {
-            $values = $fields[$search_api_property]->getValues();
+            $values = $item_fields[$search_api_property]->getValues();
             foreach ($values as $value) {
               foreach ($snippets as $snippet) {
                 if ($value->getText() === $snippet['raw']) {
@@ -163,7 +165,7 @@ class SolrHelper {
                 }
               }
             }
-            $fields[$search_api_property]->setValues($values);
+            $item_fields[$search_api_property]->setValues($values);
           }
         }
       }
