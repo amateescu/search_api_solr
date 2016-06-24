@@ -58,7 +58,7 @@ before_script:
   - cd $TRAVIS_BUILD_DIR/../drupal
   - composer config repositories.search_api_solr_multilingual vcs $TRAVIS_BUILD_DIR
   - composer config repositories.search_api_solr              vcs https://github.com/mkalkbrenner/search_api_solr.git
-  - composer require --no-update drupal/search_api_solr_multilingual:999.0.0 drupal/search_api:dev-8.x-1.x drupal/search_api_solr:8.x-1.x drupal/facets:dev-8.x-1.x
+  - composer require --no-update drupal/search_api_solr_multilingual:999.0.0 drupal/search_api:dev-8.x-1.x drupal/search_api_solr:dev-8.x-1.x drupal/facets:dev-8.x-1.x
   - cat composer.json
   - composer install --no-progress
   - cd web
