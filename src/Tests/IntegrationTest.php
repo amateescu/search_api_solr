@@ -110,7 +110,7 @@ class IntegrationTest extends WebTestBase {
 
     // Create a facet, enable 'show numbers'.
     $this->createFacet('Owl', 'owl');
-    $edit = ['widget' => 'links', 'widget_configs[show_numbers]' => '1'];
+    $edit = ['widget' => 'links', 'widget_config[show_numbers]' => '1'];
     $this->drupalPostForm('admin/config/search/facets/owl/edit', $edit, $this->t('Save'));
 
     // Verify that the facet results are correct.
