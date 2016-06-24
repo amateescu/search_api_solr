@@ -170,7 +170,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     /** @var SolrFieldTypeInterface $solr_field_type */
     foreach ($this->load() as $solr_field_type) {
       if (!$solr_field_type->isManagedSchema()) {
-        $xml .= "\n" . $indentation . $solr_field_type->getFieldTypeAsXml();
+        $xml .= "\n$indentation" . str_replace("\n", "\n$indentation", $solr_field_type->getFieldTypeAsXml());
       }
     }
     $xml .= "\n" . $this->getExtraFileFoot($target_solr_version, 'types');
