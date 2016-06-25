@@ -1,6 +1,6 @@
 type: module
 name: 'Search API Test Solr Multilingual search'
-description: 'Support module for Search API Solr Mulrilingual search tests.'
+description: 'Support module for Search API Solr Multilingual search tests.'
 package: 'Search API'
 dependencies:
   - search_api_test_example_content
