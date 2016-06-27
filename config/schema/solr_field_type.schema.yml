@@ -158,7 +158,7 @@ search_api_solr_multilingual.solr_field_type.*:
           label: 'Protected words'
         accents:
           type: string
-          label: 'Accemnt char mapping'
+          label: 'Accent char mapping'
         synonyms:
           type: string
           label: 'Synonym words'

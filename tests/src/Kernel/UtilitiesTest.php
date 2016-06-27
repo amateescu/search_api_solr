@@ -32,14 +32,14 @@ class UtilitiesTest extends KernelTestBase {
    * Tests langauge-specific Solr field names.
    */
   public function testLanguageSpecificFieldNames() {
-    $this->doFieldNameConvertions();
+    $this->doFieldNameConversions();
     // Traditional Chinese as used in Hong Kong.
-    $this->doFieldNameConvertions('ts', 'zh-Hant-HK', 'a_longer_field_name');
+    $this->doFieldNameConversions('ts', 'zh-Hant-HK', 'a_longer_field_name');
     // The variant of German orthography dating from the 1901 reforms, as seen
     // in Switzerland.
-    $this->doFieldNameConvertions('tm', 'de-CH-1901', 'sophisticated/field;NAME');
+    $this->doFieldNameConversions('tm', 'de-CH-1901', 'sophisticated/field;NAME');
 
-    $this->doFieldNameConvertions('tm', 'en', 'tm;en_tm_en_repeated_sequences');
+    $this->doFieldNameConversions('tm', 'en', 'tm;en_tm_en_repeated_sequences');
   }
 
   /**
@@ -52,7 +52,7 @@ class UtilitiesTest extends KernelTestBase {
    * @param string $field
    *   The Drupal field name.
    */
-  protected function doFieldNameConvertions($prefix = 'tm', $langcode = 'de', $field = 'body') {
+  protected function doFieldNameConversions($prefix = 'tm', $langcode = 'de', $field = 'body') {
     $sep = ';';
     // tm_body
     $dynamic_field_name = $prefix . '_' . $field;
