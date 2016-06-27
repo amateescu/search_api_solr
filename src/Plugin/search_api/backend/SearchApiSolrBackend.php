@@ -28,6 +28,7 @@ use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Drupal\search_api_solr\Solr\SolrHelper;
 use Solarium\Client;
 use Solarium\Core\Client\Request;
+use Solarium\Core\Client\Response;
 use Solarium\Core\Query\Helper;
 use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\QueryType\Select\Query\Query;
@@ -418,7 +419,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $supported = array(
       //'search_api_autocomplete',
       'search_api_facets',
-      //'search_api_facets_operator_or',
+      'search_api_facets_operator_or',
       //'search_api_grouping',
       'search_api_mlt',
       'search_api_random_sort',
@@ -883,9 +884,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     // Set basic filters.
-    $conditions_queries = $this->getFilterQueries($query, $field_names, $index_fields);
-    foreach ($conditions_queries as $id => $conditions_query) {
-      $solarium_query->createFilterQuery('filters_' . $id)->setQuery($conditions_query);
+    $filter_queries = $this->getFilterQueries($query, $field_names, $index_fields);
+    foreach ($filter_queries as $id => $filter_query) {
+      $solarium_query->createFilterQuery('filters_' . $id)
+        ->setQuery($filter_query['query'])
+        ->addTags($filter_query['tags']);
     }
 
     // Set the Index filter.
@@ -902,8 +905,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $this->solrHelper->setSorts($solarium_query, $query, $field_names);
 
     // Set facet fields.
-    $facets = $query->getOption('search_api_facets', array());
-    $this->setFacets($facets, $field_names, $solarium_query);
+    $this->setFacets($query, $solarium_query, $field_names);
 
     // Set highlighting.
     $this->solrHelper->setHighlighting($solarium_query, $query);
@@ -984,6 +986,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       // Send search request.
       $response = $this->solr->executeRequest($request);
+      $body = $response->getBody();
+      $this->alterSolrResponseBody($body, $query);
+      $response = new Response($body, $response->getHeaders());
+
       $resultset = $this->solr->createResult($solarium_query, $response);
 
       // Extract results.
@@ -998,7 +1004,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       // Extract facets.
       if ($resultset instanceof Result) {
-        if ($facets = $this->extractFacets($query, $resultset)) {
+        if ($facets = $this->extractFacets($query, $resultset, $field_names)) {
           $results->setExtraData('search_api_facets', $facets);
         }
       }
@@ -1386,17 +1392,16 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @return array
    *   An array describing facets that apply to the current results.
    */
-  protected function extractFacets(QueryInterface $query, Result $resultset) {
+  protected function extractFacets(QueryInterface $query, Result $resultset, array $field_names) {
     if (!$resultset->getFacetSet()) {
-      return array();
+      return [];
     }
 
-    $facets = array();
+    $facets = [];
     $index = $query->getIndex();
-    $field_names = $this->getSolrFieldNames($index);
     $fields = $index->getFields();
 
-    $extract_facets = $query->getOption('search_api_facets', array());
+    $extract_facets = $query->getOption('search_api_facets', []);
 
     if ($facet_fields = $resultset->getFacetSet()->getFacets()) {
       foreach ($extract_facets as $delta => $info) {
@@ -1523,7 +1528,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * Recursively transforms conditions into a flat array of Solr filter queries.
    *
-   * @param \Drupal\search_api\Query\ConditionGroupInterface $conditions
+   * @param \Drupal\search_api\Query\ConditionGroupInterface $condition_group
    *   The group of conditions.
    * @param array $solr_fields
    *   The mapping from Drupal to Solr field names.
@@ -1548,37 +1553,60 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
         $value = $condition->getValue();
         if ($value !== '') {
-          $fq[] = $this->createFilterQuery($solr_fields[$field], $value, $condition->getOperator(), $index_fields[$field]);
+          $fq[] = [
+            'query' => $this->createFilterQuery($solr_fields[$field], $value, $condition->getOperator(), $index_fields[$field]),
+            'tags' => $condition_group->getTags(),
+          ];
         }
       }
       else {
         // Nested condition group.
-        $nested_fq = $this->createFilterQueries($condition, $solr_fields, $index_fields);
-        if (count($nested_fq) > 1) {
-          array_walk_recursive($nested_fq, function (&$query, $key, $pre) {
-            if (strpos($query, '-') !== 0) {
-              $query = $pre . $query;
-            }
-            elseif (!$pre) {
-              $query = '(' . $query . ')';
-            }
-          }, $condition->getConjunction() == 'OR' ? '' : '+');
-          $fq[] = '(' . implode(' ', $nested_fq) . ')';
-        }
-        else {
-          $fq[] = $nested_fq[0];
-        }
+        $nested_fqs = $this->createFilterQueries($condition, $solr_fields, $index_fields);
+        $fq = array_merge($fq, $this->reduceFilterQueries($nested_fqs, $condition));
       }
     }
 
-    // @todo The tagging needs a complete review.
-    foreach ($condition_group->getTags() as $tag) {
-      array_walk($fq, function(&$value, $key, $prefix) {
-        $value = $prefix . $value;
-      }, "{!tag=$tag}");
+    return $fq;
+  }
 
-      // We can only apply one tag per filter.
-      break;
+  /**
+   * Reduces an array of filter queries to an array containing one filter query.
+   *
+   * The the queries will be logically combined and their tags will be merged.
+   *
+   * @param array $filter_queries
+   * @param \Drupal\search_api\Query\ConditionGroupInterface $condition_group
+   * @param bool $last
+   * @return array
+   */
+  protected function reduceFilterQueries(array $filter_queries, ConditionGroupInterface $condition_group, $last = FALSE) {
+    $fq = [];
+    if (count($filter_queries) > 1) {
+      $queries = [];
+      $tags = [];
+      $pre = $condition_group->getConjunction() == 'OR' ? '' : '+';
+      foreach ($filter_queries as $nested_fq) {
+        if (strpos($nested_fq['query'], '-') !== 0) {
+          $queries[] = $pre . $nested_fq['query'];
+        }
+        elseif (!$pre) {
+          $queries[] = '(' . $nested_fq['query'] . ')';
+        }
+        else {
+          $queries[] = $nested_fq['query'];
+        }
+        $tags += $nested_fq['tags'];
+      }
+      $fq[] =  [
+        'query' => (!$last ? '(' : '') . implode(' ', $queries) . (!$last ? ')' : ''),
+        'tags' => array_unique($tags + $condition_group->getTags()),
+      ];
+    }
+    else {
+      $fq[] = [
+        'query' => $filter_queries[0]['query'],
+        'tags' => array_unique($filter_queries[0]['tags'] + $condition_group->getTags()),
+      ];
     }
 
     return $fq;
@@ -1668,8 +1696,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
   /**
    * Helper method for creating the facet field parameters.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   * @param \Solarium\QueryType\Select\Query\Query $solarium_query
+   * @param array $field_names
    */
-  protected function setFacets(array $facets, array $field_names, Query $solarium_query) {
+  protected function setFacets(QueryInterface $query, Query $solarium_query, array $field_names) {
+    $facets = $query->getOption('search_api_facets', []);
+
     if (empty($facets)) {
       return;
     }
@@ -1784,6 +1818,15 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   The response object returned by Solr.
    */
   protected function postQuery(ResultSetInterface $results, QueryInterface $query, $response) {
+  }
+
+  /**
+   * Allow custom changes to the response body before extracting values.
+   *
+   * @param string $body
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   */
+  protected function alterSolrResponseBody(&$body, QueryInterface $query) {
   }
 
   /**

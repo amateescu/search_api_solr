@@ -187,17 +187,28 @@ class SearchApiSolrTest extends BackendTestBase {
     $query->addCondition('id', 5, '<>');
     $query->range(0, 0);
     $results = $query->execute();
-    $expected = array(
-      array('count' => 4, 'filter' => '"test"'),
-      array('count' => 3, 'filter' => '"case"'),
-      array('count' => 1, 'filter' => '"bar"'),
-      array('count' => 1, 'filter' => '"foobar"'),
-    );
+    $expected = $this->getExpectedFacetsOfregressionTest2469547();
     // We can't guarantee the order of returned facets, since "bar" and "foobar"
     // both occur once, so we have to manually sort the returned facets first.
     $facets = $results->getExtraData('search_api_facets', array())['body'];
     usort($facets, array($this, 'facetCompare'));
     $this->assertEquals($expected, $facets, 'Correct facets were returned for a fulltext field.');
+  }
+
+  /**
+   * Return the expected facets for regression test 2469547.
+   *
+   * The facets differ for different backends because.
+   *
+   * @return array
+   */
+  protected function getExpectedFacetsOfregressionTest2469547() {
+    return [
+      ['count' => 4, 'filter' => '"test"'],
+      ['count' => 3, 'filter' => '"case"'],
+      ['count' => 1, 'filter' => '"bar"'],
+      ['count' => 1, 'filter' => '"foobar"'],
+    ];
   }
 
   /**
@@ -291,21 +302,21 @@ class SearchApiSolrTest extends BackendTestBase {
     $query = $this->buildSearch();
     $query->addCondition('x', 5, '=');
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
-    $this->assertEquals('solr_x:"5"', $fq[0]);
+    $this->assertEquals('solr_x:"5"', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
     $query = $this->buildSearch();
     $query->addCondition('x', 5, '<>');
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
-    $this->assertEquals('-solr_x:"5"', $fq[0]);
+    $this->assertEquals('-solr_x:"5"', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
     $query = $this->buildSearch();
     $query->addCondition('x', 3, '<>');
     $query->addCondition('x', 5, '<>');
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
-    $this->assertEquals('-solr_x:"3"', $fq[0]);
-    $this->assertEquals('-solr_x:"5"', $fq[1]);
+    $this->assertEquals('-solr_x:"3"', $fq[0]['query']);
+    $this->assertEquals('-solr_x:"5"', $fq[1]['query']);
 
     $query = $this->buildSearch();
     $condition_group = $query->createConditionGroup();
@@ -313,7 +324,7 @@ class SearchApiSolrTest extends BackendTestBase {
     $condition_group->addCondition('x', 5, '<>');
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
-    $this->assertEquals('(-solr_x:"3" -solr_x:"5")', $fq[0]);
+    $this->assertEquals('(-solr_x:"3" -solr_x:"5")', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
     $query = $this->buildSearch();
@@ -323,7 +334,7 @@ class SearchApiSolrTest extends BackendTestBase {
     $condition_group->addCondition('z', 7);
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
-    $this->assertEquals('(-solr_x:"5" +solr_y:"3" +solr_z:"7")', $fq[0]);
+    $this->assertEquals('(-solr_x:"5" +solr_y:"3" +solr_z:"7")', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
     $query = $this->buildSearch();
@@ -335,7 +346,7 @@ class SearchApiSolrTest extends BackendTestBase {
     $condition_group->addConditionGroup($inner_condition_group);
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
-    $this->assertEquals('(-solr_x:"5" +(solr_y:"3" solr_z:"7"))', $fq[0]);
+    $this->assertEquals('(-solr_x:"5" +(solr_y:"3" solr_z:"7"))', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
     $query = $this->buildSearch();
@@ -351,7 +362,7 @@ class SearchApiSolrTest extends BackendTestBase {
     $condition_group->addConditionGroup($inner_condition_group_and);
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
-    $this->assertEquals('(+(solr_x:"3" (-solr_y:"7")) +(+solr_x:"1" -solr_y:"2" +solr_z:{* TO "5"}))', $fq[0]);
+    $this->assertEquals('(+(solr_x:"3" (-solr_y:"7")) +(+solr_x:"1" -solr_y:"2" +solr_z:{* TO "5"}))', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
     $query = $this->buildSearch();
@@ -360,7 +371,7 @@ class SearchApiSolrTest extends BackendTestBase {
     $condition_group->addCondition('y', [1, 2, 3], 'NOT IN');
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
-    $this->assertEquals('(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))', $fq[0]);
+    $this->assertEquals('(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
     $query = $this->buildSearch();
@@ -371,7 +382,7 @@ class SearchApiSolrTest extends BackendTestBase {
     $condition_group->addConditionGroup($inner_condition_group);
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
-    $this->assertEquals('(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))', $fq[0]);
+    $this->assertEquals('(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
   }
 
@@ -387,8 +398,8 @@ class SearchApiSolrTest extends BackendTestBase {
     $query->setLanguages(['en']);
     $query->addCondition('x', 5, '=');
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
-    $this->assertEquals('solr_x:"5"', $fq[0]);
-    $this->assertEquals('ss_search_api_language:"en"', $fq[1]);
+    $this->assertEquals('solr_x:"5"', $fq[0]['query']);
+    $this->assertEquals('ss_search_api_language:"en"', $fq[1]['query']);
 
     $query = $this->buildSearch();
     $query->setLanguages(['en', 'de']);
@@ -399,8 +410,8 @@ class SearchApiSolrTest extends BackendTestBase {
     $condition_group->addConditionGroup($inner_condition_group);
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
-    $this->assertEquals('(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))', $fq[0]);
-    $this->assertEquals('(ss_search_api_language:"en" ss_search_api_language:"de")', $fq[1]);
+    $this->assertEquals('(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))', $fq[0]['query']);
+    $this->assertEquals('(ss_search_api_language:"en" ss_search_api_language:"de")', $fq[1]['query']);
   }
 
   /**
