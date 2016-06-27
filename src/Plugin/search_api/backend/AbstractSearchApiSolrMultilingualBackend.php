@@ -20,6 +20,7 @@ use Drupal\search_api_solr_multilingual\Utility\Utility;
 use Solarium\Core\Client\Response;
 use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\QueryType\Select\Query\Query;
+use Solarium\QueryType\Select\ResponseParser\Component\FacetSet;
 use Solarium\QueryType\Select\Result\Result;
 
 /**
@@ -237,7 +238,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
   /**
    * {@inheritdoc}
    */
-  protected  function getFilterQueries(QueryInterface $query, array $solr_fields, array $index_fields) {
+  protected function getFilterQueries(QueryInterface $query, array $solr_fields, array $index_fields) {
     $condition_group = $query->getConditionGroup();
     $conditions = $condition_group->getConditions();
     if (empty($conditions) || empty($query->getLanguages())) {
@@ -245,19 +246,23 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     }
 
     $fq = [];
-    foreach ($query->getLanguages() as $langcode) {
-      $language_specific_condition_group = $query->createConditionGroup();
-      $language_specific_condition_group->addCondition(SEARCH_API_LANGUAGE_FIELD_NAME, $langcode);
-      $language_specific_condition_group->addConditionGroup($condition_group);
-      $nested_fq = $this->createFilterQueries($language_specific_condition_group, $this->getLanguageSpecificSolrFieldNames($langcode, $solr_fields, reset($index_fields)->getIndex()), $index_fields);
-      array_walk_recursive($nested_fq, function (&$query, $key) {
-        if (strpos($query, '-') !== 0) {
-          $query = '+' . $query;
-        }
-      });
-      $fq[] = '(' . implode(' ', $nested_fq) . ')';
+    foreach ($conditions as $condition) {
+      $language_fqs = [];
+      foreach ($query->getLanguages() as $langcode) {
+        $language_specific_condition_group = $query->createConditionGroup();
+        $language_specific_condition_group->addCondition(SEARCH_API_LANGUAGE_FIELD_NAME, $langcode);
+        $language_specific_conditions = & $language_specific_condition_group->getConditions();
+        $language_specific_conditions[] = $condition;
+        $language_fqs = array_merge($language_fqs, $this->reduceFilterQueries(
+          $this->createFilterQueries($language_specific_condition_group, $this->getLanguageSpecificSolrFieldNames($langcode, $solr_fields, reset($index_fields)->getIndex()), $index_fields),
+          $condition_group
+        ));
+      }
+      $language_aware_condition_group = $query->createConditionGroup('OR');
+      $fq = array_merge($fq, $this->reduceFilterQueries($language_fqs, $language_aware_condition_group, TRUE));
     }
-    return [implode(' ', $fq)];
+
+    return $fq;
   }
 
   /**
@@ -284,43 +289,63 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
   /**
    * @inheritdoc
    */
-  protected function extractResults(QueryInterface $query, ResultInterface $result) {
+  protected function alterSolrResponseBody(&$body, QueryInterface $query) {
+    $data = json_decode($body);
+
     $index = $query->getIndex();
     $field_names = $this->getSolrFieldNames($index, TRUE);
-    $data = $result->getData();
     $doc_languages = [];
 
-    foreach ($data['response']['docs'] as &$doc) {
-      $language_id = $doc_languages[$this->createId($index->id(), $doc['item_id'])] = $doc[$field_names[SEARCH_API_LANGUAGE_FIELD_NAME]];
-      foreach (array_keys($doc) as $language_specific_field_name) {
+    foreach ($data->response->docs as $doc) {
+      $language_id = $doc_languages[$this->createId($index->id(), $doc->item_id)] = $doc->{$field_names[SEARCH_API_LANGUAGE_FIELD_NAME]};
+      foreach (array_keys(get_object_vars($doc)) as $language_specific_field_name) {
         $field_name = Utility::getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($language_specific_field_name);
         if ($field_name != $language_specific_field_name) {
           if (Utility::getLanguageIdFromLanguageSpecificSolrDynamicFieldName($language_specific_field_name) == $language_id) {
-            $doc[$field_name] = $doc[$language_specific_field_name];
-            unset($doc[$language_specific_field_name]);
+            $doc->{$field_name} = $doc->{$language_specific_field_name};
+            unset($doc->{$language_specific_field_name});
           }
         }
       }
     }
 
-    if (isset($data['highlighting'])) {
-      foreach ($data['highlighting'] as $solr_id => &$item) {
-        foreach (array_keys($item) as $language_specific_field_name) {
+    if (isset($data->highlighting)) {
+      foreach ($data->highlighting as $solr_id => &$item) {
+        foreach (array_keys(get_object_vars($item)) as $language_specific_field_name) {
           $field_name = Utility::getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($language_specific_field_name);
           if ($field_name != $language_specific_field_name) {
             if (Utility::getLanguageIdFromLanguageSpecificSolrDynamicFieldName($language_specific_field_name) == $doc_languages[$solr_id]) {
-              $item[$field_name] = $item[$language_specific_field_name];
-              $item[$language_specific_field_name];
+              $item->{$field_name} = $item->{$language_specific_field_name};
+              unset($item->{$language_specific_field_name});
             }
           }
         }
       }
     }
 
-    $new_response = new Response(json_encode($data), $result->getResponse()->getHeaders());
-    $result = new Result(NULL, $result->getQuery(), $new_response);
+    if (isset($data->facet_counts)) {
+      $facet_set_helper = new FacetSet();
+      foreach (get_object_vars($data->facet_counts->facet_fields) as $language_specific_field_name => $facet_terms) {
+        $field_name = Utility::getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($language_specific_field_name);
+        if ($field_name != $language_specific_field_name) {
+          if (isset($data->facet_counts->facet_fields->{$field_name})) {
+            // @todo this simple merge of all language specific fields to one
+            //    language unspecific fields should be configurable.
+            $key_value = $facet_set_helper->convertToKeyValueArray($data->facet_counts->facet_fields->{$field_name}) +
+              $facet_set_helper->convertToKeyValueArray($facet_terms);
+            $facet_terms = [];
+            foreach ($key_value as $key => $value) {
+              // @todo check for NULL key of "missing facets".
+              $facet_terms[] = $key;
+              $facet_terms[] = $value;
+            }
+          }
+          $data->facet_counts->facet_fields->{$field_name} = $facet_terms;
+        }
+      }
+    }
 
-    return parent::extractResults($query, $result);
+    $body = json_encode($data);
   }
 
   /**
@@ -485,6 +510,21 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
   public function hasLanguageUndefinedFallback() {
     return isset($this->configuration['sasm_language_unspecific_fallback_on_schema_issues']) ?
       $this->configuration['sasm_language_unspecific_fallback_on_schema_issues'] : FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setFacets(QueryInterface $query, Query $solarium_query, array $field_names) {
+    parent::setFacets($query, $solarium_query, $field_names);
+
+    // $languages could not be empty.
+    // @see alterSearchApiQuery()
+    $languages = $query->getLanguages();
+    foreach ($languages as $language) {
+      $language_specific_field_names = $this->getLanguageSpecificSolrFieldNames($language, $field_names, $query->getIndex());
+      parent::setFacets($query, $solarium_query, array_diff_assoc($language_specific_field_names, $field_names));
+    }
   }
 
 }

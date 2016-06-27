@@ -70,7 +70,7 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
     $query->setLanguages(['en']);
     $query->addCondition('x', 5, '=');
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
-    $this->assertEquals('(+ss_search_api_language:"en" +solr_x:"5")', $fq[0]);
+    $this->assertEquals('(+ss_search_api_language:"en" +solr_x:"5")', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
     $query = $this->buildSearch();
@@ -82,21 +82,21 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
     $condition_group->addConditionGroup($inner_condition_group);
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
-    $this->assertEquals('(+ss_search_api_language:"en" +(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))) (+ss_search_api_language:"de" +(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3")))', $fq[0]);
+    $this->assertEquals('(+ss_search_api_language:"en" +(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))) (+ss_search_api_language:"de" +(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3")))', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
   }
 
   /**
-   * Tests whether facets work correctly.
+   * {@inheritdoc}
    */
-  protected function checkFacets() {
-    // @todo facets are currently broken.
+  protected function getExpectedFacetsOfregressionTest2469547() {
+    return [
+      ['count' => 4, 'filter' => '"test"'],
+      ['count' => 3, 'filter' => '"case"'],
+      ['count' => 2, 'filter' => '"cas"'],
+      ['count' => 1, 'filter' => '"bar"'],
+      ['count' => 1, 'filter' => '"foobar"'],
+    ];
   }
 
-  /**
-   * Regression tests for #2469547.
-   */
-  protected function regressionTest2469547() {
-    // @todo facets are currently broken.
-  }
 }
