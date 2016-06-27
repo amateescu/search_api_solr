@@ -11,14 +11,15 @@ git:
  depth: 10000
 
 php:
-  - 5.5
-#  - 5.6
+#  - 5.5
+  - 5.6
   - 7.0
 
 # This creates a build with each php environment. 6 builds in total.
 env:
   - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=4.5.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/web/modules/search_api_solr/solr-conf/4.x"
   - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=5.5.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/web/modules/search_api_solr/solr-conf/5.x"
+  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=6.0.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/web/modules/search_api_solr/solr-conf/6.x"
 
 # notifications:
 #  irc:
