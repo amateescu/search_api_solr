@@ -518,12 +518,11 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
   protected function setFacets(QueryInterface $query, Query $solarium_query, array $field_names) {
     parent::setFacets($query, $solarium_query, $field_names);
 
-    // $languages could not be empty.
-    // @see alterSearchApiQuery()
-    $languages = $query->getLanguages();
-    foreach ($languages as $language) {
-      $language_specific_field_names = $this->getLanguageSpecificSolrFieldNames($language, $field_names, $query->getIndex());
-      parent::setFacets($query, $solarium_query, array_diff_assoc($language_specific_field_names, $field_names));
+    if ($languages = $query->getLanguages()) {
+      foreach ($languages as $language) {
+        $language_specific_field_names = $this->getLanguageSpecificSolrFieldNames($language, $field_names, $query->getIndex());
+        parent::setFacets($query, $solarium_query, array_diff_assoc($language_specific_field_names, $field_names));
+      }
     }
   }
 
