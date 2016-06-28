@@ -15,6 +15,12 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
+<!DOCTYPE schema [
+  <!ENTITY extrafields SYSTEM "schema_extra_fields.xml">
+  <!ENTITY extratypes SYSTEM "schema_extra_types.xml">
+  <!ENTITY legacyfields SYSTEM "schema_legacy_fields.xml">
+  <!ENTITY legacytypes SYSTEM "schema_legacy_types.xml">
+]>
 
 <!--
  This is the Solr schema file. This file should be named "schema.xml" and
@@ -703,9 +709,7 @@
 <!--  <fieldType name="currency" class="solr.CurrencyField" precisionStep="8" defaultCurrency="USD" currencyConfig="currency.xml" /> -->
 
   <!-- Following is a dynamic way to include other fields, added by other contrib modules -->
-  <xi:include href="schema_extra_fields.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
-    <xi:fallback></xi:fallback>
-  </xi:include>
+  &extrafields;
 
 <!--
   Enable the following only if you need backwards compatibility with
@@ -714,15 +718,11 @@
   Drupal 8 and earlier versions.
 -->
 <!--
-  <xi:include href="schema_legacy_fields.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
-    <xi:fallback></xi:fallback>
-  </xi:include>
+  &legacyfields;
 -->
 
   <!-- Following is a dynamic way to include other types, added by other contrib modules -->
-  <xi:include href="schema_extra_types.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
-    <xi:fallback></xi:fallback>
-  </xi:include>
+  &extratypes;
 
   <!--
     Enable the following only if you need backwards compatibility with
@@ -731,9 +731,7 @@
     Drupal 8 and earlier versions.
   -->
 <!--
-  <xi:include href="schema_legacy_types.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
-    <xi:fallback></xi:fallback>
-  </xi:include>
+  &legacytypes;
 -->
 
   <!-- Field to use to determine and enforce document uniqueness.
