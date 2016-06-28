@@ -227,21 +227,12 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    * @return string The created fragment.
    */
   protected function getExtraFileHead($target_solr_version, $legacy_element) {
-    $head = <<<'EOD'
+    $head = '';
+    if (version_compare($target_solr_version, '6.0.0', '<')) {
+      $head = <<<'EOD'
 <?xml version="1.0" encoding="UTF-8" ?>
 EOD;
-    $head .= "\n\n";
-
-    if (version_compare($target_solr_version, '6.0.0', '>=')) {
-      $head .= <<<'EOD'
-<!-- An XML file always requires a single root element.
-     The additional <xi:include> which points to a nonexistent(!) file became our
-     required single root element. See https://drupal.org/node/2145969 -->
-<xi:include href="InMemoriamOfPinkPony.rip" xmlns:xi="http://www.w3.org/2001/XInclude">
-  <xi:fallback>
-EOD;
-    }
-    else {
+      $head .= "\n\n";
       $head .= "<$legacy_element>\n";
     }
     return $head;
@@ -258,13 +249,7 @@ EOD;
    */
   protected function getExtraFileFoot($target_solr_version, $legacy_element) {
     $foot = '';
-    if (version_compare($target_solr_version, '6.0.0', '>=')) {
-      $foot .= <<<'EOD'
-  </xi:fallback>
-</xi:include>
-EOD;
-    }
-    else {
+    if (version_compare($target_solr_version, '6.0.0', '<')) {
       $foot .= "</$legacy_element>";
     }
     return $foot;
