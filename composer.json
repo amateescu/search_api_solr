@@ -4,6 +4,6 @@
     "type": "drupal-module",
     "license": "GPL-2.0+",
     "require": {
-        "solarium/solarium": "3.5.1"
+        "solarium/solarium": "3.6.*"
     }
 }
