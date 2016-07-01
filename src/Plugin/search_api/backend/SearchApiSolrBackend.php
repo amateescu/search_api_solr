@@ -39,6 +39,11 @@ use Solarium\QueryType\Update\Query\Document\Document;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
+ * The minimum required Solr schema version.
+ */
+define('SEARCH_API_SOLR_MIN_SCHEMA_VERSION', 4);
+
+/**
  * Apache Solr backend for search api.
  *
  * @SearchApiBackend(
@@ -553,7 +558,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                 drupal_set_message($this->t('Your schema.xml version is too old. Please replace all configuration files with the ones packaged with this module and re-index you data.'), 'error');
                 $status = 'error';
               }
-              elseif (substr($stats_summary['@schema_version'], 0, 9) != 'drupal-4.') {
+              elseif (!preg_match('/drupal-[' . SEARCH_API_SOLR_MIN_SCHEMA_VERSION . '-9]\./', $stats_summary['@schema_version'])) {
                 $variables['@url'] = Url::fromUri('internal:/' . drupal_get_path('module', 'search_api_solr') . '/INSTALL.txt')
                   ->toString();
                 $message = $this->t('You are using an incompatible schema.xml configuration file. Please follow the instructions in the <a href="@url">INSTALL.txt</a> file for setting up Solr.', $variables);
