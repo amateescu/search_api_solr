@@ -1143,7 +1143,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $pref .= 'm';
         }
         $name = $pref . '_' . $key;
-        $ret[$key] = SearchApiSolrUtility::encodeSolrDynamicFieldName($name);
+        $ret[$key] = SearchApiSolrUtility::encodeSolrName($name);
       }
 
       // Let modules adjust the field mappings.
