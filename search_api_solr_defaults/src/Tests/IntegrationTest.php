@@ -68,7 +68,7 @@ class IntegrationTest extends WebTestBase {
     $this->drupalPostForm(NULL, NULL, t('Continue'));
     $args = array(
       '@count' => 3,
-      '%names' => 'Database Search Defaults, Database search, Search API',
+      '%names' => 'Solr Search Defaults, Solr search, Search API',
     );
     $success_text = strip_tags(t('@count modules have been enabled: %names.', $args));
     $this->assertText($success_text, 'Modules have been installed.');
@@ -82,7 +82,7 @@ class IntegrationTest extends WebTestBase {
     $this->assertTrue($index, 'Index can be loaded');
 
     $this->drupalLogin($this->authenticatedUser);
-    $this->drupalGet('search/content');
+    $this->drupalGet('solr-search/content');
     $this->assertResponse(200, 'Authenticated user can access the search view.');
     $this->drupalLogin($this->adminUser);
 
@@ -104,7 +104,7 @@ class IntegrationTest extends WebTestBase {
     $this->assertResponse(200, 'Index was not removed.');
 
     $this->drupalLogin($this->authenticatedUser);
-    $this->drupalGet('search/content');
+    $this->drupalGet('solr-search/content');
     $this->assertResponse(200, 'Authenticated user can access the search view.');
     $this->drupalLogin($this->adminUser);
 
