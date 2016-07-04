@@ -447,6 +447,7 @@ class SearchApiSolrTest extends BackendTestBase {
       $this->insertExampleContent();
       $this->indexItems($this->indexId);
 
+      $config['retrieve_data'] = TRUE;
       $config['highlight_data'] = TRUE;
       $config['excerpt'] = FALSE;
       $query = $this->buildSearch('foobar');

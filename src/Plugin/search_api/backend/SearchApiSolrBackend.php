@@ -13,6 +13,7 @@ use Drupal\field\FieldConfigInterface;
 use Drupal\field\FieldStorageConfigInterface;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\ItemInterface;
+use Drupal\search_api\Plugin\search_api\data_type\value\TextValue;
 use Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface;
 use Drupal\search_api\Query\ConditionInterface;
 use Drupal\search_api\SearchApiException;
@@ -255,12 +256,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
     );
-    $form['advanced']['excerpt'] = array(
-      '#type' => 'checkbox',
-      '#title' => $this->t('Return an excerpt for all results'),
-      '#description' => $this->t("If search keywords are given, use Solr's capabilities to create a highlighted search excerpt for each result. Whether the excerpts will actually be displayed depends on the settings of the search, though."),
-      '#default_value' => $this->configuration['excerpt'],
-    );
     $form['advanced']['retrieve_data'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Retrieve result data from Solr'),
@@ -272,6 +267,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#title' => $this->t('Highlight retrieved data'),
       '#description' => $this->t('When retrieving result data from the Solr server, try to highlight the search terms in the returned fulltext fields.'),
       '#default_value' => $this->configuration['highlight_data'],
+    );
+    $form['advanced']['excerpt'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Return an excerpt for all results'),
+      '#description' => $this->t("If search keywords are given, use Solr's capabilities to create a highlighted search excerpt for each result. Whether the excerpts will actually be displayed depends on the settings of the search, though."),
+      '#default_value' => $this->configuration['excerpt'],
     );
     $form['advanced']['skip_schema_check'] = array(
       '#type' => 'checkbox',
@@ -291,10 +292,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       ),
       '#default_value' => $this->configuration['solr_version'],
     );
-    // Highlighting retrieved data only makes sense when we retrieve data.
-    // (Actually, internally it doesn't really matter. However, from a user's
-    // perspective, having to check both probably makes sense.)
-    $form['advanced']['highlight_data']['#states']['invisible'][':input[name="options[form][advanced][retrieve_data]"]']['checked'] = FALSE;
+    // Highlighting retrieved data and getting an excerpt only makes sense when
+    // we retrieve data. (Actually, internally it doesn't really matter.
+    // However, from a user's perspective, having to check both probably makes
+    // sense.)
+    $form['advanced']['highlight_data']['#states']['invisible'][':input[name="backend_config[advanced][retrieve_data]"]']['checked'] = FALSE;
+    $form['advanced']['excerpt']['#states']['invisible'][':input[name="backend_config[advanced][retrieve_data]"]']['checked'] = FALSE;
 
     $form['advanced']['http_method'] = array(
       '#type' => 'select',
@@ -389,8 +392,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $values += $values['multisite'];
     $values += !empty($values['autocomplete']) ? $values['autocomplete'] : array();
 
-    // Highlighting retrieved data only makes sense when we retrieve data.
+    // Highlighting retrieved data and getting an excerpt only makes sense when
+    // we retrieve data from the Solr backend.
     $values['highlight_data'] &= $values['retrieve_data'];
+    $values['excerpt'] &= $values['retrieve_data'];
 
     // For password fields, there is no default value, they're empty by default.
     // Therefore we ignore empty submissions if the user didn't change either.
@@ -912,8 +917,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Set facet fields.
     $this->setFacets($query, $solarium_query, $field_names);
 
-    // Set highlighting.
-    $this->solrHelper->setHighlighting($solarium_query, $query);
+    if (!empty($this->configuration['retrieve_data'])) {
+      // Set highlighting.
+      $this->solrHelper->setHighlighting($solarium_query, $query);
+    }
 
     // Handle spatial filters.
     $spatial_options = $query->getOption('search_api_location');
@@ -1287,6 +1294,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected function extractResults(QueryInterface $query, ResultInterface $result) {
     $index = $query->getIndex();
+    $backend_config = $index->getServerInstance()->getBackendConfig();
     $field_names = $this->getSolrFieldNames($index);
     $fields = $index->getFields();
     $site_hash = SearchApiSolrUtility::getSiteHash();
@@ -1335,7 +1343,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     /** @var \Solarium\QueryType\Select\Result\Document $doc */
     foreach ($docs as $doc) {
       $doc_fields = $doc->getFields();
-
       $item_id = $doc_fields[$id_field];
       // For items coming from a different site, we need to adapt the item ID.
       if (!$this->configuration['site_hash'] && $doc_fields['hash'] != $site_hash) {
@@ -1352,27 +1359,32 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         if (isset($doc_fields[$solr_property]) && isset($fields[$search_api_property])) {
           $doc_field = is_array($doc_fields[$solr_property]) ? $doc_fields[$solr_property] : [$doc_fields[$solr_property]];
           $field = clone $fields[$search_api_property];
+          foreach ($doc_field as &$value) {
+            switch ($field->getType()) {
+              case 'date':
+                // field type convertions
+                // Date fields need some special treatment to become valid date values
+                // (i.e., timestamps) again.
+                if (preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $value)) {
+                  $value = strtotime($value);
+                }
+                break;
 
-          // Date fields need some special treatment to become valid date values
-          // (i.e., timestamps) again.
-          if ($field->getType() == 'date') {
-            foreach ($doc_field as &$date) {
-              if (preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $date)) {
-                $date = strtotime($date);
-              }
+              case 'text':
+                $value = new TextValue($value);
             }
           }
-
           $field->setValues($doc_field);
           $result_item->setField($search_api_property, $field);
         }
       }
 
-      $index_id = $this->getIndexId($index->id());
-      $solr_id = $this->createId($index_id, $result_item->getId());
-      $excerpt = $this->getSolrHelper()->getExcerpt($result->getData(), $solr_id, $result_item, $field_names);
-      if ($excerpt) {
-        $result_item->setExcerpt($excerpt);
+      if (!empty($backend_config['retrieve_data'])) {
+        $solr_id = $this->createId($index->id(), $result_item->getId());
+        $excerpt = $this->getSolrHelper()->getExcerpt($result->getData(), $solr_id, $result_item, $field_names);
+        if ($excerpt) {
+          $result_item->setExcerpt($excerpt);
+        }
       }
 
       $result_set->addResultItem($result_item);
