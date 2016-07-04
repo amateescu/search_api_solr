@@ -491,6 +491,19 @@ class SearchApiSolrTest extends BackendTestBase {
   }
 
   /**
+   * Test that basic auth config gets passed to Solarium.
+   */
+  public function testBasicAuth() {
+    $server = $this->getServer();
+    $config = $server->getBackendConfig();
+    $config['username'] = 'foo';
+    $config['password'] = 'bar';
+    $server->setBackendConfig($config);
+    $auth = $server->getBackend()->getSolrConnection()->getEndpoint()->getAuthentication();
+    $this->assertEquals(['username' => 'foo', 'password' => 'bar'], $auth);
+  }
+
+  /**
    * Tests addition and deletion of a data source.
    */
   public function testDatasourceAdditionAndDeletion() {

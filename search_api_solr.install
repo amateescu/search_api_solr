@@ -29,7 +29,7 @@ function search_api_solr_requirements($phase) {
     if ($unavailable) {
       if ($unavailable == 1) {
         $ret['search_api_solr']['description'] = \Drupal::translation()->translate('The Solr server of <a href="!url">%name</a> could not be reached.',
-            array('!url' => \Drupal\Core\Url::fromRoute('entity.search_api_server.canonical', array('search_api_server' => $last->id()))->toString(), '%name' => $last->label()));
+          array('!url' => \Drupal\Core\Url::fromRoute('entity.search_api_server.canonical', array('search_api_server' => $last->id()))->toString(), '%name' => $last->label()));
       }
       else {
         $ret['search_api_solr']['description'] = \Drupal::translation()->translate('@count Solr servers could not be reached.', array('@count' => $unavailable));
@@ -54,6 +54,7 @@ function search_api_solr_update_8001() {
 
   foreach ($config_factory->listAll('search_api.server.') as $server_name) {
     $server = $config_factory->get($server_name);
+    // Covers search_api_solr_multilingual, too.
     if (strpos($server->get('backend'), 'search_api_solr') === 0) {
       $backend_config = $server->get('backend_config');
       $parts = explode('/', $backend_config['path']);
@@ -64,6 +65,30 @@ function search_api_solr_update_8001() {
           ->set('backend_config', $backend_config)
           ->save($has_trusted_data);
       }
+    }
+  }
+}
+
+/**
+ * Convert http_user and http_pass to username and password config for Solarium.
+ */
+function search_api_solr_update_8002() {
+  $config_factory = \Drupal::configFactory();
+  $has_trusted_data = TRUE;
+
+  foreach ($config_factory->listAll('search_api.server.') as $server_name) {
+    $server = $config_factory->get($server_name);
+    // Covers search_api_solr_multilingual, too.
+    if (strpos($server->get('backend'), 'search_api_solr') === 0) {
+      $backend_config = $server->get('backend_config');
+
+      $backend_config['username'] = $backend_config['http_user'];
+      $backend_config['password'] = $backend_config['http_pass'];
+      unset($backend_config['http_user'], $backend_config['http_pass']);
+
+      $config_factory->getEditable($server_name)
+        ->set('backend_config', $backend_config)
+        ->save($has_trusted_data);
     }
   }
 }

@@ -29,10 +29,10 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
     skip_schema_check:
       type: boolean
       label: 'Skip schema verification'
-    http_user:
+    username:
       type: string
       label: 'Username for basic HTTP authentication'
-    http_pass:
+    password:
       type: string
       label: 'Password for basic HTTP authentication'
     excerpt:

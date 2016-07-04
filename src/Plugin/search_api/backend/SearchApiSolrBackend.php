@@ -167,8 +167,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'port' => '8983',
       'path' => '/solr',
       'core' => '',
-      'http_user' => '',
-      'http_pass' => '',
+      'username' => '',
+      'password' => '',
       'excerpt' => FALSE,
       'retrieve_data' => FALSE,
       'highlight_data' => FALSE,
@@ -237,14 +237,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#title' => $this->t('Basic HTTP authentication'),
       '#description' => $this->t('If your Solr server is protected by basic HTTP authentication, enter the login data here.'),
       '#collapsible' => TRUE,
-      '#collapsed' => empty($this->configuration['http_user']),
+      '#collapsed' => empty($this->configuration['username']),
     );
-    $form['http']['http_user'] = array(
+    $form['http']['username'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Username'),
-      '#default_value' => $this->configuration['http_user'],
+      '#default_value' => $this->configuration['username'],
     );
-    $form['http']['http_pass'] = array(
+    $form['http']['password'] = array(
       '#type' => 'password',
       '#title' => $this->t('Password'),
       '#description' => $this->t('If this field is left blank and the HTTP username is filled out, the current password will not be changed.'),
@@ -399,10 +399,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     // For password fields, there is no default value, they're empty by default.
     // Therefore we ignore empty submissions if the user didn't change either.
-    if ($values['http_pass'] === ''
-      && isset($this->configuration['http_user'])
-      && $values['http_user'] === $this->configuration['http_user']) {
-      $values['http_pass'] = $this->configuration['http_pass'];
+    if ($values['password'] === ''
+      && isset($this->configuration['username'])
+      && $values['username'] === $this->configuration['username']) {
+      $values['password'] = $this->configuration['password'];
     }
 
     foreach ($values as $key => $value) {
@@ -469,10 +469,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'info' => $this->getSolrHelper()->getCoreLink(),
     );
 
-    if ($this->configuration['http_user']) {
+    if ($this->configuration['username']) {
       $vars = array(
-        '@user' => $this->configuration['http_user'],
-        '@pass' => str_repeat('*', strlen($this->configuration['http_pass'])),
+        '@user' => $this->configuration['username'],
+        '@pass' => str_repeat('*', strlen($this->configuration['password'])),
       );
       $http = $this->t('Username: @user; Password: @pass', $vars);
       $info[] = array(
@@ -992,8 +992,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
 
       // Set HTTP Basic Authentication parameter, if login data was set.
-      if (strlen($this->configuration['http_user']) && strlen($this->configuration['http_pass'])) {
-        $request->setAuthentication($this->configuration['http_user'], $this->configuration['http_pass']);
+      if (strlen($this->configuration['username']) && strlen($this->configuration['password'])) {
+        $request->setAuthentication($this->configuration['username'], $this->configuration['password']);
       }
 
       // Send search request.
