@@ -8,6 +8,7 @@
 namespace Drupal\search_api_solr_multilingual\Plugin\search_api\backend;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\search_api_solr\Utility\Utility;
 use Drupal\search_api_solr_multilingual\Entity\SolrFieldType;
 use Drupal\search_api_solr_multilingual\SearchApiSolrMultilingualException;
 
@@ -55,7 +56,7 @@ class SearchApiSolrMultilingualManagedSchemaBackend extends AbstractSearchApiSol
    */
   protected function createSolrMultilingualFieldType($solr_field_type_name) {
     // @todo replace the hardcoded version extension.
-    $field_type_name = 'm_' . $solr_field_type_name . '_5_2_0';
+    $field_type_name = 'm_' . Utility::decodeSolrName($solr_field_type_name) . '_5_2_0';
 
     // Get the field type definition from Drupal.
     /** @var \Drupal\search_api_solr_multilingual\Entity\SolrFieldType $field_type_entity */

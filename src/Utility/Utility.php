@@ -38,7 +38,7 @@ class Utility {
    * - tm_X3b_de_*
    * - tm_*
    *
-   * @see Drupal\search_api_solr\Utility\Utility::encodeSolrDynamicFieldName().
+   * @see Drupal\search_api_solr\Utility\Utility::encodeSolrName().
    * @see https://wiki.apache.org/solr/SchemaXml#Dynamic_fields
    *
    * @param string $field_name
@@ -59,7 +59,7 @@ class Utility {
    * For example the dynamic field tm;en_* for English will become tm_*.
    *
    * @see Drupal\search_api_solr_multilingual\Utility\Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName().
-   * @see Drupal\search_api_solr\Utility\Utility::encodeSolrDynamicFieldName().
+   * @see Drupal\search_api_solr\Utility\Utility::encodeSolrName().
    * @see https://wiki.apache.org/solr/SchemaXml#Dynamic_fields
    *
    * @param string $field_name
@@ -80,7 +80,7 @@ class Utility {
    * If the field name is encoded it will be decoded before the regular
    * expression runs and encoded again before the modified is returned.
    *
-   * @see Drupal\search_api_solr\Utility\Utility::encodeSolrDynamicFieldName().
+   * @see Drupal\search_api_solr\Utility\Utility::encodeSolrName().
    *
    * @param string $field_name
    *   The dynamic Solr field name.
@@ -93,10 +93,10 @@ class Utility {
    *   The modified dynamic Solr field name.
    */
   protected static function modifySolrDynamicFieldName($field_name, $pattern, $replacement) {
-    $decoded_field_name = SearchApiSolrUtility::decodeSolrDynamicFieldName($field_name);
+    $decoded_field_name = SearchApiSolrUtility::decodeSolrName($field_name);
     $modified_field_name = preg_replace($pattern, $replacement, $decoded_field_name);
     if ($decoded_field_name != $field_name) {
-      $modified_field_name = SearchApiSolrUtility::encodeSolrDynamicFieldName($modified_field_name);
+      $modified_field_name = SearchApiSolrUtility::encodeSolrName($modified_field_name);
     }
     return $modified_field_name;
   }
@@ -127,7 +127,7 @@ class Utility {
    *   could be extracted.
    */
   public static function getLanguageIdFromLanguageSpecificSolrDynamicFieldName($field_name) {
-    $decoded_field_name = SearchApiSolrUtility::decodeSolrDynamicFieldName($field_name);
+    $decoded_field_name = SearchApiSolrUtility::decodeSolrName($field_name);
     if (preg_match('@^[a-z]+' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . '([^_]+?)_@', $decoded_field_name, $matches)) {
       return $matches[1];
     }
@@ -145,9 +145,9 @@ class Utility {
    *   could be extracted.
    */
   public static function extractLanguageSpecificSolrDynamicFieldDefinition($field_name) {
-    $decoded_field_name = SearchApiSolrUtility::decodeSolrDynamicFieldName($field_name);
+    $decoded_field_name = SearchApiSolrUtility::decodeSolrName($field_name);
     if (preg_match('@^[a-z]+' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . '[^_]+?_@', $decoded_field_name, $matches)) {
-      return SearchApiSolrUtility::encodeSolrDynamicFieldName($matches[0]) . '*';
+      return SearchApiSolrUtility::encodeSolrName($matches[0]) . '*';
     }
     return FALSE;
   }

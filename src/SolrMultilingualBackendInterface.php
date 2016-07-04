@@ -35,7 +35,7 @@ interface SolrMultilingualBackendInterface extends SolrBackendInterface {
   public function getSchemaLanguageStatistics();
 
   /**
-   * Indicates if the fallback for not supportes languages is active.
+   * Indicates if the fallback for not supported languages is active.
    *
    * @return boolean
    */
