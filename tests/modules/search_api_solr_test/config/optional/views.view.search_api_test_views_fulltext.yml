@@ -63,7 +63,7 @@ display:
               'article': default
               'page': default
             datasource:
-              'entity:entity_test': default
+              'entity:entity_test_mulrev_changed': default
       fields:
         search_api_id:
           table: search_api_index_solr_search_index

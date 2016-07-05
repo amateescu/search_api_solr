@@ -552,7 +552,7 @@ class SearchApiSolrTest extends BackendTestBase {
 
       $index = $this->getIndex();
       $datasources = $index->getDatasources();
-      unset($datasources['entity:entity_test']);
+      unset($datasources['entity:entity_test_mulrev_changed']);
       $index->setDatasources($datasources)->save();
 
       // Wait for the commitWithin 1 second to complete the deletion.
