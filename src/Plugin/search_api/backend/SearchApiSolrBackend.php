@@ -1633,7 +1633,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * Create a single search query string.
    */
   protected function createFilterQuery($field, $value, $operator, FieldInterface $index_field) {
-    $field = SearchApiSolrUtility::escapeFieldName($field);
     if ($value === NULL) {
       return ($operator == '=' ? '-' : '') . "$field:[* TO *]";
     }

@@ -659,7 +659,6 @@ class SolrHelper {
       }
 
       $field = $field_names[$spatial['field']];
-      $escaped_field = SearchApiSolrUtility::escapeFieldName($field);
       $point = ((float) $spatial['lat']) . ',' . ((float) $spatial['lon']);
 
       // Prepare the filter settings.
@@ -677,7 +676,7 @@ class SolrHelper {
       foreach ($filter_queries as $key => $filter_query) {
         // If the fq consists only of a filter on this field, replace it with
         // a range.
-        $preg_field = preg_quote($escaped_field, '/');
+        $preg_field = preg_quote($field, '/');
         if (preg_match('/^' . $preg_field . ':\["?(\*|\d+(?:\.\d+)?)"? TO "?(\*|\d+(?:\.\d+)?)"?\]$/', $filter_query, $matches)) {
           unset($filter_queries[$key]);
           if ($matches[1] && is_numeric($matches[1])) {

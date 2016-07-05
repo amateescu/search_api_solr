@@ -168,23 +168,6 @@ class Utility {
   }
 
   /**
-   * Escapes a Search API field name for passing to Solr.
-   *
-   * Since field names can only contain one special character, ":", there is no
-   * need to use the complete escape() method.
-   *
-   * @param string $value
-   *   The field name to escape.
-   *
-   * @return string
-   *   An escaped string suitable for passing to Solr.
-   */
-  public static function escapeFieldName($value) {
-    $value = str_replace(':', '\:', $value);
-    return $value;
-  }
-
-  /**
    * Changes highlighting tags from our custom, HTML-safe ones to HTML.
    *
    * @param string|array $snippet
