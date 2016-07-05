@@ -29,17 +29,40 @@ class UtilitiesTest extends KernelTestBase {
   }
 
   /**
-   * Tests langauge-specific Solr field names.
+   * Tests language-specific Solr field names.
    */
-  public function testLanguageSpecificFieldNames() {
-    $this->doFieldNameConversions();
+  public function testLanguageSpecificFieldTypeNames() {
+    $this->assertEquals('text_de', SASUtility::encodeSolrName('text_de'));
+
+    // Drupal-like locale for Austria.
+    $encoded = SASUtility::encodeSolrName('text_de-at');
+    $this->assertEquals('text_de_X2d_at', $encoded);
+    $this->assertEquals('text_de-at', SASUtility::decodeSolrName($encoded));
+
     // Traditional Chinese as used in Hong Kong.
-    $this->doFieldNameConversions('ts', 'zh-Hant-HK', 'a_longer_field_name');
+    $encoded = SASUtility::encodeSolrName('text_zh-Hant-HK');
+    $this->assertEquals('text_zh_X2d_Hant_X2d_HK', $encoded);
+    $this->assertEquals('text_zh-Hant-HK', SASUtility::decodeSolrName($encoded));
+
     // The variant of German orthography dating from the 1901 reforms, as seen
     // in Switzerland.
-    $this->doFieldNameConversions('tm', 'de-CH-1901', 'sophisticated/field;NAME');
+    $encoded = SASUtility::encodeSolrName('text_de-CH-1901');
+    $this->assertEquals('text_de_X2d_CH_X2d_1901', $encoded);
+    $this->assertEquals('text_de-CH-1901', SASUtility::decodeSolrName($encoded));
+  }
 
-    $this->doFieldNameConversions('tm', 'en', 'tm;en_tm_en_repeated_sequences');
+  /**
+   * Tests language-specific Solr field names.
+   */
+  public function testLanguageSpecificDynamicFieldNames() {
+    $this->doDynamicFieldNameConversions();
+    // Traditional Chinese as used in Hong Kong.
+    $this->doDynamicFieldNameConversions('ts', 'zh-Hant-HK', 'a_longer_field_name');
+    // The variant of German orthography dating from the 1901 reforms, as seen
+    // in Switzerland.
+    $this->doDynamicFieldNameConversions('tm', 'de-CH-1901', 'sophisticated/field;NAME');
+
+    $this->doDynamicFieldNameConversions('tm', 'en', 'tm;en_tm_en_repeated_sequences');
   }
 
   /**
@@ -52,7 +75,7 @@ class UtilitiesTest extends KernelTestBase {
    * @param string $field
    *   The Drupal field name.
    */
-  protected function doFieldNameConversions($prefix = 'tm', $langcode = 'de', $field = 'body') {
+  protected function doDynamicFieldNameConversions($prefix = 'tm', $langcode = 'de', $field = 'body') {
     $sep = ';';
     // tm_body
     $dynamic_field_name = $prefix . '_' . $field;
@@ -72,14 +95,14 @@ class UtilitiesTest extends KernelTestBase {
     $this->assertEquals($language_unspecific_dynamic_field_name, $dynamic_field_name);
 
     // tm;de_body => tm_X3b_de_body => tm_body
-    $encoded_language_specific_dynamic_field_name = SASUtility::encodeSolrDynamicFieldName($language_specific_dynamic_field_name);
+    $encoded_language_specific_dynamic_field_name = SASUtility::encodeSolrName($language_specific_dynamic_field_name);
     $encoded_language_unspecific_dynamic_field_name = Utility::getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($encoded_language_specific_dynamic_field_name);
-    $decoded_language_unspecific_dynamic_field_name = SASUtility::decodeSolrDynamicFieldName($encoded_language_unspecific_dynamic_field_name);
+    $decoded_language_unspecific_dynamic_field_name = SASUtility::decodeSolrName($encoded_language_unspecific_dynamic_field_name);
     $this->assertEquals($decoded_language_unspecific_dynamic_field_name, $dynamic_field_name);
 
     // tm_X3b_de_body => tm_X3b_de_*
     $field_definition = Utility::extractLanguageSpecificSolrDynamicFieldDefinition($encoded_language_specific_dynamic_field_name);
-    $this->assertEquals($field_definition, SASUtility::encodeSolrDynamicFieldName($language_specific_prefix) . '*');
+    $this->assertEquals($field_definition, SASUtility::encodeSolrName($language_specific_prefix) . '*');
 
     // tm;de_body => de
     $this->assertEquals(Utility::getLanguageIdFromLanguageSpecificSolrDynamicFieldName($language_specific_field_name), $langcode);
