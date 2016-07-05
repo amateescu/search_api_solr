@@ -1132,15 +1132,15 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $type = $field->getType();
           $type_info = SearchApiSolrUtility::getDataTypeInfo($type);
           $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
-          try {
-            if (SearchApiUtility::isFieldIdReserved($key)) {
-              $pref .= 's';
+          if (SearchApiUtility::isFieldIdReserved($key)) {
+            $pref .= 's';
+          }
+          else {
+            if ($field->getDataDefinition()->isList()) {
+              $pref .= 'm';
             }
             else {
-              if ($field->getDataDefinition()->isList()) {
-                $pref .= 'm';
-              }
-              else {
+              try {
                 $datasource = $field->getDatasource();
                 if (!$datasource) {
                   throw new SearchApiException();
@@ -1149,11 +1149,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                   $pref .= $this->getPropertyPathCardinality($field->getPropertyPath(), $datasource->getPropertyDefinitions()) != 1 ? 'm' : 's';
                 }
               }
+              catch (SearchApiException $e) {
+                // Thrown by $field->getDatasource(). Assume multi value to be
+                // safe.
+                $pref .= 'm';
+              }
             }
-          }
-          catch (SearchApiException $e) {
-            // Thrown by $field->getDatasource(). Assume multi value to be safe.
-            $pref .= 'm';
           }
           $name = $pref . '_' . $key;
           $ret[$key] = SearchApiSolrUtility::encodeSolrName($name);

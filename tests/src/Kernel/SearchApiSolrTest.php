@@ -521,6 +521,9 @@ class SearchApiSolrTest extends BackendTestBase {
 
       $this->indexItems($this->indexId);
 
+      $results = $this->buildSearch()->execute();
+      $this->assertEquals(5, $results->getResultCount(), 'Number of indexed entities is correct.');
+
       User::create(array(
         'uid' => 1,
         'name' => 'root',
