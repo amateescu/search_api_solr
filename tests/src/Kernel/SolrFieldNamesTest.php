@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\search_api_solr\Kernel\SolrFieldNamesTest.
- */
-
 namespace Drupal\Tests\search_api_solr\Kernel;
 
 use Drupal\field\Entity\FieldConfig;
