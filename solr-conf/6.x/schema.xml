@@ -51,7 +51,7 @@
     that avoids logging every request
 -->
 
-<schema name="drupal-5.0-solr-6.x" version="1.6">
+<schema name="drupal-5.1-solr-6.x" version="1.6">
   <!-- attribute "name" is the name of this schema and is only used for display purposes.
        version="x.y" is Solr's version number for the schema syntax and
        semantics.  It should not normally be changed by applications.
@@ -139,8 +139,6 @@
   <field name="id" type="string" indexed="true" stored="true" required="true" />
 
   <!-- Search Api specific fields -->
-  <!-- item_id contains the entity ID, e.g. a node's nid. -->
-  <field name="item_id"  type="string" indexed="true" stored="true" />
   <!-- index_id is the machine name of the search index this entry belongs to. -->
   <field name="index_id" type="string" indexed="true" stored="true" />
 

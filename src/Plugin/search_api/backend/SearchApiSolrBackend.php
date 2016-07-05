@@ -44,6 +44,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 define('SEARCH_API_SOLR_MIN_SCHEMA_VERSION', 4);
 
+define('SEARCH_API_ID_FIELD_NAME', 'ss_search_api_id');
+
 /**
  * Apache Solr backend for search api.
  *
@@ -678,7 +680,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       $ret = [];
       foreach ($documents as $document) {
-        $ret[] = $document->getFields()['item_id'];
+        $ret[] = $document->getFields()[SEARCH_API_ID_FIELD_NAME];
       }
       return $ret;
     }
@@ -715,7 +717,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $doc = $this->getUpdateQuery()->createDocument();
       $doc->setField('id', $this->createId($index_id, $id));
       $doc->setField('index_id', $index_id);
-      $doc->setField('item_id', $id);
 
       // Add the site hash and language-specific base URL.
       $doc->setField('hash', SearchApiSolrUtility::getSiteHash());
@@ -958,7 +959,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $solarium_query->setFields(['*', 'score']);
     }
     else {
-      $returned_fields = ['item_id', 'score'];
+      $returned_fields = [SEARCH_API_ID_FIELD_NAME, 'score'];
       if (!$this->configuration['site_hash']) {
         $returned_fields[] = 'hash';
       }
@@ -1117,7 +1118,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     if (!isset($this->fieldNames[$index->id()]) || $reset) {
       // This array maps "local property name" => "solr doc property name".
       $ret = array(
-        'search_api_id' => 'item_id',
         'search_api_relevance' => 'score',
         'search_api_random' => 'random',
       );
@@ -1126,36 +1126,38 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $fields = $index->getFields();
       $fields += $this->getSpecialFields($index);
       foreach ($fields as $key => $field) {
-        // Generate a field name; this corresponds with naming conventions in
-        // our schema.xml.
-        $type = $field->getType();
-        $type_info = SearchApiSolrUtility::getDataTypeInfo($type);
-        $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
-        try {
-          if (SearchApiUtility::isFieldIdReserved($key)) {
-            $pref .= 's';
-          }
-          else {
-            if ($field->getDataDefinition()->isList()) {
-              $pref .= 'm';
+        if (empty($ret[$key])) {
+          // Generate a field name; this corresponds with naming conventions in
+          // our schema.xml.
+          $type = $field->getType();
+          $type_info = SearchApiSolrUtility::getDataTypeInfo($type);
+          $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
+          try {
+            if (SearchApiUtility::isFieldIdReserved($key)) {
+              $pref .= 's';
             }
             else {
-              $datasource = $field->getDatasource();
-              if (!$datasource) {
-                throw new SearchApiException();
+              if ($field->getDataDefinition()->isList()) {
+                $pref .= 'm';
               }
               else {
-                $pref .= $this->getPropertyPathCardinality($field->getPropertyPath(), $datasource->getPropertyDefinitions()) != 1 ? 'm' : 's';
+                $datasource = $field->getDatasource();
+                if (!$datasource) {
+                  throw new SearchApiException();
+                }
+                else {
+                  $pref .= $this->getPropertyPathCardinality($field->getPropertyPath(), $datasource->getPropertyDefinitions()) != 1 ? 'm' : 's';
+                }
               }
             }
           }
+          catch (SearchApiException $e) {
+            // Thrown by $field->getDatasource(). Assume multi value to be safe.
+            $pref .= 'm';
+          }
+          $name = $pref . '_' . $key;
+          $ret[$key] = SearchApiSolrUtility::encodeSolrName($name);
         }
-        catch (SearchApiException $e) {
-          // Thrown by $field->getDatasource(). Assume multi value to be safe.
-          $pref .= 'm';
-        }
-        $name = $pref . '_' . $key;
-        $ret[$key] = SearchApiSolrUtility::encodeSolrName($name);
       }
 
       // Let modules adjust the field mappings.
@@ -1256,6 +1258,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           }
           */
           $value = $value->toText();
+          break;
+
+        case 'string':
+        default:
+          // Keep $value as it is.
       }
 
       $doc->addField($key, $value);
