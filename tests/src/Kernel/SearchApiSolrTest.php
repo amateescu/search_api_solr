@@ -116,10 +116,10 @@ class SearchApiSolrTest extends BackendTestBase {
   /**
    * Tests various indexing scenarios for the Solr search backend.
    */
-  public function testFramework() {
+  public function testBackend() {
     // Only run the tests if we have a Solr core available.
     if ($this->solrAvailable) {
-      parent::testFramework();
+      parent::testBackend();
     }
     else {
       $this->assertTrue(TRUE, 'Error: The Solr instance could not be found. Please enable a multi-core one on http://localhost:8983/solr/d8');
