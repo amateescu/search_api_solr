@@ -702,6 +702,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getDocuments(IndexInterface $index, array $items) {
+    $this->connect();
+    $schema_version = $this->solrHelper->getSchemaVersion();
+
     $documents = array();
     $index_id = $this->getIndexId($index->id());
     $field_names = $this->getSolrFieldNames($index);
@@ -750,6 +753,16 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           break;
         }
         $this->addIndexField($doc, $field_names[$name], $field->getValues(), $field->getType());
+
+        if (version_compare($schema_version, '5.0', '<')) {
+          if (substr($field_names[$name], 1, 2) == 'm_') {
+            // For multi-valued fields (which aren't sortable by nature) we use
+            // the same hackish workaround like the DB backend: just copy the
+            // first value in a dedicated field for sorting.
+            $values = $field->getValues();
+            $this->addIndexField($doc, 'sort_' . $name, [reset($values)], $field->getType());
+          }
+        }
       }
 
       if ($doc) {

@@ -745,8 +745,9 @@ class SolrHelper {
   /**
    * Sets sorting for the query.
    */
-  public function setSorts(Query $solarium_query, QueryInterface $query, $field_names_single_value = array()) {
+  public function setSorts(Query $solarium_query, QueryInterface $query, $field_names = array()) {
     foreach ($query->getSorts() as $field => $order) {
+      $f = '';
       // The default Solr schema provides a virtual field named "random_SEED"
       // that can be used to randomly sort the results; the field is available
       // only at query-time.
@@ -757,11 +758,11 @@ class SolrHelper {
         $seed = !empty($params['seed']) ? $params['seed'] : mt_rand();
         $f = 'random_' . $seed;
       }
+      elseif (substr($field_names[$field], 1, 2) == 'm_') {
+        $f = 'sort_' . substr($field_names[$field], 3);
+      }
       else {
-        $f = $field_names_single_value[$field];
-        if (substr($f, 0, 3) == 'ss_') {
-          $f = 'sort_' . substr($f, 3);
-        }
+        $f = $field_names[$field];
       }
 
       $solarium_query->addSort($f, strtolower($order));
