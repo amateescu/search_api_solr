@@ -1127,7 +1127,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function getSolrFieldNames(IndexInterface $index, $reset = FALSE) {
     // @todo The field name mapping should be cached per index because custom
-    // queries needs to access it on every query.
+    //   queries needs to access it on every query. But we need to be aware of
+    //   datasource additions and deletions.
     if (!isset($this->fieldNames[$index->id()]) || $reset) {
       // This array maps "local property name" => "solr doc property name".
       $ret = array(
