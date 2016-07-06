@@ -80,4 +80,4 @@ dependencies:
     - field.storage.entity_test_mulrev_changed.width
     - search_api.server.solr_multilingual_search_server
   module:
-    - entity_test_mulrev_changed
+    - entity_test
