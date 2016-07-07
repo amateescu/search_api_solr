@@ -754,7 +754,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
         $this->addIndexField($doc, $field_names[$name], $field->getValues(), $field->getType());
 
-        if (version_compare($schema_version, '5.0', '<')) {
+        if (version_compare($schema_version, '5.0', '>=')) {
           if (substr($field_names[$name], 1, 2) == 'm_') {
             // For multi-valued fields (which aren't sortable by nature) we use
             // the same hackish workaround like the DB backend: just copy the
