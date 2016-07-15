@@ -406,6 +406,27 @@ class SearchApiSolrTest extends BackendTestBase {
     $this->assertEquals(['facet:tagtosearchfor' => 'facet:tagtosearchfor'], $fq[0]['tags'], 'Tag found in tagged first filter query');
     $this->assertEquals('ss_category:[* TO *]', $fq[1]['query'], 'Condition found in unrelated second filter query');
     $this->assertEquals([], $fq[1]['tags'], 'No tag found in second filter query');
+
+    // @see https://www.drupal.org/node/2753917
+    $query = $this->buildSearch();
+    $conditions = $query->createConditionGroup('OR', array('facet:x'));
+    $conditions->addCondition('x', 'A');
+    $conditions->addCondition('x', 'B');
+    $query->addConditionGroup($conditions);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
+    $this->assertEquals(1, count($fq));
+    $this->assertEquals(['facet:x' => 'facet:x'], $fq[0]['tags']);
+    $this->assertEquals('(solr_x:"A" solr_x:"B")', $fq[0]['query']);
+
+    $query = $this->buildSearch();
+    $conditions = $query->createConditionGroup('AND', array('facet:x'));
+    $conditions->addCondition('x', 'A');
+    $conditions->addCondition('x', 'B');
+    $query->addConditionGroup($conditions);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
+    $this->assertEquals(1, count($fq));
+    $this->assertEquals(['facet:x' => 'facet:x'], $fq[0]['tags']);
+    $this->assertEquals('(+solr_x:"A" +solr_x:"B")', $fq[0]['query']);
   }
 
   /**
