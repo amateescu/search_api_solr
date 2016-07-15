@@ -402,10 +402,10 @@ class SearchApiSolrTest extends BackendTestBase {
     );
     $query->setOption('search_api_facets', $facets);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields]);
-    $this->assertEquals('ss_category:"article_category"', $fq[0]['query'], 'Tag found in tagged first filter query');
+    $this->assertEquals('ss_category:"article_category"', $fq[0]['query'], 'Condition found in tagged first filter query');
     $this->assertEquals(['facet:tagtosearchfor' => 'facet:tagtosearchfor'], $fq[0]['tags'], 'Tag found in tagged first filter query');
-    $this->assertEquals('ss_category:[* TO *]', $fq[1]['query'], 'Tag not found in unrelated second filter query');
-    $this->assertEquals([], $fq[1]['tags'], 'Tag found in tagged first filter query');
+    $this->assertEquals('ss_category:[* TO *]', $fq[1]['query'], 'Condition found in unrelated second filter query');
+    $this->assertEquals([], $fq[1]['tags'], 'No tag found in second filter query');
   }
 
   /**
