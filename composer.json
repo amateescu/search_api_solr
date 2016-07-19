@@ -3,7 +3,22 @@
     "description": "Offers an implementation of the Search API that uses an Apache Solr server for indexing content.",
     "type": "drupal-module",
     "license": "GPL-2.0+",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/search_api_solr",
+        "irc": "irc://irc.freenode.org/drupal-search-api"
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url":  "https://packages.drupal.org/8"
+        }
+    ],
     "require": {
+        "drupal/search_api": "1.x-dev",
         "solarium/solarium": "3.6.*"
+    },
+    "suggest": {
+        "drupal/facets": "Provides factted search.",
+        "drupal/search_api_solr_multilingual": "Highly recommended if installation is multilingual or uses a language different then English."
     }
 }
