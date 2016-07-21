@@ -7,12 +7,14 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\Url;
 use Drupal\field\FieldConfigInterface;
 use Drupal\field\FieldStorageConfigInterface;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\ItemInterface;
+use Drupal\search_api\Plugin\PluginFormTrait;
 use Drupal\search_api\Plugin\search_api\data_type\value\TextValue;
 use Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface;
 use Drupal\search_api\Query\ConditionInterface;
@@ -56,7 +58,11 @@ define('SEARCH_API_ID_FIELD_NAME', 'ss_search_api_id');
  *   description = @Translation("Index items using an Apache Solr search server.")
  * )
  */
-class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInterface {
+class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInterface, PluginFormInterface {
+
+  use PluginFormTrait {
+    submitConfigurationForm as traitSubmitConfigurationForm;
+  }
 
   /**
    * The date format that Solr uses, in PHP date() syntax.
@@ -421,7 +427,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // value, do not save it.
     $form_state->unsetValue('server_description');
 
-    parent::submitConfigurationForm($form, $form_state);
+    $this->traitSubmitConfigurationForm($form, $form_state);
   }
 
   /**
