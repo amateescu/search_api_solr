@@ -38,6 +38,7 @@ use Solarium\Exception\HttpException;
 use Solarium\QueryType\Select\Result\Result;
 use Solarium\QueryType\Update\Query\Document\Document;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Datetime\DateFormatter;
 
 /**
  * The minimum required Solr schema version.
@@ -1247,7 +1248,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           if ($value === FALSE) {
             return;
           }
-          $value = format_date($value, 'custom', self::SOLR_DATE_FORMAT, 'UTC');
+          $value = DateFormatter::format($value, 'custom', self::SOLR_DATE_FORMAT, 'UTC');
           break;
 
         case 'integer':
@@ -1726,7 +1727,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         if ($value === FALSE) {
           return 0;
         }
-        $value = format_date($value, 'custom', self::SOLR_DATE_FORMAT, 'UTC');
+        $value = DateFormatter::format($value, 'custom', self::SOLR_DATE_FORMAT, 'UTC');
         break;
     }
     return $this->getQueryHelper()->escapePhrase($value);
