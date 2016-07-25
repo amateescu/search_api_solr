@@ -433,9 +433,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
-  public function supportsFeature($feature) {
-    // First, check the features we always support.
-    $supported = array(
+  public function getSupportedFeatures() {
+    return array(
       //'search_api_autocomplete',
       'search_api_facets',
       'search_api_facets_operator_or',
@@ -446,20 +445,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       //'search_api_data_type_location',
       //'search_api_data_type_geohash',
     );
-    $supported = array_combine($supported, $supported);
-    if (isset($supported[$feature])) {
-      return TRUE;
-    }
-
-    // If it is a custom data type, maybe we support it automatically via
-    // search_api_solr_hook_search_api_data_type_info().
-    if (substr($feature, 0, 21) != 'search_api_data_type_') {
-      return FALSE;
-    }
-    $type = substr($feature, 21);
-    $type = SearchApiSolrUtility::getDataTypeInfo($type);
-    // We only support it if the "prefix" key is set.
-    return $type && !empty($type['prefix']);
   }
 
   /**
