@@ -211,7 +211,7 @@ class IntegrationTest extends WebTestBase {
       'name' => $index_name,
       'id' => $this->indexId,
       'server' => $this->serverId,
-      'datasources[]' => 'entity:node',
+      'datasources[entity:node]' => TRUE,
     ];
 
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
@@ -235,7 +235,7 @@ class IntegrationTest extends WebTestBase {
     $this->assertTrue($index->status(), 'Index status correctly inserted.');
     $this->assertEqual($index->getDescription(), $edit['description'], 'Index ID correctly inserted.');
     $this->assertEqual($index->getServerId(), $edit['server'], 'Index server ID correctly inserted.');
-    $this->assertEqual($index->getDatasourceIds(), [$edit['datasources[]']], 'Index datasource id correctly inserted.');
+    $this->assertEqual($index->getDatasourceIds(), ['entity:node'], 'Index datasource id correctly inserted.');
   }
 
   /**
