@@ -10,7 +10,6 @@ use Drupal\search_api\SearchApiException;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
-use Drupal\Core\Datetime\DateFormatter;
 
 /**
  * A basic form with a passed entity with an interface.
@@ -45,7 +44,7 @@ class SolrConfigForm extends FormBase {
 
       // Generate a fieldset for each file.
       foreach ($files_list as $file_name => $file_info) {
-        $file_date = DateFormatter::format(strtotime($file_info['modified']));
+        $file_date = \Drupal::service('date.formatter')->format(strtotime($file_info['modified']));
         $escaped_file_name = Html::escape($file_name);
 
         $form['files'][$file_name] = array(
