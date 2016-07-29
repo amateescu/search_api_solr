@@ -4,10 +4,9 @@ namespace Drupal\search_api_solr\Tests;
 
 use Drupal\Component\Utility\Html;
 use Drupal\facets\Tests\BlockTestTrait;
-use Drupal\facets\Tests\ExampleContentTrait;
 use Drupal\search_api\Entity\Index;
-use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Tests\WebTestBase;
+use Drupal\views\Entity\View;
 
 /**
  * Tests the overall functionality of the Search API framework and admin UI.
@@ -17,7 +16,7 @@ use Drupal\search_api\Tests\WebTestBase;
 class IntegrationTest extends WebTestBase {
 
   use BlockTestTrait;
-  use ExampleContentTrait;
+  use FacetsExampleContentTrait;
 
   /**
    * The ID of the search server used for this test.
@@ -34,6 +33,13 @@ class IntegrationTest extends WebTestBase {
   protected $serverBackend = 'search_api_solr';
 
   /**
+   * A search index ID.
+   *
+   * @var string
+   */
+  protected $indexId;
+
+  /**
    * A storage instance for indexes.
    *
    * @var \Drupal\Core\Entity\EntityStorageInterface
@@ -44,14 +50,15 @@ class IntegrationTest extends WebTestBase {
    * {@inheritdoc}
    */
   public static $modules = array(
+    'block',
+    'field_ui',
     'node',
+    'views',
     'search_api',
     'search_api_solr',
     'search_api_solr_test',
-    'field_ui',
-    'block',
+    'search_api_solr_test_facets',
     'facets',
-    'views',
   );
 
   /**
@@ -59,23 +66,16 @@ class IntegrationTest extends WebTestBase {
    */
   public function setUp() {
     parent::setUp();
+
     $this->indexStorage = \Drupal::entityTypeManager()->getStorage('search_api_index');
 
     $this->drupalLogin($this->adminUser);
-
-    $filepath = drupal_get_path('module', 'search_api_solr') . '/vendor/autoload.php';
-    if (!class_exists('Solarium\\Client') && ($filepath != DRUPAL_ROOT . '/core/vendor/autoload.php')) {
-      require $filepath;
-    }
   }
 
   /**
    * Tests various operations via the Search API's admin UI.
    */
   public function testFramework() {
-    // Login as an admin user for the rest of the tests.
-    $this->drupalLogin($this->adminUser);
-
     $this->createServer();
     $this->createIndex();
     $this->checkContentEntityTracking();
@@ -86,6 +86,9 @@ class IntegrationTest extends WebTestBase {
    * Tests basic facets integration.
    */
   public function testFacets() {
+    $view = View::load('search_api_test_view');
+    $this->assertEqual($view->get('base_table'), 'search_api_index_solr_search_index');
+
     // Create the users used for the tests.
     $admin_user = $this->drupalCreateUser([
       'administer search_api',
@@ -105,7 +108,7 @@ class IntegrationTest extends WebTestBase {
 
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->indexStorage->load($this->indexId);
-    $indexed_items = $index->indexItems();
+    $indexed_items = $this->indexItems($this->indexId);
     $this->assertEqual($indexed_items, 5, 'Five items are indexed.');
 
     // Create a facet, enable 'show numbers'.
@@ -417,7 +420,7 @@ class IntegrationTest extends WebTestBase {
     $this->assertEqual($node_count, $this->countTrackedItems(), 'All nodes are correctly tracked by the index.');
 
     // Index all remaining items on the index.
-    $index->indexItems();
+    $this->indexItems($this->indexId);
 
     $remaining_items = $this->countRemainingItems();
     $this->assertEqual($remaining_items, 0, 'All items have been successfully indexed.');

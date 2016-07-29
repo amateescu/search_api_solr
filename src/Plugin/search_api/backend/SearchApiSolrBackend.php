@@ -1632,7 +1632,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         'tags' => array_unique($tags + $condition_group->getTags()),
       ];
     }
-    else {
+    elseif (!empty($filter_queries)) {
       $fq[] = [
         'query' => $filter_queries[0]['query'],
         'tags' => array_unique($filter_queries[0]['tags'] + $condition_group->getTags()),
