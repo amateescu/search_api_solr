@@ -3,7 +3,6 @@
 namespace Drupal\search_api_solr\Tests;
 
 use Drupal\search_api\Entity\Index;
-use Drupal\search_api\Tests\ExampleContentTrait;
 use Drupal\simpletest\WebTestBase as SimpletestWebTestBase;
 
 /**
@@ -12,8 +11,6 @@ use Drupal\simpletest\WebTestBase as SimpletestWebTestBase;
  * @group search_api_solr
  */
 class ViewsTest extends \Drupal\search_api\Tests\ViewsTest {
-
-  use ExampleContentTrait;
 
   /**
    * Modules to enable for this test.
