@@ -3,6 +3,7 @@
 namespace Drupal\search_api_solr\Tests;
 
 use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Tests\ExampleContentTrait;
 use Drupal\simpletest\WebTestBase as SimpletestWebTestBase;
 
 /**
@@ -54,6 +55,21 @@ class ViewsTest extends \Drupal\search_api\Tests\ViewsTest {
     // @see https://www.drupal.org/node/2773019
     $query = ['language' => ['***LANGUAGE_language_interface***']];
     $this->checkResults($query, [1, 2, 3, 4, 5], 'Search with interface language as filter');
+  }
+
+  /**
+   * Indexes all (unindexed) items on the specified index.
+   *
+   * @param string $index_id
+   *   The ID of the index on which items should be indexed.
+   *
+   * @return int
+   *   The number of successfully indexed items.
+   */
+  protected function indexItems($index_id) {
+    $index_status = parent::indexItems($index_id);
+    sleep(2);
+    return $index_status;
   }
 
 }

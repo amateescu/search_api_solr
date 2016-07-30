@@ -4,6 +4,7 @@ namespace Drupal\search_api_solr\Tests;
 
 use Drupal\Component\Utility\Html;
 use Drupal\facets\Tests\BlockTestTrait;
+use Drupal\facets\Tests\ExampleContentTrait;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Tests\WebTestBase;
 use Drupal\views\Entity\View;
@@ -16,7 +17,9 @@ use Drupal\views\Entity\View;
 class IntegrationTest extends WebTestBase {
 
   use BlockTestTrait;
-  use FacetsExampleContentTrait;
+  use ExampleContentTrait {
+    indexItems as doIndexItems;
+  }
 
   /**
    * The ID of the search server used for this test.
@@ -463,6 +466,21 @@ class IntegrationTest extends WebTestBase {
     $this->assertRaw(Html::escape($string));
     $this->assertNoRaw(Html::escape(Html::escape($string)));
     $this->assertNoRaw($string);
+  }
+
+  /**
+   * Indexes all (unindexed) items on the specified index.
+   *
+   * @param string $index_id
+   *   The ID of the index on which items should be indexed.
+   *
+   * @return int
+   *   The number of successfully indexed items.
+   */
+  protected function indexItems($index_id) {
+    $index_status = $this->doIndexItems($index_id);
+    sleep(2);
+    return $index_status;
   }
 
 }
