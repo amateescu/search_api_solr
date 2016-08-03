@@ -7,7 +7,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Query\QueryInterface;
-use Drupal\search_api\Utility as SearchApiUtility;
+use Drupal\search_api\Utility\Utility as SearchApiUtility;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Solarium\Client;
