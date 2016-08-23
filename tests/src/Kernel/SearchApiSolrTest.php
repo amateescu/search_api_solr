@@ -526,11 +526,8 @@ class SearchApiSolrTest extends BackendTestBase {
 
   /**
    * Tests addition and deletion of a data source.
-   *
-   * @todo Test is currently disabled because it will fail until there's a fix
-   *   for https://www.drupal.org/node/2761719
    */
-  public function _testDatasourceAdditionAndDeletion() {
+  public function testDatasourceAdditionAndDeletion() {
     // Only run the tests if we have a Solr core available.
     if ($this->solrAvailable) {
       $this->insertExampleContent();
@@ -539,20 +536,35 @@ class SearchApiSolrTest extends BackendTestBase {
       $results = $this->buildSearch()->execute();
       $this->assertEquals(5, $results->getResultCount(), 'Number of indexed entities is correct.');
 
-      $previous_index_id = $this->indexId;
+      try {
+        $results = $this->buildSearch()->addCondition('uid', 0, '>')->execute();
+        $this->fail('Field uid must not yet exists in this index.');
+      }
+      catch (\Exception $e) {
+        $this->assertEquals('Filter term on unknown or unindexed field uid.', $e->getMessage());
+      }
 
-      $this->indexId = 'multi_datasource_solr_search_index';
+      $index = $this->getIndex();
+      $index->set('datasource_settings', $index->get('datasource_settings') + [
+        'entity:user' => [
+          'plugin_id' => 'entity:user',
+          'settings' => [],
+        ],
+      ]);
+      $info = [
+        'label' => 'uid',
+        'type' => 'integer',
+        'datasource_id' => 'entity:user',
+        'property_path' => 'uid',
+      ];
+      $index->addField(Utility::createField($index, 'uid', $info));
+      $index->save();
 
-      $this->indexItems($this->indexId);
-
-      $results = $this->buildSearch()->execute();
-      $this->assertEquals(5, $results->getResultCount(), 'Number of indexed entities is correct.');
-
-      User::create(array(
+      User::create([
         'uid' => 1,
         'name' => 'root',
         'langcode' => 'en',
-      ))->save();
+      ])->save();
 
       $this->indexItems($this->indexId);
 
@@ -562,45 +574,27 @@ class SearchApiSolrTest extends BackendTestBase {
       $results = $this->buildSearch()->addCondition('uid', 0, '>')->execute();
       $this->assertEquals(1, $results->getResultCount(), 'Search for users returned correct number of results.');
 
-      $this->indexId = $previous_index_id;
-
-      $results = $this->buildSearch()->execute();
-      $this->assertEquals(5, $results->getResultCount(), 'Number of indexed entities in multi datasource index is correct.');
-
-      try {
-        $results = $this->buildSearch()->addCondition('uid', 0, '>')->execute();
-        $this->fail('Field uid must not exists in this index.');
-      }
-      catch (\Exception $e) {
-        $this->assertEquals('Filter term on unknown or unindexed field uid.', $e->getMessage());
-      }
-
-      $this->indexId = 'multi_datasource_solr_search_index';
-
-      $this->getIndex()->removeDatasource('entity:entity_test_mulrev_changed')->save();
+      $this->getIndex()->removeDatasource('entity:user')->save();
 
       // Wait for the commitWithin 1 second to complete the deletion.
       sleep(2);
 
       $results = $this->buildSearch()->execute();
-      $this->assertEquals(1, $results->getResultCount(), 'Number of indexed entities is correct.');
-
-      $results = $this->buildSearch()->addCondition('uid', 0, '>')->execute();
-      $this->assertEquals(1, $results->getResultCount(), 'Search for users returned correct number of results.');
-
-      $this->clearIndex();
-
-      $this->indexId = $previous_index_id;
-
-      $results = $this->buildSearch()->execute();
       $this->assertEquals(5, $results->getResultCount(), 'Number of indexed entities is correct.');
+
+      try {
+        $results = $this->buildSearch()->addCondition('uid', 0, '>')->execute();
+        $this->fail('Field uid must not yet exists in this index.');
+      }
+      catch (\Exception $e) {
+        $this->assertEquals('Filter term on unknown or unindexed field uid.', $e->getMessage());
+      }
 
       $this->clearIndex();
     }
     else {
       $this->assertTrue(TRUE, 'Error: The Solr instance could not be found. Please enable a multi-core one on http://localhost:8983/solr/d8');
     }
-
   }
 
 }

@@ -50,11 +50,17 @@ processor_settings:
     settings:
       weights:
         preprocess_index: -30
-  language:
-    plugin_id: language
+  aggregated_field:
+    plugin_id: aggregated_field
     settings:
       weights:
-        preprocess_index: -50
+        add_properties: 20
+  rendered_item:
+    plugin_id: rendered_item
+    settings:
+      weights:
+        add_properties: 0
+        pre_index_save: -10
 options:
   cron_limit: -1
   index_directly: false
