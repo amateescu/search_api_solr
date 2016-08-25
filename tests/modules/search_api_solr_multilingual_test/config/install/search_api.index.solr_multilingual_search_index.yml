@@ -14,6 +14,11 @@ field_settings:
     datasource_id: 'entity:entity_test_mulrev_changed'
     property_path: name
     boost: 5.0
+  created:
+    label: Authored on
+    type: date
+    datasource_id: 'entity:entity_test_mulrev_changed'
+    property_path: created
   body:
     label: Body
     type: text
@@ -45,11 +50,17 @@ processor_settings:
     settings:
       weights:
         preprocess_index: -30
-  language:
-    plugin_id: language
+  aggregated_field:
+    plugin_id: aggregated_field
     settings:
       weights:
-        preprocess_index: -50
+        add_properties: 20
+  rendered_item:
+    plugin_id: rendered_item
+    settings:
+      weights:
+        add_properties: 0
+        pre_index_save: -10
 options:
   cron_limit: -1
   index_directly: false
