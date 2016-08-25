@@ -759,6 +759,7 @@ class SolrHelper {
         $f = 'random_' . $seed;
       }
       elseif (substr($field_names[$field], 1, 2) == 'm_') {
+        // @todo https://www.drupal.org/node/2783419
         $f = 'sort_' . substr($field_names[$field], 3);
       }
       else {
