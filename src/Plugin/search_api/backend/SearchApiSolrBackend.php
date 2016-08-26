@@ -4,14 +4,13 @@ namespace Drupal\search_api_solr\Plugin\search_api\backend;
 
 use Drupal\Core\Config\Config;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\Url;
-use Drupal\field\FieldConfigInterface;
-use Drupal\field\FieldStorageConfigInterface;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Plugin\PluginFormTrait;
@@ -1193,9 +1192,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     list($key, $nested_path) = SearchApiUtility::splitPropertyPath($property_path, FALSE);
     if (isset($properties[$key])) {
       $property = $properties[$key];
-      if ($property instanceof FieldConfigInterface) {
+      if ($property instanceof FieldDefinitionInterface) {
         $storage = $property->getFieldStorageDefinition();
-        if ($storage instanceof FieldStorageConfigInterface) {
+        if ($storage instanceof FieldStorageDefinitionInterface) {
           if ($storage->getCardinality() == FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED) {
             // Shortcut. We reached the maximum.
             return FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED;

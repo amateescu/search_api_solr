@@ -19,6 +19,8 @@ use Drupal\user\Entity\User;
  */
 class SearchApiSolrTest extends BackendTestBase {
 
+  use InvokeMethodTrait;
+
   /**
    * Modules to enable for this test.
    *
@@ -237,27 +239,6 @@ class SearchApiSolrTest extends BackendTestBase {
   protected function assertIgnored(ResultSetInterface $results, array $ignored = array(), $message = 'No keys were ignored.') {
     // Nothing to do here since the Solr backend doesn't keep a list of ignored
     // fields.
-  }
-
-  /**
-   * Calls protected/private method of a class.
-   *
-   * @param object &$object
-   *   Instantiated object that we will run method on.
-   * @param string
-   *  Method name to call.
-   * @param array $parameters
-   *   Array of parameters to pass into method.
-   *
-   * @return mixed
-   *   Method return.
-   */
-  protected function invokeMethod(&$object, $methodName, array $parameters = []) {
-    $reflection = new \ReflectionClass(get_class($object));
-    $method = $reflection->getMethod($methodName);
-    $method->setAccessible(TRUE);
-
-    return $method->invokeArgs($object, $parameters);
   }
 
   /**
