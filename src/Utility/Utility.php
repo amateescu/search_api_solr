@@ -55,16 +55,19 @@ class Utility {
           'prefix' => 's',
         ),
         'integer' => array(
-          'prefix' => 'i',
+          // Use trie field for better sorting.
+          'prefix' => 'it',
         ),
         'decimal' => array(
-          'prefix' => 'f',
+          // Use trie field for better sorting.
+          'prefix' => 'ft',
         ),
         'date' => array(
           'prefix' => 'd',
         ),
         'duration' => array(
-          'prefix' => 'i',
+          // Use trie field for better sorting.
+          'prefix' => 'it',
         ),
         'boolean' => array(
           'prefix' => 'b',

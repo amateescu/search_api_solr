@@ -743,15 +743,22 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           break;
         }
         $this->addIndexField($doc, $field_names[$name], $field->getValues(), $field->getType());
-
-        if (version_compare($schema_version, '5.0', '>=')) {
-          if (substr($field_names[$name], 1, 2) == 'm_') {
-            // For multi-valued fields (which aren't sortable by nature) we use
-            // the same hackish workaround like the DB backend: just copy the
-            // first value in a dedicated field for sorting.
-            // @todo https://www.drupal.org/node/2783419
-            $values = $field->getValues();
-            $this->addIndexField($doc, 'sort_' . $name, [reset($values)], $field->getType());
+        if (version_compare($schema_version, '4.4', '>=')) {
+          $values = $field->getValues();
+          $first_value = reset($values);
+          if ($first_value) {
+            if (strpos($field_names[$name], 't') === 0 || strpos($field_names[$name], 's') === 0) {
+              // Always copy fulltext fields to a dedicated field for faster
+              // alpha sorts. Copy strings as well to normalize them.
+              $this->addIndexField($doc, 'sort_' . $name, [$first_value], $field->getType());
+            }
+            elseif (preg_match('/^([a-z]+)m(_.*)/', $field_names[$name], $matches)) {
+              // For multi-valued fields (which aren't sortable by nature) we use
+              // the same hackish workaround like the DB backend: just copy the
+              // first value in a single value field for sorting.
+              $values = $field->getValues();
+              $this->addIndexField($doc, $matches[1] . 's' . $matches[2], [$first_value], $field->getType());
+            }
           }
         }
       }
@@ -916,7 +923,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     // Set sorts.
-    // @todo we can't sort on multi valued fields.
     $this->solrHelper->setSorts($solarium_query, $query, $field_names);
 
     // Set facet fields.
@@ -1220,7 +1226,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * is the same as specified in
    * \Drupal\search_api\Backend\BackendSpecificInterface::indexItems().
    */
-  protected function addIndexField(Document $doc, $key, $values, $type) {
+  protected function addIndexField(Document $doc, $key, array $values, $type) {
     // Don't index empty values (i.e., when field is missing).
     if (!isset($values)) {
       return;

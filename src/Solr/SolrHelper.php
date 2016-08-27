@@ -746,6 +746,7 @@ class SolrHelper {
    * Sets sorting for the query.
    */
   public function setSorts(Query $solarium_query, QueryInterface $query, $field_names = array()) {
+    $new_schema_version = version_compare($this->getSchemaVersion(), '4.4', '>=');
     foreach ($query->getSorts() as $field => $order) {
       $f = '';
       // The default Solr schema provides a virtual field named "random_SEED"
@@ -758,9 +759,16 @@ class SolrHelper {
         $seed = !empty($params['seed']) ? $params['seed'] : mt_rand();
         $f = 'random_' . $seed;
       }
-      elseif (substr($field_names[$field], 1, 2) == 'm_') {
-        // @todo https://www.drupal.org/node/2783419
-        $f = 'sort_' . substr($field_names[$field], 3);
+      elseif ($new_schema_version && (strpos($field_names[$field], 't') === 0 || strpos($field_names[$field], 's') === 0)) {
+        // For fulltext fields use the dedicated sort field for faster alpha
+        // sorts. Use the same field for strings to sort on a normalized value.
+        $f = 'sort_' . $field;
+      }
+      elseif ($new_schema_version && preg_match('/^([a-z]+)m(_.*)/', $field_names[$field], $matches)) {
+        // For multi-valued fields (which aren't sortable by nature) we use
+        // the same hackish workaround like the DB backend: just copy the
+        // first value in a single value field for sorting.
+        $f = $matches[1] . 's' . $matches[2];
       }
       else {
         $f = $field_names[$field];

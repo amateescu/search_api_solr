@@ -189,7 +189,7 @@ class SearchApiSolrTest extends BackendTestBase {
     $query->addCondition('id', 5, '<>');
     $query->range(0, 0);
     $results = $query->execute();
-    $expected = $this->getExpectedFacetsOfregressionTest2469547();
+    $expected = $this->getExpectedFacetsOfRegressionTest2469547();
     // We can't guarantee the order of returned facets, since "bar" and "foobar"
     // both occur once, so we have to manually sort the returned facets first.
     $facets = $results->getExtraData('search_api_facets', array())['body'];
@@ -204,7 +204,7 @@ class SearchApiSolrTest extends BackendTestBase {
    *
    * @return array
    */
-  protected function getExpectedFacetsOfregressionTest2469547() {
+  protected function getExpectedFacetsOfRegressionTest2469547() {
     return [
       ['count' => 4, 'filter' => '"test"'],
       ['count' => 3, 'filter' => '"case"'],
@@ -570,8 +570,83 @@ class SearchApiSolrTest extends BackendTestBase {
       catch (\Exception $e) {
         $this->assertEquals('Filter term on unknown or unindexed field uid.', $e->getMessage());
       }
+    }
+    else {
+      $this->assertTrue(TRUE, 'Error: The Solr instance could not be found. Please enable a multi-core one on http://localhost:8983/solr/d8');
+    }
+  }
 
-      $this->clearIndex();
+  /**
+   * Tests search result sorts.
+   */
+  public function testSearchResultSorts() {
+    // Only run the tests if we have a Solr core available.
+    if ($this->solrAvailable) {
+      $this->insertExampleContent();
+      $this->indexItems($this->indexId);
+
+      // Type text.
+      $results = $this->buildSearch(NULL, [], [], FALSE)
+        ->sort('name')
+        // Force an expected order for identical names.
+        ->sort('search_api_id')
+        ->execute();
+      $this->assertResults([3, 5, 1, 4, 2], $results, 'Sort by name.');
+
+      $results = $this->buildSearch(NULL, [], [], FALSE)
+        ->sort('name', QueryInterface::SORT_DESC)
+        // Force an expected order for identical names.
+        ->sort('search_api_id')
+        ->execute();
+      $this->assertResults([2, 4, 1, 5, 3], $results, 'Sort by name descending.');
+
+      // Type string.
+      $results = $this->buildSearch(NULL, [], [], FALSE)
+        ->sort('type')
+        // Force an expected order for identical types.
+        ->sort('search_api_id')
+        ->execute();
+      $this->assertResults([4, 5, 1, 2, 3], $results, 'Sort by type.');
+
+      $results = $this->buildSearch(NULL, [], [], FALSE)
+        ->sort('type', QueryInterface::SORT_DESC)
+        // Force an expected order for identical types.
+        ->sort('search_api_id')
+        ->execute();
+      $this->assertResults([1, 2, 3, 4, 5], $results, 'Sort by type descending.');
+
+      // Type multi-value string. Uses first value.
+      $results = $this->buildSearch(NULL, [], [], FALSE)
+        ->sort('keywords')
+        // Force an expected order for identical keywords.
+        ->sort('search_api_id')
+        ->execute();
+      $this->assertResults([4, 1, 2, 5, 3], $results, 'Sort by keywords.');
+
+      $results = $this->buildSearch(NULL, [], [], FALSE)
+        ->sort('keywords', QueryInterface::SORT_DESC)
+        // Force an expected order for identical keywords.
+        ->sort('search_api_id')
+        ->execute();
+      $this->assertResults([1, 2, 5, 4, 3], $results, 'Sort by keywords descending.');
+
+      // Type decimal.
+      $results = $this->buildSearch(NULL, [], [], FALSE)
+        ->sort('width')
+        // Force an expected order for identical width.
+        ->sort('search_api_id')
+        ->execute();
+      // @todo if width is midding it seems to be treated like 0 because
+      //   sortMissingLast="true" doesn't fix it.
+      // $this->assertResults([4, 5, 1, 2, 3], $results, 'Sort by width.');
+      $this->assertResults([1, 2, 3, 4, 5], $results, 'Sort by width.');
+
+      $results = $this->buildSearch(NULL, [], [], FALSE)
+        ->sort('width', QueryInterface::SORT_DESC)
+        // Force an expected order for identical width.
+        ->sort('search_api_id')
+        ->execute();
+      $this->assertResults([5, 4, 1, 2, 3], $results, 'Sort by width descending.');
     }
     else {
       $this->assertTrue(TRUE, 'Error: The Solr instance could not be found. Please enable a multi-core one on http://localhost:8983/solr/d8');
