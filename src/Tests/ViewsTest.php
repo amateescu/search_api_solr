@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api_solr\Tests;
 
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
 use Drupal\simpletest\WebTestBase as SimpletestWebTestBase;
 
@@ -25,6 +26,9 @@ class ViewsTest extends \Drupal\search_api\Tests\ViewsTest {
   public function setUp() {
     // Skip parent::setUp().
     SimpletestWebTestBase::setUp();
+
+    // Add a second language.
+    ConfigurableLanguage::createFromLangcode('nl')->save();
 
     // Swap database backend for Solr backend.
     $config_factory = \Drupal::configFactory();
