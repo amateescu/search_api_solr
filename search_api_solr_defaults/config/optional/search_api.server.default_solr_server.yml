@@ -12,7 +12,7 @@ backend_config:
   core: d8
   username: ''
   password: ''
-  excerpt: true
+  excerpt: false
   retrieve_data: false
   highlight_data: true
   skip_schema_check: false
