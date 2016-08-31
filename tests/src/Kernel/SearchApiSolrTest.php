@@ -200,7 +200,7 @@ class SearchApiSolrTest extends BackendTestBase {
   /**
    * Return the expected facets for regression test 2469547.
    *
-   * The facets differ for different backends because.
+   * The facets differ for Solr backends because of case-insensitive filters.
    *
    * @return array
    */
