@@ -38,7 +38,7 @@ function _search_api_solr_views_data_alter(array &$data) {
         $wrapper = $index->entityWrapper(NULL, FALSE);
       }
       catch (EntityMetadataWrapperException $e) {
-        watchdog_exception('search_api_solr', $e, "%type while retrieving metadata for index %index: !message in %function (line %line of %file).", array('%index' => $index->name), WATCHDOG_WARNING);
+        watchdog_exception('search_api_solr', $e, "%type while retrieving metadata for index %index: @message in %function (line %line of %file).", array('%index' => $index->name), WATCHDOG_WARNING);
         continue;
       }
 
@@ -53,7 +53,7 @@ function _search_api_solr_views_data_alter(array &$data) {
         $wrapper = $index->entityWrapper(NULL);
       }
       catch (EntityMetadataWrapperException $e) {
-        watchdog_exception('search_api_solr', $e, "%type while retrieving metadata for index %index: !message in %function (line %line of %file).", array('%index' => $index->name), WATCHDOG_WARNING);
+        watchdog_exception('search_api_solr', $e, "%type while retrieving metadata for index %index: @message in %function (line %line of %file).", array('%index' => $index->name), WATCHDOG_WARNING);
         continue;
       }
 

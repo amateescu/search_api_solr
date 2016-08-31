@@ -2045,7 +2045,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
       }
       catch (SearchApiException $e) {
-        watchdog_exception('search_api_solr', $e, "%type during autocomplete Solr query: !message in %function (line %line of %file).", array(), WATCHDOG_WARNING);
+        watchdog_exception('search_api_solr', $e, "%type during autocomplete Solr query: @message in %function (line %line of %file).", array(), WATCHDOG_WARNING);
       }
 
       if (count($suggestions) >= $limit) {

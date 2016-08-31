@@ -68,7 +68,7 @@ class SolrConfigForm extends FormBase {
       }
     }
     catch (SearchApiException $e) {
-      watchdog_exception('search_api_solr', $e, '%type while retrieving config files of Solr server @server: !message in %function (line %line of %file).', array('@server' => $search_api_server->label()));
+      watchdog_exception('search_api_solr', $e, '%type while retrieving config files of Solr server @server: @message in %function (line %line of %file).', array('@server' => $search_api_server->label()));
       $form['info']['#markup'] = $this->t('An error occured while trying to load the list of files.');
     }
 
