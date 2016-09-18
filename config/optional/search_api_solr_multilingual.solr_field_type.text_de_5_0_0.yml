@@ -51,8 +51,10 @@ field_type:
           class: solr.StopFilterFactory
           ignoreCase: true
           words: stopwords_de.txt
-        -
-          class: solr.GermanNormalizationFilterFactory
+        # GermanNormalizationFilter is not needed if German2 Porter stemmer is
+        # used.
+        #-
+        #  class: solr.GermanNormalizationFilterFactory
         -
           class: solr.SnowballPorterFilterFactory
           language: German2
@@ -93,8 +95,10 @@ field_type:
           class: solr.StopFilterFactory
           ignoreCase: true
           words: stopwords_de.txt
-        -
-          class: solr.GermanNormalizationFilterFactory
+        # GermanNormalizationFilter is not needed if German2 Porter stemmer is
+        # used.
+        #-
+        #  class: solr.GermanNormalizationFilterFactory
         -
           class: solr.SnowballPorterFilterFactory
           language: German2
@@ -1143,7 +1147,7 @@ text_files:
     armen
     armuts
     arrest
-    arsch/n
+    arsch
     arsen
     art
     arten
@@ -1698,7 +1702,7 @@ text_files:
     cellophan
     charakter
     charter
-    chat/n
+    chat
     chauffeur
     chef
     chemie
@@ -1712,7 +1716,7 @@ text_files:
     cliquen
     club
     code
-    comic/n
+    comic
     computer
     container
     couch
@@ -1998,7 +2002,7 @@ text_files:
     elefanten
     elektrizitäts
     elektro
-    elektronen/n
+    elektronen
     elektronik
     element
     elementar
@@ -2138,7 +2142,7 @@ text_files:
     etat
     ethik
     etiketten
-    etüden/n
+    etüden
     eulen
     euro
     europa
@@ -2218,7 +2222,7 @@ text_files:
     feuchtigkeits
     feuer
     fichten
-    fick/n
+    fick
     fieber
     film
     filter
@@ -2297,7 +2301,7 @@ text_files:
     freuden
     freundschafts
     friedens
-    frisch/n
+    frisch
     friseur
     front
     frontal
@@ -3072,7 +3076,7 @@ text_files:
     literatur
     lizenz
     löffel
-    löss/n
+    löss
     lösch
     lösungs
     löt
@@ -3233,7 +3237,7 @@ text_files:
     müll
     münz
     mütze
-    mull/n
+    mull
     multimedia
     mund
     munitions
@@ -3276,11 +3280,11 @@ text_files:
     nebel
     neben
     negativ
-    neger/n
+    neger
     neigungs
     nelken
     nenn
-    neo/n
+    neo
     nerven
     netto
     netz
@@ -3367,7 +3371,7 @@ text_files:
     papp
     paprika
     papst
-    para/n
+    para
     parade
     paradies
     parallel
@@ -3376,7 +3380,7 @@ text_files:
     parkett
     parlaments
     partei
-    parteien/n
+    parteien
     parteitags
     partisanen
     partner
@@ -3447,7 +3451,7 @@ text_files:
     polizei
     polster
     poren
-    porno/n
+    porno
     porzellan
     posaunen
     positions
@@ -3998,8 +4002,8 @@ text_files:
     sünden
     süss
     süssigkeiten
-    sub/n
-    subjekt/n
+    sub
+    subjekt
     subventions
     such
     sucht
@@ -4416,7 +4420,7 @@ text_files:
     weisungs
     weiter
     weizen
-    well/n
+    well
     wellen
     welt
     wendel
@@ -4589,8 +4593,9 @@ text_files:
     "\u00C2" => "A"
     # Ã => A
     "\u00C3" => "A"
-    # Ä => A
-    "\u00C4" => "Ae"
+    # Ä => Ae
+    # Not needed if German2 Porter stemmer is used. This way word lists like
+    # stopwords are easier to maintain.
     # Å => A
     "\u00C5" => "A"
     # Æ => AE
@@ -4627,8 +4632,9 @@ text_files:
     "\u00D4" => "O"
     # Õ => O
     "\u00D5" => "O"
-    # Ö => O
-    "\u00D6" => "Oe"
+    # Ö => Oe
+    # Not needed if German2 Porter stemmer is used. This way word lists like
+    # stopwords are easier to maintain.
     # Ø => O
     "\u00D8" => "O"
     # Œ => OE
@@ -4641,8 +4647,9 @@ text_files:
     "\u00DA" => "U"
     # Û => U
     "\u00DB" => "U"
-    # Ü => U
-    "\u00DC" => "Ue"
+    # Ü => Ue
+    # Not needed if German2 Porter stemmer is used. This way word lists like
+    # stopwords are easier to maintain.
     # Ý => Y
     "\u00DD" => "Y"
     # Ÿ => Y
@@ -4655,8 +4662,9 @@ text_files:
     "\u00E2" => "a"
     # ã => a
     "\u00E3" => "a"
-    # ä => a
-    "\u00E4" => "ae"
+    # ä => ae
+    # Not needed if German2 Porter stemmer is used. This way word lists like
+    # stopwords are easier to maintain.
     # å => a
     "\u00E5" => "a"
     # æ => ae
@@ -4693,14 +4701,16 @@ text_files:
     "\u00F4" => "o"
     # õ => o
     "\u00F5" => "o"
-    # ö => o
-    "\u00F6" => "oe"
+    # ö => oe
+    # Not needed if German2 Porter stemmer is used. This way word lists like
+    # stopwords are easier to maintain.
     # ø => o
     "\u00F8" => "o"
     # œ => oe
     "\u0153" => "oe"
     # ß => ss
-    "\u00DF" => "ss"
+    # Not needed if German2 Porter stemmer is used. This way word lists like
+    # stopwords are easier to maintain.
     # þ => th
     "\u00FE" => "th"
     # ù => u
@@ -4709,8 +4719,9 @@ text_files:
     "\u00FA" => "u"
     # û => u
     "\u00FB" => "u"
-    # ü => u
-    "\u00FC" => "ue"
+    # ü => ue
+    # Not needed if German2 Porter stemmer is used. This way word lists like
+    # stopwords are easier to maintain.
     # ý => y
     "\u00FD" => "y"
     # ÿ => y

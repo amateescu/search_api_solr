@@ -99,7 +99,7 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
   /**
    * {@inheritdoc}
    */
-  protected function getExpectedFacetsOfregressionTest2469547() {
+  protected function getExpectedFacetsOfRegressionTest2469547() {
     return [
       ['count' => 4, 'filter' => '"test"'],
       ['count' => 3, 'filter' => '"case"'],
