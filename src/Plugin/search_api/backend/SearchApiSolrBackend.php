@@ -1683,17 +1683,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         return "$field:{{$value} TO *}";
 
       case 'BETWEEN':
-        return "$field:[" . $value[0] . ' TO ' . $value[1] . ']';
+        return "$field:[" . array_shift($value) . ' TO ' . array_shift($value) . ']';
 
       case 'NOT BETWEEN':
-        return "-$field:[" . $value[0] . ' TO ' . $value[1] . ']';
+        return "-$field:[" . array_shift($value) . ' TO ' . array_shift($value) . ']';
 
       case 'IN':
         if (count($value) > 1) {
           return "($field:" . implode(" $field:", $value) . ')';
         }
         else {
-          return "$field:". $value[0];
+          return "$field:". array_shift($value);
         }
 
       case 'NOT IN':
@@ -1701,7 +1701,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           return "(*:* -$field:" . implode(" -$field:", $value) . ')';
         }
         else {
-          return "-$field:". $value[0];
+          return "-$field:". array_shift($value);
         }
 
       default:
