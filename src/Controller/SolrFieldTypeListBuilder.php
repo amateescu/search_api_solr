@@ -56,7 +56,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       // @todo format
       'managed_schema' => $solr_field_type->isManagedSchema(),
       // @todo format
-      'langcode' => $solr_field_type->language()->getId(),
+      'langcode' => $solr_field_type->getFieldTypeLanguageCode(),
       'id' => $solr_field_type->id(),
     ];
     return $row + parent::buildRow($solr_field_type);

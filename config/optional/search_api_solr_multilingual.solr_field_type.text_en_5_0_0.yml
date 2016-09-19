@@ -10,6 +10,7 @@ id: text_en_5_0_0
 label: 'English Text Field'
 managed_schema: false
 minimum_solr_version: 5.0.0
+field_type_language_code: en
 field_type:
   name: text_en
   class: solr.TextField

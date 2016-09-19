@@ -16,6 +16,9 @@ search_api_solr_multilingual.solr_field_type.*:
     minimum_solr_version:
       type: string
       label: 'The minimum version the Solr server'
+    field_type_language_code:
+      type: string
+      label: 'The language targeted by this Solr Field Type'
     field_type:
       type: mapping
       mapping:

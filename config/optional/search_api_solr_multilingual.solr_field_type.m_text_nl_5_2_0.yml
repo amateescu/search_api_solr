@@ -1,4 +1,4 @@
-langcode: nl
+langcode: en
 status: true
 dependencies:
   module:
@@ -10,6 +10,7 @@ id: m_text_nl_5_2_0
 label: 'Dutch Text Field'
 managed_schema: true
 minimum_solr_version: 5.2.0
+field_type_language_code: nl
 field_type:
   name: text_nl
   class: solr.TextField

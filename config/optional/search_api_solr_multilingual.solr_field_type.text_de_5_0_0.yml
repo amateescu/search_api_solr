@@ -1,4 +1,4 @@
-langcode: de
+langcode: en
 status: true
 dependencies:
   module:
@@ -10,6 +10,7 @@ id: text_de_5_0_0
 label: 'German Text Field'
 managed_schema: false
 minimum_solr_version: 5.0.0
+field_type_language_code: de
 field_type:
   name: text_de
   class: solr.TextField

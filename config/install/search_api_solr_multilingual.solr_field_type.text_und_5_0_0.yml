@@ -1,4 +1,4 @@
-langcode: und
+langcode: en
 status: true
 dependencies:
   module:
@@ -8,6 +8,7 @@ label: null
 label: 'Language Undefined Text Field'
 managed_schema: false
 minimum_solr_version: 5.0.0
+field_type_language_code: und
 field_type:
   name: text_und
   class: solr.TextField

@@ -81,6 +81,13 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   protected $field_type;
 
   /**
+   * The language targeted by this Solr Field Type.
+   *
+   * @var string
+   */
+  protected $field_type_language_code;
+
+  /**
    * Array of various text files required by the Solr Field Type definition.
    *
    * @var array
@@ -92,6 +99,13 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   public function getFieldType() {
     return $this->field_type;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldTypeLanguageCode() {
+    return $this->field_type_language_code;
   }
 
   /**
@@ -200,7 +214,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     foreach (array('ts', 'tm') as $prefix) {
       $dynamic_fields[] = [
         'name' => SearchApiSolrUtility::encodeSolrName(
-            Utility::getLanguageSpecificSolrDynamicFieldPrefix($prefix, $this->langcode)
+            Utility::getLanguageSpecificSolrDynamicFieldPrefix($prefix, $this->field_type_language_code)
           ) . '*',
         'type' => $this->field_type['name'],
         'stored' => TRUE,
