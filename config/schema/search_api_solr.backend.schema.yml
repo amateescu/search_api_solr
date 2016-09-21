@@ -35,9 +35,6 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
     password:
       type: string
       label: 'Password for basic HTTP authentication'
-    excerpt:
-      type: integer
-      label: 'User to authenticate Solr with'
     retrieve_data:
       type: integer
       label: 'Get data from the solr fields'
