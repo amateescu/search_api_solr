@@ -279,7 +279,7 @@ EOD;
     foreach ($solr_field_types as $solr_field_type) {
       $text_files = $solr_field_type->getTextFiles();
       foreach ($text_files as $text_file_name => $text_file) {
-        $language_specific_text_file_name = $text_file_name . '_' . $solr_field_type->language()->getId() . '.txt';
+        $language_specific_text_file_name = $text_file_name . '_' . $solr_field_type->getFieldTypeLanguageCode() . '.txt';
         $zip->addFile($language_specific_text_file_name, $text_file);
         $solrcore_properties['solr.replication.confFiles'] .= ',' . $language_specific_text_file_name;
       }
