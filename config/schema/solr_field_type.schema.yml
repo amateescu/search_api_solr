@@ -150,6 +150,10 @@ search_api_solr_multilingual.solr_field_type.*:
                       type: string
                       label: 'ManagedStopFilter::managed'
                       nullable: true
+                    articles:
+                      type: string
+                      label: 'ElisionFilter::articles'
+                      nullable: true
     text_files:
       type: mapping
       mapping:
