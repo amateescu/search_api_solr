@@ -60,9 +60,44 @@ function search_api_solr_multilingual_requirements($phase) {
 }
 
 /**
+ * Gets all backend configs for active Solr multilingual servers.
+ *
+ * @return array
+ *   All backend configs for active Solr multilingual servers keyed by server
+ *   name.
+ */
+function search_api_solr_multilingual_update_helper_get_backend_configs() {
+  module_load_install('search_api_solr');
+  return search_api_solr_update_helper_get_backend_configs('search_api_solr_multilingual');
+}
+
+/**
+ * Saves a modified backend config for a given Solr server.
+ *
+ * @param string $server_name
+ * @param array $backend_config
+ * @param bool $trusted_data
+ */
+function search_api_solr_multilingual_update_helper_save_backend_config($server_name, array $backend_config, $trusted_data = TRUE) {
+  module_load_install('search_api_solr');
+  search_api_solr_update_helper_save_backend_config($server_name, $backend_config, $trusted_data);
+}
+
+/**
  * Fixes erroneous left overs from managed field types in unmanaged field types.
  */
 function search_api_solr_multilingual_update_8001() {
   // Removed due to race condition with
   // search_api_solr_multilingual_post_update_replace_solr_field_types().
+}
+
+/**
+ * Migrate langcode to field_type_language_code.
+ */
+function search_api_solr_multilingual_update_8002() {
+  foreach (search_api_solr_multilingual_update_helper_get_backend_configs() as $server_name => $backend_config) {
+    $backend_config['field_type_language_code'] = $backend_config['langcode'];
+    $backend_config['langcode'] = 'en';
+    search_api_solr_multilingual_update_helper_save_backend_config($server_name, $backend_config);
+  }
 }
