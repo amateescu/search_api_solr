@@ -54,14 +54,19 @@ function search_api_solr_cron() {
       ->execute();
 
     $count = 0;
+    /** @var \Drupal\search_api\ServerInterface $server */
     foreach (Server::loadMultiple($ids) as $server) {
       try {
-        /** @var \Solarium\Client $solarium_client */
-        $solarium_client = $server->getBackend()->getSolrConnection();
+        /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
+        $backend = $server->getBackend();
+        $solarium_client = $backend->getSolrConnection();
+        $backend_config = $backend->getConfiguration();
+        $endpoint = $solarium_client->getEndpoint('core');
+        $endpoint->setTimeout($backend_config['optimize_timeout']);
         if ($action != 'spellcheck') {
           $update = $solarium_client->createUpdate();
           $update->addOptimize(TRUE, FALSE);
-          $solarium_client->update($update);
+          $solarium_client->update($update, $endpoint);
         }
         else {
           $solarium_query = $solarium_client->createSelect();
@@ -70,7 +75,7 @@ function search_api_solr_cron() {
           $spellcheck = $solarium_query->getSpellcheck();
           $spellcheck->setBuild(TRUE);
 
-          $solarium_client->select($solarium_query);
+          $solarium_client->select($solarium_query, $endpoint);
         }
         ++$count;
       }

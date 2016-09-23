@@ -17,6 +17,15 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
     core:
       type: string
       label: 'The name that identifies the Solr core to use on the server'
+    timeout:
+      type: integer
+      label: 'Timeout for search queries'
+    index_timeout:
+      type: integer
+      label: 'Timeout for indexing requests'
+    optimize_timeout:
+      type: integer
+      label: 'Timeout for optimize requests'
     excerpt:
       type: boolean
       label: 'Return an excerpt for all results'

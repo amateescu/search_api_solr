@@ -174,6 +174,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'port' => '8983',
       'path' => '/solr',
       'core' => '',
+      'timeout' => 5,
+      'index_timeout' => 5,
+      'optimize_timeout' => 10,
       'username' => '',
       'password' => '',
       'excerpt' => FALSE,
@@ -237,6 +240,33 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#title' => $this->t('Solr core'),
       '#description' => $this->t('The name that identifies the Solr core to use on the server.'),
       '#default_value' => $this->configuration['core'],
+    );
+    $form['timeout'] = array(
+      '#type' => 'number',
+      '#min' => 1,
+      '#max' => 180,
+      '#title' => $this->t('Query timeout'),
+      '#description' => $this->t('The timeout in seconds for search queries sent to the Solr server.'),
+      '#default_value' => $this->configuration['timeout'],
+      '#required' => TRUE,
+    );
+    $form['index_timeout'] = array(
+      '#type' => 'number',
+      '#min' => 1,
+      '#max' => 180,
+      '#title' => $this->t('Index timeout'),
+      '#description' => $this->t('The timeout in seconds for indexing requests to the Solr server.'),
+      '#default_value' => $this->configuration['index_timeout'],
+      '#required' => TRUE,
+    );
+    $form['optimize_timeout'] = array(
+      '#type' => 'number',
+      '#min' => 1,
+      '#max' => 180,
+      '#title' => $this->t('Optimize timeout'),
+      '#description' => $this->t('The timeout in seconds for background index optimization queries on a Solr server.'),
+      '#default_value' => $this->configuration['optimize_timeout'],
+      '#required' => TRUE,
     );
 
     $form['http'] = array(
@@ -426,6 +456,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $form_state->unsetValue('server_description');
 
     $this->traitSubmitConfigurationForm($form, $form_state);
+
+    // Delete cached endpoint data.
+    \Drupal::state()->delete('search_api_solr.endpoint.data');
   }
 
   /**
@@ -663,7 +696,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         ->setName('commitWithin')
         ->setValue('1000');
 
-      $this->solr->execute($this->getUpdateQuery());
+      // The default timeout is set for search queries. The configured timeout
+      // might differ and needs to be set now because solarium doesn't
+      // distinguish between these types.
+      $endpoint = $this->solr->getEndpoint('core');
+      $timeout = $endpoint->getTimeout();
+      $endpoint->setTimeout($this->configuration['index_timeout']);
+
+      $this->solr->execute($this->getUpdateQuery(), $endpoint);
+
+      // Reset the timeout setting to the default value for search queries.
+      $endpoint->setTimeout($timeout);
 
       // Reset the Update query for further calls.
       static::$updateQuery = NULL;
