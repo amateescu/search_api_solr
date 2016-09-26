@@ -679,7 +679,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   public function indexItems(IndexInterface $index, array $items) {
     $documents = $this->getDocuments($index, $items);
     if (!$documents) {
-      return array();
+      return [];
     }
     try {
       $this->getUpdateQuery()->addDocuments($documents);
@@ -719,8 +719,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
     catch (\Exception $e) {
       watchdog_exception('search_api_solr', $e, "%type while indexing: @message in %function (line %line of %file).");
+      throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
-    return array();
+    return [];
   }
 
   /**
