@@ -771,7 +771,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
       $doc->setField('site', $base_urls[$lang]);
       $item_fields = $item->getFields();
-      $item_fields += $this->getSpecialFields($index, $item);
+      $item_fields += $special_fields = $this->getSpecialFields($index, $item);
       /** @var \Drupal\search_api\Item\FieldInterface $field */
       foreach ($item_fields as $name => $field) {
         // If the field is not known for the index, something weird has
@@ -787,7 +787,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           break;
         }
         $this->addIndexField($doc, $field_names[$name], $field->getValues(), $field->getType());
-        if (version_compare($schema_version, '4.4', '>=')) {
+        if (!array_key_exists($name, $special_fields) && version_compare($schema_version, '4.4', '>=')) {
           $values = $field->getValues();
           $first_value = reset($values);
           if ($first_value) {

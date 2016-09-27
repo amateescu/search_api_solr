@@ -745,32 +745,47 @@ class SolrHelper {
   /**
    * Sets sorting for the query.
    */
-  public function setSorts(Query $solarium_query, QueryInterface $query, $field_names = array()) {
+  public function setSorts(Query $solarium_query, QueryInterface $query, $field_names = []) {
     $new_schema_version = version_compare($this->getSchemaVersion(), '4.4', '>=');
     foreach ($query->getSorts() as $field => $order) {
       $f = '';
-      // The default Solr schema provides a virtual field named "random_SEED"
-      // that can be used to randomly sort the results; the field is available
-      // only at query-time.
-      if ($field == 'search_api_random') {
-        $params = $query->getOption('search_api_random_sort', array());
-        // Random seed: getting the value from parameters or computing a new
-        // one.
-        $seed = !empty($params['seed']) ? $params['seed'] : mt_rand();
-        $f = 'random_' . $seed;
+      // First wee need to handle special fields which are prefixed by
+      // 'search_api_'. Otherwise they will erroneously be treated as dynamic
+      // string fields by the next detection below because they start with an
+      // 's'. This way we for example ensure that search_api_relevance isn't
+      // modified at all.
+      if (strpos($field, 'search_api_') === 0) {
+        if ($field == 'search_api_random') {
+          // The default Solr schema provides a virtual field named "random_*"
+          // that can be used to randomly sort the results; the field is
+          // available only at query-time. See schema.xml for more details about
+          // how the "seed" works.
+          $params = $query->getOption('search_api_random_sort', []);
+          // Random seed: getting the value from parameters or computing a new
+          // one.
+          $seed = !empty($params['seed']) ? $params['seed'] : mt_rand();
+          $f = $field_names[$field] . '_' . $seed;
+        }
       }
-      elseif ($new_schema_version && (strpos($field_names[$field], 't') === 0 || strpos($field_names[$field], 's') === 0)) {
-        // For fulltext fields use the dedicated sort field for faster alpha
-        // sorts. Use the same field for strings to sort on a normalized value.
-        $f = 'sort_' . $field;
+      elseif ($new_schema_version) {
+        // @todo Both detections are redundant to some parts of
+        //   SearchApiSolrBackend::getDocuments(). They should be combined in a
+        //   single place to avoid errors in the future.
+        if (strpos($field_names[$field], 't') === 0 || strpos($field_names[$field], 's') === 0) {
+          // For fulltext fields use the dedicated sort field for faster alpha
+          // sorts. Use the same field for strings to sort on a normalized
+          // value.
+          $f = 'sort_' . $field;
+        }
+        elseif (preg_match('/^([a-z]+)m(_.*)/', $field_names[$field], $matches)) {
+          // For other multi-valued fields (which aren't sortable by nature) we
+          // use the same hackish workaround like the DB backend: just copy the
+          // first value in a single value field for sorting.
+          $f = $matches[1] . 's' . $matches[2];
+        }
       }
-      elseif ($new_schema_version && preg_match('/^([a-z]+)m(_.*)/', $field_names[$field], $matches)) {
-        // For multi-valued fields (which aren't sortable by nature) we use
-        // the same hackish workaround like the DB backend: just copy the
-        // first value in a single value field for sorting.
-        $f = $matches[1] . 's' . $matches[2];
-      }
-      else {
+
+      if (!$f) {
         $f = $field_names[$field];
       }
 
