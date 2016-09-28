@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api_solr\Tests;
+namespace Drupal\search_api_solr_multilingual\Tests;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
@@ -51,11 +51,11 @@ class ViewsTest extends \Drupal\search_api\Tests\ViewsTest {
    * {@inheritdoc}
    */
   public function testView() {
-    parent::testView();
-
     // @see https://www.drupal.org/node/2773019
     $query = ['language' => ['***LANGUAGE_language_interface***']];
     $this->checkResults($query, [1, 2, 3, 4, 5], 'Search with interface language as filter');
+
+    parent::testView();
   }
 
   /**
