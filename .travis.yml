@@ -21,9 +21,9 @@ env:
   - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=5.5.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/web/modules/search_api_solr/solr-conf/5.x"
   - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=6.0.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/web/modules/search_api_solr/solr-conf/6.x"
 
-# notifications:
-#  irc:
-#    - "chat.freenode.net#drupal-search-api"
+notifications:
+  irc:
+    - "chat.freenode.net#drupal-search-api"
 
 # This will create the database
 mysql:

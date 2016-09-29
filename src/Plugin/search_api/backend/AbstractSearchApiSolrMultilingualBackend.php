@@ -9,6 +9,7 @@ namespace Drupal\search_api_solr_multilingual\Plugin\search_api\backend;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr_multilingual\SearchApiSolrMultilingualException;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
@@ -436,17 +437,21 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     $schema_parts = $state->get($state_key);
     // @todo reset that drupal state from time to time
 
-    if (!isset($previous_calls[$kind])) {
-      $previous_calls[$kind] = TRUE;
-
-      if (!is_array($schema_parts) || !isset($schema_parts[$kind]) || !in_array($name, $schema_parts[$kind])) {
-        $schema_parts[$kind] = [];
-        $response = $this->solrHelper->coreRestGet('schema/' . strtolower($kind));
-        foreach ($response[$kind] as $row) {
-          $schema_parts[$kind][] = $row['name'];
-        }
-        $state->set($state_key, $schema_parts);
+    if (
+      !is_array($schema_parts) || empty($schema_parts[$kind]) ||
+      (!in_array($name, $schema_parts[$kind]) && !isset($previous_calls[$kind]))
+    ) {
+      $response = $this->solrHelper->coreRestGet('schema/' . strtolower($kind));
+      if (empty($response[$kind])) {
+        throw new SearchApiSolrException('Missing information about ' . $kind . ' in response to REST request.');
       }
+      // Delete the old state.
+      $schema_parts[$kind] = [];
+      foreach ($response[$kind] as $row) {
+        $schema_parts[$kind][] = $row['name'];
+      }
+      $state->set($state_key, $schema_parts);
+      $previous_calls[$kind] = TRUE;
     }
 
     return in_array($name, $schema_parts[$kind]);
