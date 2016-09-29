@@ -57,6 +57,7 @@ install:
   - cd $TRAVIS_BUILD_DIR/..
   - git clone --branch 8.2.x https://git.drupal.org/project/drupal.git
   - cd $TRAVIS_BUILD_DIR/../drupal
+  - composer global require "hirak/prestissimo:^0.3"
   - composer install
   - composer config repositories.drupal composer https://packages.drupal.org/8
   - composer config repositories.search_api_solr vcs $TRAVIS_BUILD_DIR
