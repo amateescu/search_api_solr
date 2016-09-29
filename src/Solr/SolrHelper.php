@@ -11,6 +11,7 @@ use Drupal\search_api\Utility\Utility as SearchApiUtility;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Solarium\Client;
+use Solarium\Core\Client\Endpoint;
 use Solarium\Core\Client\Request;
 use Solarium\Core\Query\Helper as SolariumHelper;
 use Solarium\Exception\HttpException;
@@ -904,7 +905,7 @@ class SolrHelper {
   /**
    * Sends a REST request to the Solr server endpoint and returns the result.
    *
-   * @param string $endpoint
+   * @param string $endpoint_key
    *   The endpoint that refelcts the base URI.
    * @param string $path
    *   The path to append to the base URI.
@@ -916,7 +917,7 @@ class SolrHelper {
    * @return string
    *   The decoded response.
    */
-  protected function restRequest($endpoint, $path, $method = Request::METHOD_GET, $command_json = '') {
+  protected function restRequest($endpoint_key, $path, $method = Request::METHOD_GET, $command_json = '') {
     $request = new Request();
     $request->setMethod($method);
     $request->addHeader('Accept: application/json');
@@ -925,7 +926,14 @@ class SolrHelper {
       $request->setRawData($command_json);
     }
     $request->setHandler($path);
+
+    $endpoint = $this->solr->getEndpoint($endpoint_key);
+    $timeout = $endpoint->getTimeout();
+    // @todo Destinguish between different flavors of REST requests and use
+    //   different timeout settings.
+    $endpoint->setTimeout($this->configuration['optimize_timeout']);
     $response = $this->solr->executeRequest($request, $endpoint);
+    $endpoint->setTimeout($timeout);
     $output = Json::decode($response->getBody());
     // \Drupal::logger('search_api_solr')->info(print_r($output, true));
     if (!empty($output['errors'])) {
