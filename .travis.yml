@@ -40,6 +40,7 @@ mysql:
 before_install:
   - phpenv config-rm xdebug.ini
   - composer self-update
+  - composer global require "hirak/prestissimo:^0.3"
   - sudo apt-get update -qq > /dev/null
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
@@ -57,7 +58,6 @@ install:
   - cd $TRAVIS_BUILD_DIR/..
   - git clone --branch 8.2.x https://git.drupal.org/project/drupal.git
   - cd $TRAVIS_BUILD_DIR/../drupal
-  - composer global require "hirak/prestissimo:^0.3"
   - composer install
   - composer config repositories.drupal composer https://packages.drupal.org/8
   - composer config repositories.search_api_solr vcs $TRAVIS_BUILD_DIR
