@@ -153,7 +153,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected $solrConnectorPluginManager;
 
-  protected $solr_connector;
+  /**
+   * @var string
+   */
+  protected $connector_id;
 
   /**
    * @var \Drupal\search_api_solr\SolrConnectorInterface
@@ -224,7 +227,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#description' => $this->t('Choose a connector to use for this Solr server.'),
       '#options' => $solr_connector_options,
       // @todo
-      '#default_value' => $this->solr_connector,
+      '#default_value' => $this->connector_id,
       '#required' => TRUE,
       '#ajax' => array(
         'callback' => [get_class($this), 'buildAjaxSolrConnectorConfigForm'],
@@ -335,7 +338,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   public function buildConnectorConfigForm(array &$form, FormStateInterface $form_state) {
     $form['connector_config'] = [];
 
-    $connector_id = $this->solr_connector;
+    $connector_id = $this->connector_id;
     $backend_config = $form_state->getValue('backend_config');
     if (!empty($backend_config['connector'])) {
       $connector_id = $backend_config['connector'];
@@ -399,7 +402,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
     // Check before loading the backend plugin so we don't throw an exception.
     else {
-      $this->solr_connector = $form_state->get('connector');
+      $this->connector_id = $form_state->get('connector');
       $connector = $this->getSolrConnector();
       if ($connector instanceof PluginFormInterface) {
         $connector_form_state = new SubFormState($form_state, ['connector_config']);
@@ -431,7 +434,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
 
-    $this->solr_connector = $form_state->get('connector');
+    $this->connector_id = $form_state->get('connector');
     $connector = $this->getSolrConnector();
     if ($connector instanceof PluginFormInterface) {
       $connector_form_state = new SubFormState($form_state, ['connector_config']);
@@ -471,8 +474,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
   public function getSolrConnector() {
     if (!$this->solrConnector) {
-      if (!($this->solrConnector = $this->solrConnectorPluginManager->createInstance($this->solr_connector))) {
-        throw new SearchApiException("The Solr Connector with ID '$this->solr_connector' could not be retrieved.");
+      if (!($this->solrConnector = $this->solrConnectorPluginManager->createInstance($this->connector_id))) {
+        throw new SearchApiException("The Solr Connector with ID '$this->connector_id' could not be retrieved.");
       }
     }
     return $this->solrConnector;
