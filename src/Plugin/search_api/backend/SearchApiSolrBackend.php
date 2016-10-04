@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api_solr\Plugin\search_api\backend;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -11,6 +12,7 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\Url;
+use Drupal\search_api\Form\SubFormState;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Plugin\PluginFormTrait;
@@ -26,6 +28,7 @@ use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\Utility as SearchApiUtility;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
+use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginManager;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Drupal\search_api_solr\Solr\SolrHelper;
 use Solarium\Client;
@@ -138,9 +141,23 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected $languageManager;
 
   /**
+   * The backend plugin manager.
+   *
+   * @var \Drupal\search_api_solr\SolrConnector\SolrConnectorPluginManager
+   */
+  protected $solrConnectorPluginManager;
+
+  protected $solr_connector;
+
+  /**
+   * @var \Drupal\search_api_solr\SolrConnectorInterface
+   */
+  protected $solrConnector;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, ModuleHandlerInterface $module_handler, Config $search_api_solr_settings, LanguageManagerInterface $language_manager) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, ModuleHandlerInterface $module_handler, Config $search_api_solr_settings, LanguageManagerInterface $language_manager, SolrConnectorPluginManager $solr_connector_plugin_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->moduleHandler = $module_handler;
@@ -148,19 +165,21 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $this->languageManager = $language_manager;
     $solr_helper = new SolrHelper($this->configuration);
     $this->setSolrHelper($solr_helper);
+    $this->solrConnectorPluginManager = $solr_connector_plugin_manager;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
+  return new static(
       $configuration,
       $plugin_id,
       $plugin_definition,
       $container->get('module_handler'),
       $container->get('config.factory')->get('search_api_solr.settings'),
-      $container->get('language_manager')
+      $container->get('language_manager'),
+      $container->get('plugin.manager.search_api_solr.connector')
     );
   }
 
@@ -169,22 +188,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function defaultConfiguration() {
     return array(
-      'scheme' => 'http',
-      'host' => 'localhost',
-      'port' => '8983',
-      'path' => '/solr',
-      'core' => '',
-      'timeout' => 5,
-      'index_timeout' => 5,
-      'optimize_timeout' => 10,
-      'username' => '',
-      'password' => '',
       'excerpt' => FALSE,
       'retrieve_data' => FALSE,
       'highlight_data' => FALSE,
       'skip_schema_check' => FALSE,
-      'solr_version' => '',
-      'http_method' => 'AUTO',
       'site_hash' => TRUE,
       'autocorrect_spell' => TRUE,
       'autocorrect_suggest_words' => TRUE,
@@ -204,88 +211,24 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       );
     }
 
-    $form['scheme'] = array(
-      '#type' => 'select',
-      '#title' => $this->t('HTTP protocol'),
-      '#description' => $this->t('The HTTP protocol to use for sending queries.'),
-      '#default_value' => $this->configuration['scheme'],
-      '#options' => array(
-        'http' => 'http',
-        'https' => 'https',
+    $solr_connector_options = $this->getSolrConnectorOptions();
+    $form['connector'] = array(
+      '#type' => 'radios',
+      '#title' => $this->t('Solr Connector'),
+      '#description' => $this->t('Choose a connector to use for this Solr server.'),
+      '#options' => $solr_connector_options,
+      // @todo
+      '#default_value' => $this->solr_connector,
+      '#required' => TRUE,
+      '#ajax' => array(
+        'callback' => [get_class($this), 'buildAjaxSolrConnectorConfigForm'],
+        'wrapper' => 'search-api-solr-connector-config-form',
+        'method' => 'replace',
+        'effect' => 'fade',
       ),
     );
 
-    $form['host'] = array(
-      '#type' => 'textfield',
-      '#title' => $this->t('Solr host'),
-      '#description' => $this->t('The host name or IP of your Solr server, e.g. <code>localhost</code> or <code>www.example.com</code>.'),
-      '#default_value' => $this->configuration['host'],
-      '#required' => TRUE,
-    );
-    $form['port'] = array(
-      '#type' => 'textfield',
-      '#title' => $this->t('Solr port'),
-      '#description' => $this->t('The Jetty example server is at port 8983, while Tomcat uses 8080 by default.'),
-      '#default_value' => $this->configuration['port'],
-      '#required' => TRUE,
-    );
-    $form['path'] = array(
-      '#type' => 'textfield',
-      '#title' => $this->t('Solr path'),
-      '#description' => $this->t('The path that identifies the Solr instance to use on the server.'),
-      '#default_value' => $this->configuration['path'],
-    );
-    $form['core'] = array(
-      '#type' => 'textfield',
-      '#title' => $this->t('Solr core'),
-      '#description' => $this->t('The name that identifies the Solr core to use on the server.'),
-      '#default_value' => $this->configuration['core'],
-    );
-    $form['timeout'] = array(
-      '#type' => 'number',
-      '#min' => 1,
-      '#max' => 180,
-      '#title' => $this->t('Query timeout'),
-      '#description' => $this->t('The timeout in seconds for search queries sent to the Solr server.'),
-      '#default_value' => $this->configuration['timeout'],
-      '#required' => TRUE,
-    );
-    $form['index_timeout'] = array(
-      '#type' => 'number',
-      '#min' => 1,
-      '#max' => 180,
-      '#title' => $this->t('Index timeout'),
-      '#description' => $this->t('The timeout in seconds for indexing requests to the Solr server.'),
-      '#default_value' => $this->configuration['index_timeout'],
-      '#required' => TRUE,
-    );
-    $form['optimize_timeout'] = array(
-      '#type' => 'number',
-      '#min' => 1,
-      '#max' => 180,
-      '#title' => $this->t('Optimize timeout'),
-      '#description' => $this->t('The timeout in seconds for background index optimization queries on a Solr server.'),
-      '#default_value' => $this->configuration['optimize_timeout'],
-      '#required' => TRUE,
-    );
-
-    $form['http'] = array(
-      '#type' => 'fieldset',
-      '#title' => $this->t('Basic HTTP authentication'),
-      '#description' => $this->t('If your Solr server is protected by basic HTTP authentication, enter the login data here.'),
-      '#collapsible' => TRUE,
-      '#collapsed' => empty($this->configuration['username']),
-    );
-    $form['http']['username'] = array(
-      '#type' => 'textfield',
-      '#title' => $this->t('Username'),
-      '#default_value' => $this->configuration['username'],
-    );
-    $form['http']['password'] = array(
-      '#type' => 'password',
-      '#title' => $this->t('Password'),
-      '#description' => $this->t('If this field is left blank and the HTTP username is filled out, the current password will not be changed.'),
-    );
+    $this->buildConnectorConfigForm($form, $form_state);
 
     $form['advanced'] = array(
       '#type' => 'fieldset',
@@ -317,36 +260,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#description' => $this->t('Skip the automatic check for schema-compatibillity. Use this override if you are seeing an error-message about an incompatible schema.xml configuration file, and you are sure the configuration is compatible.'),
       '#default_value' => $this->configuration['skip_schema_check'],
     );
-    $form['advanced']['solr_version'] = array(
-      '#type' => 'select',
-      '#title' => $this->t('Solr version override'),
-      '#description' => $this->t('Specify the Solr version manually in case it cannot be retrived automatically. The version can be found in the Solr admin interface under "Solr Specification Version" or "solr-spec"'),
-      '#options' => array(
-        '' => $this->t('Determine automatically'),
-        '4' => '4.x',
-        '5' => '5.x',
-        '6' => '6.x',
-      ),
-      '#default_value' => $this->configuration['solr_version'],
-    );
     // Highlighting retrieved data and getting an excerpt only makes sense when
     // we retrieve data. (Actually, internally it doesn't really matter.
     // However, from a user's perspective, having to check both probably makes
     // sense.)
     $form['advanced']['highlight_data']['#states']['invisible'][':input[name="backend_config[advanced][retrieve_data]"]']['checked'] = FALSE;
     $form['advanced']['excerpt']['#states']['invisible'][':input[name="backend_config[advanced][retrieve_data]"]']['checked'] = FALSE;
-
-    $form['advanced']['http_method'] = array(
-      '#type' => 'select',
-      '#title' => $this->t('HTTP method'),
-      '#description' => $this->t('The HTTP method to use for sending queries. GET will often fail with larger queries, while POST should not be cached. AUTO will use GET when possible, and POST for queries that are too large.'),
-      '#default_value' => $this->configuration['http_method'],
-      '#options' => array(
-        'AUTO' => $this->t('AUTO'),
-        'POST' => 'POST',
-        'GET' => 'GET',
-      ),
-    );
 
     if ($this->moduleHandler->moduleExists('search_api_autocomplete')) {
       $form['advanced']['autocomplete'] = array(
@@ -387,30 +306,115 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
+   * Returns all available backend plugins, as an options list.
+   *
+   * @return string[]
+   *   An associative array mapping backend plugin IDs to their (HTML-escaped)
+   *   labels.
+   */
+  protected function getSolrConnectorOptions() {
+    $options = [];
+    foreach ($this->solrConnectorPluginManager->getDefinitions() as $plugin_id => $plugin_definition) {
+      $options[$plugin_id] = Html::escape($plugin_definition['label']);
+    }
+    return $options;
+  }
+
+  /**
+   * Builds the backend-specific configuration form.
+   *
+   * @param \Drupal\search_api_solr\SolrConnectorInterface $connector
+   *   The server that is being created or edited.
+   */
+  public function buildConnectorConfigForm(array &$form, FormStateInterface $form_state) {
+    $form['connector_config'] = [];
+
+    $connector_id = $this->solr_connector;
+    $backend_config = $form_state->getValue('backend_config');
+    if (!empty($backend_config['connector'])) {
+      $connector_id = $backend_config['connector'];
+    }
+    if ($connector_id) {
+      $connector = $this->solrConnectorPluginManager->createInstance($connector_id);
+      if ($connector instanceof PluginFormInterface) {
+        $form_state->set(['sub_states', 'backend_config', 'connector'], $connector_id);
+        if ($form_state->isRebuilding()) {
+          drupal_set_message($this->t('Please configure the selected Solr connector.'), 'warning');
+        }
+        // Attach the Solr connector plugin configuration form.
+        $connector_form = isset($form['connector_config']) ? $form['connector_config'] : [];
+        $form['connector_config'] = $connector->buildConfigurationForm($connector_form, $form_state);
+
+        // Modify the backend plugin configuration container element.
+        $form['connector_config']['#type'] = 'details';
+        $form['connector_config']['#title'] = $this->t('Configure %plugin Solr connector', array('%plugin' => $connector->label()));
+        $form['connector_config']['#description'] = $connector->getDescription();
+        $form['connector_config']['#open'] = TRUE;
+      }
+    }
+    $form['connector_config'] += ['#type' => 'container'];
+    $form['connector_config']['#attributes'] = [
+      'id' => 'search-api-solr-connector-config-form',
+    ];
+    $form['connector_config']['#tree'] = TRUE;
+
+  }
+
+  /**
+   * Handles switching the selected Solr connector plugin.
+   */
+  public static function buildAjaxSolrConnectorConfigForm(array $form, FormStateInterface $form_state) {
+    // The work is already done in form(), where we rebuild the entity according
+    // to the current form values and then create the backend configuration form
+    // based on that. So we just need to return the relevant part of the form
+    // here.
+    return $form['backend_config']['connector_config'];
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-    $values = $form_state->getValues();
-    if (isset($values['port']) && (!is_numeric($values['port']) || $values['port'] < 0 || $values['port'] > 65535)) {
-      $form_state->setError($form['port'], $this->t('The port has to be an integer between 0 and 65535.'));
+    // Check if the Solr connector plugin changed.
+    if ($form_state->getValue('connector') != $form_state->get('connector')) {
+      // This can only happen during initial server creation, since we don't
+      // allow switching the backend afterwards. The user has selected a
+      // different backend, so any values entered for the other backend should
+      // be discarded.
+      #$input = &$form_state->getUserInput();
+      #$input['backend_config']['connector_config'] = [];
+      $new_connector = $this->solrConnectorPluginManager->createInstance($form_state->getValue('connector'));
+      if ($new_connector instanceof PluginFormInterface) {
+        $form_state->setRebuild();
+      }
+      else {
+        $form_state->setError($form['connector'], $this->t('The connector could not be activated.'));
+      }
     }
-    if (!empty($values['path']) && strpos($values['path'], '/') !== 0) {
-      $form_state->setError($form['path'], $this->t('If provided the path has to start with "/".'));
-    }
-    if (!empty($values['core']) && strpos($values['core'], '/') === 0) {
-      $form_state->setError($form['core'], $this->t('The core must not start with "/".'));
-    }
+    // Check before loading the backend plugin so we don't throw an exception.
+    else {
+      $this->solr_connector = $form_state->get('connector');
+      $connector = $this->getSolrConnector();
+      if ($connector instanceof PluginFormInterface) {
+        $connector_form_state = new SubFormState($form_state, ['connector_config']);
+        $connector->validateConfigurationForm($form['connector_config'], $connector_form_state);
+      }
+      else {
+        $form_state->setError($form['connector'], $this->t('The connector could not be activated.'));
+      }
 
-    if (!$form_state->hasAnyErrors()) {
-      // Try to orchestrate a server link from form values.
-      $solr = new Client();
-      $solr->createEndpoint($values + ['key' => 'core'], TRUE);
-      $this->getSolrHelper()->setSolr($solr);
-      try {
-        $this->getSolrHelper()->getServerLink();
-      } catch (\InvalidArgumentException $e) {
-        foreach (['scheme', 'host', 'port', 'path', 'core'] as $part) {
-          $form_state->setError($form[$part], $this->t('The server link generated from the form values is illegal.'));
+      if (!$form_state->hasAnyErrors()) {
+        // Try to orchestrate a server link from form values.
+        $solr = new Client();
+        $solr->createEndpoint($this->getSolrConnector()
+            ->getIndexEndpointConfig() + ['key' => 'core'], TRUE);
+        $this->getSolrHelper()->setSolr($solr);
+        try {
+          $this->getSolrHelper()->getServerLink();
+        } catch (\InvalidArgumentException $e) {
+          foreach (['scheme', 'host', 'port', 'path', 'core'] as $part) {
+            $form_state->setError($form[$part], $this->t('The server link generated from the form values is illegal.'));
+          }
         }
       }
     }
@@ -420,11 +424,18 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+
+    $this->solr_connector = $form_state->get('connector');
+    $connector = $this->getSolrConnector();
+    if ($connector instanceof PluginFormInterface) {
+      $connector_form_state = new SubFormState($form_state, ['connector_config']);
+      $connector->submitConfigurationForm($form['connector_config'], $connector_form_state);
+    }
+
     $values = $form_state->getValues();
     // Since the form is nested into another, we can't simply use #parents for
     // doing this array restructuring magic. (At least not without creating an
     // unnecessary dependency on internal implementation.)
-    $values += $values['http'];
     $values += $values['advanced'];
     $values += $values['multisite'];
     $values += !empty($values['autocomplete']) ? $values['autocomplete'] : array();
@@ -434,20 +445,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $values['highlight_data'] &= $values['retrieve_data'];
     $values['excerpt'] &= $values['retrieve_data'];
 
-    // For password fields, there is no default value, they're empty by default.
-    // Therefore we ignore empty submissions if the user didn't change either.
-    if ($values['password'] === ''
-      && isset($this->configuration['username'])
-      && $values['username'] === $this->configuration['username']) {
-      $values['password'] = $this->configuration['password'];
-    }
-
     foreach ($values as $key => $value) {
       $form_state->setValue($key, $value);
     }
 
     // Clean-up the form to avoid redundant entries in the stored configuration.
-    $form_state->unsetValue('http');
     $form_state->unsetValue('advanced');
     $form_state->unsetValue('multisite');
     $form_state->unsetValue('autocomplete');
@@ -460,6 +462,16 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Delete cached endpoint data.
     \Drupal::state()->delete('search_api_solr.endpoint.data');
   }
+
+  public function getSolrConnector() {
+    if (!$this->solrConnector) {
+      if (!($this->solrConnector = $this->solrConnectorPluginManager->createInstance($this->solr_connector))) {
+        throw new SearchApiException("The Solr Connector with ID '$this->solr_connector' could not be retrieved.");
+      }
+    }
+    return $this->solrConnector;
+  }
+
 
   /**
    * {@inheritdoc}
@@ -1824,33 +1836,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $facet_field->setMissing(FALSE);
       }
     }
-  }
-
-  /**
-   * Sets the request handler.
-   *
-   * This should also make the needed adjustments to the request parameters.
-   *
-   * @todo SearchApiSolrConnectionInterface doesn't exist!
-   *
-   * @param string $handler
-   *   Name of the handler to set.
-   * @param array $call_args
-   *   An associative array containing all three arguments to the
-   *   SearchApiSolrConnectionInterface::search() call ("query", "params" and
-   *   "method") as references.
-   *
-   * @return bool
-   *   TRUE iff this method invocation handled the given handler. This allows
-   *   subclasses to recognize whether the request handler was already set by
-   *   this method.
-   */
-  protected function setRequestHandler($handler, array &$call_args) {
-    if ($handler == 'pinkPony') {
-      $call_args['params']['qt'] = $handler;
-      return TRUE;
-    }
-    return FALSE;
   }
 
   /**
