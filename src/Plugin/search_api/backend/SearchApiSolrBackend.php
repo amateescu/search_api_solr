@@ -3,15 +3,19 @@
 namespace Drupal\search_api_solr\Plugin\search_api\backend;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Plugin\PluginDependencyTrait;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\Url;
+use Drupal\search_api\Annotation\SearchApiBackend;
 use Drupal\search_api\Form\SubFormState;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\ItemInterface;
@@ -64,6 +68,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   use PluginFormTrait {
     submitConfigurationForm as traitSubmitConfigurationForm;
   }
+
+  use PluginDependencyTrait;
 
   /**
    * The date format that Solr uses, in PHP date() syntax.
@@ -2185,6 +2191,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     return static::$queryHelper;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function calculateDependencies() {
+    $this->calculatePluginDependencies($this->getSolrConnector());
+    return $this->dependencies;
   }
 
 }
