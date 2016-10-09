@@ -84,20 +84,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected $fieldNames = array();
 
   /**
-   * A Solarium Update query.
-   *
-   * @var \Solarium\QueryType\Update\Query\Query
-   */
-  protected static $updateQuery;
-
-  /**
-   * A Solarium query helper.
-   *
-   * @var \Solarium\Core\Query\Helper
-   */
-  protected static $queryHelper;
-
-  /**
    * Saves whether a commit operation was already scheduled for this server.
    *
    * @var bool
@@ -124,13 +110,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @var \Drupal\Core\Config\Config
    */
   protected $searchApiSolrSettings;
-
-  /**
-   * A connection to the Solr server.
-   *
-   * @var \Solarium\Client
-   */
-  protected $solr;
 
   /**
    * SolrHelper object with helper functions to work with Solr.
@@ -216,7 +195,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $form['server_description'] = array(
         '#type' => 'item',
         '#title' => $this->t('Solr server URI'),
-        '#description' => $this->getSolrHelper()->getServerLink(),
+        '#description' => $this->getSolrConnector()->getServerLink(),
       );
     }
 
@@ -411,21 +390,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       else {
         $form_state->setError($form['connector'], $this->t('The connector could not be activated.'));
       }
-
-      if (!$form_state->hasAnyErrors()) {
-        // Try to orchestrate a server link from form values.
-        $solr = new Client();
-        $solr->createEndpoint($this->getSolrConnector()
-            ->getIndexEndpointConfig() + ['key' => 'core'], TRUE);
-        $this->getSolrHelper()->setSolr($solr);
-        try {
-          $this->getSolrHelper()->getServerLink();
-        } catch (\InvalidArgumentException $e) {
-          foreach (['scheme', 'host', 'port', 'path', 'core'] as $part) {
-            $form_state->setError($form[$part], $this->t('The server link generated from the form values is illegal.'));
-          }
-        }
-      }
     }
   }
 
@@ -507,14 +471,15 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     $info[] = array(
       'label' => $this->t('Solr server URI'),
-      'info' => $this->getSolrHelper()->getServerLink(),
+      'info' => $this->getSolrConnector()->getServerLink(),
     );
 
     $info[] = array(
       'label' => $this->t('Solr core URI'),
-      'info' => $this->getSolrHelper()->getCoreLink(),
+      'info' => $this->getSolrConnector()->getCoreLink(),
     );
 
+    /*
     if ($this->configuration['username']) {
       $vars = array(
         '@user' => $this->configuration['username'],
@@ -526,10 +491,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         'info' => $http,
       );
     }
+    */
 
     if ($this->server->status()) {
       // If the server is enabled, check whether Solr can be reached.
-      $ping = $this->getSolrHelper()->pingServer();
+      $ping = $this->getSolrConnector()->pingServer();
       if ($ping) {
         $msg = $this->t('The Solr server could be reached.');
       }
@@ -542,7 +508,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         'status' => $ping ? 'ok' : 'error',
       );
 
-      $ping = $this->getSolrHelper()->pingCore();
+      $ping = $this->getSolrConnector()->pingCore();
       if ($ping) {
         $msg = $this->t('The Solr core could be accessed (latency: @millisecs ms).', array('@millisecs' => $ping * 1000));
       }
@@ -555,7 +521,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         'status' => $ping ? 'ok' : 'error',
       );
 
-      $version = $this->getSolrHelper()->getSolrVersion();
+      $version = $this->getSolrConnector()->getSolrVersion();
       $info[] = array(
         'label' => $this->t('Configured Solr Version'),
         'info' => $version,
@@ -565,7 +531,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       if ($ping) {
         $info[] = array(
           'label' => $this->t('Detected Solr Version'),
-          'info' => $this->getSolrHelper()->getSolrVersion(TRUE),
+          'info' => $this->getSolrConnector()->getSolrVersion(TRUE),
           'status' => 'ok',
         );
 
@@ -574,10 +540,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           // often (only when an admin views the server details), so we clear
           // the cache to get the current data.
           $this->connect();
-          $data = $this->getSolrHelper()->getLuke();
+          $data = $this->getSolrConnector()->getLuke();
           if (isset($data['index']['numDocs'])) {
             // Collect the stats.
-            $stats_summary = $this->getSolrHelper()->getStatsSummary();
+            $stats_summary = $this->getSolrConnector()->getStatsSummary();
 
             $pending_msg = $stats_summary['@pending_docs'] ? $this->t('(@pending_docs sent but not yet processed)', $stats_summary) : '';
             $index_msg = $stats_summary['@index_size'] ? $this->t('(@index_size on disk)', $stats_summary) : '';
@@ -703,7 +669,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       return [];
     }
     try {
-      $this->getUpdateQuery()->addDocuments($documents);
+      $this->getSolrConnector()->getUpdateQuery()->addDocuments($documents);
       // Do a commitWithin since that is automatically a softCommit with Solr 4
       // and a delayed hard commit with Solr 3.4+.
       // We wait 1 second after the request arrived for solr to parse the
@@ -1158,11 +1124,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * Creates a connection to the Solr server as configured in $this->configuration.
    */
   protected function connect() {
-    if (!$this->solr) {
-      $this->solr = new Client();
-      $this->solr->createEndpoint($this->configuration + ['key' => 'core'], TRUE);
-      $this->getSolrHelper()->setSolr($this->solr);
-    }
   }
 
   /**
@@ -2158,42 +2119,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Prepend environment prefix.
     $id = $this->searchApiSolrSettings->get('index_prefix') . $id;
     return $id;
-  }
-
-  /**
-   * Gets the current Solarium update query, creating one if necessary.
-   *
-   * @return \Solarium\QueryType\Update\Query\Query
-   *   The Update query.
-   */
-  protected function getUpdateQuery() {
-    if (!static::$updateQuery) {
-      $this->connect();
-      static::$updateQuery = $this->solr->createUpdate();
-    }
-    return static::$updateQuery;
-  }
-
-  /**
-   * Returns a Solarium query helper object.
-   *
-   * @param \Solarium\QueryType\Select\Query\Query|null $query
-   *   (optional) A Solarium query object.
-   *
-   * @return \Solarium\Core\Query\Helper
-   *   A Solarium query helper.
-   */
-  protected function getQueryHelper(Query $query = NULL) {
-    if (!static::$queryHelper) {
-      if ($query) {
-        static::$queryHelper = $query->getHelper();
-      }
-      else {
-        static::$queryHelper = new Helper();
-      }
-    }
-
-    return static::$queryHelper;
   }
 
   /**
