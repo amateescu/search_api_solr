@@ -59,23 +59,18 @@ function search_api_solr_cron() {
       try {
         /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
         $backend = $server->getBackend();
-        $solarium_client = $backend->getSolrConnection();
-        $backend_config = $backend->getConfiguration();
-        $endpoint = $solarium_client->getEndpoint('core');
-        $endpoint->setTimeout($backend_config['optimize_timeout']);
+        $connector = $backend->getSolrConnector();
         if ($action != 'spellcheck') {
-          $update = $solarium_client->createUpdate();
-          $update->addOptimize(TRUE, FALSE);
-          $solarium_client->update($update, $endpoint);
+          $connector->optimize();
         }
         else {
-          $solarium_query = $solarium_client->createSelect();
+          $solarium_query = $connector->getSelectQuery();
           $solarium_query->setRows(0);
 
           $spellcheck = $solarium_query->getSpellcheck();
           $spellcheck->setBuild(TRUE);
 
-          $solarium_client->select($solarium_query, $endpoint);
+          $connector->execute($solarium_query);
         }
         ++$count;
       }
