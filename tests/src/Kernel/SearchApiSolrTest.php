@@ -78,7 +78,7 @@ class SearchApiSolrTest extends BackendTestBase {
 
     try {
       $backend = Server::load($this->serverId)->getBackend();
-      if ($backend instanceof SearchApiSolrBackend && $backend->getSolrHelper()->pingCore()) {
+      if ($backend instanceof SearchApiSolrBackend && $backend->getSolrConnector()->pingCore()) {
         $this->solrAvailable = TRUE;
       }
     }
@@ -498,10 +498,12 @@ class SearchApiSolrTest extends BackendTestBase {
   public function testBasicAuth() {
     $server = $this->getServer();
     $config = $server->getBackendConfig();
-    $config['username'] = 'foo';
-    $config['password'] = 'bar';
+    $config['connector_config']['username'] = 'foo';
+    $config['connector_config']['password'] = 'bar';
     $server->setBackendConfig($config);
-    $auth = $server->getBackend()->getSolrConnection()->getEndpoint()->getAuthentication();
+    /** @var SolrBackendInterface $backend */
+    $backend = $server->getBackend();
+    $auth = $backend->getSolrConnector()->getEndpoint()->getAuthentication();
     $this->assertEquals(['username' => 'foo', 'password' => 'bar'], $auth);
   }
 

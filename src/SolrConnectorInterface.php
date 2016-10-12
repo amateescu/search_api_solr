@@ -283,7 +283,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    *
    * @return \Solarium\Core\Client\Endpoint
    */
-  public function getEndpoint($key);
+  public function getEndpoint($key = 'core');
 
   /**
    * Retrieves a config file or file list from the Solr server.

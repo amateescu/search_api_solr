@@ -8,7 +8,7 @@ backend_config:
   retrieve_data: false
   highlight_data: false
   skip_schema_check: false
-  connector: standard
+  connector: basic_auth
   connector_config:
     scheme: http
     host: localhost
@@ -20,6 +20,8 @@ backend_config:
     optimize_timeout: 5
     solr_version: ''
     http_method: AUTO
+    username: ''
+    password: ''
 status: true
 langcode: en
 dependencies:

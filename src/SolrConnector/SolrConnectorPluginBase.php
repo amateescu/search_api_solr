@@ -748,7 +748,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function getEndpoint($key) {
+  public function getEndpoint($key = 'core') {
     $this->connect();
     $this->solr->createMoreLikeThis(array('handler' => 'select'));
     return $this->solr->getEndpoint($key);

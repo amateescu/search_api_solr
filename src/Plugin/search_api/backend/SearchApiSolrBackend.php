@@ -1927,9 +1927,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function setConfiguration(array $configuration) {
     parent::setConfiguration($configuration);
-    // Update the configuration of the solr connector as well by replacing it by
-    // a new instance.
+
+    // Update the configuration of the Solr connector as well by replacing it by
+    // a new instance with the latest configuration.
     $this->solrConnector = NULL;
+    $connector = $this->getSolrConnector();
+    $connector->setConfiguration($this->configuration['connector_config']);
   }
 
   /**
