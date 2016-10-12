@@ -4,13 +4,13 @@ description: 'A server used for testing.'
 backend: search_api_solr
 backend_config:
   site_hash: true
-  scheme: http
   excerpt: false
   retrieve_data: false
   highlight_data: false
   skip_schema_check: false
   connector: standard
   connector_config:
+    scheme: http
     host: localhost
     port: '8983'
     path: /solr

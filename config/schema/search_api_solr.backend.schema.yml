@@ -2,11 +2,6 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
   type: config_object
   label: 'Search API Solr settings'
   mapping:
-    connector:
-      type: string
-      label: 'The connector plugin ID'
-    connector_config:
-      type: plugin.plugin_configuration.search_api_solr_connector.[%parent.connector]
     excerpt:
       type: boolean
       label: 'Return an excerpt for all results'
@@ -28,3 +23,8 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
     autocorrect_suggest_words:
       type: boolean
       label: 'Suggest additional words'
+    connector:
+      type: string
+      label: 'The connector plugin ID'
+    connector_config:
+      type: plugin.plugin_configuration.search_api_solr_connector.[%parent.connector]
