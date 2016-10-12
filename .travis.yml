@@ -65,7 +65,12 @@ install:
   - composer require drupal/search_api_solr:999.0.0
   - composer require drupal/facets:1.x-dev
   - composer require drush/drush
-  - composer update
+  #########################################
+  # to be removed once #2817341 is resolved
+  - cd modules/search_api
+  - curl https://www.drupal.org/files/issues/2817341_PluginDependencyTrait.patch | patch -p1
+  - cd $TRAVIS_BUILD_DIR/../drupal
+  #########################################
 
 before_script:
   # start the built-in php web server (mysql is already started)

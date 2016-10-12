@@ -11,7 +11,6 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\Core\Plugin\PluginDependencyTrait;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\Url;
@@ -63,8 +62,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   use PluginFormTrait {
     submitConfigurationForm as traitSubmitConfigurationForm;
   }
-
-  use PluginDependencyTrait;
 
   /**
    * The date format that Solr uses, in PHP date() syntax.
