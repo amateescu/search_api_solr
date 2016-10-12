@@ -39,7 +39,7 @@ use Solarium\QueryType\Select\Query\Query;
  * @SolrConnector(
  *   id = "my_connector",
  *   label = @Translation("My connector"),
- *   description = @Translation("Searches with SuperSearch™.")
+ *   description = @Translation("Authenticates with SuperAuth™.")
  * )
  * @endcode
  *
@@ -273,6 +273,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    * Returns a the Solr server URI.
    */
   protected function getServerUri() {
+    $this->connect();
     $url_path = $this->solr->getEndpoint('server')->getBaseUri();
     if ($this->configuration['host'] == 'localhost' && !empty($_SERVER['SERVER_NAME'])) {
       $url_path = str_replace('localhost', $_SERVER['SERVER_NAME'], $url_path);
@@ -607,7 +608,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function getSelectQueryQuery() {
+  public function getSelectQuery() {
     $this->connect();
     return $this->solr->createSelect();
   }

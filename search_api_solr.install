@@ -13,7 +13,10 @@ function search_api_solr_requirements($phase) {
     $unavailable = 0;
     $last = NULL;
     foreach ($servers as $server) {
-      if (!$server->getBackend()->getSolrHelper()->pingCore()) {
+      /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
+      $backend = $server->getBackend();
+      $connector = $backend->getSolrConnector();
+      if (!$connector->pingCore()) {
         ++$unavailable;
         $last = $server;
       }

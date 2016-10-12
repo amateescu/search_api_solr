@@ -34,12 +34,10 @@ use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginManager;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
-use Solarium\Core\Client\Request;
 use Solarium\Core\Client\Response;
 use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\QueryType\Select\Query\Query;
 use Solarium\Exception\ExceptionInterface;
-use Solarium\Exception\HttpException;
 use Solarium\QueryType\Select\Result\Result;
 use Solarium\QueryType\Update\Query\Document\Document;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -116,11 +114,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected $solrConnectorPluginManager;
 
   /**
-   * @var string
-   */
-  protected $connector_id;
-
-  /**
    * @var \Drupal\search_api_solr\SolrConnectorInterface
    */
   protected $solrConnector;
@@ -141,7 +134,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-  return new static(
+    return new static(
       $configuration,
       $plugin_id,
       $plugin_definition,
@@ -187,7 +180,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#description' => $this->t('Choose a connector to use for this Solr server.'),
       '#options' => $solr_connector_options,
       // @todo
-      '#default_value' => $this->connector_id,
+      '#default_value' => $this->configuration['connector'],
       '#required' => TRUE,
       '#ajax' => array(
         'callback' => [get_class($this), 'buildAjaxSolrConnectorConfigForm'],
@@ -298,7 +291,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   public function buildConnectorConfigForm(array &$form, FormStateInterface $form_state) {
     $form['connector_config'] = [];
 
-    $connector_id = $this->connector_id;
+    $connector_id = $this->configuration['connector'];
     $backend_config = $form_state->getValue('backend_config');
     if (!empty($backend_config['connector'])) {
       $connector_id = $backend_config['connector'];
@@ -346,12 +339,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     // Check if the Solr connector plugin changed.
     if ($form_state->getValue('connector') != $form_state->get('connector')) {
-      // This can only happen during initial server creation, since we don't
-      // allow switching the backend afterwards. The user has selected a
-      // different backend, so any values entered for the other backend should
-      // be discarded.
-      #$input = &$form_state->getUserInput();
-      #$input['backend_config']['connector_config'] = [];
       $new_connector = $this->solrConnectorPluginManager->createInstance($form_state->getValue('connector'));
       if ($new_connector instanceof PluginFormInterface) {
         $form_state->setRebuild();
@@ -362,7 +349,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
     // Check before loading the backend plugin so we don't throw an exception.
     else {
-      $this->connector_id = $form_state->get('connector');
+      $this->configuration['connector'] = $form_state->get('connector');
       $connector = $this->getSolrConnector();
       if ($connector instanceof PluginFormInterface) {
         $connector_form_state = new SubFormState($form_state, ['connector_config']);
@@ -379,7 +366,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
 
-    $this->connector_id = $form_state->get('connector');
+    $this->configuration['connector'] = $form_state->get('connector');
     $connector = $this->getSolrConnector();
     if ($connector instanceof PluginFormInterface) {
       $connector_form_state = new SubFormState($form_state, ['connector_config']);
@@ -422,8 +409,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function getSolrConnector() {
     if (!$this->solrConnector) {
-      if (!($this->solrConnector = $this->solrConnectorPluginManager->createInstance($this->connector_id))) {
-        throw new SearchApiException("The Solr Connector with ID '$this->connector_id' could not be retrieved.");
+      if (!($this->solrConnector = $this->solrConnectorPluginManager->createInstance($this->configuration['connector']))) {
+        throw new SearchApiException("The Solr Connector with ID '$this->configuration['connector']' could not be retrieved.");
       }
     }
     return $this->solrConnector;
@@ -1994,7 +1981,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @return bool|string
    *   FALSE if no excerpt is returned from Solr, the excerpt string otherwise.
    */
-  public function getExcerpt($data, $solr_id, ItemInterface $item, array $field_mapping) {
+  protected function getExcerpt($data, $solr_id, ItemInterface $item, array $field_mapping) {
     if (!isset($data['highlighting'][$solr_id])) {
       return FALSE;
     }
@@ -2054,7 +2041,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @return string
    *   A Solr query string representing the same keys.
    */
-  public function flattenKeys(array $keys) {
+  protected function flattenKeys(array $keys) {
     $k = [];
     $pre = ($keys['#conjunction'] == 'OR') ? '' : '+';
     $neg = empty($keys['#negation']) ? '' : '-';
@@ -2110,7 +2097,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The query object.
    */
-  public function setHighlighting(Query $solarium_query, QueryInterface $query) {
+  protected function setHighlighting(Query $solarium_query, QueryInterface $query) {
     $excerpt = !empty($this->configuration['excerpt']);
     $highlight = !empty($this->configuration['highlight_data']);
 
@@ -2180,7 +2167,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @param array $fields
    *   The fields to add mlt for.
    */
-  public function setMoreLikeThis(Query &$solarium_query, QueryInterface $query, $mlt_options = array(), $index_fields = array(), $fields = array()) {
+  protected function setMoreLikeThis(Query &$solarium_query, QueryInterface $query, $mlt_options = array(), $index_fields = array(), $fields = array()) {
     // The fields to look for similarities in.
     if (empty($mlt_options['fields'])) {
       return;
@@ -2228,7 +2215,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @param $field_names
    *   The field names, to add the spatial options for.
    */
-  public function setSpatial(Query $solarium_query, QueryInterface $query, $spatial_options = array(), $field_names = array()) {
+  protected function setSpatial(Query $solarium_query, QueryInterface $query, $spatial_options = array(), $field_names = array()) {
     foreach ($spatial_options as $i => $spatial) {
       // Reset radius for each option.
       unset($radius);
@@ -2324,7 +2311,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * Sets sorting for the query.
    */
-  public function setSorts(Query $solarium_query, QueryInterface $query, $field_names = []) {
+  protected function setSorts(Query $solarium_query, QueryInterface $query, $field_names = []) {
     $new_schema_version = version_compare($this->getSolrConnector()->getSchemaVersion(), '4.4', '>=');
     foreach ($query->getSorts() as $field => $order) {
       $f = '';
@@ -2375,7 +2362,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * Sets grouping for the query.
    */
-  public function setGrouping(Query $solarium_query, QueryInterface $query, $grouping_options = array(), $index_fields = array(), $field_names = array()) {
+  protected function setGrouping(Query $solarium_query, QueryInterface $query, $grouping_options = array(), $index_fields = array(), $field_names = array()) {
     $group_params['group'] = 'true';
     // We always want the number of groups returned so that we get pagers done
     // right.
