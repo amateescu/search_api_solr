@@ -157,6 +157,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'site_hash' => TRUE,
       'autocorrect_spell' => TRUE,
       'autocorrect_suggest_words' => TRUE,
+      'connector' => '',
+      'connector_config' => [],
     );
   }
 
@@ -297,7 +299,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $connector_id = $backend_config['connector'];
     }
     if ($connector_id) {
-      $connector = $this->solrConnectorPluginManager->createInstance($connector_id);
+      $connector = $this->solrConnectorPluginManager->createInstance($connector_id, $this->configuration['connector_config']);
       if ($connector instanceof PluginFormInterface) {
         $form_state->set(['sub_states', 'backend_config', 'connector'], $connector_id);
         if ($form_state->isRebuilding()) {
@@ -409,7 +411,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function getSolrConnector() {
     if (!$this->solrConnector) {
-      if (!($this->solrConnector = $this->solrConnectorPluginManager->createInstance($this->configuration['connector']))) {
+      if (!($this->solrConnector = $this->solrConnectorPluginManager->createInstance($this->configuration['connector'], $this->configuration['connector_config']))) {
         throw new SearchApiException("The Solr Connector with ID '$this->configuration['connector']' could not be retrieved.");
       }
     }
@@ -1931,8 +1933,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Update the configuration of the Solr connector as well by replacing it by
     // a new instance with the latest configuration.
     $this->solrConnector = NULL;
-    $connector = $this->getSolrConnector();
-    $connector->setConfiguration($this->configuration['connector_config']);
   }
 
   /**
@@ -2159,6 +2159,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * Changes the query to a "More Like This" query.
    *
+   * @todo This code is outdated and needs to be reviewd and refactored.
+   *
    * @param \Solarium\QueryType\Select\Query\Query $solarium_query
    *   The solr query to add MLT for.
    * @param \Drupal\search_api\Query\QueryInterface $query
@@ -2208,6 +2210,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
   /**
    * Adds spatial features to the search query.
+   *
+   * @todo This code is outdated and needs to be reviewd and refactored.
    *
    * @param \Solarium\QueryType\Select\Query\Query $solarium_query
    *   The solr query.
@@ -2364,6 +2368,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
   /**
    * Sets grouping for the query.
+   *
+   * @todo This code is outdated and needs to be reviewd and refactored.
    */
   protected function setGrouping(Query $solarium_query, QueryInterface $query, $grouping_options = array(), $index_fields = array(), $field_names = array()) {
     $group_params['group'] = 'true';

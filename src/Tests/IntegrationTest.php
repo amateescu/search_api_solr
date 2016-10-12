@@ -164,10 +164,16 @@ class IntegrationTest extends WebTestBase {
     $this->assertText($this->t('Please configure the selected backend.'));
 
     $edit += [
-      'backend_config[host]' => 'localhost',
-      'backend_config[port]' => '8983',
-      'backend_config[path]' => '/',
-      'backend_config[core]' => '',
+      'backend_config[connector]' => 'standard',
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
+    $this->assertText($this->t('Please configure the selected Solr connector.'));
+
+    $edit += [
+      'backend_config[connector_config][host]' => 'localhost',
+      'backend_config[connector_config][port]' => '8983',
+      'backend_config[connector_config][path]' => '/',
+      'backend_config[connector_config][core]' => '',
     ];
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
@@ -180,10 +186,10 @@ class IntegrationTest extends WebTestBase {
     $edit_path = 'admin/config/search/search-api/server/' . $this->serverId . '/edit';
     $this->drupalGet($edit_path);
     $edit = [
-      'backend_config[host]' => 'localhost',
-      'backend_config[port]' => '8983',
-      'backend_config[path]' => '/solr',
-      'backend_config[core]' => 'd8',
+      'backend_config[connector_config][host]' => 'localhost',
+      'backend_config[connector_config][port]' => '8983',
+      'backend_config[connector_config][path]' => '/solr',
+      'backend_config[connector_config][core]' => 'd8',
     ];
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $this->assertText($this->t('The Solr server could be reached.'));
