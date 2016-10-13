@@ -117,3 +117,18 @@ function search_api_solr_update_8003() {
     search_api_solr_update_helper_save_backend_config($server_name, $backend_config);
   }
 }
+
+/**
+ * Migrate existing backend configurations to the basic auth connector plugin.
+ */
+function search_api_solr_update_8004() {
+  foreach (search_api_solr_update_helper_get_backend_configs() as $server_name => $backend_config) {
+    $backend_config['connector'] = 'basic_auth';
+    $backend_config['connector_config'] = [];
+    foreach (['scheme', 'host', 'port', 'path', 'core', 'timeout', 'index_timeout', 'optimize_timeout', 'solr_version', 'http_method', 'username', 'password'] as $key) {
+      $backend_config['connector_config'][$key] = $backend_config[$key];
+      unset($backend_config[$key]);
+    }
+    search_api_solr_update_helper_save_backend_config($server_name, $backend_config);
+  }
+}
