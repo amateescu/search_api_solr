@@ -57,7 +57,9 @@ function drush_search_api_solr_multilingual_get_server_config($server_id, $file_
   $list_builder = Drupal::entityTypeManager()->getListBuilder('solr_field_type');
   $server = Server::load($server_id);
   if ($solr_version) {
-    $server->setBackendConfig(['solr_version' => $solr_version] + $server->getBackendConfig());
+    $config = $server->getBackendConfig();
+    $config['connector_config']['solr_version'] = $solr_version;
+    $server->setBackendConfig($config);
   }
   $list_builder->setServer($server);
   ob_end_clean();
