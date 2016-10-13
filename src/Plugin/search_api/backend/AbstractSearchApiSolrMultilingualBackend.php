@@ -18,11 +18,8 @@ use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Drupal\search_api_solr_multilingual\SolrMultilingualBackendInterface;
 use Drupal\search_api_solr_multilingual\Utility\Utility;
-use Solarium\Core\Client\Response;
-use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\QueryType\Select\Query\Query;
 use Solarium\QueryType\Select\ResponseParser\Component\FacetSet;
-use Solarium\QueryType\Select\Result\Result;
 
 /**
  * The name of the language field might be change in future releases of
@@ -95,6 +92,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
    * {@inheritdoc}
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
+    parent::validateConfigurationForm($form, $form_state);
   }
 
   /**
@@ -441,7 +439,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
       !is_array($schema_parts) || empty($schema_parts[$kind]) ||
       (!in_array($name, $schema_parts[$kind]) && !isset($previous_calls[$kind]))
     ) {
-      $response = $this->solrHelper->coreRestGet('schema/' . strtolower($kind));
+      $response = $this->getSolrConnector()->coreRestGet('schema/' . strtolower($kind));
       if (empty($response[$kind])) {
         throw new SearchApiSolrException('Missing information about ' . $kind . ' in response to REST request.');
       }
@@ -461,7 +459,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
    * {@inheritdoc}
    */
   public function getSchemaLanguageStatistics() {
-    $available = $this->getSolrHelper()->pingCore();
+    $available = $this->getSolrConnector()->pingCore();
     $stats = [];
     foreach (\Drupal::languageManager()->getLanguages() as $language) {
       $solr_field_type_name = SearchApiSolrUtility::encodeSolrName('text' . '_' . $language->getId());
