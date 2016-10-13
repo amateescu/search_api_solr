@@ -52,33 +52,29 @@ install:
   # Forward the errors to the syslog so we can print them
   - echo "error_log=syslog" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
   # Get latest Drupal 8 core
-  - git clone --branch 8.x https://github.com/drupal-composer/drupal-project.git $TRAVIS_BUILD_DIR/../drupal
-  # Re-enable when trying to get CodeSniffer doesn't return a 403 anymore.
-  # - composer global require drupal/coder:\>7
+  - cd $TRAVIS_BUILD_DIR/..
+  - git clone --branch 8.2.x https://git.drupal.org/project/drupal.git
+  - cd $TRAVIS_BUILD_DIR/../drupal
+  - composer install
+  - composer config repositories.drupal composer https://packages.drupal.org/8
+  - composer config repositories.search_api_solr_multilingual vcs $TRAVIS_BUILD_DIR
+  - composer require drupal/search_api:1.x-dev
+  - composer require drupal/search_api_solr:1.x-dev
+  - composer require drupal/search_api_solr_multilingual:999.0.0
+  - composer require drupal/facets:1.x-dev
+  - composer require drush/drush
 
 before_script:
-  - cd $TRAVIS_BUILD_DIR/../drupal
-  - composer config repositories.search_api_solr_multilingual vcs $TRAVIS_BUILD_DIR
-  - composer config repositories.search_api_solr              vcs https://github.com/mkalkbrenner/search_api_solr.git
-  - composer require --no-update drupal/search_api_solr_multilingual:999.0.0 drupal/search_api:dev-8.x-1.x drupal/search_api_solr:dev-8.x-1.x drupal/facets:dev-8.x-1.x
-  - cat composer.json
-  - composer install --no-progress
-  - cd web
   # start the built-in php web server (mysql is already started)
   - php -S localhost:8888 &
   # Install the site
-  - mv modules/contrib/search_api modules/search_api
-  - mv modules/contrib/search_api_solr modules/search_api_solr
-  - mv modules/contrib/search_api_solr_multilingual modules/search_api_solr_multilingual
-  - ../vendor/bin/drush -v site-install minimal --db-url=mysql://root:@localhost/drupal --yes
-  - ../vendor/bin/drush en --yes simpletest
+  - ./vendor/bin/drush -v site-install minimal --db-url=mysql://root:@localhost/drupal --yes
+  - ./vendor/bin/drush en --yes simpletest
   # Generate a multilingual Solr configuration.
   # Therefore we have to install the test modules before the tests.
-  - cp -R core/modules/system/tests/modules/entity_test core/modules/system/entity_test
-  - cp -R modules/search_api/tests/search_api_test_example_content modules/search_api/search_api_test_example_content
-  - cp -R modules/search_api_solr_multilingual/tests/modules/search_api_solr_multilingual_test modules/search_api_solr_multilingual/search_api_solr_multilingual_test
-  - ../vendor/bin/drush en --yes search_api_solr_multilingual_test
-  - ../vendor/bin/drush sasm-gsc solr_multilingual_search_server conf.zip $SOLR_VERSION
+  - ./vendor/bin/drush --yes config-set extension_discovery_scan_tests 1
+  - ./vendor/bin/drush en --yes search_api_solr_multilingual_test
+  - ./vendor/bin/drush sasm-gsc solr_multilingual_search_server conf.zip $SOLR_VERSION
   - unzip -o conf.zip -d $SOLR_CONFS
   - ls -lh $SOLR_CONFS
   # Install Solr
@@ -86,8 +82,9 @@ before_script:
 
 script:
   # Run the tests
-  - cd $TRAVIS_BUILD_DIR/../drupal/web/
+  - cd $TRAVIS_BUILD_DIR/../drupal
   - export SIMPLETEST_DB=mysql://root:@localhost/drupal
+  - export SIMPLETEST_BASE_URL=http://localhost:8888
   - php core/scripts/run-tests.sh --verbose --color --concurrency 4 --php `which php` --url http://localhost:8888 --directory modules/search_api_solr_multilingual --types Simpletest | tee /tmp/test.txt ; export TEST_EXIT=${PIPESTATUS[0]} ; echo $TEST_EXIT
   # Check if we had fails in the run-tests.sh script
   # Exit with the inverted value, because if there are no fails found, it will exit with 1 and for us that\
@@ -95,8 +92,8 @@ script:
   # bit.
   # Also make the grep case insensitive and fail on run-tests.sh regular fails as well on fatal errors.
   - TEST_OUTPUT=$(! egrep -i "([0-9]+ fails)|(Fatal erro)|([0-9]+ exceptions)" /tmp/test.txt > /dev/null)$?
-  - cd $TRAVIS_BUILD_DIR/../drupal/web/
-  - ./../vendor/bin/phpunit -c core --group search_api_solr_multilingual --verbose --debug | tee ; export TEST_PHPUNIT=${PIPESTATUS[0]} ; echo $TEST_PHPUNIT
+  - cd $TRAVIS_BUILD_DIR/../drupal
+  - ./vendor/bin/phpunit -c core --group search_api_solr_multilingual --verbose --debug | tee ; export TEST_PHPUNIT=${PIPESTATUS[0]} ; echo $TEST_PHPUNIT
   #- ./vendor/bin/phpunit --group search_api_solr_multilingual -c "../modules/search_api_solr/phpunit.xml.travis" --verbose --debug --coverage-text | tee ; export TEST_PHPUNIT=${PIPESTATUS[0]} ; echo $TEST_PHPUNIT
   # if the TEST_EXIT status is 0 AND the TEST_OUTPUT status is also 0 it means we succeeded, in all other cases we
   # failed.
