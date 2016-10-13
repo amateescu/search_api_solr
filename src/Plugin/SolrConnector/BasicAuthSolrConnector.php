@@ -4,7 +4,6 @@ namespace Drupal\search_api_solr\Plugin\SolrConnector;
 
 use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\search_api_solr\Annotation\SolrConnector;
 use Solarium\Core\Client\Endpoint;
 use Solarium\Core\Client\Request;
@@ -18,7 +17,7 @@ use Solarium\Core\Client\Request;
  *   description = @Translation("A connector usable for Solr installations protected by basic authentication.")
  * )
  */
-class BasicAuthSolrConnector extends StandardSolrConnector implements PluginFormInterface {
+class BasicAuthSolrConnector extends StandardSolrConnector {
 
   /**
    * {@inheritdoc}

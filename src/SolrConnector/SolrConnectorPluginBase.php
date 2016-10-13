@@ -6,6 +6,7 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
+use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Plugin\ConfigurablePluginBase;
 use Drupal\search_api\Plugin\PluginFormTrait;
@@ -48,18 +49,11 @@ use Solarium\QueryType\Select\Query\Query;
  * @see \Drupal\search_api_solr\SolrConnectorInterface
  * @see plugin_api
  */
-abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements SolrConnectorInterface {
+abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements SolrConnectorInterface, PluginFormInterface {
 
   use PluginFormTrait {
     submitConfigurationForm as traitSubmitConfigurationForm;
   }
-
-  /**
-   * A Solarium Update query.
-   *
-   * @var \Solarium\QueryType\Update\Query\Query
-   */
-  protected static $updateQuery;
 
   /**
    * A connection to the Solr server.
@@ -94,7 +88,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       '#type' => 'select',
       '#title' => $this->t('HTTP protocol'),
       '#description' => $this->t('The HTTP protocol to use for sending queries.'),
-      '#default_value' => $this->configuration['scheme'],
+      '#default_value' => isset($this->configuration['scheme']) ? $this->configuration['scheme'] : 'http',
       '#options' => array(
         'http' => 'http',
         'https' => 'https',
@@ -105,7 +99,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       '#type' => 'textfield',
       '#title' => $this->t('Solr host'),
       '#description' => $this->t('The host name or IP of your Solr server, e.g. <code>localhost</code> or <code>www.example.com</code>.'),
-      '#default_value' => $this->configuration['host'],
+      '#default_value' => isset($this->configuration['host']) ? $this->configuration['host'] : '',
       '#required' => TRUE,
     );
 
@@ -113,7 +107,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       '#type' => 'textfield',
       '#title' => $this->t('Solr port'),
       '#description' => $this->t('The Jetty example server is at port 8983, while Tomcat uses 8080 by default.'),
-      '#default_value' => $this->configuration['port'],
+      '#default_value' => isset($this->configuration['port']) ? $this->configuration['port'] : '',
       '#required' => TRUE,
     );
 
@@ -121,14 +115,14 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       '#type' => 'textfield',
       '#title' => $this->t('Solr path'),
       '#description' => $this->t('The path that identifies the Solr instance to use on the server.'),
-      '#default_value' => $this->configuration['path'],
+      '#default_value' => isset($this->configuration['path']) ? $this->configuration['path'] : '',
     );
 
     $form['core'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Solr core'),
       '#description' => $this->t('The name that identifies the Solr core to use on the server.'),
-      '#default_value' => $this->configuration['core'],
+      '#default_value' => isset($this->configuration['core']) ? $this->configuration['core'] : '',
     );
 
     $form['timeout'] = array(
@@ -137,7 +131,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       '#max' => 180,
       '#title' => $this->t('Query timeout'),
       '#description' => $this->t('The timeout in seconds for search queries sent to the Solr server.'),
-      '#default_value' => $this->configuration['timeout'],
+      '#default_value' => isset($this->configuration['timeout']) ? $this->configuration['timeout'] : 5,
       '#required' => TRUE,
     );
 
@@ -147,7 +141,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       '#max' => 180,
       '#title' => $this->t('Index timeout'),
       '#description' => $this->t('The timeout in seconds for indexing requests to the Solr server.'),
-      '#default_value' => $this->configuration['index_timeout'],
+      '#default_value' => isset($this->configuration['index_timeout']) ? $this->configuration['index_timeout'] : 5,
       '#required' => TRUE,
     );
 
@@ -157,7 +151,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       '#max' => 180,
       '#title' => $this->t('Optimize timeout'),
       '#description' => $this->t('The timeout in seconds for background index optimization queries on a Solr server.'),
-      '#default_value' => $this->configuration['optimize_timeout'],
+      '#default_value' => isset($this->configuration['optimize_timeout']) ? $this->configuration['optimize_timeout'] : 10,
       '#required' => TRUE,
     );
 
@@ -178,14 +172,14 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
         '5' => '5.x',
         '6' => '6.x',
       ),
-      '#default_value' => $this->configuration['solr_version'],
+      '#default_value' => isset($this->configuration['solr_version']) ? $this->configuration['solr_version'] : '',
     );
 
     $form['workarounds']['http_method'] = array(
       '#type' => 'select',
       '#title' => $this->t('HTTP method'),
       '#description' => $this->t('The HTTP method to use for sending queries. GET will often fail with larger queries, while POST should not be cached. AUTO will use GET when possible, and POST for queries that are too large.'),
-      '#default_value' => $this->configuration['http_method'],
+      '#default_value' => isset($this->configuration['http_method']) ? $this->configuration['http_method'] : 'AUTO',
       '#options' => array(
         'AUTO' => $this->t('AUTO'),
         'POST' => 'POST',
@@ -244,6 +238,9 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     $this->traitSubmitConfigurationForm($form, $form_state);
   }
 
+  /**
+   * Prepares the connection to the Solr server.
+   */
   protected function connect() {
     if (!$this->solr) {
       $this->solr = new Client();
