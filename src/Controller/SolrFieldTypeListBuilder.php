@@ -11,6 +11,7 @@ use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
+use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr_multilingual\SolrFieldTypeInterface;
 use Drupal\search_api_solr_multilingual\SolrMultilingualBackendInterface;
 use ZipStream\ZipStream;
@@ -73,7 +74,9 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       $operator = '>=';
       $warning = FALSE;
       try {
-        $solr_version = $this->getBackend()->getSolrHelper()->getSolrVersion();
+        /** @var SolrBackendInterface $backend */
+        $backend = $this->getBackend();
+        $solr_version = $backend->getSolrConnector()->getSolrVersion();
       } catch (SearchApiSolrException $e) {
         $operator = '<=';
         $warning = TRUE;
@@ -261,8 +264,10 @@ EOD;
   public function getConfigZip() {
     $solr_field_types = $this->load();
 
-    $solr_helper = $this->getBackend()->getSolrHelper();
-    $solr_branch = $solr_helper->getSolrBranch($this->assumed_minimum_version);
+    /** @var SolrBackendInterface $backend */
+    $backend = $this->getBackend();
+    $connector = $backend->getSolrConnector();
+    $solr_branch = $connector->getSolrBranch($this->assumed_minimum_version);
     $search_api_solr_conf_path = drupal_get_path('module', 'search_api_solr') . '/solr-conf/' . $solr_branch;
     $solrcore_properties = parse_ini_file($search_api_solr_conf_path . '/solrcore.properties', FALSE, INI_SCANNER_RAW);
     $schema = file_get_contents($search_api_solr_conf_path . '/schema.xml');
@@ -285,7 +290,7 @@ EOD;
       }
     }
 
-    $solrcore_properties['solr.luceneMatchVersion'] = $solr_helper->getLuceneMatchVersion($this->assumed_minimum_version ?: '');
+    $solrcore_properties['solr.luceneMatchVersion'] = $connector->getLuceneMatchVersion($this->assumed_minimum_version ?: '');
     // @todo
     //$solrcore_properties['solr.replication.masterUrl']
 
