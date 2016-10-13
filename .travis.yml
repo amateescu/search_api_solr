@@ -67,13 +67,14 @@ install:
 before_script:
   # start the built-in php web server (mysql is already started)
   - php -S localhost:8888 &
-  # We have to install the test modules before the tests to generate a Solr
-  # configuration.
-  - cp $TRAVIS_BUILD_DIR/travis.settings.local.php sites/default/settings.local.php
   # Install the site
   - ./vendor/bin/drush -v site-install minimal --db-url=mysql://root:@localhost/drupal --yes
   - ./vendor/bin/drush en --yes simpletest
   # Generate a multilingual Solr configuration.
+  # Therefore we have to install the test modules before the tests.
+  - cp -R core/modules/system/tests/modules/entity_test core/modules/system/entity_test
+  - cp -R modules/search_api/tests/search_api_test_example_content modules/search_api/search_api_test_example_content
+  - cp -R modules/search_api_solr_multilingual/tests/modules/search_api_solr_multilingual_test modules/search_api_solr_multilingual/search_api_solr_multilingual_test
   - ./vendor/bin/drush en --yes search_api_solr_multilingual_test
   - ./vendor/bin/drush sasm-gsc solr_multilingual_search_server conf.zip $SOLR_VERSION
   - unzip -o conf.zip -d $SOLR_CONFS
