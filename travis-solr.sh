@@ -7,19 +7,19 @@ SOLR_CORE=${SOLR_CORE:-core0}
 HOME=${HOME:-.}
 
 download() {
+    [ -d $HOME/downloads ] || mkdir $HOME/downloads
     FILE="$2.tgz"
-    if [ -f $FILE ];
+    if [ -f $HOME/downloads/$FILE ];
     then
        echo "File $FILE exists."
     else
        echo "File $FILE does not exist. Downloading solr from $1..."
-       [ -d $HOME/downloads ] || mkdir $HOME/downloads
        cd $HOME/downloads
        curl -O $1
        cd -
-       tar -zxf $HOME/downloads/$FILE
+       echo "Downloaded!"
     fi
-    echo "Downloaded!"
+    tar -zxf $HOME/downloads/$FILE
 }
 
 is_solr_up(){
