@@ -724,6 +724,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $first_value = reset($values);
           if ($first_value) {
             if (strpos($field_names[$name], 't') === 0 || strpos($field_names[$name], 's') === 0) {
+              // Truncate the string to avoid Solr string field limitation.
+              // Use strlen() instead of Unicode::strlen() to get number of
+              // bytes rather than characters.
+              // https://www.drupal.org/node/2809429
+              if ($first_value instanceof TextValue && strlen($first_value->getText()) > 32766) {
+                $first_value = new TextValue(Unicode::truncateBytes($first_value->getText(), 32766));
+              }
               // Always copy fulltext fields to a dedicated field for faster
               // alpha sorts. Copy strings as well to normalize them.
               $this->addIndexField($doc, 'sort_' . $name, [$first_value], $field->getType());

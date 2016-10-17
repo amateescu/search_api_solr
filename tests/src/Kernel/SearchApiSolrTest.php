@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\search_api_solr\Kernel;
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Query\QueryInterface;
@@ -579,12 +580,49 @@ class SearchApiSolrTest extends BackendTestBase {
   }
 
   /**
+   * Produces a string of given comprising diverse chars.
+   *
+   * @param int $length
+   *   Length of the string.
+   *
+   * @return string
+   */
+  protected function getLongText($length) {
+    $sequence = 'abcdefghijklmnopqrstuwxyz1234567890,./;\'[]\\<>?:"{}|~!@#$%^&*()_+`1234567890-=ööążźćęółńABCDEFGHIJKLMNOPQRSTUWXYZ';
+    $result = '';
+    $i = 0;
+
+    $sequenceLength = strlen($sequence);
+    while ($i++ != $length) {
+      $result .= $sequence[ $i % $sequenceLength ];
+    }
+
+    return $result;
+  }
+
+  /**
    * Tests search result sorts.
    */
   public function testSearchResultSorts() {
     // Only run the tests if we have a Solr core available.
     if ($this->solrAvailable) {
       $this->insertExampleContent();
+
+      // Add node with body length just above the solr limit for search fields.
+      // It's exceeded by just a single char to simulate an edge case.
+      $this->addTestEntity(6, [
+        'name' => 'Long text',
+        'body' => $this->getLongText(32767),
+        'type' => 'article',
+      ]);
+
+      // Add another node with body length equal to the limit.
+      $this->addTestEntity(7, [
+        'name' => 'Z long',
+        'body' => $this->getLongText(32766),
+        'type' => 'article',
+      ]);
+
       $this->indexItems($this->indexId);
 
       // Type text.
@@ -593,14 +631,14 @@ class SearchApiSolrTest extends BackendTestBase {
         // Force an expected order for identical names.
         ->sort('search_api_id')
         ->execute();
-      $this->assertResults([3, 5, 1, 4, 2], $results, 'Sort by name.');
+      $this->assertResults([3, 5, 1, 4, 2, 6, 7], $results, 'Sort by name.');
 
       $results = $this->buildSearch(NULL, [], [], FALSE)
         ->sort('name', QueryInterface::SORT_DESC)
         // Force an expected order for identical names.
         ->sort('search_api_id')
         ->execute();
-      $this->assertResults([2, 4, 1, 5, 3], $results, 'Sort by name descending.');
+      $this->assertResults([7, 6, 2, 4, 1, 5, 3], $results, 'Sort by name descending.');
 
       // Type string.
       $results = $this->buildSearch(NULL, [], [], FALSE)
@@ -608,14 +646,14 @@ class SearchApiSolrTest extends BackendTestBase {
         // Force an expected order for identical types.
         ->sort('search_api_id')
         ->execute();
-      $this->assertResults([4, 5, 1, 2, 3], $results, 'Sort by type.');
+      $this->assertResults([4, 5, 6, 7, 1, 2, 3], $results, 'Sort by type.');
 
       $results = $this->buildSearch(NULL, [], [], FALSE)
         ->sort('type', QueryInterface::SORT_DESC)
         // Force an expected order for identical types.
         ->sort('search_api_id')
         ->execute();
-      $this->assertResults([1, 2, 3, 4, 5], $results, 'Sort by type descending.');
+      $this->assertResults([1, 2, 3, 4, 5, 6, 7], $results, 'Sort by type descending.');
 
       // Type multi-value string. Uses first value.
       $results = $this->buildSearch(NULL, [], [], FALSE)
@@ -623,14 +661,14 @@ class SearchApiSolrTest extends BackendTestBase {
         // Force an expected order for identical keywords.
         ->sort('search_api_id')
         ->execute();
-      $this->assertResults([4, 1, 2, 5, 3], $results, 'Sort by keywords.');
+      $this->assertResults([4, 1, 2, 5, 3, 6, 7], $results, 'Sort by keywords.');
 
       $results = $this->buildSearch(NULL, [], [], FALSE)
         ->sort('keywords', QueryInterface::SORT_DESC)
         // Force an expected order for identical keywords.
         ->sort('search_api_id')
         ->execute();
-      $this->assertResults([1, 2, 5, 4, 3], $results, 'Sort by keywords descending.');
+      $this->assertResults([1, 2, 5, 4, 3, 6, 7], $results, 'Sort by keywords descending.');
 
       // Type decimal.
       $results = $this->buildSearch(NULL, [], [], FALSE)
@@ -638,17 +676,17 @@ class SearchApiSolrTest extends BackendTestBase {
         // Force an expected order for identical width.
         ->sort('search_api_id')
         ->execute();
-      // @todo if width is midding it seems to be treated like 0 because
+      // @todo if width is missing it seems to be treated like 0 because
       //   sortMissingLast="true" doesn't fix it.
       // $this->assertResults([4, 5, 1, 2, 3], $results, 'Sort by width.');
-      $this->assertResults([1, 2, 3, 4, 5], $results, 'Sort by width.');
+      $this->assertResults([1, 2, 3, 6, 7, 4, 5], $results, 'Sort by width.');
 
       $results = $this->buildSearch(NULL, [], [], FALSE)
         ->sort('width', QueryInterface::SORT_DESC)
         // Force an expected order for identical width.
         ->sort('search_api_id')
         ->execute();
-      $this->assertResults([5, 4, 1, 2, 3], $results, 'Sort by width descending.');
+      $this->assertResults([5, 4, 1, 2, 3, 6, 7], $results, 'Sort by width descending.');
     }
     else {
       $this->assertTrue(TRUE, 'Error: The Solr instance could not be found. Please enable a multi-core one on http://localhost:8983/solr/d8');
