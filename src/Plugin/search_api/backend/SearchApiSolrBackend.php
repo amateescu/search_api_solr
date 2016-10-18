@@ -10,12 +10,12 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\SubformState;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Annotation\SearchApiBackend;
-use Drupal\search_api\Form\SubFormState;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Plugin\PluginFormTrait;
@@ -286,20 +286,16 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $form['connector_config'] = [];
 
     $connector_id = $this->configuration['connector'];
-    $backend_config = $form_state->getValue('backend_config');
-    if (!empty($backend_config['connector'])) {
-      $connector_id = $backend_config['connector'];
-    }
     if ($connector_id) {
       $connector = $this->solrConnectorPluginManager->createInstance($connector_id, $this->configuration['connector_config']);
       if ($connector instanceof PluginFormInterface) {
-        $form_state->set(['sub_states', 'backend_config', 'connector'], $connector_id);
+        $form_state->set('connector', $connector_id);
         if ($form_state->isRebuilding()) {
           drupal_set_message($this->t('Please configure the selected Solr connector.'), 'warning');
         }
         // Attach the Solr connector plugin configuration form.
-        $connector_form = isset($form['connector_config']) ? $form['connector_config'] : [];
-        $form['connector_config'] = $connector->buildConfigurationForm($connector_form, $form_state);
+        $connector_form_state = SubformState::createForSubform($form['connector_config'], $form, $form_state);
+        $form['connector_config'] = $connector->buildConfigurationForm([], $connector_form_state);
 
         // Modify the backend plugin configuration container element.
         $form['connector_config']['#type'] = 'details';
@@ -346,7 +342,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $this->configuration['connector'] = $form_state->get('connector');
       $connector = $this->getSolrConnector();
       if ($connector instanceof PluginFormInterface) {
-        $connector_form_state = new SubFormState($form_state, ['connector_config']);
+        $connector_form_state = SubformState::createForSubform($form['connector_config'], $form, $form_state);
         $connector->validateConfigurationForm($form['connector_config'], $connector_form_state);
       }
       else {
@@ -359,11 +355,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-
     $this->configuration['connector'] = $form_state->get('connector');
     $connector = $this->getSolrConnector();
     if ($connector instanceof PluginFormInterface) {
-      $connector_form_state = new SubFormState($form_state, ['connector_config']);
+      $connector_form_state = SubformState::createForSubform($form['connector_config'], $form, $form_state);
       $connector->submitConfigurationForm($form['connector_config'], $connector_form_state);
     }
 
