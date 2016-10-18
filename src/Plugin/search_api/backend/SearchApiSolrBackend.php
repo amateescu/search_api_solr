@@ -64,11 +64,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
-   * The date format that Solr uses, in PHP date() syntax.
-   */
-  const SOLR_DATE_FORMAT = 'Y-m-d\TH:i:s\Z';
-
-  /**
    * Metadata describing fields on the Solr/Lucene index.
    *
    * @var string[][]
@@ -1137,11 +1132,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           break;
 
         case 'date':
-          $value = is_numeric($value) ? (int) $value : strtotime($value);
+          $value = $this->formatDate($value);
           if ($value === FALSE) {
             return;
           }
-          $value = \Drupal::service('date.formatter')->format($value, 'custom', self::SOLR_DATE_FORMAT, 'UTC');
           break;
 
         case 'integer':
@@ -1616,14 +1610,24 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         break;
 
       case 'date':
-        $value = is_numeric($value) ? (int) $value : strtotime($value);
+        $value = $this->formatDate($value);
         if ($value === FALSE) {
           return 0;
         }
-        $value = \Drupal::service('date.formatter')->format($value, 'custom', self::SOLR_DATE_FORMAT, 'UTC');
         break;
     }
     return $this->getSolrConnector()->getQueryHelper()->escapePhrase($value);
+  }
+
+  /**
+   * Tries to format given date with solarium query helper.
+   *
+   * @param mixed $input
+   * @return bool|string
+   */
+  protected function formatDate($input) {
+    $input = is_numeric($input) ? (int) $input : strtotime($input);
+    return $this->getSolrConnector()->getQueryHelper()->formatDate($input);
   }
 
   /**
