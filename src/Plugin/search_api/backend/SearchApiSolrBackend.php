@@ -295,7 +295,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
         // Attach the Solr connector plugin configuration form.
         $connector_form_state = SubformState::createForSubform($form['connector_config'], $form, $form_state);
-        $form['connector_config'] = $connector->buildConfigurationForm([], $connector_form_state);
+        $form['connector_config'] = $connector->buildConfigurationForm($form['connector_config'], $connector_form_state);
 
         // Modify the backend plugin configuration container element.
         $form['connector_config']['#type'] = 'details';
