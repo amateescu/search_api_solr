@@ -687,6 +687,16 @@ class SearchApiSolrTest extends BackendTestBase {
         ->sort('search_api_id')
         ->execute();
       $this->assertResults([5, 4, 1, 2, 3, 6, 7], $results, 'Sort by width descending.');
+
+      $results = $this->buildSearch(NULL, [], [], FALSE)
+        ->sort('changed')
+        ->execute();
+      $this->assertResults([1, 2, 3, 4, 5, 6 ,7], $results, 'Sort by last update date');
+
+      $results = $this->buildSearch(NULL, [], [], FALSE)
+        ->sort('changed', QueryInterface::SORT_DESC)
+        ->execute();
+      $this->assertResults([7, 6, 5, 4, 3, 2, 1], $results, 'Sort by last update date descending');
     }
     else {
       $this->assertTrue(TRUE, 'Error: The Solr instance could not be found. Please enable a multi-core one on http://localhost:8983/solr/d8');
