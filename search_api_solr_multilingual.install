@@ -30,7 +30,8 @@ function search_api_solr_multilingual_requirements($phase) {
 
         /** @var \Drupal\search_api_solr_multilingual\SolrMultilingualBackendInterface $backend */
         $backend = $server->getBackend();
-        if ($backend->getSolrHelper()->pingCore()) {
+        $connector = $backend->getSolrConnector();
+        if (!$connector->pingCore()) {
           $stats = $backend->getSchemaLanguageStatistics();
           if ($missing_languages = array_filter($stats, function ($state) { return !$state; })) {
             $requirements[$key]['value'] = t('Schema incomplete');
