@@ -771,4 +771,11 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function viewSettings() {
+    return [];
+  }
+
 }

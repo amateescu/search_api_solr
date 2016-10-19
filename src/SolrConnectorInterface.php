@@ -303,4 +303,21 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    */
   public function getFile($file = NULL);
 
+  /**
+   * Returns additional, connector-specific information about this server.
+   *
+   * This information will be then added to the server's "View" tab in some way.
+   * In the default theme implementation the data is output in a table with two
+   * columns along with other, generic information about the server.
+   *
+   * @return array
+   *   An array of additional server information, with each piece of information
+   *   being an associative array with the following keys:
+   *   - label: The human-readable label for this data.
+   *   - info: The information, as HTML.
+   *   - status: (optional) The status associated with this information. One of
+   *     "info", "ok", "warning" or "error". Defaults to "info".
+   */
+  public function viewSettings();
+
 }

@@ -124,4 +124,21 @@ class BasicAuthSolrConnector extends StandardSolrConnector {
     return $this->solr->executeRequest($request, $endpoint);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function viewSettings() {
+    $vars = array(
+      '%user' => $this->configuration['username'],
+      '%pass' => str_repeat('*', strlen($this->configuration['password'])),
+    );
+
+    $info[] = array(
+      'label' => $this->t('Basic HTTP authentication'),
+      'info' => $this->t('Username: %user | Password: %pass', $vars),
+    );
+
+    return $info;
+  }
+
 }

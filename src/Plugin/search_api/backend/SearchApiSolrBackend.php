@@ -430,6 +430,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   public function viewSettings() {
     $connector = $this->getSolrConnector();
 
+    $info[] = array(
+      'label' => $this->t('Solr connector plugin'),
+      'info' => $connector->label(),
+    );
+
     $info[] = [
       'label' => $this->t('Solr server URI'),
       'info' => $connector->getServerLink(),
@@ -440,24 +445,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'info' => $connector->getCoreLink(),
     ];
 
-    /*
-    if ($this->configuration['username']) {
-      $vars = array(
-        '@user' => $this->configuration['username'],
-        '@pass' => str_repeat('*', strlen($this->configuration['password'])),
-      );
-      $http = $this->t('Username: @user; Password: @pass', $vars);
-      $info[] = array(
-        'label' => $this->t('Basic HTTP authentication'),
-        'info' => $http,
-      );
-    }
-    */
+    // Add connector-specific information.
+    $info = array_merge($info, $connector->viewSettings());
 
     if ($this->server->status()) {
       // If the server is enabled, check whether Solr can be reached.
-      $ping = $connector->pingServer();
-      if ($ping) {
+      $ping_server = $connector->pingServer();
+      if ($ping_server) {
         $msg = $this->t('The Solr server could be reached.');
       }
       else {
@@ -466,7 +460,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $info[] = [
         'label' => $this->t('Server Connection'),
         'info' => $msg,
-        'status' => $ping ? 'ok' : 'error',
+        'status' => $ping_server ? 'ok' : 'error',
       ];
 
       $ping = $connector->pingCore();
@@ -489,7 +483,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         'status' => version_compare($version, '0.0.0', '>') ? 'ok' : 'error',
       ];
 
-      if ($ping) {
+      if ($ping_server || $ping) {
         $info[] = [
           'label' => $this->t('Detected Solr Version'),
           'info' => $connector->getSolrVersion(TRUE),
@@ -560,7 +554,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         catch (SearchApiException $e) {
           $info[] = [
             'label' => $this->t('Additional information'),
-            'info' => $this->t('An error occurred while trying to retrieve additional information from the Solr server: @msg.', ['@msg' => $e->getMessage()]),
+            'info' => $this->t('An error occurred while trying to retrieve additional information from the Solr server: %msg', ['%msg' => $e->getMessage()]),
             'status' => 'error',
           ];
         }
