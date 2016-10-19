@@ -149,7 +149,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'site_hash' => TRUE,
       'autocorrect_spell' => TRUE,
       'autocorrect_suggest_words' => TRUE,
-      'connector' => '',
+      // Set the default for new servers to NULL to force "safe" un-selected
+      // radios. @see https://www.drupal.org/node/2820244
+      'connector' => NULL,
       'connector_config' => [],
     );
   }
@@ -173,7 +175,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#title' => $this->t('Solr Connector'),
       '#description' => $this->t('Choose a connector to use for this Solr server.'),
       '#options' => $solr_connector_options,
-      // @todo
       '#default_value' => $this->configuration['connector'],
       '#required' => TRUE,
       '#ajax' => array(
