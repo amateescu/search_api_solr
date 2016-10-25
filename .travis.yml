@@ -66,6 +66,12 @@ install:
   - composer require drupal/search_api_solr:999.0.0
   - composer require drupal/facets:1.x-dev
   - composer require drush/drush
+  #########################################
+  # to be removed once #2821955 is resolved
+  - cd modules/search_api
+  - curl https://www.drupal.org/files/issues/2821955_6.patch | patch -p1
+  - cd $TRAVIS_BUILD_DIR/../drupal
+  #########################################
 
 before_script:
   # Start the built-in php web server (mysql is already started) and
@@ -101,5 +107,5 @@ script:
   - echo $TEST_EXIT
   - echo $TEST_OUTPUT
   - echo $TEST_PHPUNIT
-  - if [ $TEST_EXIT -ne 0 ]; then echo /tmp/test.txt; fi
+  - if [ $TEST_EXIT -ne 0 ]; then cat /tmp/test.txt; fi
   - if [ $TEST_EXIT -eq 0 ] && [ $TEST_OUTPUT -eq 0 ] && [ $TEST_PHPUNIT -eq 0 ]; then exit 0; else exit 1; fi

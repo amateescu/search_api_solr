@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Config\Config;
+use Drupal\Core\Entity\TypedData\EntityDataDefinitionInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -28,6 +29,7 @@ use Drupal\search_api\Query\ConditionGroupInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Query\ResultSetInterface;
+use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility as SearchApiUtility;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
@@ -111,15 +113,22 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected $solrConnector;
 
   /**
+   * @var \Drupal\search_api\Utility\FieldsHelperInterface
+   */
+  protected $fieldsHelper;
+
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, ModuleHandlerInterface $module_handler, Config $search_api_solr_settings, LanguageManagerInterface $language_manager, SolrConnectorPluginManager $solr_connector_plugin_manager) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, ModuleHandlerInterface $module_handler, Config $search_api_solr_settings, LanguageManagerInterface $language_manager, SolrConnectorPluginManager $solr_connector_plugin_manager, FieldsHelperInterface $fields_helper) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->moduleHandler = $module_handler;
     $this->searchApiSolrSettings = $search_api_solr_settings;
     $this->languageManager = $language_manager;
     $this->solrConnectorPluginManager = $solr_connector_plugin_manager;
+    $this->fieldsHelper = $fields_helper;
   }
 
   /**
@@ -133,7 +142,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $container->get('module_handler'),
       $container->get('config.factory')->get('search_api_solr.settings'),
       $container->get('language_manager'),
-      $container->get('plugin.manager.search_api_solr.connector')
+      $container->get('plugin.manager.search_api_solr.connector'),
+      $container->get('search_api.fields_helper')
     );
   }
 
@@ -1029,7 +1039,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $pref .= 's';
           }
           else {
-            if ($field->getDataDefinition()->isList()) {
+            if ($field->getDataDefinition()->isList() || $this->isHierarchicalField($field)) {
               $pref .= 'm';
             }
             else {
@@ -1099,6 +1109,74 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
     }
     return $cardinality;
+  }
+
+  /**
+   * Checks if a field is (potentially) hierarchical.
+   *
+   * Fields are (potentially) hierarchical if:
+   * - they point to an entity type; and
+   * - that entity type contains a property referencing the same type of entity
+   *   (so that a hierarchy could be built from that nested property).
+   *
+   * @see \Drupal\search_api\Plugin\search_api\processor\AddHierarchy::getHierarchyFields()
+   *
+   * @return boolean
+   */
+  protected function isHierarchicalField(FieldInterface $field) {
+    $definition = $field->getDataDefinition();
+    if ($definition instanceof ComplexDataDefinitionInterface) {
+      $properties = $this->fieldsHelper->getNestedProperties($definition);
+      // The property might be an entity data definition itself.
+      $properties[''] = $definition;
+      foreach ($properties as $property) {
+        $property = $this->fieldsHelper->getInnerProperty($property);
+        if ($property instanceof EntityDataDefinitionInterface) {
+          if ($this->hasHierarchicalProperties($property)) {
+            return TRUE;
+          }
+        }
+      }
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Checks if hierarchical properties are nested on an entity-typed property.
+   *
+   * @see \Drupal\search_api\Plugin\search_api\processor\AddHierarchy::findHierarchicalProperties()
+   *
+   * @param \Drupal\Core\Entity\TypedData\EntityDataDefinitionInterface $property
+   *   The property to be searched for hierarchical nested properties.
+   *
+   * @return boolean
+   */
+  protected function hasHierarchicalProperties(EntityDataDefinitionInterface $property) {
+    $entity_type_id = $property->getEntityTypeId();
+
+    // Check properties for potential hierarchy. Check two levels down, since
+    // Core's entity references all have an additional "entity" sub-property for
+    // accessing the actual entity reference, which we'd otherwise miss.
+    foreach ($this->fieldsHelper->getNestedProperties($property) as $name_2 => $property_2) {
+      $property_2 = $this->fieldsHelper->getInnerProperty($property_2);
+      if ($property_2 instanceof EntityDataDefinitionInterface) {
+        if ($property_2->getEntityTypeId() == $entity_type_id) {
+          return TRUE;
+        }
+      }
+      elseif ($property_2 instanceof ComplexDataDefinitionInterface) {
+        foreach ($property_2->getPropertyDefinitions() as $property_3) {
+          $property_3 = $this->fieldsHelper->getInnerProperty($property_3);
+          if ($property_3 instanceof EntityDataDefinitionInterface) {
+            if ($property_3->getEntityTypeId() == $entity_type_id) {
+              return TRUE;
+            }
+          }
+        }
+      }
+    }
+    return FALSE;
   }
 
   /**
