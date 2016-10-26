@@ -47,4 +47,13 @@ trait SolrBackendTrait {
     return $index_status;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  protected function tearDown() {
+    $this->index->clear();
+    sleep(2);
+    parent::tearDown();
+  }
+
 }

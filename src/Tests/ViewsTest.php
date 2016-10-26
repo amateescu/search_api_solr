@@ -50,6 +50,16 @@ class ViewsTest extends \Drupal\search_api\Tests\ViewsTest {
   /**
    * {@inheritdoc}
    */
+  protected function tearDown() {
+    $index = Index::load($this->indexId);
+    $index->clear();
+    sleep(2);
+    parent::tearDown();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function testView() {
     // @see https://www.drupal.org/node/2773019
     $query = ['language' => ['***LANGUAGE_language_interface***']];

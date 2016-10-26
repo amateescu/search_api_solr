@@ -78,6 +78,15 @@ class IntegrationTest extends WebTestBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  protected function tearDown() {
+    $this->getIndex()->clear();
+    sleep(2);
+    parent::tearDown();
+  }
+
+  /**
    * Tests various operations via the Search API's admin UI.
    */
   public function testFramework() {
