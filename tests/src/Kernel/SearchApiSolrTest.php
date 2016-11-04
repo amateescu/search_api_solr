@@ -713,7 +713,7 @@ class SearchApiSolrTest extends BackendTestBase {
   protected function regressionTest2616804() {
     $wait_for_commit = $this->waitForCommit;
     $this->waitForCommit = 10;
-    parent::regressionTest2616804()
+    parent::regressionTest2616804();
     $this->waitForCommit = $wait_for_commit;
   }
 
