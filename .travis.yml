@@ -68,10 +68,10 @@ install:
   - composer require drush/drush
   # Patch template.
   #########################################
-  # to be removed once #2821955 is resolved
-  #- cd modules/search_api
-  #- curl https://www.drupal.org/files/issues/2821955_6.patch | patch -p1
-  #- cd $TRAVIS_BUILD_DIR/../drupal
+  # to be removed once #2824932 is resolved
+  - cd modules/search_api
+  - curl https://www.drupal.org/files/issues/2824932.patch | patch -p1
+  - cd $TRAVIS_BUILD_DIR/../drupal
   #########################################
 
 before_script:

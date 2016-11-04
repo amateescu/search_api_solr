@@ -709,12 +709,4 @@ class SearchApiSolrTest extends BackendTestBase {
       $this->assertTrue(TRUE, 'Error: The Solr instance could not be found. Please enable a multi-core one on http://localhost:8983/solr/d8');
     }
   }
-
-  protected function regressionTest2616804() {
-    $wait_for_commit = $this->waitForCommit;
-    $this->waitForCommit = 10;
-    parent::regressionTest2616804();
-    $this->waitForCommit = $wait_for_commit;
-  }
-
 }
