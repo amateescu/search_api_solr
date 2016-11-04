@@ -2272,16 +2272,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     //$solarium_query->setHandler('mlt');
-    $solarium_query->setMltFields($mlt_fl);
-    /** @var \Solarium\Plugin\CustomizeRequest\CustomizeRequest $customizer */
-    $customizer = $this->solr->getPlugin('customizerequest');
-    $customizer->createCustomization('id')
-      ->setType('param')
-      ->setName('qt')
-      ->setValue('mlt');
-    // @todo Make sure these configurations are correct
-    $solarium_query->setMinimumDocumentFrequency(1);
-    $solarium_query->setMinimumTermFrequency(1);
+
+    $solarium_query->addParam('qt', 'mlt');
+
+    $mlt_query = $solarium_query->getMoreLikeThis();
+    $mlt_query->setFields($mlt_fl);
+    $mlt_query->setMinimumDocumentFrequency(1);
+    $mlt_query->setMinimumTermFrequency(1);
   }
 
   /**
