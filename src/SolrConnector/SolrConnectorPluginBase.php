@@ -77,6 +77,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       'optimize_timeout' => 10,
       'solr_version' => '',
       'http_method' => 'AUTO',
+      'commit_within' => 1000,
     ];
   }
 
@@ -152,6 +153,15 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       '#title' => $this->t('Optimize timeout'),
       '#description' => $this->t('The timeout in seconds for background index optimization queries on a Solr server.'),
       '#default_value' => isset($this->configuration['optimize_timeout']) ? $this->configuration['optimize_timeout'] : 10,
+      '#required' => TRUE,
+    );
+
+    $form['commit_within'] = array(
+      '#type' => 'number',
+      '#min' => 0,
+      '#title' => $this->t('Commit within'),
+      '#description' => $this->t('The limit in milliseconds within a (soft) commit on Solr is forced after any updating the index in any way. Setting the value to "0" turns off this dynamic enforcement and lets Solr behave like configured solrconf.xml.'),
+      '#default_value' => isset($this->configuration['commit_within']) ? $this->configuration['commit_within'] : 1000,
       '#required' => TRUE,
     );
 
@@ -682,19 +692,20 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     // distinguish between these types.
     $timeout = $endpoint->getTimeout();
     $endpoint->setTimeout($this->configuration['index_timeout']);
-    // Do a commitWithin since that is automatically a softCommit with Solr 4
-    // and a delayed hard commit with Solr 3.4+.
-    // We wait 1 second after the request arrived for solr to parse the
-    // commit. This allows us to return to Drupal and let Solr handle what it
-    // needs to handle.
-    // @see http://wiki.apache.org/solr/NearRealtimeSearch
-    /** @var \Solarium\Plugin\CustomizeRequest\CustomizeRequest $request */
-    $request = $this->customizeRequest();
-    $request->createCustomization('id')
-      ->setType('param')
-      // @todo commitWithin should be configurable or removed for Solr > 4.0.x.
-      ->setName('commitWithin')
-      ->setValue('1000');
+    if ($this->configuration['commit_within']) {
+      // Do a commitWithin since that is automatically a softCommit since Solr 4
+      // and a delayed hard commit with Solr 3.4+.
+      // By default we wait 1 second after the request arrived for solr to parse
+      // the commit. This allows us to return to Drupal and let Solr handle what
+      // it needs to handle.
+      // @see http://wiki.apache.org/solr/NearRealtimeSearch
+      /** @var \Solarium\Plugin\CustomizeRequest\CustomizeRequest $request */
+      $request = $this->customizeRequest();
+      $request->createCustomization('id')
+        ->setType('param')
+        ->setName('commitWithin')
+        ->setValue($this->configuration['commit_within']);
+    }
 
     $result = $this->solr->execute($query, $endpoint);
 

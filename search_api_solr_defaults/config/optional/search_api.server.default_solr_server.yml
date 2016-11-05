@@ -21,6 +21,7 @@ backend_config:
     optimize_timeout: 15
     solr_version: ''
     http_method: AUTO
+    commit_within: 1000
 langcode: en
 dependencies:
   module:

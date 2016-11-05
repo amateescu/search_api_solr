@@ -28,10 +28,13 @@ plugin.plugin_configuration.search_api_solr_connector.standard:
       label: 'Timeout for optimize requests'
     skip_schema_check:
       type: integer
-      label: 'Do not validate if the schema is correct.'
+      label: 'Do not validate if the schema is correct'
     solr_version:
       type: string
       label: 'Solr version override'
     http_method:
       type: string
       label: 'The HTTP method to use for sending queries'
+    commit_within:
+      type: integer
+      label: 'Time until a soft commit has to happen'

@@ -132,3 +132,13 @@ function search_api_solr_update_8004() {
     search_api_solr_update_helper_save_backend_config($server_name, $backend_config);
   }
 }
+
+/**
+ * Add commit_within settings to existing connector configs.
+ */
+function search_api_solr_update_8005() {
+  foreach (search_api_solr_update_helper_get_backend_configs() as $server_name => $backend_config) {
+    $backend_config['connector_config']['commit_within'] = 1000;
+    search_api_solr_update_helper_save_backend_config($server_name, $backend_config);
+  }
+}
