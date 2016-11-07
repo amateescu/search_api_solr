@@ -668,7 +668,7 @@ class SearchApiSolrTest extends BackendTestBase {
         // Force an expected order for identical keywords.
         ->sort('search_api_id')
         ->execute();
-      $this->assertResults([4, 1, 2, 5, 3, 6, 7], $results, 'Sort by keywords.');
+      $this->assertResults([3, 6, 7, 4, 1, 2, 5], $results, 'Sort by keywords.');
 
       $results = $this->buildSearch(NULL, [], [], FALSE)
         ->sort('keywords', QueryInterface::SORT_DESC)
@@ -683,9 +683,6 @@ class SearchApiSolrTest extends BackendTestBase {
         // Force an expected order for identical width.
         ->sort('search_api_id')
         ->execute();
-      // @todo if width is missing it seems to be treated like 0 because
-      //   sortMissingLast="true" doesn't fix it.
-      // $this->assertResults([4, 5, 1, 2, 3], $results, 'Sort by width.');
       $this->assertResults([1, 2, 3, 6, 7, 4, 5], $results, 'Sort by width.');
 
       $results = $this->buildSearch(NULL, [], [], FALSE)

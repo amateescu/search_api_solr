@@ -51,7 +51,7 @@
     that avoids logging every request
 -->
 
-<schema name="drupal-5.2-solr-6.x" version="1.6">
+<schema name="drupal-5.3-solr-6.x" version="1.6">
   <!-- attribute "name" is the name of this schema and is only used for display purposes.
        version="x.y" is Solr's version number for the schema syntax and
        semantics.  It should not normally be changed by applications.
@@ -273,10 +273,10 @@
        It supports doc values but in that case the field needs to be
        single-valued and either required or have a default value.
       -->
-    <fieldType name="string" class="solr.StrField" sortMissingLast="true" />
+    <fieldType name="string" class="solr.StrField"/>
 
     <!-- boolean type: "true" or "false" -->
-    <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true"/>
+    <fieldType name="boolean" class="solr.BoolField"/>
 
     <!-- sortMissingLast and sortMissingFirst attributes are optional attributes are
          currently supported on types that are sorted internally as strings
@@ -350,7 +350,7 @@
 
          Note: For faster range queries, consider the tdate type
       -->
-    <fieldType name="date" class="solr.TrieDateField" precisionStep="0" positionIncrementGap="0" sortMissingLast="true" omitNorms="true"/>
+    <fieldType name="date" class="solr.TrieDateField" precisionStep="0" positionIncrementGap="0" omitNorms="true"/>
 
     <!-- A Trie based date field for faster date range queries and date faceting. -->
     <fieldType name="tdate" class="solr.TrieDateField" precisionStep="6" positionIncrementGap="0"/>
@@ -564,7 +564,7 @@
          With various TokenFilterFactories to produce a sortable field
          that does not include some properties of the source text
       -->
-    <fieldType name="alphaOnlySort" class="solr.TextField" sortMissingLast="true" omitNorms="true">
+    <fieldType name="alphaOnlySort" class="solr.TextField" omitNorms="true">
       <analyzer>
         <!-- KeywordTokenizer does no actual tokenizing, so the entire
              input string is preserved as a single token
@@ -598,7 +598,7 @@
          characters, numbers and punctuation, for example
          'entity:entity_test_mulrev_changed/2:en'.
      -->
-    <fieldType name="sortString" class="solr.TextField" sortMissingLast="true" omitNorms="true">
+    <fieldType name="sortString" class="solr.TextField" omitNorms="true">
       <analyzer>
         <!-- KeywordTokenizer does no actual tokenizing, so the entire
             input string is preserved as a single token
