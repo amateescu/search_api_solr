@@ -21,6 +21,7 @@ class AddHierarchyTest extends \Drupal\Tests\search_api\Kernel\Processor\AddHier
    * {@inheritdoc}
    */
   public static $modules = [
+    'search_api_solr',
     'search_api_solr_multilingual',
     'search_api_solr_multilingual_test',
   ];
