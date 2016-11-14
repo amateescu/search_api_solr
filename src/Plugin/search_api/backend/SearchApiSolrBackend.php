@@ -1547,12 +1547,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           throw new SearchApiException($this->t('Filter term on unknown or unindexed field @field.', array('@field' => $field)));
         }
         $value = $condition->getValue();
-        if ($value !== '') {
-          $fq[] = [
-            'query' => $this->createFilterQuery($solr_fields[$field], $value, $condition->getOperator(), $index_fields[$field]),
-            'tags' => $condition_group->getTags(),
-          ];
-        }
+        $fq[] = [
+          'query' => $this->createFilterQuery($solr_fields[$field], $value, $condition->getOperator(), $index_fields[$field]),
+          'tags' => $condition_group->getTags(),
+        ];
       }
       else {
         // Nested condition group.
@@ -1561,6 +1559,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
     }
 
+    drupal_set_message(print_r($fq, TRUE), 'error');
     return $fq;
   }
 
@@ -1611,23 +1610,41 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * Create a single search query string.
    */
   protected function createFilterQuery($field, $value, $operator, FieldInterface $index_field) {
-    if ($value === NULL) {
-      return ($operator == '=' ? '-' : '') . "$field:[* TO *]";
+    if (!is_array($value)) {
+      $value = [$value];
     }
 
-    if (!is_array($value)) {
-      $value = trim($value);
-      $value = $this->formatFilterValue($value, $index_field->getType());
-    }
-    else {
-      foreach ($value as &$v) {
+    foreach ($value as &$v) {
+      if (!is_null($v) || !in_array($operator, ['=', '<>', 'IN', 'NOT IN'])) {
         $v = trim($v);
         $v = $this->formatFilterValue($v, $index_field->getType());
+        // Remaining NULL values are now converted to empty strings.
       }
     }
+    unset($v);
+
+    if (1 == count($value)) {
+      $value = array_shift($value);
+
+      switch ($operator) {
+        case 'IN':
+          $operator = '=';
+          break;
+
+        case 'NOT IN':
+          $operator = '<>';
+          break;
+      }
+    }
+
     switch ($operator) {
       case '<>':
-        return "-$field:$value";
+        if (is_null($value)) {
+          return "$field:[* TO *]";
+        }
+        else {
+          return "-$field:$value";
+        }
 
       case '<':
         return "$field:{* TO $value}";
@@ -1648,23 +1665,42 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         return "-$field:[" . array_shift($value) . ' TO ' . array_shift($value) . ']';
 
       case 'IN':
-        if (count($value) > 1) {
-          return "($field:" . implode(" $field:", $value) . ')';
+        $parts = [];
+        $null = FALSE;
+        foreach ($value as $v) {
+          if (is_null($v)) {
+            $null = TRUE;
+          }
+          else {
+            $parts[] = "$field:$v";
+          }
         }
-        else {
-          return "$field:". array_shift($value);
+        if ($null) {
+          $parts[] = "(-$field:[* TO *])";
         }
+        return '(' . implode(" ", $parts) . ')';
 
       case 'NOT IN':
-        if (count($value) > 1) {
-          return "(*:* -$field:" . implode(" -$field:", $value) . ')';
+        $parts = [];
+        $null = FALSE;
+        foreach ($value as $v) {
+          if (is_null($v)) {
+            $null = TRUE;
+          }
+          else {
+            $parts[] = "-$field:$v";
+          }
+        }
+        return '(' . ($null ? "$field:[* TO *]" : '*:*') . ' ' . implode(" ", $parts) . ')';
+
+      case '=':
+      default:
+        if (is_null($value)) {
+          return "-$field:[* TO *]";
         }
         else {
-          return "-$field:". array_shift($value);
+          return "$field:$value";
         }
-
-      default:
-        return "$field:$value";
     }
   }
 
