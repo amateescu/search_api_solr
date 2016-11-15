@@ -1559,7 +1559,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
     }
 
-    drupal_set_message(print_r($fq, TRUE), 'error');
     return $fq;
   }
 
