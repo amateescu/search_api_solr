@@ -416,6 +416,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     return $this->solrConnector;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function isAvailable() {
+    $conn = $this->getSolrConnector();
+    return $conn->pingCore() !== FALSE;
+  }
 
   /**
    * {@inheritdoc}
