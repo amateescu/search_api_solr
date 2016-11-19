@@ -1,17 +1,17 @@
 <?php
 
-namespace Drupal\search_api_solr\Tests;
+namespace Drupal\Tests\search_api_solr\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
-use Drupal\simpletest\WebTestBase as SimpletestWebTestBase;
+use Drupal\Tests\search_api\Functional\SearchApiBrowserTestBase;
 
 /**
  * Tests the Views integration of the Search API.
  *
  * @group search_api_solr
  */
-class ViewsTest extends \Drupal\search_api\Tests\ViewsTest {
+class ViewsTest extends \Drupal\Tests\search_api\Functional\ViewsTest {
 
   /**
    * Modules to enable for this test.
@@ -25,7 +25,7 @@ class ViewsTest extends \Drupal\search_api\Tests\ViewsTest {
    */
   public function setUp() {
     // Skip parent::setUp().
-    SimpletestWebTestBase::setUp();
+    SearchApiBrowserTestBase::setUp();
 
     // Add a second language.
     ConfigurableLanguage::createFromLangcode('nl')->save();

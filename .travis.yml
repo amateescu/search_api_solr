@@ -73,6 +73,18 @@ install:
   #- curl https://www.drupal.org/files/issues/2824932.patch | patch -p1
   #- cd $TRAVIS_BUILD_DIR/../drupal
   #########################################
+  #########################################
+  # to be removed once #2826308 is resolved
+  - cd modules/search_api
+  - curl https://www.drupal.org/files/issues/2826308-6--views_tests_invalid_filter.patch | patch -p1
+  - cd $TRAVIS_BUILD_DIR/../drupal
+  #########################################
+  #########################################
+  # to be removed once #2828848 is resolved
+  - cd modules/search_api
+  - curl https://www.drupal.org/files/issues/2828848_5_0.patch | patch -p1
+  - cd $TRAVIS_BUILD_DIR/../drupal
+  #########################################
 
 before_script:
   # Start the built-in php web server (mysql is already started) and
@@ -89,24 +101,9 @@ script:
   - cd $TRAVIS_BUILD_DIR/../drupal
   - export SIMPLETEST_DB=mysql://root:@localhost/drupal
   - export SIMPLETEST_BASE_URL=http://localhost:8888
-  - php core/scripts/run-tests.sh --verbose --color --non-html --concurrency 8 --php `which php` --url http://localhost:8888 --directory modules/search_api_solr --types Simpletest | tee /tmp/test.txt | grep passes; export TEST_EXIT=${PIPESTATUS[0]} ; echo $TEST_EXIT
-  # Check if we had fails in the run-tests.sh script
-  # Exit with the inverted value, because if there are no fails found, it will exit with 1 and for us that\
-  # is a good thing so invert it to 0. Travis has some issues with the exclamation mark in front so we have to fiddle a
-  # bit.
-  # Also make the grep case insensitive and fail on run-tests.sh regular fails as well on fatal errors.
-  - TEST_OUTPUT=$(! egrep -i "([0-9]+ fails)|(Fatal erro)|([0-9]+ exceptions)" /tmp/test.txt > /dev/null)$?
-  - cd $TRAVIS_BUILD_DIR/../drupal
   - ./vendor/bin/phpunit -c core --group search_api_solr --verbose --debug | tee ; export TEST_PHPUNIT=${PIPESTATUS[0]} ; echo $TEST_PHPUNIT
-  #- ./vendor/bin/phpunit --group search_api_solr -c "../modules/search_api_solr/phpunit.xml.travis" --verbose --debug --coverage-text | tee ; export TEST_PHPUNIT=${PIPESTATUS[0]} ; echo $TEST_PHPUNIT
-  # if the TEST_EXIT status is 0 AND the TEST_OUTPUT status is also 0 it means we succeeded, in all other cases we
-  # failed.
   # Re-enable when trying to get CodeSniffer doesn't return a 403 anymore.
   #- /home/travis/.composer/vendor/bin/phpcs --standard=/home/travis/.composer/vendor/drupal/coder/coder_sniffer/Drupal --extensions=php,inc,test,module,install --ignore=css/ $TRAVIS_BUILD_DIR/../drupal/modules/search_api
-  - php -i | grep 'php.ini'
   # Exit the build
-  - echo $TEST_EXIT
-  - echo $TEST_OUTPUT
   - echo $TEST_PHPUNIT
-  - if [ $TEST_EXIT -ne 0 ]; then cat /tmp/test.txt; fi
-  - if [ $TEST_EXIT -eq 0 ] && [ $TEST_OUTPUT -eq 0 ] && [ $TEST_PHPUNIT -eq 0 ]; then exit 0; else exit 1; fi
+  - if [ $TEST_PHPUNIT -eq 0 ]; then exit 0; else exit 1; fi
