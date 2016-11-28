@@ -843,7 +843,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     foreach ($search_fields as $search_field) {
       /** @var FieldInterface $field */
       $field = $index_fields[$search_field];
-      $boost = $field->getBoost() ? '^' . $field->$field() : '';
+      $boost = $field->getBoost() ? '^' . $field->getBoost() : '';
       $query_fields[] = $field_names[$search_field] . $boost;
     }
     $solarium_query->getEDisMax()->setQueryFields(implode(' ', $query_fields));
