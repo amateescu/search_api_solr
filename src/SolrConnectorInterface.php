@@ -122,7 +122,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    *   If TRUE the server will be asked regardless if a previous call is cached.
    *
    * @return string
-   *   The full schema version string.
+   *   The schema version number.
    */
   public function getSchemaVersion($reset = FALSE);
 
@@ -203,7 +203,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
   public function serverRestPost($path, $command_json = '');
 
   /**
-   * Gets the current Solarium update query, creating one if necessary.
+   * Creates a new Solarium update query.
    *
    * @return \Solarium\QueryType\Update\Query\Query
    *   The Update query.
@@ -211,12 +211,20 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
   public function getUpdateQuery();
 
   /**
-   * Gets the current Solarium update query, creating one if necessary.
+   * Creates a new Solarium update query.
    *
    * @return \Solarium\QueryType\Select\Query\Query
    *   The Select query.
    */
   public function getSelectQuery();
+
+  /**
+   * Creates a new Solarium terms query.
+   *
+   * @return \Solarium\QueryType\Terms\Query
+   *   The Select query.
+   */
+  public function getTermsQuery();
 
   /**
    * Returns a Solarium query helper object.

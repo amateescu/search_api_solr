@@ -116,3 +116,30 @@ function search_api_solr_entity_type_alter(array &$entity_types) {
     }
   }
 }
+
+function search_api_solr_form_search_api_index_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  $form['server']['#element_validate'][] = 'search_api_solr_form_search_api_index_form_validate_server';
+}
+
+function search_api_solr_form_search_api_index_form_validate_server(&$element, \Drupal\Core\Form\FormStateInterface $form_state, $form) {
+  if ($server = Server::load($form_state->getValue('server'))) {
+    if ($server->getBackend() instanceof \Drupal\search_api_solr\SolrBackendInterface) {
+      /** @var \Drupal\Core\Entity\EntityFormInterface $form_object */
+      $form_object = $form_state->getFormObject();
+      $this_index = $form_object->getEntity();
+      $indexes = $server->getIndexes();
+      $index_count = 0;
+      foreach ($indexes as $index) {
+        if ($index->status()) {
+          if (!$this_index->isNew() && ($this_index->id() == $index->id())) {
+            continue;
+          }
+          ++$index_count;
+        }
+      }
+      if ($index_count > 0 && $form_state->getValue('status')) {
+        $form_state->setError($element, t('The concept of storing multiple "virtual" Search API indexes in one Solr index (aka core) is bad practice and randomly breaks a lot of advanced features like spell checking, suggestions, automplete and others. Create a second core within your Solr server and assign this "index" to that core.'));
+      }
+    }
+  }
+}

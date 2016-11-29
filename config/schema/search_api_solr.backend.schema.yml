@@ -17,12 +17,12 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
     site_hash:
       type: boolean
       label: 'Restrict searches to current site'
-    autocorrect_spell:
+    suggest_suffix:
       type: boolean
-      label: 'Use spellcheck for autocomplete suggestions'
-    autocorrect_suggest_words:
+      label: 'Suggest endings for the currently entered word'
+    suggest_words:
       type: boolean
-      label: 'Suggest additional words'
+      label: 'Suggest additional words the user might want to search for'
     connector:
       type: string
       label: 'The connector plugin ID'

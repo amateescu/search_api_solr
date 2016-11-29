@@ -31,15 +31,19 @@ use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility as SearchApiUtility;
+use Drupal\search_api_autocomplete\Entity\SearchApiAutocompleteSearch;
+use Drupal\search_api_autocomplete\Suggestion;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginManager;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Solarium\Core\Client\Response;
 use Solarium\Core\Query\Result\ResultInterface;
-use Solarium\QueryType\Select\Query\Query;
 use Solarium\Exception\ExceptionInterface;
+use Solarium\QueryType\Select\Query\Query;
 use Solarium\QueryType\Select\Result\Result;
+use Solarium\QueryType\Suggester\Query as SuggesterQuery;
+use Solarium\QueryType\Suggester\Result\Result as SuggesterResult;
 use Solarium\QueryType\Update\Query\Document\Document;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -157,8 +161,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'highlight_data' => FALSE,
       'skip_schema_check' => FALSE,
       'site_hash' => TRUE,
-      'autocorrect_spell' => TRUE,
-      'autocorrect_suggest_words' => TRUE,
+      'suggest_suffix' => TRUE,
+      'suggest_words' => TRUE,
       // Set the default for new servers to NULL to force "safe" un-selected
       // radios. @see https://www.drupal.org/node/2820244
       'connector' => NULL,
@@ -235,23 +239,22 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $form['advanced']['excerpt']['#states']['invisible'][':input[name="backend_config[advanced][retrieve_data]"]']['checked'] = FALSE;
 
     if ($this->moduleHandler->moduleExists('search_api_autocomplete')) {
-      $form['advanced']['autocomplete'] = array(
-        '#type' => 'fieldset',
-        '#title' => $this->t('Autocomplete'),
-        '#collapsible' => TRUE,
-        '#collapsed' => TRUE,
+      $form['autocomplete'] = array(
+        '#type' => 'details',
+        '#title' => $this->t('Autocomplete settings'),
+        '#description' => $this->t('These settings allow you to configure how suggestions are computed when autocompletion is used. If you are seeing many inappropriate suggestions you might want to deactivate the corresponding suggestion type. You can also deactivate one method to speed up the generation of suggestions.'),
       );
-      $form['advanced']['autocomplete']['autocorrect_spell'] = array(
+      $form['autocomplete']['suggest_suffix'] = array(
         '#type' => 'checkbox',
-        '#title' => $this->t('Use spellcheck for autocomplete suggestions'),
-        '#description' => $this->t('If activated, spellcheck suggestions ("Did you mean") will be included in the autocomplete suggestions. Since the used dictionary contains words from all indexes, this might lead to leaking of sensitive data, depending on your setup.'),
-        '#default_value' => $this->configuration['autocorrect_spell'],
+        '#title' => $this->t('Suggest word endings'),
+        '#description' => $this->t('Suggest endings for the currently entered word.'),
+        '#default_value' => $this->configuration['suggest_suffix'],
       );
-      $form['advanced']['autocomplete']['autocorrect_suggest_words'] = array(
+      $form['autocomplete']['suggest_words'] = array(
         '#type' => 'checkbox',
         '#title' => $this->t('Suggest additional words'),
-        '#description' => $this->t('If activated and the user enters a complete word, Solr will suggest additional words the user wants to search, which are often found (not searched!) together. This has been known to lead to strange results in some configurations – if you see inappropriate additional-word suggestions, you might want to deactivate this option.'),
-        '#default_value' => $this->configuration['autocorrect_suggest_words'],
+        '#description' => $this->t('Suggest additional words the user might want to search for.'),
+        '#default_value' => $this->configuration['suggest_words'],
       );
     }
 
@@ -379,7 +382,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // unnecessary dependency on internal implementation.)
     $values += $values['advanced'];
     $values += $values['multisite'];
-    $values += !empty($values['autocomplete']) ? $values['autocomplete'] : array();
+    if (!empty($values['autocomplete'])) {
+      $values += $values['autocomplete'];
+    }
+    else {
+      $defaults = $this->defaultConfiguration();
+      $values['suggest_suffix'] = $defaults['suggest_suffix'];
+      $values['suggest_words'] = $defaults['suggest_words'];
+    }
 
     // Highlighting retrieved data and getting an excerpt only makes sense when
     // we retrieve data from the Solr backend.
@@ -429,13 +439,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function getSupportedFeatures() {
     return array(
-      //'search_api_autocomplete',
+      'search_api_autocomplete',
       'search_api_facets',
       'search_api_facets_operator_or',
       //'search_api_grouping',
-      'search_api_mlt',
+      //'search_api_mlt',
       'search_api_random_sort',
-      'search_api_spellcheck',
+      //'search_api_spellcheck',
       //'search_api_data_type_location',
       //'search_api_data_type_geohash',
     );
@@ -576,6 +586,20 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           ];
         }
       }
+    }
+
+    if ($this->moduleHandler->moduleExists('search_api_autocomplete')) {
+      if ($this->configuration['suggest_suffix']) {
+        $autocomplete_modes[] = $this->t('Suggest word endings');
+      }
+      if ($this->configuration['suggest_words']) {
+        $autocomplete_modes[] = $this->t('Suggest additional words');
+      }
+      $autocomplete_modes = $autocomplete_modes ? implode('; ', $autocomplete_modes) : $this->t('none');
+      $info[] = array(
+        'label' => $this->t('Autocomplete suggestions'),
+        'info' => $autocomplete_modes,
+      );
     }
 
     return $info;
@@ -1849,194 +1873,115 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
-   * Implements autocomplete suggestions.
+   * Implements autocomplete compatible to SearchApiAutocompleteInterface.
    *
-   * Largely copied from the apachesolr_autocomplete module.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   A query representing the completed user input so far.
+   * @param \Drupal\search_api_autocomplete\SearchApiAutocompleteSearchInterface $search
+   *   An object containing details about the search the user is on, and
+   *   settings for the autocompletion. See the class documentation for details.
+   *   Especially $search->options should be checked for settings, like whether
+   *   to try and estimate result counts for returned suggestions.
+   * @param string $incomplete_key
+   *   The start of another fulltext keyword for the search, which should be
+   *   completed. Might be empty, in which case all user input up to now was
+   *   considered completed. Then, additional keywords for the search could be
+   *   suggested.
+   * @param string $user_input
+   *   The complete user input for the fulltext search keywords so far.
+   *
+   * @return \Drupal\search_api_autocomplete\SuggestionInterface[]
+   *   An array of suggestions, as defined by
+   *   SearchApiAutocompleteSuggesterInterface::getAutocompleteSuggestions().
    */
   public function getAutocompleteSuggestions(QueryInterface $query, SearchApiAutocompleteSearch $search, $incomplete_key, $user_input) {
-    $suggestions = array();
-    // Reset request handler.
-    $this->requestHandler = NULL;
-    // Turn inputs to lower case, otherwise we get case sensivity problems.
-    $incomp = Unicode::strtolower($incomplete_key);
+    $suggestions = [];
 
-    $index = $query->getIndex();
-    $field_names = $this->getSolrFieldNames($index);
-    $complete = $query->getOriginalKeys();
+    if ($this->configuration['suggest_suffix'] || $this->configuration['suggest_words']) {
+      $connector = $this->getSolrConnector();
+      $solarium_query = $connector->getTermsQuery();
+      $schema_version = $connector->getSchemaVersion();
+      if (version_compare($schema_version, '5.4', '>=')) {
+        $solarium_query->setHandler('autocomplete');
+      }
+      elseif (version_compare($connector->getSolrVersion(), '6.0', '>=')) {
+        $solarium_query->setHandler('select');
+      }
+      else {
+        $solarium_query->setHandler('pinkPony');
+      }
 
-    // Extract keys.
-    $keys = $query->getKeys();
-    if (is_array($keys)) {
-      $keys_array = array();
-      while ($keys) {
-        reset($keys);
-        if (!element_child(key($keys))) {
-          array_shift($keys);
-          continue;
-        }
-        $key = array_shift($keys);
-        if (is_array($key)) {
-          $keys = array_merge($keys, $key);
+      try {
+        $fl = [];
+        if (version_compare($schema_version, '5.4', '>=')) {
+          $solr_field_names = $this->getSolrFieldNames($query->getIndex());
+          $fulltext_fields = $search->getOption('fields') ? $search->getOption('fields') : $this->getQueryFulltextFields($query);
+          foreach ($fulltext_fields as $fulltext_field) {
+            $fl[] = 'terms_' . $solr_field_names[$fulltext_field];
+          }
         }
         else {
-          $keys_array[$key] = $key;
+          $fl[] = 'spell';
         }
-      }
-      $keys = $this->flattenKeys($query->getKeys());
-    }
-    else {
-      $keys_array = preg_split('/[-\s():{}\[\]\\\\"]+/', $keys, -1, PREG_SPLIT_NO_EMPTY);
-      $keys_array = array_combine($keys_array, $keys_array);
-    }
-    if (!$keys) {
-      $keys = NULL;
-    }
+        $solarium_query->setFields($fl);
+        $solarium_query->setPrefix($incomplete_key);
+        $solarium_query->setLimit(10);
 
-    // Set searched fields.
-    $options = $query->getOptions();
-    $search_fields = $query->getFulltextFields();
-    $qf = array();
-    foreach ($search_fields as $f) {
-      $qf[] = $field_names[$f];
-    }
+        if (version_compare($schema_version, '5.4', '>=')) {
+          $solarium_query->addParam('q', $user_input);
+        }
+        $solarium_query->addParam('spellcheck', 'true');
+        $solarium_query->addParam('spellcheck.count', 1);
 
-    // Extract filters.
-    $fq = $this->createFilterQueries($query->getFilter(), $field_names, $index->getOption('fields', array()));
-    $index_id = $this->getIndexId($index->id());
-    $fq[] = 'index_id:' . $this->getQueryHelper()->escapePhrase($index_id);
-    if ($this->configuration['site_hash']) {
-      $site_hash = $this->getSolrConnector()->getQueryHelper()->escapePhrase(SearchApiSolrUtility::getSiteHash());
-      $fq[] = 'hash:' . $site_hash;
-    }
+        /** @var \Solarium\QueryType\Terms\Result $terms_result */
+        $terms_result = $connector->execute($solarium_query);
 
-    // Autocomplete magic.
-    $facet_fields = array();
-    foreach ($search_fields as $f) {
-      $facet_fields[] = $field_names[$f];
-    }
-
-    $limit = $query->getOption('limit', 10);
-
-    $params = array(
-      'qf' => $qf,
-      'fq' => $fq,
-      'rows' => 0,
-      'facet' => 'true',
-      'facet.field' => $facet_fields,
-      'facet.prefix' => $incomp,
-      'facet.limit' => $limit * 5,
-      'facet.mincount' => 1,
-      'spellcheck' => (!isset($this->configuration['autocorrect_spell']) || $this->configuration['autocorrect_spell']) ? 'true' : 'false',
-      'spellcheck.count' => 1,
-    );
-    // Retrieve http method from server options.
-    $http_method = !empty($this->configuration['http_method']) ? $this->configuration['http_method'] : 'AUTO';
-
-    $call_args = array(
-      'query'       => &$keys,
-      'params'      => &$params,
-      'http_method' => &$http_method,
-    );
-    if ($this->requestHandler) {
-      $this->setRequestHandler($this->requestHandler, $call_args);
-    }
-    $second_pass = !isset($this->configuration['autocorrect_suggest_words']) || $this->configuration['autocorrect_suggest_words'];
-    for ($i = 0; $i < ($second_pass ? 2 : 1); ++$i) {
-      try {
-        $this->moduleHandler->alter('search_api_solr_query', $call_args, $query);
-        $this->preQuery($call_args, $query);
-        // @todo
-        //$response = $this->solr->search($keys, $params, $http_method);
-
-        if (!empty($response->spellcheck->suggestions)) {
-          $replace = array();
-          foreach ($response->spellcheck->suggestions as $word => $data) {
-            $replace[$word] = $data->suggestion[0];
-          }
-          $corrected = str_ireplace(array_keys($replace), array_values($replace), $user_input);
-          if ($corrected != $user_input) {
-            array_unshift($suggestions, array(
-              'prefix' => $this->t('Did you mean:'),
-              'user_input' => $corrected,
-            ));
+        $autocomplete_terms = [];
+        foreach ($terms_result as $terms) {
+          foreach ($terms as $term => $count) {
+            if ($term != $incomplete_key) {
+              $autocomplete_terms[$term] = $count;
+            }
           }
         }
 
-        $matches = array();
-        if (isset($response->facet_counts->facet_fields)) {
-          foreach ($response->facet_counts->facet_fields as $terms) {
-            foreach ($terms as $term => $count) {
-              if (isset($matches[$term])) {
-                // If we just add the result counts, we can easily get over the
-                // total number of results if terms appear in multiple fields.
-                // Therefore, we just take the highest value from any field.
-                $matches[$term] = max($matches[$term], $count);
+        if ($this->configuration['suggest_suffix']) {
+          foreach ($autocomplete_terms as $term => $count) {
+            $suggestions[] = Suggestion::fromSuggestionSuffix(mb_substr($term, mb_strlen($incomplete_key)), $count, $user_input);
+          }
+        }
+
+        if ($this->configuration['suggest_words']) {
+          $suggestion = $user_input;
+          $suggester_result = new SuggesterResult(NULL, new SuggesterQuery(), $terms_result->getResponse());
+          foreach ($suggester_result as $term => $termResult) {
+            foreach ($termResult as $result) {
+              if ($result == $term) {
+                continue;
               }
-              else {
-                $matches[$term] = $count;
+              $correction = preg_replace('@(\b)' . preg_quote($term, '@'). '(\b)@', '$1' . $result . '$2', $suggestion);
+              if ($correction != $suggestion) {
+                $suggestion = $correction;
+                // Swapped one term. Try to correct the next term.
+                break;
               }
             }
           }
 
-          if ($matches) {
-            // Eliminate suggestions that are too short or already in the query.
-            foreach ($matches as $term => $count) {
-              if (strlen($term) < 3 || isset($keys_array[$term])) {
-                unset($matches[$term]);
-              }
-            }
-
-            // Don't suggest terms that are too frequent (by default in more
-            // than 90% of results).
-            $result_count = $response->response->numFound;
-            $max_occurrences = $result_count * $this->searchApiSolrSettings->get('autocomplete_max_occurrences');
-            if (($max_occurrences >= 1 || $i > 0) && $max_occurrences < $result_count) {
-              foreach ($matches as $match => $count) {
-                if ($count > $max_occurrences) {
-                  unset($matches[$match]);
-                }
-              }
-            }
-
-            // The $count in this array is actually a score. We want the
-            // highest ones first.
-            arsort($matches);
-
-            // Shorten the array to the right ones.
-            $additional_matches = array_slice($matches, $limit - count($suggestions), NULL, TRUE);
-            $matches = array_slice($matches, 0, $limit, TRUE);
-
-            // Build suggestions using returned facets.
-            $incomp_length = strlen($incomp);
-            foreach ($matches as $term => $count) {
-              if (Unicode::strtolower(substr($term, 0, $incomp_length)) == $incomp) {
-                $suggestions[] = array(
-                  'suggestion_suffix' => substr($term, $incomp_length),
-                  'term' => $term,
-                  'results' => $count,
-                );
-              }
-              else {
-                $suggestions[] = array(
-                  'suggestion_suffix' => ' ' . $term,
-                  'term' => $term,
-                  'results' => $count,
-                );
+          if ($suggestion != $user_input && !array_key_exists($suggestion, $autocomplete_terms)) {
+            $suggestions[] = Suggestion::fromString($suggestion, $user_input);
+            foreach (array_keys($autocomplete_terms) as $term) {
+              $completion = preg_replace('@(\b)' . preg_quote($incomplete_key, '@'). '$@', '$1' . $term . '$2', $suggestion);
+              if ($completion != $suggestion) {
+                $suggestions[] = Suggestion::fromString($completion, $user_input);
               }
             }
           }
         }
-      }
-      catch (SearchApiException $e) {
-        watchdog_exception('search_api_solr', $e, "%type during autocomplete Solr query: @message in %function (line %line of %file).", array(), WATCHDOG_WARNING);
+      } catch (SearchApiException $e) {
+        watchdog_exception('search_api_solr', $e, "%type during autocomplete Solr query: !message in %function (line %line of %file).", array(), WATCHDOG_WARNING);
       }
 
-      if (count($suggestions) >= $limit) {
-        break;
-      }
-      // Change parameters for second query.
-      unset($params['facet.prefix']);
-      $keys = trim($keys . ' ' . $incomplete_key);
     }
 
     return $suggestions;

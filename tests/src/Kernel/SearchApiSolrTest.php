@@ -8,6 +8,7 @@ use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\Utility;
+use Drupal\search_api_autocomplete\Entity\SearchApiAutocompleteSearch;
 use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
@@ -28,6 +29,7 @@ class SearchApiSolrTest extends BackendTestBase {
    * @var string[]
    */
   public static $modules = array(
+    'search_api_autocomplete',
     'search_api_solr',
     'search_api_solr_test',
     'user',
@@ -86,7 +88,7 @@ class SearchApiSolrTest extends BackendTestBase {
 
     try {
       $backend = Server::load($this->serverId)->getBackend();
-      if ($backend instanceof SearchApiSolrBackend && $backend->getSolrConnector()->pingCore()) {
+      if ($backend->isAvailable()) {
         $this->solrAvailable = TRUE;
       }
     }
@@ -706,4 +708,67 @@ class SearchApiSolrTest extends BackendTestBase {
       $this->assertTrue(TRUE, 'Error: The Solr instance could not be found. Please enable a multi-core one on http://localhost:8983/solr/d8');
     }
   }
+
+  /**
+   * Tests the autocomplete support.
+   */
+  public function testAutocomplete() {
+    // Only run the tests if we have a Solr core available.
+    if ($this->solrAvailable) {
+
+      $this->addTestEntity(1, [
+        'name' => 'Test Article 1',
+        'body' => 'The test article number 1 about cats, dogs and trees.',
+        'type' => 'article',
+      ]);
+
+      // Add another node with body length equal to the limit.
+      $this->addTestEntity(2, [
+        'name' => 'Test Article 1',
+        'body' => 'The test article number 2 about a tree.',
+        'type' => 'article',
+      ]);
+
+      $this->indexItems($this->indexId);
+
+      /** @var SearchApiSolrBackend $backend */
+      $backend = Server::load($this->serverId)->getBackend();
+      $autocompleteSearch = new SearchApiAutocompleteSearch([], 'search_api_autocomplete_search');
+
+      $query = $this->buildSearch(['artic'], [], ['body'], FALSE);
+      $suggestions = $backend->getAutocompleteSuggestions($query, $autocompleteSearch, 'artic', 'artic');
+      $this->assertEquals(1, count($suggestions));
+      $this->assertEquals('le', $suggestions[0]->getSuggestionSuffix());
+      $this->assertEquals(2, $suggestions[0]->getResults());
+
+      $query = $this->buildSearch(['articel'], [], ['body'], FALSE);
+      $suggestions = $backend->getAutocompleteSuggestions($query, $autocompleteSearch, 'articel', 'articel');
+      $this->assertEquals(1, count($suggestions));
+      $this->assertEquals('article', $suggestions[0]->getSuggestionSuffix());
+      $this->assertEquals(0, $suggestions[0]->getResults());
+
+      $query = $this->buildSearch(['articel doks'], [], ['body'], FALSE);
+      $suggestions = $backend->getAutocompleteSuggestions($query, $autocompleteSearch, 'doks', 'articel doks');
+      $this->assertEquals(1, count($suggestions));
+      $this->assertEquals('article dogs', $suggestions[0]->getSuggestionSuffix());
+
+      $query = $this->buildSearch(['articel tre'], [], ['body'], FALSE);
+      $suggestions = $backend->getAutocompleteSuggestions($query, $autocompleteSearch, 'tre', 'articel tre');
+      $this->assertEquals(5, count($suggestions));
+      $this->assertEquals('e', $suggestions[0]->getSuggestionSuffix());
+      $this->assertEquals(1, $suggestions[0]->getResults());
+      $this->assertEquals('es', $suggestions[1]->getSuggestionSuffix());
+      $this->assertEquals(1, $suggestions[1]->getResults());
+      $this->assertEquals('article tre', $suggestions[2]->getSuggestionSuffix());
+      $this->assertEquals(0, $suggestions[2]->getResults());
+      $this->assertEquals('article tree', $suggestions[3]->getSuggestionSuffix());
+      $this->assertEquals(0, $suggestions[3]->getResults());
+      $this->assertEquals('article trees', $suggestions[4]->getSuggestionSuffix());
+      $this->assertEquals(0, $suggestions[4]->getResults());
+    }
+    else {
+      $this->assertTrue(TRUE, 'Error: The Solr instance could not be found. Please enable a multi-core one on http://localhost:8983/solr/d8');
+    }
+  }
+
 }
