@@ -740,12 +740,7 @@ class SearchApiSolrTest extends BackendTestBase {
       $suggestions = $backend->getAutocompleteSuggestions($query, $autocompleteSearch, 'artic', 'artic');
       $this->assertEquals(1, count($suggestions));
       $this->assertEquals('le', $suggestions[0]->getSuggestionSuffix());
-      if (version_compare($schema_version, '5.4', '>=')) {
-        $this->assertEquals(2, $suggestions[0]->getResults());
-      }
-      else {
-        $this->assertEquals(6, $suggestions[0]->getResults());
-      }
+      $this->assertEquals(2, $suggestions[0]->getResults());
 
       $query = $this->buildSearch(['articel'], [], ['body'], FALSE);
       $suggestions = $backend->getAutocompleteSuggestions($query, $autocompleteSearch, 'articel', 'articel');
@@ -760,22 +755,11 @@ class SearchApiSolrTest extends BackendTestBase {
 
       $query = $this->buildSearch(['articel tre'], [], ['body'], FALSE);
       $suggestions = $backend->getAutocompleteSuggestions($query, $autocompleteSearch, 'tre', 'articel tre');
-
       $this->assertEquals(5, count($suggestions));
       $this->assertEquals('e', $suggestions[0]->getSuggestionSuffix());
-      if (version_compare($schema_version, '5.4', '>=')) {
-        $this->assertEquals(1, $suggestions[0]->getResults());
-      }
-      else {
-        $this->assertEquals(3, $suggestions[0]->getResults());
-      }
+      $this->assertEquals(1, $suggestions[0]->getResults());
       $this->assertEquals('es', $suggestions[1]->getSuggestionSuffix());
-      if (version_compare($schema_version, '5.4', '>=')) {
-        $this->assertEquals(1, $suggestions[1]->getResults());
-      }
-      else {
-        $this->assertEquals(3, $suggestions[1]->getResults());
-      }
+      $this->assertEquals(1, $suggestions[1]->getResults());
       $this->assertEquals('article tre', $suggestions[2]->getSuggestionSuffix());
       $this->assertEquals(0, $suggestions[2]->getResults());
       $this->assertEquals('article tree', $suggestions[3]->getSuggestionSuffix());
