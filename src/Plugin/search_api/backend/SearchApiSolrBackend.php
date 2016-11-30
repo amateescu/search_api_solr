@@ -162,7 +162,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'skip_schema_check' => FALSE,
       'site_hash' => TRUE,
       'suggest_suffix' => TRUE,
-      'suggest_words' => TRUE,
+      'suggest_corrections' => TRUE,
+      'suggest_words' => FALSE,
       // Set the default for new servers to NULL to force "safe" un-selected
       // radios. @see https://www.drupal.org/node/2820244
       'connector' => NULL,
@@ -250,11 +251,19 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         '#description' => $this->t('Suggest endings for the currently entered word.'),
         '#default_value' => $this->configuration['suggest_suffix'],
       );
+      $form['autocomplete']['suggest_corrections'] = array(
+        '#type' => 'checkbox',
+        '#title' => $this->t('Suggest corrected words'),
+        '#description' => $this->t('Suggest corrections for the currently entered words.'),
+        '#default_value' => $this->configuration['suggest_corrections'],
+      );
       $form['autocomplete']['suggest_words'] = array(
         '#type' => 'checkbox',
         '#title' => $this->t('Suggest additional words'),
         '#description' => $this->t('Suggest additional words the user might want to search for.'),
         '#default_value' => $this->configuration['suggest_words'],
+        // @todo
+        '#disabled' => TRUE,
       );
     }
 
@@ -388,6 +397,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     else {
       $defaults = $this->defaultConfiguration();
       $values['suggest_suffix'] = $defaults['suggest_suffix'];
+      $values['suggest_corrections'] = $defaults['suggest_corrections'];
       $values['suggest_words'] = $defaults['suggest_words'];
     }
 
@@ -589,16 +599,20 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     if ($this->moduleHandler->moduleExists('search_api_autocomplete')) {
+      $autocomplete_modes = [];
       if ($this->configuration['suggest_suffix']) {
         $autocomplete_modes[] = $this->t('Suggest word endings');
+      }
+      if ($this->configuration['suggest_corrections']) {
+        $autocomplete_modes[] = $this->t('Suggest corrected words');
       }
       if ($this->configuration['suggest_words']) {
         $autocomplete_modes[] = $this->t('Suggest additional words');
       }
-      $autocomplete_modes = $autocomplete_modes ? implode('; ', $autocomplete_modes) : $this->t('none');
+
       $info[] = array(
         'label' => $this->t('Autocomplete suggestions'),
-        'info' => $autocomplete_modes,
+        'info' => !empty($autocomplete_modes) ? implode('; ', $autocomplete_modes) : $this->t('none'),
       );
     }
 
@@ -1897,18 +1911,15 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   public function getAutocompleteSuggestions(QueryInterface $query, SearchApiAutocompleteSearch $search, $incomplete_key, $user_input) {
     $suggestions = [];
 
-    if ($this->configuration['suggest_suffix'] || $this->configuration['suggest_words']) {
+    if ($this->configuration['suggest_suffix'] || $this->configuration['suggest_corrections'] || $this->configuration['suggest_words']) {
       $connector = $this->getSolrConnector();
       $solarium_query = $connector->getTermsQuery();
       $schema_version = $connector->getSchemaVersion();
       if (version_compare($schema_version, '5.4', '>=')) {
         $solarium_query->setHandler('autocomplete');
       }
-      elseif (version_compare($connector->getSolrVersion(), '6.0', '>=')) {
-        $solarium_query->setHandler('select');
-      }
       else {
-        $solarium_query->setHandler('pinkPony');
+        $solarium_query->setHandler('terms');
       }
 
       try {
@@ -1927,11 +1938,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $solarium_query->setPrefix($incomplete_key);
         $solarium_query->setLimit(10);
 
-        if (version_compare($schema_version, '5.4', '>=')) {
+        if ($this->configuration['suggest_corrections']) {
           $solarium_query->addParam('q', $user_input);
+          $solarium_query->addParam('spellcheck', 'true');
+          $solarium_query->addParam('spellcheck.count', 1);
         }
-        $solarium_query->addParam('spellcheck', 'true');
-        $solarium_query->addParam('spellcheck.count', 1);
 
         /** @var \Solarium\QueryType\Terms\Result $terms_result */
         $terms_result = $connector->execute($solarium_query);
@@ -1951,7 +1962,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           }
         }
 
-        if ($this->configuration['suggest_words']) {
+        if ($this->configuration['suggest_corrections']) {
+          if (version_compare($schema_version, '5.4', '<')) {
+            $solarium_query->setHandler('select');
+            $terms_result = $connector->execute($solarium_query);
+          }
           $suggestion = $user_input;
           $suggester_result = new SuggesterResult(NULL, new SuggesterQuery(), $terms_result->getResponse());
           foreach ($suggester_result as $term => $termResult) {
@@ -1979,7 +1994,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           }
         }
       } catch (SearchApiException $e) {
-        watchdog_exception('search_api_solr', $e, "%type during autocomplete Solr query: !message in %function (line %line of %file).", array(), WATCHDOG_WARNING);
+        watchdog_exception('search_api_solr', $e);
+        return [];
       }
 
     }

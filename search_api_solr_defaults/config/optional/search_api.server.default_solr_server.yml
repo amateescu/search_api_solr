@@ -10,7 +10,8 @@ backend_config:
   highlight_data: true
   skip_schema_check: false
   suggest_suffix: true
-  suggest_words: true
+  suggest_corrections: true
+  suggest_words: false
   connector: standard
   connector_config:
     scheme: http

@@ -191,7 +191,8 @@ function search_api_solr_update_8005() {
 function search_api_solr_update_8006() {
   foreach (search_api_solr_update_helper_get_backend_configs() as $server_name => $backend_config) {
     $backend_config['suggest_suffix'] = TRUE;
-    $backend_config['suggest_words'] = TRUE;
+    $backend_config['suggest_corrections'] = TRUE;
+    $backend_config['suggest_words'] = FALSE;
     search_api_solr_update_helper_save_backend_config($server_name, $backend_config);
   }
 }
