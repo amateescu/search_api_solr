@@ -733,7 +733,6 @@ class SearchApiSolrTest extends BackendTestBase {
 
       /** @var SearchApiSolrBackend $backend */
       $backend = Server::load($this->serverId)->getBackend();
-      $schema_version = $backend->getSolrConnector()->getSchemaVersion();
       $autocompleteSearch = new SearchApiAutocompleteSearch([], 'search_api_autocomplete_search');
 
       $query = $this->buildSearch(['artic'], [], ['body'], FALSE);

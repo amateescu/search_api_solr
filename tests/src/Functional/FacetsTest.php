@@ -6,6 +6,7 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\facets\Tests\BlockTestTrait;
 use Drupal\facets\Tests\ExampleContentTrait;
 use Drupal\facets\Tests\TestHelperTrait;
+use Drupal\search_api\Entity\Index;
 use Drupal\Tests\search_api\Functional\SearchApiBrowserTestBase;
 use Drupal\views\Entity\View;
 
@@ -35,9 +36,21 @@ class FacetsTest extends SearchApiBrowserTestBase {
   );
 
   /**
+   * {@inheritdoc}
+   */
+  protected function tearDown() {
+    if ($this->indexId) {
+      Index::load($this->indexId)->clear();
+      sleep(2);
+    }
+    parent::tearDown();
+  }
+
+  /**
    * Tests basic facets integration.
    */
   public function testFacets() {
+    $this->indexId = 'solr_search_index';
     $view = View::load('search_api_test_view');
     $this->assertEquals('search_api_index_solr_search_index', $view->get('base_table'));
 
@@ -56,7 +69,7 @@ class FacetsTest extends SearchApiBrowserTestBase {
 
     $this->setUpExampleStructure();
     $this->insertExampleContent();
-    $indexed_items = $this->indexItems('solr_search_index');
+    $indexed_items = $this->indexItems($this->indexId);
     $this->assertEquals(5, $indexed_items, 'Five items are indexed.');
 
     // Create a facet, enable 'show numbers'.
