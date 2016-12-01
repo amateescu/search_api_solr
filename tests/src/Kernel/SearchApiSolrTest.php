@@ -184,6 +184,15 @@ class SearchApiSolrTest extends BackendTestBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  protected function checkIndexWithoutFields() {
+    $index = parent::checkIndexWithoutFields();
+    $index->clear();
+    sleep(2);
+  }
+
+  /**
    * Regression tests for #2469547.
    */
   protected function regressionTest2469547() {

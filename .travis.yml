@@ -75,9 +75,9 @@ install:
   #- cd $TRAVIS_BUILD_DIR/../drupal
   #########################################
   #########################################
-  # to be removed once #2831755 is resolved
+  # to be removed once #2832015 is resolved
   - cd modules/search_api
-  - curl https://www.drupal.org/files/issues/2831755_4.patch | patch -p1
+  - curl https://www.drupal.org/files/issues/2832015_4.patch | patch -p1
   - cd $TRAVIS_BUILD_DIR/../drupal
   #########################################
 
