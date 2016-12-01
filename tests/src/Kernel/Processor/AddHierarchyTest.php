@@ -9,7 +9,7 @@ use Drupal\Tests\search_api_solr\Kernel\Processor\SolrBackendTrait;
  *
  * @see \Drupal\search_api\Plugin\search_api\processor\AddHierarchy
  *
- * @group search_api_solr
+ * @group search_api_solr_multilingual
  *
  * @coversDefaultClass \Drupal\search_api\Plugin\search_api\processor\AddHierarchy
  */

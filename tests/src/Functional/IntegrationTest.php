@@ -1,18 +1,13 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_solr\Tests\IntegrationTest.
- */
-
-namespace Drupal\search_api_solr_multilingual\Tests;
+namespace Drupal\Tests\search_api_solr_multilingual\Functional;
 
 /**
  * Tests the overall functionality of the Search API framework and admin UI.
  *
  * @group search_api_solr_multilingual
  */
-class IntegrationTest extends \Drupal\search_api_solr\Tests\IntegrationTest {
+class IntegrationTest extends \Drupal\Tests\search_api_solr\Functional\IntegrationTest {
 
   /**
    * {@inheritdoc}

@@ -1,15 +1,8 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_solr_multilingual\Tests\SearchApiSolrMultilingualTest.
- */
-
 namespace Drupal\Tests\search_api_solr_multilingual\Kernel;
 
-use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
-use Drupal\search_api\Utility;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
 use Drupal\Tests\search_api_solr\Kernel\SearchApiSolrTest;
 

@@ -20,7 +20,7 @@ php:
 env:
   - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=4.5.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr/solr-conf/4.x"
   - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=5.5.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr/solr-conf/5.x"
-  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=6.2.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr/solr-conf/6.x"
+  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=6.3.0 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr/solr-conf/6.x"
 
 notifications:
   irc:
@@ -60,6 +60,7 @@ install:
   - composer config repositories.drupal composer https://packages.drupal.org/8
   - composer config repositories.search_api_solr_multilingual vcs $TRAVIS_BUILD_DIR
   - composer require drupal/search_api:1.x-dev
+  - composer require drupal/search_api_autocomplete:1.x-dev
   - composer require drupal/search_api_solr:1.x-dev
   - composer require drupal/search_api_solr_multilingual:999.0.0
   - composer require drupal/facets:1.x-dev
@@ -70,6 +71,12 @@ install:
   #- cd modules/search_api
   #- curl https://www.drupal.org/files/issues/2824932.patch | patch -p1
   #- cd $TRAVIS_BUILD_DIR/../drupal
+  #########################################
+  #########################################
+  # to be removed once #2832015 is resolved
+  - cd modules/search_api
+  - curl https://www.drupal.org/files/issues/2832015_4.patch | patch -p1
+  - cd $TRAVIS_BUILD_DIR/../drupal
   #########################################
 
 before_script:
@@ -96,24 +103,9 @@ script:
   - cd $TRAVIS_BUILD_DIR/../drupal
   - export SIMPLETEST_DB=mysql://root:@localhost/drupal
   - export SIMPLETEST_BASE_URL=http://localhost:8888
-  - php core/scripts/run-tests.sh --verbose --color --non-html --concurrency 8 --php `which php` --url http://localhost:8888 --directory modules/search_api_solr_multilingual --types Simpletest | tee /tmp/test.txt | grep passes; export TEST_EXIT=${PIPESTATUS[0]} ; echo $TEST_EXIT
-  # Check if we had fails in the run-tests.sh script
-  # Exit with the inverted value, because if there are no fails found, it will exit with 1 and for us that\
-  # is a good thing so invert it to 0. Travis has some issues with the exclamation mark in front so we have to fiddle a
-  # bit.
-  # Also make the grep case insensitive and fail on run-tests.sh regular fails as well on fatal errors.
-  - TEST_OUTPUT=$(! egrep -i "([0-9]+ fails)|(Fatal erro)|([0-9]+ exceptions)" /tmp/test.txt > /dev/null)$?
-  - cd $TRAVIS_BUILD_DIR/../drupal
   - ./vendor/bin/phpunit -c core --group search_api_solr_multilingual --verbose --debug | tee ; export TEST_PHPUNIT=${PIPESTATUS[0]} ; echo $TEST_PHPUNIT
-  #- ./vendor/bin/phpunit --group search_api_solr_multilingual -c "../modules/search_api_solr/phpunit.xml.travis" --verbose --debug --coverage-text | tee ; export TEST_PHPUNIT=${PIPESTATUS[0]} ; echo $TEST_PHPUNIT
-  # if the TEST_EXIT status is 0 AND the TEST_OUTPUT status is also 0 it means we succeeded, in all other cases we
-  # failed.
   # Re-enable when trying to get CodeSniffer doesn't return a 403 anymore.
-  #- /home/travis/.composer/vendor/bin/phpcs --standard=/home/travis/.composer/vendor/drupal/coder/coder_sniffer/Drupal --extensions=php,inc,test,module,install --ignore=css/ $TRAVIS_BUILD_DIR/../drupal/modules/search_api_multilingual
-  - php -i | grep 'php.ini'
+  #- /home/travis/.composer/vendor/bin/phpcs --standard=/home/travis/.composer/vendor/drupal/coder/coder_sniffer/Drupal --extensions=php,inc,test,module,install --ignore=css/ $TRAVIS_BUILD_DIR/../drupal/modules/search_api
   # Exit the build
-  - echo $TEST_EXIT
-  - echo $TEST_OUTPUT
   - echo $TEST_PHPUNIT
-  - if [ $TEST_EXIT -ne 0 ]; then cat /tmp/test.txt; fi
-  - if [ $TEST_EXIT -eq 0 ] && [ $TEST_OUTPUT -eq 0 ] && [ $TEST_PHPUNIT -eq 0 ]; then exit 0; else exit 1; fi
+  - if [ $TEST_PHPUNIT -eq 0 ]; then exit 0; else exit 1; fi
