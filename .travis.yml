@@ -74,12 +74,6 @@ install:
   #- curl https://www.drupal.org/files/issues/2824932.patch | patch -p1
   #- cd $TRAVIS_BUILD_DIR/../drupal
   #########################################
-  #########################################
-  # to be removed once #2832015 is resolved
-  - cd modules/search_api
-  - curl https://www.drupal.org/files/issues/2832015_4.patch | patch -p1
-  - cd $TRAVIS_BUILD_DIR/../drupal
-  #########################################
 
 before_script:
   # Start the built-in php web server (mysql is already started) and
