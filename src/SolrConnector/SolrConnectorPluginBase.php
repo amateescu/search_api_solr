@@ -640,6 +640,14 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getExtractQuery() {
+    $this->connect();
+    return $this->solr->createExtract();
+  }
+
+  /**
    * @return \Solarium\Plugin\CustomizeRequest\CustomizeRequest
    */
   protected function customizeRequest() {
@@ -758,6 +766,14 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
 
     // Reset the timeout setting to the default value for search queries.
     $endpoint->setTimeout($timeout);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function extract(QueryInterface $query) {
+    $this->connect();
+    return $this->solr->extract($query);
   }
 
   /**
