@@ -62,6 +62,13 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function testAutocomplete() {
+    // @todo
+  }
+
+  /**
    * Tests the conversion of language aware queries into Solr queries.
    */
   public function testQueryConditionsAndLanguageFilter() {
