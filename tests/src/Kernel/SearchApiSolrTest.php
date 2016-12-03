@@ -3,6 +3,7 @@
 namespace Drupal\Tests\search_api_solr\Kernel;
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\Component\Serialization\Json;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Query\QueryInterface;
@@ -778,6 +779,32 @@ class SearchApiSolrTest extends BackendTestBase {
     else {
       $this->assertTrue(TRUE, 'Error: The Solr instance could not be found. Please enable a multi-core one on http://localhost:8983/solr/d8');
     }
+  }
+
+  /**
+   * Test tika extension PDF extraction.
+   */
+  public function testExtract() {
+    /** @var SearchApiSolrBackend $backend */
+    $backend = Server::load($this->serverId)->getBackend();
+    // Initialise the Client.
+    $client = $backend->getSolrConnector();
+    // Create the Query.
+    $query = $client->getExtractQuery();
+    // setExtractOnly is only available in solarium 3.3.0 and up.
+    $query->setExtractOnly(TRUE);
+    $filepath = drupal_get_path('module', 'search_api_solr_test') . '/assets/test_extraction.pdf';
+    $query->setFile($filepath);
+    // Execute the query.
+    $result = $client->extract($query);
+    $response = $result->getResponse();
+    $json_data = $response->getBody();
+    $array_data = Json::decode($json_data);
+    // $array_data contains json array with two keys : [filename] that contains
+    // the extracted text we need and [filename]_metadata that contains some
+    // extra metadata.
+    $xml_data = $array_data[$filepath];
+    $this->assertContains('The extraction seems working!', $xml_data);
   }
 
 }

@@ -73,8 +73,8 @@
   <!-- A "dir" option by itself adds any files found in the directory to the
        classpath, this is useful for including all jars in a directory.
     -->
-  <lib dir="${solr.contrib.dir:../../../contrib}/extraction/lib" />
-  <lib dir="${solr.contrib.dir:../../../contrib}/clustering/lib/" />
+  <lib dir="../../../../contrib/extraction/lib" />
+  <lib dir="../../../../contrib/clustering/lib/" />
 
   <!-- The velocity library has been known to crash Solr in some
        instances when deployed as a war file to Tomcat. Therefore all
@@ -87,7 +87,7 @@
        files in that directory which completely match the regex
        (anchored on both ends) will be included.
     -->
-  <!--<lib dir="../../dist/" regex="apache-solr-cell-\d.*\.jar" />-->
+  <lib dir="../../../../dist/" regex="solr-cell-\d.*\.jar" />
   <!--<lib dir="../../dist/" regex="apache-solr-clustering-\d.*\.jar" />-->
   <!--<lib dir="../../dist/" regex="apache-solr-dataimporthandler-\d.*\.jar" />-->
   <!--<lib dir="../../dist/" regex="apache-solr-langid-\d.*\.jar" />-->
@@ -1073,8 +1073,7 @@
 
     -->
   <requestHandler name="/update/extract"
-                  startup="lazy"
-                  class="solr.extraction.ExtractingRequestHandler" >
+	  class="org.apache.solr.handler.extraction.ExtractingRequestHandler" >
     <lst name="defaults">
       <!-- All the main content goes into "text"... if you need to return
            the extracted text or do highlighting, use a stored field. -->
