@@ -2,10 +2,6 @@
 
 namespace Drupal\Tests\search_api_solr\Functional;
 
-use Drupal\facets\Tests\BlockTestTrait;
-use Drupal\facets\Tests\ExampleContentTrait;
-use Drupal\facets\Tests\TestHelperTrait;
-
 /**
  * Tests the overall functionality of the Search API framework and admin UI.
  *
