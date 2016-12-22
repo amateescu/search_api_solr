@@ -21,6 +21,7 @@ use Solarium\Core\Query\Helper;
 use Solarium\Core\Query\QueryInterface;
 use Solarium\Exception\HttpException;
 use Solarium\QueryType\Select\Query\Query;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines a base class for Solr connector plugins.
@@ -56,11 +57,29 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   }
 
   /**
+   * The event dispatcher.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
+  protected $eventDispatcher;
+
+  /**
    * A connection to the Solr server.
    *
    * @var \Solarium\Client
    */
   protected $solr;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $plugin = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+
+    $plugin->eventDispatcher = $container->get('event_dispatcher');
+
+    return $plugin;
+  }
 
   /**
    * {@inheritdoc}
@@ -217,7 +236,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
 
     if (!$form_state->hasAnyErrors()) {
       // Try to orchestrate a server link from form values.
-      $solr = new Client();
+      $solr = new Client(NULL, $this->eventDispatcher);
       $solr->createEndpoint($values + ['key' => 'core'], TRUE);
       try {
         $this->getServerLink();
@@ -253,7 +272,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    */
   protected function connect() {
     if (!$this->solr) {
-      $this->solr = new Client();
+      $this->solr = new Client(NULL, $this->eventDispatcher);
       $this->solr->createEndpoint($this->configuration + ['key' => 'core'], TRUE);
       $this->attachServerEndpoint();
     }
