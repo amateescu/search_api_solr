@@ -548,10 +548,7 @@ class SearchApiSolrTest extends BackendTestBase {
 
       $index = $this->getIndex();
       $index->set('datasource_settings', $index->get('datasource_settings') + [
-        'entity:user' => [
-          'plugin_id' => 'entity:user',
-          'settings' => [],
-        ],
+        'entity:user' => [],
       ]);
       $info = [
         'label' => 'uid',
