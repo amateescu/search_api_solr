@@ -51,32 +51,22 @@ field_settings:
     property_path: width
 processor_settings:
   add_url:
-    plugin_id: add_url
-    settings:
-      weights:
-        preprocess_index: -30
+    weights:
+      preprocess_index: -30
   aggregated_field:
-    plugin_id: aggregated_field
-    settings:
-      weights:
-        add_properties: 20
+    weights:
+      add_properties: 20
   rendered_item:
-    plugin_id: rendered_item
-    settings:
-      weights:
-        add_properties: 0
-        pre_index_save: -10
+    weights:
+      add_properties: 0
+      pre_index_save: -10
 options:
   cron_limit: -1
   index_directly: false
 datasource_settings:
-  'entity:entity_test_mulrev_changed':
-    plugin_id: 'entity:entity_test_mulrev_changed'
-    settings: {  }
+  'entity:entity_test_mulrev_changed': {  }
 tracker_settings:
-  'default':
-    plugin_id: default
-    settings: { }
+  'default': { }
 server: solr_search_server
 status: true
 langcode: en

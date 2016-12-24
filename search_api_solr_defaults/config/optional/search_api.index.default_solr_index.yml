@@ -73,59 +73,43 @@ field_settings:
     property_path: type
 processor_settings:
   add_url:
-    plugin_id: add_url
-    settings:
-      weights:
-        preprocess_index: -30
+    weights:
+      preprocess_index: -30
   aggregated_field:
-    plugin_id: aggregated_field
-    settings:
-      weights:
-        add_properties: 20
+    weights:
+      add_properties: 20
   content_access:
-    plugin_id: content_access
-    settings:
-      weights:
-        preprocess_index: -6
-        preprocess_query: -4
+    weights:
+      preprocess_index: -6
+      preprocess_query: -4
   html_filter:
-    plugin_id: html_filter
-    settings:
-      weights:
-        preprocess_index: -3
-        preprocess_query: -6
-      fields:
-        - rendered_item
-      title: true
-      alt: true
-      tags:
-        h1: 5
-        h2: 3
-        h3: 2
-        string: 2
-        b: 2
+    weights:
+      preprocess_index: -3
+      preprocess_query: -6
+    fields:
+      - rendered_item
+    title: true
+    alt: true
+    tags:
+      h1: 5
+      h2: 3
+      h3: 2
+      string: 2
+      b: 2
   node_status:
-    plugin_id: node_status
-    settings:
-      weights:
-        preprocess_index: -10
+    weights:
+      preprocess_index: -10
   rendered_item:
-    plugin_id: rendered_item
-    settings:
-      weights:
-        add_properties: 0
-        pre_index_save: -10
+    weights:
+      add_properties: 0
+      pre_index_save: -10
 options:
   index_directly: true
   cron_limit: 50
 datasource_settings:
-  'entity:node':
-    plugin_id: 'entity:node'
-    settings: {  }
+  'entity:node': {  }
 tracker_settings:
-  'default':
-    plugin_id: default
-    settings: {  }
+  'default': {  }
 server: default_solr_server
 status: true
 langcode: en
