@@ -663,8 +663,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function removeIndex($index) {
-    // Only delete the index's data if the index isn't read-only.
-    if (!is_object($index) || empty($index->read_only)) {
+    // Only delete the index's data if the index isn't read-only. If the index
+    // has already been deleted and we only get the ID, we just assume it was
+    // read-only to be on the safe side.
+    if (is_object($index) && !$index->isReadOnly()) {
       $this->deleteAllIndexItems($index);
     }
   }
