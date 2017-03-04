@@ -29,8 +29,10 @@ class IntegrationTest extends \Drupal\Tests\search_api\Functional\IntegrationTes
    */
   protected function tearDown() {
     if ($this->indexId) {
-      $this->getIndex()->clear();
-      sleep(2);
+      if ($index = $this->getIndex()) {
+        $index->clear();
+        sleep(2);
+      }
     }
     parent::tearDown();
   }
