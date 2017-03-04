@@ -676,7 +676,7 @@ class SearchApiSolrTest extends BackendTestBase {
         // Force an expected order for identical keywords.
         ->sort('search_api_id')
         ->execute();
-      $this->assertResults([3, 6, 7, 4, 1, 2, 5], $results, 'Sort by keywords.');
+      $this->assertResults([4, 1, 2, 5, 3, 6, 7], $results, 'Sort by keywords.');
 
       $results = $this->buildSearch(NULL, [], [], FALSE)
         ->sort('keywords', QueryInterface::SORT_DESC)
