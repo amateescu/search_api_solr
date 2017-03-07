@@ -1,0 +1,13 @@
+{
+  "name": "drupal/search_api_solr_datasource",
+  "description": "Provides a datasource for searching external Solr indexes.",
+  "type": "drupal-module",
+  "authors": [
+    {
+      "name": "David Cameron",
+      "homepage": "https://www.drupal.org/u/dcam"
+    }
+  ],
+  "license": "GPL-2.0+",
+  "require": {}
+}
