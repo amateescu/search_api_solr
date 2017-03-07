@@ -1,0 +1,4 @@
+type: module
+name: 'Search API Solr Datasource'
+description: 'Provides a datasource for searching external Solr indexes.'
+package: Search
