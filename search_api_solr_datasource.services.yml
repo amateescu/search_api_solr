@@ -1,0 +1,3 @@
+services:
+  solr_field.manager:
+    class: Drupal\search_api_solr_datasource\SolrFieldManager
