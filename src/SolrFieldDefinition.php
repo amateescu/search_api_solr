@@ -194,7 +194,7 @@ class SolrFieldDefinition implements SolrFieldDefinitionInterface {
    */
   public function getSchema() {
     if (!isset($this->schema)) {
-      foreach (str_split(str_replace('-', '', $this->field['schema'])) as $key) {
+      foreach (str_split(str_replace('-', '', $this->definition['schema'])) as $key) {
         $this->schema[$key] = isset(self::$schemaLabels[$key]) ? self::$schemaLabels[$key] : $key;
       }
     }
