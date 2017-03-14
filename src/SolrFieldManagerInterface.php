@@ -2,6 +2,8 @@
 
 namespace Drupal\search_api_solr_datasource;
 
+use Drupal\search_api\ServerInterface;
+
 /**
  * Defines an interface for a Solr field manager.
  */
@@ -16,6 +18,6 @@ interface SolrFieldManagerInterface {
    * @return \Drupal\Core\Field\FieldDefinitionInterface[]
    *   The array of field definitions for the server, keyed by field name.
    */
-  public function getFieldDefinitions($server);
+  public function getFieldDefinitions(ServerInterface $server);
 
 }

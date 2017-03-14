@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api_solr_datasource;
 
+use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr_datasource\SolrFieldDefinition;
 
@@ -13,7 +14,7 @@ class SolrFieldManager implements SolrFieldManagerInterface {
   /**
    * (@inheritdoc}
    */
-  public function getFieldDefinitions($server) {
+  public function getFieldDefinitions(ServerInterface $server) {
     // @todo Handle non-Solr servers.
     // @todo Cache the results.
     $fields = array();
