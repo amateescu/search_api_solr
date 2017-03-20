@@ -148,14 +148,13 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     }
     elseif (1 == count($language_ids)) {
       // @todo At this point we don't know if someone explicitly searches for
-      //   language unspecific content otr if he searches for all languages.
+      //   language unspecific content or if he searches for all languages.
       //   Probably we have to apply some logic here or introduce a
       //   configuration option.
       // @see https://www.drupal.org/node/2717591
-      switch ($language_ids[0]) {
+      switch (reset($language_ids)) {
         case LanguageInterface::LANGCODE_NOT_SPECIFIED:
         case LanguageInterface::LANGCODE_NOT_APPLICABLE:
-        case LanguageInterface::LANGCODE_DEFAULT:
           break;
       }
     }
