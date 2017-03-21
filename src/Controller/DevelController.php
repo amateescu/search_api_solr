@@ -6,6 +6,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\devel\DevelDumperManager;
 use Drupal\search_api\Backend\BackendPluginManager;
 use Drupal\search_api\Utility\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -30,16 +31,26 @@ class DevelController extends ControllerBase {
   protected $backendPluginManager;
 
   /**
-   * Constructs a ServerForm object.
+   * The Devel dumper manager.
+   *
+   * @var \Drupal\devel\DevelDumperManager
+   */
+  protected $develDumperManager;
+
+  /**
+   * Constructs a DevelController object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    * @param \Drupal\search_api\Backend\BackendPluginManager $backend_plugin_manager
    *   The backend plugin manager.
+   * @param \Drupal\devel\DevelDumperManager $devel_dumper_manager
+   *   The Devel dumper manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, BackendPluginManager $backend_plugin_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, BackendPluginManager $backend_plugin_manager, DevelDumperManager $devel_dumper_manager) {
     $this->storage = $entity_type_manager->getStorage('search_api_server');
     $this->backendPluginManager = $backend_plugin_manager;
+    $this->develDumperManager = $devel_dumper_manager;
   }
 
   /**
@@ -50,7 +61,9 @@ class DevelController extends ControllerBase {
     $entity_type_manager = $container->get('entity_type.manager');
     /** @var \Drupal\search_api\Backend\BackendPluginManager $backend_plugin_manager */
     $backend_plugin_manager = $container->get('plugin.manager.search_api.backend');
-    return new static($entity_type_manager, $backend_plugin_manager);
+    /** @var \Drupal\devel\DevelDumperManager $devel_dumper_manager */
+    $devel_dumper_manager = $container->get('devel.dumper');
+    return new static($entity_type_manager, $backend_plugin_manager, $devel_dumper_manager);
   }
 
   /**
@@ -95,10 +108,10 @@ class DevelController extends ControllerBase {
    * Prints the document structure to be indexed by Solr.
    *
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
-   *    A RouteMatch object.
+   *   A RouteMatch object.
    *
    * @return array
-   *    Array of page elements to render.
+   *   Array of page elements to render.
    */
   public function entitySolr(RouteMatchInterface $route_match) {
     $output = [];
@@ -130,11 +143,11 @@ class DevelController extends ControllerBase {
                     $documents = $backend->getDocuments($index, $items);
                     foreach ($documents as $document) {
                       $output[$server->id() . $index->id() . $item_id] = [
-                        '#markup' => kprint_r($document->getFields(), TRUE, $this->t('Translation %langcode to be stored in index %index on server %server', [
+                        '#markup' => $this->develDumperManager->dumpOrExport($document->getFields(), $this->t('Translation %langcode to be stored in index %index on server %server', [
                           '%langcode' => $langcode,
                           '%index' => $index->label(),
                           '%server' => $server->label(),
-                        ])),
+                        ]), TRUE),
                       ];
                     }
                   }
