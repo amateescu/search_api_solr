@@ -113,12 +113,15 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
       '#description' => $this->t("Enter the name of a requestHandler from the core's solrconfig.xml file.  This should only be necessary if you need to specify a handler to use other than the default."),
       '#default_value' => $this->configuration['advanced']['request_handler'],
     ];
-    $form['advanced']['default_query'] = [
+    // @todo Figure out if we actually need this setting.  It was copied over
+    //   from Sarnia, but it seems like in D8 Search API Solr defaults to
+    //   selecting all records.  It may not be necessary.
+    /*$form['advanced']['default_query'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Default query'),
       '#description' => $this->t("Enter a default query parameter. This may only be necessary if a default query cannot be specified in the solrconfig.xml."),
       '#default_value' => $this->configuration['advanced']['default_query'],
-    ];
+    ];*/
     return $form;
   }
 
