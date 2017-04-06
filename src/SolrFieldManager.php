@@ -7,6 +7,7 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Cache\UseCacheBackendTrait;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
+use Drupal\search_api_solr_datasource\TypedData\SolrFieldDefinition;
 
 /**
  * Manages the discovery of Solr fields.
@@ -58,7 +59,7 @@ class SolrFieldManager implements SolrFieldManagerInterface {
    * @param \Drupal\search_api\ServerInterface $server
    *   The server from which we are retreiving field information.
    *
-   * @return \Drupal\search_api_solr_datasource\SolrFieldDefinitionInterface[]
+   * @return \Drupal\search_api_solr_datasource\TypedData\SolrFieldDefinitionInterface[]
    *   The array of field definitions for the server, keyed by field name.
    */
   protected function buildFieldDefinitions(ServerInterface $server) {
@@ -72,8 +73,8 @@ class SolrFieldManager implements SolrFieldManagerInterface {
       // @todo Inject the logger service.
       \Drupal::logger('search_api_solr_datasource')->error('Could not connect to server %server, %message', ['%server' => $server->id(), '%message' => $e->getMessage()]);
     }
-    foreach ($luke['fields'] as $label => $defintion) {
-      $field = new SolrFieldDefinition($defintion);
+    foreach ($luke['fields'] as $label => $definition) {
+      $field = new SolrFieldDefinition($definition);
       $field->setLabel($label);
       $fields[$label] = $field;
     }

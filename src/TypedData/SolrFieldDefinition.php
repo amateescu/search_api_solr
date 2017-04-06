@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api_solr_datasource;
+namespace Drupal\search_api_solr_datasource\TypedData;
 
 use Drupal\Core\TypedData\DataDefinition;
 
