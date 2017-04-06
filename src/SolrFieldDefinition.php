@@ -2,10 +2,12 @@
 
 namespace Drupal\search_api_solr_datasource;
 
+use Drupal\Core\TypedData\DataDefinition;
+
 /**
  * Defines a class for Solr field definitions.
  */
-class SolrFieldDefinition implements SolrFieldDefinitionInterface {
+class SolrFieldDefinition extends DataDefinition implements SolrFieldDefinitionInterface {
 
   /**
    * Human-readable labels for Solr schema properties.
@@ -29,93 +31,11 @@ class SolrFieldDefinition implements SolrFieldDefinitionInterface {
   );
 
   /**
-   * The field's machine name in Solr.
-   *
-   * @var string
-   */
-  protected $label;
-
-  /**
-   * The array holding values for all definition keys.
-   *
-   * @var array
-   */
-  protected $definition = array();
-
-  /**
    * An array of Solr schema properties for this field.
    *
    * @var string[]
    */
   protected $schema;
-
-  /**
-   * Creates a new Solr field definition.
-   *
-   * @param string $type
-   *   The field's Solr data type.
-   *
-   * @return static
-   *   A new SolrFieldDefinition object.
-   */
-  public static function create($type) {
-    $definition['type'] = $type;
-    return new static($definition);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function createFromDataType($type) {
-    return self::create($type);
-  }
-
-  /**
-   * Constructs a new Solr field definition object.
-   *
-   * @param array $values
-   *   The field's definition as returned from Luke.
-   */
-  public function __construct(array $values) {
-    $this->definition = $values;
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * @todo Map Solr data types to Drupal data types.
-   */
-  public function getDataType() {
-    return !empty($this->definition['type']) ? $this->definition['type'] : 'any';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getLabel() {
-    return $this->label;
-  }
-
-  /**
-   * Sets the human-readable label.
-   *
-   * @param string $label
-   *   The label to set.
-   *
-   * @return static
-   *   The object itself for chaining.
-   */
-  public function setLabel($label) {
-    $this->label = $label;
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getDescription() {
-    return NULL;
-  }
 
   /**
    * {@inheritdoc}
@@ -143,29 +63,6 @@ class SolrFieldDefinition implements SolrFieldDefinitionInterface {
    */
   public function isRequired() {
     return FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * @todo Fill this out.
-   */
-  public function getClass() {
-
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getSettings() {
-    return isset($this->definition['settings']) ? $this->definition['settings'] : array();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getSetting($setting_name) {
-    return isset($this->definition['settings'][$setting_name]) ? $this->definition['settings'][$setting_name] : NULL;
   }
 
   /**
