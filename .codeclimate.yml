@@ -10,6 +10,9 @@ engines:
   phpmd:
     enabled: true
     config: "cleancode,codesize,design,unusedcode"
+    checks:
+      Controversial/CamelCaseParameterName:
+        enabled: false
   phpcodesniffer:
     enabled: true
     config:
