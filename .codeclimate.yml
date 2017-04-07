@@ -1,0 +1,23 @@
+---
+engines:
+  duplication:
+    enabled: true
+    config:
+      languages:
+      - php
+  fixme:
+    enabled: true
+  phpmd:
+    enabled: true
+    config: "cleancode,codesize,design,unusedcode"
+  phpcodesniffer:
+    enabled: true
+    config:
+      file_extensions: "php,inc"
+      standard: "Drupal"
+ratings:
+  paths:
+  - "**.inc"
+  - "**.module"
+  - "**.php"
+exclude_paths: []
