@@ -5,7 +5,7 @@ namespace Drupal\search_api_solr_datasource;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Cache\UseCacheBackendTrait;
-use Drupal\search_api\ServerInterface;
+use Drupal\search_api\Entity\Server;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr_datasource\TypedData\SolrFieldDefinition;
 
@@ -36,34 +36,41 @@ class SolrFieldManager implements SolrFieldManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFieldDefinitions(ServerInterface $server) {
-    if (!isset($this->fieldDefinitions[$server->id()])) {
+  public function getFieldDefinitions($server_id) {
+    if (!isset($this->fieldDefinitions[$server_id])) {
       // Not prepared, try to load from cache.
-      $cid = 'solr_field_definitions:' . $server->id();
+      $cid = 'solr_field_definitions:' . $server_id;
       if ($cache = $this->cacheGet($cid)) {
         $field_definitions = $cache->data;
       }
       else {
         // Rebuild the definitions and put it into the cache.
-        $field_definitions = $this->buildFieldDefinitions($server);
-        $this->cacheSet($cid, $field_definitions , Cache::PERMANENT, ['search_api_server' => $server->id()]);
+        $field_definitions = $this->buildFieldDefinitions($server_id);
+        $this->cacheSet($cid, $field_definitions , Cache::PERMANENT, ['search_api_server' => $server_id]);
       }
-      $this->fieldDefinitions[$server->id()] = $field_definitions;
+      $this->fieldDefinitions[$server_id] = $field_definitions;
     }
-    return $this->fieldDefinitions[$server->id()];
+    return $this->fieldDefinitions[$server_id];
   }
 
   /**
    * Builds the field definitions for a Solr server from its Luke handler.
    *
-   * @param \Drupal\search_api\ServerInterface $server
+   * @param string $server_id
    *   The server from which we are retreiving field information.
    *
    * @return \Drupal\search_api_solr_datasource\TypedData\SolrFieldDefinitionInterface[]
    *   The array of field definitions for the server, keyed by field name.
+   *
+   * @throws \InvalidArgumentException
    */
-  protected function buildFieldDefinitions(ServerInterface $server) {
+  protected function buildFieldDefinitions($server_id) {
     // @todo Handle non-Solr servers.
+    // Load the server entity.
+    $server = Server::load($server_id);
+    if ($server === NULL) {
+      throw new \InvalidArgumentException('The Search API server could not be loaded.');
+    }
     $fields = array();
     try {
       $luke = $server->getBackend()->getSolrConnector()->getLuke();
