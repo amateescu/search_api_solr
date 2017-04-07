@@ -2,11 +2,11 @@
 
 namespace Drupal\search_api_solr_datasource\Plugin\search_api\datasource;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
+use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Plugin\PluginFormTrait;
 use Drupal\search_api_solr_datasource\SolrFieldManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -77,8 +77,26 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
    */
   public function getPropertyDefinitions() {
     // @todo Handle IndexInterface::getServerInstance() returning NULL.
-    $fields = $this->getSolrFieldManager()->getFieldDefinitions($this->index->getServerInstance());
+    $fields = $this->getSolrFieldManager()->getFieldDefinitions($this->index->getServerInstance()->id());
     return $fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function loadMultiple(array $ids) {
+    // Query the index for the Solr documents.
+    $query = $this->index->query(['limit' => 1]);
+    foreach ($ids as $id) {
+      $query->addCondition('search_api_id', $id);
+    }
+    $query->execute();
+    $results = $query->getResults()->getResultItems();
+    $documents = [];
+    foreach ($results as $id => $result) {
+      $documents[$id]  = $this->createTypedDataFromItem($result);
+    }
+    return $documents;
   }
 
   /**
@@ -123,6 +141,14 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
       '#default_value' => $this->configuration['advanced']['default_query'],
     ];*/
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function createTypedDataFromItem(ItemInterface $item) {
+    $plugin = \Drupal::typedDataManager()->getDefinition('solr_document')['class'];
+    return $plugin::createFromItem($item);
   }
 
 }
