@@ -71,7 +71,9 @@ class SolrDocument extends TypedData implements \IteratorAggregate, ComplexDataI
       throw new \InvalidArgumentException("The Solr field $property_name has not been configured in the index.");
     }
     // Create a new typed data object from the item's field data.
-    return SolrField::createFromField($field, $property_name, $this);
+    /** @var \Drupal\search_api_solr_datasource\Plugin\DataType\SolrField $plugin */
+    $plugin = \Drupal::typedDataManager()->getDefinition('solr_field')['class'];
+    return $plugin::createFromField($field, $property_name, $this);
   }
 
   /**

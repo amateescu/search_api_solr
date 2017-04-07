@@ -60,6 +60,7 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
    * Returns the Solr field manager.
    *
    * @return \Drupal\search_api_solr_datasource\SolrFieldManagerInterface
+   *   The Solr field manager.
    */
   public function getSolrFieldManager() {
     return $this->solrFieldManager ?: \Drupal::getContainer()->get('solr_field.manager');

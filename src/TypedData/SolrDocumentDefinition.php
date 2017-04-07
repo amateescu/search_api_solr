@@ -66,14 +66,11 @@ class SolrDocumentDefinition extends ComplexDataDefinitionBase implements SolrDo
    */
   public function getPropertyDefinitions() {
     if (!isset($this->propertyDefinitions)) {
+      $this->propertyDefinitions = [];
       if (!empty($this->getServerId())) {
         /** @var \Drupal\search_api_solr_datasource\SolrFieldManagerInterface $field_manager */
         $field_manager = \Drupal::getContainer()->get('solr_field.manager');
         $this->propertyDefinitions = $field_manager->getFieldDefinitions($this->getServerId());
-      }
-      else {
-        // No server is set.
-        $this->propertyDefinitions = [];
       }
     }
     return $this->propertyDefinitions;
