@@ -1,0 +1,78 @@
+<?php
+
+/**
+ * @file
+ * Contains hook functions for the Search API Solr Datasource module.
+ */
+
+use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Query\ResultSetInterface;
+use Solarium\QueryType\Select\Query\Query as SolariumQuery;
+use Solarium\QueryType\Select\Result\Result as SolariumResult;
+
+/**
+ * Implements hook_search_api_solr_field_mapping_alter().
+ *
+ * Override the default fields that Search API Solr sets up.  In particular,
+ * set the ID field to the one that is configured via the datasource config
+ * form.  Also, strip the field name prefixes from all of the field names.
+ * Search API Solr adds the prefixes because it assumes that it has done the
+ * indexing according to its schema.xml rules.  Of course, in our case it hasn't
+ * and we need it to use the raw field names.
+ *
+ * @see \Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend::getSolrFieldNames()
+ *
+ * @todo Apply changes only to this datasource.
+ */
+function search_api_solr_datasource_search_api_solr_field_mapping_alter(IndexInterface $index, array &$fields) {
+  // Set the ID field.
+  $config = $index->getDatasource('solr_document')->getConfiguration();
+  $fields['search_api_id'] = $config['id_field'];
+
+  // Rename the indexed fields.
+  foreach ($fields as $raw => $name) {
+    // Ignore the Search API fields.
+    if (strpos($raw, 'search_api_') === 0) {
+      continue;
+    }
+    $fields[$raw] = $raw;
+  }
+}
+
+/**
+ * Implements hook_search_api_solr_query_alter().
+ *
+ * @todo Apply changes only to this datasource.
+ */
+function search_api_solr_datasource_search_api_solr_query_alter(SolariumQuery $solarium_query, QueryInterface $query) {
+  // Remove the filter queries that limit the results based on site and index.
+  $solarium_query->removeFilterQuery('site_hash');
+  $solarium_query->removeFilterQuery('index_id');
+
+  // Set requestHandler for the query type.
+  $config = $query->getIndex()->getDatasource('solr_document')->getConfiguration();
+  if (!empty($config['advanced']['request_handler'])) {
+    $solarium_query->addParam('qt', $config['advanced']['request_handler']);
+  }
+}
+
+/**
+ * Implements hook_search_api_solr_search_results_alter().
+ *
+ * @todo Apply changes only to this datasource.
+ */
+function search_api_solr_datasource_search_api_solr_search_results_alter(ResultSetInterface $results, QueryInterface $query, SolariumResult $resultset) {
+  // Prepend each item's itemId with the datasource ID.  A lot of the Search API
+  // assumes that the item IDs are formatted as 'datasouce_id/entity_id.'  Of
+  // course, the ID numbers of external Solr documents will not have this
+  // pattern and the datasource must be added.  Reflect into the class to set
+  // the itemId.
+  /** @var \Drupal\search_api\Item\Item $item */
+  foreach ($results->getResultItems() as $item) {
+    $reflection = new \ReflectionClass($item);
+    $id_property = $reflection->getProperty('itemId');
+    $id_property->setAccessible(TRUE);
+    $id_property->setValue($item, 'solr_document/' . $item->getId());
+  }
+}
