@@ -117,6 +117,7 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
     $form['id_field'] = [
       '#type' => 'textfield',
       '#title' => $this->t('ID field'),
+      '#required' => TRUE,
       '#description' => $this->t('Enter the name of a field from your Solr schema that contains unique ID values.'),
       '#default_value' => $this->configuration['id_field'],
     ];
