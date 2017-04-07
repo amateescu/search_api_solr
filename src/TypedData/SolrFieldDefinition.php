@@ -68,27 +68,6 @@ class SolrFieldDefinition extends DataDefinition implements SolrFieldDefinitionI
   /**
    * {@inheritdoc}
    */
-  public function getConstraints() {
-    return [];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getConstraint($constraint_name) {
-    return [];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function addConstraint($constraint_name, $options = NULL) {
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getSchema() {
     if (!isset($this->schema)) {
       foreach (str_split(str_replace('-', '', $this->definition['schema'])) as $key) {
