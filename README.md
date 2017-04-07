@@ -6,12 +6,7 @@ whether or not they were originally indexed by Drupal.
 Warning
 -------
 This module is still under development and is not stable, nor should it be
-considered secure.  In particular, it should not be installed on sites that have
-other Search API indexes configured.  Alter hooks are used to change queries and
-field mappings from Solr datasources in order to make them fit the Search API's
-expectations.  These alterations may adversely impact other indexes.  Until these
-issues can be tested and resolved, please use this module in isolation on a
-development environment.
+considered secure.
 
 Contributing
 ------------
@@ -50,9 +45,6 @@ to get a development environment running.
 
 Known Issues
 ------------
-* The alter hooks used by this module may interfere with the function of other
-  indexes.  Until this is tested and resolved, it is recommended that you only use
-  this module in isolated development environments.
 * Search API Solr's backend unsets the ID field that you configure in the
   datasource settings from the results arrays, making it unavailable for display.
 * Some Solr field types need to be mapped to Drupal data types before they can be

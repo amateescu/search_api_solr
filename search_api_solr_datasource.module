@@ -22,10 +22,15 @@ use Solarium\QueryType\Select\Result\Result as SolariumResult;
  * and we need it to use the raw field names.
  *
  * @see \Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend::getSolrFieldNames()
- *
- * @todo Apply changes only to this datasource.
  */
 function search_api_solr_datasource_search_api_solr_field_mapping_alter(IndexInterface $index, array &$fields) {
+  // Do not alter mappings if the index does not use the solr_document
+  // datasource.
+  $datasources = $index->getDatasources();
+  if (!isset($datasources['solr_document'])) {
+    return;
+  }
+
   // Set the ID field.
   $config = $index->getDatasource('solr_document')->getConfiguration();
   $fields['search_api_id'] = $config['id_field'];
@@ -42,10 +47,15 @@ function search_api_solr_datasource_search_api_solr_field_mapping_alter(IndexInt
 
 /**
  * Implements hook_search_api_solr_query_alter().
- *
- * @todo Apply changes only to this datasource.
  */
 function search_api_solr_datasource_search_api_solr_query_alter(SolariumQuery $solarium_query, QueryInterface $query) {
+  // Do not alter the query if the index does not use the solr_document
+  // datasource.
+  $datasources = $query->getIndex()->getDatasources();
+  if (!isset($datasources['solr_document'])) {
+    return;
+  }
+
   // Remove the filter queries that limit the results based on site and index.
   $solarium_query->removeFilterQuery('site_hash');
   $solarium_query->removeFilterQuery('index_id');
@@ -59,10 +69,15 @@ function search_api_solr_datasource_search_api_solr_query_alter(SolariumQuery $s
 
 /**
  * Implements hook_search_api_solr_search_results_alter().
- *
- * @todo Apply changes only to this datasource.
  */
 function search_api_solr_datasource_search_api_solr_search_results_alter(ResultSetInterface $results, QueryInterface $query, SolariumResult $resultset) {
+  // Do not alter the results if the index does not use the solr_document
+  // datasource.
+  $datasources = $query->getIndex()->getDatasources();
+  if (!isset($datasources['solr_document'])) {
+    return;
+  }
+
   // Prepend each item's itemId with the datasource ID.  A lot of the Search API
   // assumes that the item IDs are formatted as 'datasouce_id/entity_id.'  Of
   // course, the ID numbers of external Solr documents will not have this
