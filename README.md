@@ -38,8 +38,8 @@ to get a development environment running.
    3. Finish configuring the index by selecting the appropriate server.  Check
       "Read only" under the Index Options.
 4. On the index's Fields tab, add the fields you would like to have shown in Views
-   or any other display.  It is assumed - but untested - that fields must be added
-   here first before they can be displayed.
+   or any other display.  Fields must be added here first before they can be
+   displayed, despite appearing in the Add fields list in Views.
 5. Create a view or some other display to see the documents from your server.  If
    you are using Views, set it up as you would for any other Search API
    datasource.
@@ -55,3 +55,5 @@ Known Issues
   this module in isolated development environments.
 * Search API Solr's backend unsets the ID field that you configure in the
   datasource settings from the results arrays, making it unavailable for display.
+* Some Solr field types need to be mapped to Drupal data types before they can be
+  used, notably long and tdate.

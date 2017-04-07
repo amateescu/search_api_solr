@@ -64,10 +64,14 @@ class SolrDocument extends TypedData implements \IteratorAggregate, ComplexDataI
    */
   public function get($property_name) {
     if (!isset($this->item)) {
-      throw new MissingDataException("Unable to get property $property_name as no item has been provided.");
+      throw new MissingDataException("Unable to get Solr field $property_name as no item has been provided.");
+    }
+    $field = $this->item->getField($property_name);
+    if ($field === NULL) {
+      throw new \InvalidArgumentException("The Solr field $property_name has not been configured in the index.");
     }
     // Create a new typed data object from the item's field data.
-    return SolrField::createFromField($this->item->getField($property_name), $property_name, $this);
+    return SolrField::createFromField($field, $property_name, $this);
   }
 
   /**
