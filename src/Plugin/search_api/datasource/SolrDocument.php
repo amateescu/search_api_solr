@@ -69,7 +69,7 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function getItemId(ComplexDataInterface $item) {
-    ;
+    // @todo Implement this.
   }
 
   /**
@@ -94,7 +94,7 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
     $results = $query->getResults()->getResultItems();
     $documents = [];
     foreach ($results as $id => $result) {
-      $documents[$id]  = $this->createTypedDataFromItem($result);
+      $documents[$id] = $this->createTypedDataFromItem($result);
     }
     return $documents;
   }

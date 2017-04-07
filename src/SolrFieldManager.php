@@ -46,7 +46,7 @@ class SolrFieldManager implements SolrFieldManagerInterface {
       else {
         // Rebuild the definitions and put it into the cache.
         $field_definitions = $this->buildFieldDefinitions($server_id);
-        $this->cacheSet($cid, $field_definitions , Cache::PERMANENT, ['search_api_server' => $server_id]);
+        $this->cacheSet($cid, $field_definitions, Cache::PERMANENT, ['search_api_server' => $server_id]);
       }
       $this->fieldDefinitions[$server_id] = $field_definitions;
     }
@@ -71,7 +71,7 @@ class SolrFieldManager implements SolrFieldManagerInterface {
     if ($server === NULL) {
       throw new \InvalidArgumentException('The Search API server could not be loaded.');
     }
-    $fields = array();
+    $fields = [];
     try {
       $luke = $server->getBackend()->getSolrConnector()->getLuke();
     }

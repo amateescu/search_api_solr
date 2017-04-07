@@ -181,9 +181,11 @@ interface SolrFieldDefinitionInterface extends DataDefinitionInterface {
   public function isFulltextSearchable();
 
   /**
-   * Determine whether a field is suitable for filtering (non-fulltext, case sensitive search).
+   * Determine whether a field is suitable for filtering.
    *
-   * When searching on this type of field, only full, exact values will match.
+   * Fields suitable for filtering must be non-fulltext.  A case-sensitive is
+   * used.  When searching on this type of field, only full, exact values will
+   * match.
    *
    * @return bool
    *   Whether the field might be suitable for filtering.

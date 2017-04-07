@@ -2,8 +2,6 @@
 
 namespace Drupal\search_api_solr_datasource;
 
-use Drupal\search_api\ServerInterface;
-
 /**
  * Defines an interface for a Solr field manager.
  */

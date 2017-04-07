@@ -14,7 +14,7 @@ class SolrFieldDefinition extends DataDefinition implements SolrFieldDefinitionI
    *
    * @var string[]
    */
-  protected static $schemaLabels = array(
+  protected static $schemaLabels = [
     'I' => 'Indexed',
     'T' => 'Tokenized',
     'S' => 'Stored',
@@ -28,7 +28,7 @@ class SolrFieldDefinition extends DataDefinition implements SolrFieldDefinitionI
     'C' => 'Compressed',
     'f' => 'Sort Missing First',
     'l' => 'Sort Missing Last',
-  );
+  ];
 
   /**
    * An array of Solr schema properties for this field.
