@@ -1,3 +1,5 @@
+Search API Solr Datasource
+==========================
 Search API Solr Datasource is a Drupal 8 module that provides a datasource plugin
 for Search API indexes.  The plugin exposes documents from any Solr server to the
 index, providing the ability to search and view those documents, regardless of
@@ -5,8 +7,9 @@ whether or not they were originally indexed by Drupal.
 
 Warning
 -------
-This module is still under development and is not stable, nor should it be
-considered secure.
+This module is still under development and should be considered _pre-alpha,
+unstable, and unsecure_.  It is recommended that you only use this module in
+development environments.
 
 Contributing
 ------------
@@ -45,6 +48,8 @@ to get a development environment running.
 
 Known Issues
 ------------
+Check the [issue queue](https://github.com/dcameron/search_api_solr_datasource/issues)
+for an up-to-date list.
 * Search API Solr's backend unsets the ID field that you configure in the
   datasource settings from the results arrays, making it unavailable for display.
 * Some Solr field types need to be mapped to Drupal data types before they can be
