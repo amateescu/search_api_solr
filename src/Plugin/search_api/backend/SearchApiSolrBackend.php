@@ -29,6 +29,7 @@ use Drupal\search_api\Query\ConditionGroupInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Query\ResultSetInterface;
+use Drupal\search_api\Utility\DataTypeHelperInterface;
 use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility as SearchApiUtility;
 use Drupal\search_api_autocomplete\Entity\SearchApiAutocompleteSearch;
@@ -123,9 +124,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
 
   /**
+   * The data type helper.
+   *
+   * @var \Drupal\search_api\Utility\DataTypeHelper|null
+   */
+  protected $dataTypeHelper;
+
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, ModuleHandlerInterface $module_handler, Config $search_api_solr_settings, LanguageManagerInterface $language_manager, SolrConnectorPluginManager $solr_connector_plugin_manager, FieldsHelperInterface $fields_helper) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, ModuleHandlerInterface $module_handler, Config $search_api_solr_settings, LanguageManagerInterface $language_manager, SolrConnectorPluginManager $solr_connector_plugin_manager, FieldsHelperInterface $fields_helper, DataTypeHelperInterface $dataTypeHelper) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->moduleHandler = $module_handler;
@@ -133,6 +142,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $this->languageManager = $language_manager;
     $this->solrConnectorPluginManager = $solr_connector_plugin_manager;
     $this->fieldsHelper = $fields_helper;
+    $this->dataTypeHelper = $dataTypeHelper;
+
   }
 
   /**
@@ -147,7 +158,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $container->get('config.factory')->get('search_api_solr.settings'),
       $container->get('language_manager'),
       $container->get('plugin.manager.search_api_solr.connector'),
-      $container->get('search_api.fields_helper')
+      $container->get('search_api.fields_helper'),
+      $container->get('search_api.data_type_helper')
     );
   }
 
@@ -1082,7 +1094,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $type = $field->getType();
           $type_info = SearchApiSolrUtility::getDataTypeInfo($type);
           $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
-          if (SearchApiUtility::isFieldIdReserved($key)) {
+          if ($this->fieldsHelper->isFieldIdReserved($key)) {
             $pref .= 's';
           }
           else {
@@ -1149,9 +1161,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
 
       if (isset($nested_path)) {
-        $property = SearchApiUtility::getInnerProperty($property);
+        $property = $this->fieldsHelper->getInnerProperty($property);
         if ($property instanceof ComplexDataDefinitionInterface) {
-          $cardinality = $this->getPropertyPathCardinality($nested_path, SearchApiUtility::getNestedProperties($property), $cardinality);
+          $cardinality = $this->getPropertyPathCardinality($nested_path, $this->fieldsHelper->getNestedProperties($property), $cardinality);
         }
       }
     }
@@ -1373,7 +1385,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       if (!$this->configuration['site_hash'] && $doc_fields['hash'] != $site_hash) {
         $item_id = $doc_fields['hash'] . '--' . $item_id;
       }
-      $result_item = SearchApiUtility::createItem($index, $item_id);
+      $result_item = $this->fieldsHelper->createItem($index, $item_id);
       $result_item->setScore($doc_fields[$score_field]);
       unset($doc_fields[$id_field], $doc_fields[$score_field]);
 
@@ -2271,7 +2283,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       $mlt_fl[] = $fields[$mlt_field];
       // For non-text fields, set minimum word length to 0.
-      if (isset($index_fields[$mlt_field]) && !SearchApiUtility::isTextType($index_fields[$mlt_field]->getType())) {
+      if (isset($index_fields[$mlt_field]) && !$this->dataTypeHelper->isTextType($index_fields[$mlt_field]->getType())) {
         $solarium_query->addParam('f.' . $fields[$mlt_field] . '.mlt.minwl', 0);
       }
     }
@@ -2463,7 +2475,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     foreach ($grouping_options['fields'] as $collapse_field) {
       $type = $index_fields[$collapse_field]['type'];
       // Only single-valued fields are supported.
-      if (SearchApiUtility::isTextType($type)) {
+      if ($this->dataTypeHelper->isTextType($type)) {
         $warnings[] = $this->t('Grouping is not supported for field @field. Only single-valued fields not indexed as "Fulltext" are supported.',
           array('@field' => $index_fields[$collapse_field]['name']));
         continue;

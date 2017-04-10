@@ -67,6 +67,11 @@ class SearchApiSolrTest extends BackendTestBase {
   protected $waitForCommit = 2;
 
   /**
+   * @var \Drupal\search_api\Utility\FieldsHelperInterface
+   */
+  protected $fieldsHelper;
+
+  /**
    * {@inheritdoc}
    */
   public function setUp() {
@@ -76,6 +81,8 @@ class SearchApiSolrTest extends BackendTestBase {
     $this->installConfig(['search_api_solr', 'search_api_solr_test']);
 
     $this->detectSolrAvailability();
+
+    $this->fieldsHelper = \Drupal::getContainer()->get('search_api.fields_helper');
   }
 
   /**
@@ -278,9 +285,9 @@ class SearchApiSolrTest extends BackendTestBase {
       'type' => 'string',
       'original type' => 'string',
     );
-    $fields['x'] = Utility::createField($index, 'x', $field_info);
-    $fields['y'] = Utility::createField($index, 'y', $field_info);
-    $fields['z'] = Utility::createField($index, 'z', $field_info);
+    $fields['x'] = $this->fieldsHelper->createField($index, 'x', $field_info);
+    $fields['y'] = $this->fieldsHelper->createField($index, 'y', $field_info);
+    $fields['z'] = $this->fieldsHelper->createField($index, 'z', $field_info);
 
     $mapping = $backend->getSolrFieldNames($index) + [
       'x' => 'solr_x',
@@ -556,7 +563,7 @@ class SearchApiSolrTest extends BackendTestBase {
         'datasource_id' => 'entity:user',
         'property_path' => 'uid',
       ];
-      $index->addField(Utility::createField($index, 'uid', $info));
+      $index->addField($this->fieldsHelper->createField($index, 'uid', $info));
       $index->save();
 
       User::create([
