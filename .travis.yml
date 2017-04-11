@@ -18,9 +18,9 @@ php:
 
 # This creates a build with each php environment. 6 builds in total.
 env:
-  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=4.5.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr/solr-conf/4.x"
-  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=5.5.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr/solr-conf/5.x"
-  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=6.3.0 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/search_api_solr/solr-conf/6.x"
+  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=4.5.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/4.x"
+  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=5.5.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/5.x"
+  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=6.3.0 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/6.x"
 
 notifications:
   irc:
@@ -83,14 +83,14 @@ before_script:
   # Generate a multilingual Solr configuration.
   # Therefore we have to install the test modules before the tests.
   - cp -R core/modules/system/tests/modules/entity_test core/modules/system/entity_test
-  - cp -R modules/search_api/tests/search_api_test_example_content modules/search_api/search_api_test_example_content
-  - cp -R modules/search_api_solr_multilingual/tests/modules/search_api_solr_multilingual_test modules/search_api_solr_multilingual/search_api_solr_multilingual_test
+  - cp -R modules/contrib/search_api/tests/search_api_test_example_content modules/contrib/search_api/search_api_test_example_content
+  - cp -R modules/contrib/search_api_solr_multilingual/tests/modules/search_api_solr_multilingual_test modules/contrib/search_api_solr_multilingual/search_api_solr_multilingual_test
   - ./vendor/bin/drush en --yes search_api_solr_multilingual_test
   - ./vendor/bin/drush sasm-gsc solr_multilingual_search_server conf.zip $SOLR_VERSION
   - unzip -o conf.zip -d $SOLR_CONFS
   - ls -lh $SOLR_CONFS
   # Install Solr
-  - cat modules/search_api_solr/travis-solr.sh | bash
+  - cat modules/contrib/search_api_solr/travis-solr.sh | bash
 
 script:
   # Run the tests
