@@ -51,12 +51,9 @@ class ViewsTest extends \Drupal\Tests\search_api\Functional\ViewsTest {
    * {@inheritdoc}
    */
   protected function tearDown() {
-    if ($this->indexId) {
-      if ($index = $this->getIndex()) {
-        $index->clear();
-        sleep(2);
-      }
-    }
+    $index = Index::load($this->indexId);
+    $index->clear();
+    sleep(2);
     parent::tearDown();
   }
 
