@@ -138,7 +138,16 @@ function search_api_solr_form_search_api_index_form_validate_server(&$element, \
         }
       }
       if ($index_count > 0 && $form_state->getValue('status')) {
-        $form_state->setError($element, t('The concept of storing multiple "virtual" Search API indexes in one Solr index (aka core) is bad practice and randomly breaks a lot of advanced features like spell checking, suggestions, automplete and others. Create a second core within your Solr server and assign this "index" to that core.'));
+        $msg = t('The concept of storing multiple "virtual" Search API indexes in one Solr index (aka core) is bad practice and randomly breaks a lot of advanced features like spell checking, suggestions, automplete and others. Create a second core within your Solr server and assign this "index" to that core.');
+        if ($this_index->isNew()) {
+          // Avoid creating multiple indexes on one server.
+          $form_state->setError($element, $msg);
+        }
+        else {
+          // Allow editing existing multiple indexes on one server for backward
+          // compatibility.
+          drupal_set_message($msg, 'error');
+        }
       }
     }
   }
