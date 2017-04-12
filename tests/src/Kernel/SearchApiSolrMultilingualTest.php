@@ -59,6 +59,8 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
     \Drupal::getContainer()->get('logger.factory')->addLogger($this->logger);
 
     $this->detectSolrAvailability();
+
+    $this->fieldsHelper = \Drupal::getContainer()->get('search_api.fields_helper');
   }
 
   /**
