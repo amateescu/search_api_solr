@@ -172,7 +172,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'retrieve_data' => FALSE,
       'highlight_data' => FALSE,
       'skip_schema_check' => FALSE,
-      'site_hash' => TRUE,
+      'site_hash' => FALSE,
       'suggest_suffix' => TRUE,
       'suggest_corrections' => TRUE,
       'suggest_words' => FALSE,
@@ -284,8 +284,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#title' => $this->t('Multi-site compatibility'),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
+      '#description' => $this->t("By default a single Solr backend based Search API server is able to index the data of multiple Drupal sites. But this is an expert-only and dangerous feature that mainly exists for backward compatibility. If you really index multiple sites in one index and don't activate 'Retrieve results for this site only' below you have to ensure that you enable 'Retrieve result data from Solr'! Otherwise it could lead to any kind of errors!"),
     );
-    $description = $this->t('Automatically filter all searches to only retrieve results from this Drupal site. By default a Solr server (and core) is able to index the data of multiple sites. Disable if you want to retrieve results from multiple sites at once.');
+    $description = $this->t("Automatically filter all searches to only retrieve results from this Drupal site. The default and intended behavior is to display results from all sites. WARNING: Enabling this filter might break features like autocomplete, spell checking or suggesters!");
     $form['multisite']['site_hash'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Retrieve results for this site only'),
