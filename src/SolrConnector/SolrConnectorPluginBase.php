@@ -545,7 +545,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
         $summary['@core_name'] = $stats['solr-mbeans']['CORE']['core']['stats']['coreName'];
         if (version_compare($this->getSolrVersion(), '6.4', '>=')) {
           // @see https://issues.apache.org/jira/browse/SOLR-3990
-          $summary['@index_size'] = $stats['solr-mbeans']['CORE']['core']['stats']['indexSize'];
+          $summary['@index_size'] = $stats['solr-mbeans']['CORE']['core']['stats']['size'];
         }
         else {
           $summary['@index_size'] = $stats['solr-mbeans']['QUERYHANDLER']['/replication']['stats']['indexSize'];
