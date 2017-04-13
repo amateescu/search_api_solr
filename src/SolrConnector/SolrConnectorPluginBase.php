@@ -543,7 +543,13 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
         $summary['@deletes_total'] = $summary['@deletes_by_id'] + $summary['@deletes_by_query'];
         $summary['@schema_version'] = $this->getSchemaVersionString(TRUE);
         $summary['@core_name'] = $stats['solr-mbeans']['CORE']['core']['stats']['coreName'];
-        $summary['@index_size'] = $stats['solr-mbeans']['QUERYHANDLER']['/replication']['stats']['indexSize'];
+        if (version_compare($this->getSolrVersion(), '6.4', '>=')) {
+          // @see https://issues.apache.org/jira/browse/SOLR-3990
+          $summary['@index_size'] = $stats['solr-mbeans']['CORE']['core']['stats']['indexSize'];
+        }
+        else {
+          $summary['@index_size'] = $stats['solr-mbeans']['QUERYHANDLER']['/replication']['stats']['indexSize'];
+        }
       }
       return $summary;
     }
