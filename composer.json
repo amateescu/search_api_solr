@@ -8,6 +8,6 @@
         "irc": "irc://irc.freenode.org/drupal-search-api"
     },
     "require": {
-        "solarium/solarium": "3.7.*"
+        "solarium/solarium": "3.8.*"
     }
 }
