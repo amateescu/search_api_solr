@@ -956,7 +956,7 @@
     -->
   <requestHandler name="/update/extract"
                   startup="lazy"
-                  class="solr.extraction.ExtractingRequestHandler" >
+                  class="org.apache.solr.handler.extraction.ExtractingRequestHandler" >
     <lst name="defaults">
       <!-- All the main content goes into "text"... if you need to return
            the extracted text or do highlighting, use a stored field. -->

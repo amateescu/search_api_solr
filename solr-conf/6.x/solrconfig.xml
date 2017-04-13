@@ -894,7 +894,7 @@
     -->
   <requestHandler name="/update/extract"
                   startup="lazy"
-                  class="solr.extraction.ExtractingRequestHandler" >
+                  class="org.apache.solr.handler.extraction.ExtractingRequestHandler" >
     <lst name="defaults">
       <str name="lowernames">true</str>
       <str name="uprefix">ignored_</str>
