@@ -16,7 +16,7 @@ trait SolrBackendTrait {
    * This function has to be called from the test setUp() function.
    *
    * @param string $module
-   *   The module that provides the server config
+   *   The module that provides the server config.
    * @param $config
    *   The server config
    */

@@ -2,11 +2,10 @@
 
 namespace Drupal\search_api_solr\Plugin\SolrConnector;
 
-use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\search_api_solr\Annotation\SolrConnector;
 use Solarium\Core\Client\Endpoint;
 use Solarium\Core\Client\Request;
+use Solarium\QueryType\Select\Query\Query;
 
 /**
  * Standard Solr connector.
@@ -90,7 +89,7 @@ class BasicAuthSolrConnector extends StandardSolrConnector {
   /**
    * {@inheritdoc}
    */
-  public function search(\Solarium\QueryType\Select\Query\Query $query, Endpoint $endpoint = NULL) {
+  public function search(Query $query, Endpoint $endpoint = NULL) {
     $this->connect();
 
     if (!$endpoint) {

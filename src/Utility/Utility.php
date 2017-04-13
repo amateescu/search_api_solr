@@ -4,7 +4,6 @@ namespace Drupal\search_api_solr\Utility;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\search_api\ServerInterface;
-use Drupal\search_api_solr\SolrBackendInterface;
 
 /**
  * Utility functions specific to solr.
@@ -142,7 +141,7 @@ class Utility {
    *   If a problem occurred while retrieving the files.
    */
   public static function getServerFiles(ServerInterface $server, $dir_name = NULL) {
-    /** @var SolrBackendInterface $backend */
+    /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
     $backend = $server->getBackend();
     $response = $backend->getSolrConnector()->getFile($dir_name);
 
@@ -237,7 +236,8 @@ class Utility {
    * hexadecimal equivalent encapsulted by a leading sequence of '_X' and a
    * termination charachter '_'. Example:
    * "tm_entity_X3a_node_X2f_body" becomes "tm_entity:node/body".
-   * @ee encodeSolrDynamicFieldName() for details.
+   *
+   * @see encodeSolrDynamicFieldName() for details.
    *
    * @param string $field_name
    *   Encoded field name.

@@ -1,5 +1,9 @@
 <?php
 
+use Drupal\search_api_solr\SolrBackendInterface;
+use Drupal\search_api\Entity\Server;
+use Drupal\Core\Url;
+
 /**
  * Implements hook_requirements().
  */
@@ -41,7 +45,7 @@ function search_api_solr_requirements($phase) {
     if ($unavailable) {
       if ($unavailable == 1) {
         $ret['search_api_solr']['description'] = \Drupal::translation()->translate('The Solr server of <a href=":url">%name</a> could not be reached.',
-          array(':url' => \Drupal\Core\Url::fromRoute('entity.search_api_server.canonical', array('search_api_server' => $last->id()))->toString(), '%name' => $last->label()));
+          array(':url' => Url::fromRoute('entity.search_api_server.canonical', array('search_api_server' => $last->id()))->toString(), '%name' => $last->label()));
       }
       else {
         $ret['search_api_solr']['description'] = \Drupal::translation()->translate('@count Solr servers could not be reached.', array('@count' => $unavailable));
@@ -81,9 +85,9 @@ function search_api_solr_get_active_servers() {
   $servers = [];
   foreach ($config_factory->listAll('search_api.server.') as $server_config_name) {
     $server_id = $config_factory->get($server_config_name)->get('id');
-    $server = \Drupal\search_api\Entity\Server::load($server_id);
+    $server = Server::load($server_id);
     // Covers search_api_solr_multilingual, too.
-    if (($server->getBackend() instanceof \Drupal\search_api_solr\SolrBackendInterface) && $server->status()) {
+    if (($server->getBackend() instanceof SolrBackendInterface) && $server->status()) {
       $servers[$server_id] = $server;
     }
   }

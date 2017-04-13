@@ -33,10 +33,10 @@ class SolrFieldNamesTest extends KernelTestBase {
   );
 
   /**
-    * @covers ::getSolrFieldNames
-    */
+   * @covers ::getSolrFieldNames
+   */
   public function testSolrFieldNames() {
-    // Multi-value link field
+    // Multi-value link field.
     $field = FieldStorageConfig::create([
       'field_name' => 'field_links',
       'entity_type' => 'user',
@@ -49,7 +49,7 @@ class SolrFieldNamesTest extends KernelTestBase {
       'bundle' => 'user',
     ])->save();
 
-    // Single-value text field
+    // Single-value text field.
     $field = FieldStorageConfig::create([
       'field_name' => 'field_bio',
       'entity_type' => 'user',
@@ -75,14 +75,14 @@ class SolrFieldNamesTest extends KernelTestBase {
           'label' => 'Link title',
           'type' => 'string',
           'datasource_id' => 'entity:node',
-          'property_path' => 'uid:entity:field_links:title'
+          'property_path' => 'uid:entity:field_links:title',
         ],
         'bio' => [
           'label' => 'Bio field',
           'type' => 'string',
           'datasource_id' => 'entity:node',
-          'property_path' => 'uid:entity:field_bio:value'
-        ]
+          'property_path' => 'uid:entity:field_bio:value',
+        ],
       ],
     ]);
 

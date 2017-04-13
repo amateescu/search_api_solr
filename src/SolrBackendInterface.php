@@ -5,6 +5,7 @@ namespace Drupal\search_api_solr;
 use Drupal\search_api\Backend\BackendInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\ItemInterface;
+use Solarium\QueryType\Update\Query\Query as UpdateQuery;
 
 /**
  * Defines an interface for Solr search backend plugins.
@@ -65,6 +66,6 @@ interface SolrBackendInterface extends BackendInterface {
    * @return \Solarium\QueryType\Update\Query\Document\Document[]
    *   An array of solr documents.
    */
-  public function getDocuments(IndexInterface $index, array $items, \Solarium\QueryType\Update\Query\Query $update_query = NULL);
+  public function getDocuments(IndexInterface $index, array $items, UpdateQuery $update_query = NULL);
 
 }

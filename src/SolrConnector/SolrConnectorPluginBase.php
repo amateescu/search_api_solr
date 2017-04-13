@@ -3,14 +3,12 @@
 namespace Drupal\search_api_solr\SolrConnector;
 
 use Drupal\Component\Serialization\Json;
-use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Plugin\ConfigurablePluginBase;
 use Drupal\search_api\Plugin\PluginFormTrait;
-use Drupal\search_api_solr\Annotation\SolrConnector;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrConnectorInterface;
 use Solarium\Client;
@@ -20,6 +18,7 @@ use Solarium\Core\Client\Response;
 use Solarium\Core\Query\Helper;
 use Solarium\Core\Query\QueryInterface;
 use Solarium\Exception\HttpException;
+use Solarium\QueryType\Update\Query\Query as UpdateQuery;
 use Solarium\QueryType\Select\Query\Query;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -240,7 +239,8 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       $solr->createEndpoint($values + ['key' => 'core'], TRUE);
       try {
         $this->getServerLink();
-      } catch (\InvalidArgumentException $e) {
+      }
+      catch (\InvalidArgumentException $e) {
         foreach (['scheme', 'host', 'port', 'path', 'core'] as $part) {
           $form_state->setError($form[$part], $this->t('The server link generated from the form values is illegal.'));
         }
@@ -425,7 +425,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * Gets data from a Solr endpoint using a given handler.
    *
-   * @param boolean $reset
+   * @param bool $reset
    *   If TRUE the server will be asked regardless if a previous call is cached.
    *
    * @return object
@@ -615,7 +615,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     $response = $this->solr->executeRequest($request, $endpoint);
     $endpoint->setTimeout($timeout);
     $output = Json::decode($response->getBody());
-    // \Drupal::logger('search_api_solr')->info(print_r($output, true));
+    // \Drupal::logger('search_api_solr')->info(print_r($output, true));.
     if (!empty($output['errors'])) {
       throw new SearchApiSolrException('Error trying to send a REST request.' .
         "\nError message(s):" . print_r($output['errors'], TRUE));
@@ -677,7 +677,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function search(\Solarium\QueryType\Select\Query\Query $query, Endpoint $endpoint = NULL) {
+  public function search(Query $query, Endpoint $endpoint = NULL) {
     $this->connect();
 
     if (!$endpoint) {
@@ -709,14 +709,14 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function createSearchResult(\Solarium\QueryType\Select\Query\Query $query, Response $response) {
+  public function createSearchResult(Query $query, Response $response) {
     return $this->solr->createResult($query, $response);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function update(\Solarium\QueryType\Update\Query\Query $query, Endpoint $endpoint = NULL) {
+  public function update(UpdateQuery $query, Endpoint $endpoint = NULL) {
     $this->connect();
 
     if (!$endpoint) {

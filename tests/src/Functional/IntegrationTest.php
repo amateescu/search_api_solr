@@ -44,39 +44,36 @@ class IntegrationTest extends \Drupal\Tests\search_api\Functional\IntegrationTes
     $this->createServer();
     $this->createServerDuplicate();
     // @todo should work but doesn't.
-    //$this->checkServerAvailability();
+    // $this->checkServerAvailability();
     $this->createIndex();
     $this->createIndexDuplicate();
     $this->editServer();
     $this->editIndex();
     $this->checkUserIndexCreation();
     // This tests doesn't cover the backend. No need to run it on Solr again.
-    //$this->checkContentEntityTracking();
-
+    // $this->checkContentEntityTracking();
     // @todo overwrite.
-    //$this->enableAllProcessors();
+    // $this->enableAllProcessors();
     $this->checkFieldLabels();
 
     // @todo overwrite.
-    //$this->addFieldsToIndex();
-    //$this->checkDataTypesTable();
-    //$this->removeFieldsFromIndex();
-    //$this->checkReferenceFieldsNonBaseFields();
-
+    // $this->addFieldsToIndex();
+    // $this->checkDataTypesTable();
+    // $this->removeFieldsFromIndex();
+    // $this->checkReferenceFieldsNonBaseFields();
     // These tests don't cover the backend. No need to run them on Solr again.
-    //$this->configureFilter();
-    //$this->configureFilterPage();
-    //$this->checkProcessorChanges();
-    //$this->changeProcessorFieldBoost();
-
+    // $this->configureFilter();
+    // $this->configureFilterPage();
+    // $this->checkProcessorChanges();
+    // $this->changeProcessorFieldBoost();
     $this->setReadOnly();
     // @todo review.
-    //$this->disableEnableIndex();
+    // $this->disableEnableIndex();
     $this->changeIndexDatasource();
     $this->changeIndexServer();
 
     // @todo review.
-    //$this->deleteServer();
+    // $this->deleteServer();
   }
 
   /**
@@ -125,7 +122,7 @@ class IntegrationTest extends \Drupal\Tests\search_api\Functional\IntegrationTes
     ];
     $this->submitForm($edit, 'Save');
     $this->assertSession()->pageTextContains('The Solr server could be reached.');
- }
+  }
 
   /**
    * Indexes all (unindexed) items on the specified index.

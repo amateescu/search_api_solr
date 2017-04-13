@@ -2,8 +2,6 @@
 
 namespace Drupal\search_api_solr\Plugin\SolrConnector;
 
-use Drupal\Core\Annotation\Translation;
-use Drupal\search_api_solr\Annotation\SolrConnector;
 use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginBase;
 
 /**

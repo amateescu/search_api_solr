@@ -63,7 +63,7 @@ class FacetsTest extends SearchApiBrowserTestBase {
     ]);
     $this->drupalLogin($admin_user);
 
-    // Check that the test index is on the admin overview
+    // Check that the test index is on the admin overview.
     $this->drupalGet('admin/config/search/search-api');
     $this->assertSession()->pageTextContains('Test index');
 

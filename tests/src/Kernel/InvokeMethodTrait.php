@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\search_api_solr\Kernel;
 
-
 /**
  * Provides a function to invoke protected/private methods of a class.
  */
@@ -14,7 +13,7 @@ trait InvokeMethodTrait {
    * @param object &$object
    *   Instantiated object that we will run method on.
    * @param string
-   *  Method name to call.
+   *   Method name to call.
    * @param array $parameters
    *   Array of parameters to pass into method.
    *

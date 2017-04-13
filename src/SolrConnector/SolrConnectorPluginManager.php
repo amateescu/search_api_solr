@@ -34,4 +34,5 @@ class SolrConnectorPluginManager extends DefaultPluginManager {
 
     parent::__construct('Plugin/SolrConnector', $namespaces, $module_handler, 'Drupal\search_api_solr\SolrConnectorInterface', 'Drupal\search_api_solr\Annotation\SolrConnector');
   }
+
 }

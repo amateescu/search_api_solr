@@ -2,15 +2,12 @@
 
 namespace Drupal\Tests\search_api_solr\Kernel;
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Serialization\Json;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
-use Drupal\search_api\Utility\Utility;
 use Drupal\search_api_autocomplete\Entity\SearchApiAutocompleteSearch;
-use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
 use Drupal\user\Entity\User;
@@ -63,7 +60,7 @@ class SearchApiSolrTest extends BackendTestBase {
   /**
    * Seconds to wait for a soft commit on Solr.
    *
-   * @var integer
+   * @var int
    */
   protected $waitForCommit = 2;
 
@@ -272,7 +269,7 @@ class SearchApiSolrTest extends BackendTestBase {
    * Gets the Drupal Fields and their Solr mapping.
    *
    * @param \Drupal\search_api_solr\SolrBackendInterface $backend
-   *    The backend the mapping is used for.
+   *   The backend the mapping is used for.
    *
    * @return array
    *   [$fields, $mapping]
@@ -393,7 +390,7 @@ class SearchApiSolrTest extends BackendTestBase {
     $this->assertEquals('(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
-    // test tagging of a single filter query of a facet query
+    // Test tagging of a single filter query of a facet query.
     $query = $this->buildSearch();
     $conditions = $query->createConditionGroup('OR', array('facet:' . 'tagtosearchfor'));
     $conditions->addCondition('category', 'article_category');
@@ -528,7 +525,7 @@ class SearchApiSolrTest extends BackendTestBase {
     $config['connector_config']['username'] = 'foo';
     $config['connector_config']['password'] = 'bar';
     $server->setBackendConfig($config);
-    /** @var SolrBackendInterface $backend */
+    /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
     $backend = $server->getBackend();
     $auth = $backend->getSolrConnector()->getEndpoint()->getAuthentication();
     $this->assertEquals(['username' => 'foo', 'password' => 'bar'], $auth);
@@ -617,7 +614,7 @@ class SearchApiSolrTest extends BackendTestBase {
 
     $sequenceLength = strlen($sequence);
     while ($i++ != $length) {
-      $result .= $sequence[ $i % $sequenceLength ];
+      $result .= $sequence[$i % $sequenceLength];
     }
 
     return $result;
@@ -711,7 +708,7 @@ class SearchApiSolrTest extends BackendTestBase {
       $results = $this->buildSearch(NULL, [], [], FALSE)
         ->sort('changed')
         ->execute();
-      $this->assertResults([1, 2, 3, 4, 5, 6 ,7], $results, 'Sort by last update date');
+      $this->assertResults([1, 2, 3, 4, 5, 6, 7], $results, 'Sort by last update date');
 
       $results = $this->buildSearch(NULL, [], [], FALSE)
         ->sort('changed', QueryInterface::SORT_DESC)
@@ -745,7 +742,7 @@ class SearchApiSolrTest extends BackendTestBase {
 
       $this->indexItems($this->indexId);
 
-      /** @var SearchApiSolrBackend $backend */
+      /** @var \Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend $backend */
       $backend = Server::load($this->serverId)->getBackend();
       $autocompleteSearch = new SearchApiAutocompleteSearch([], 'search_api_autocomplete_search');
 
@@ -789,7 +786,7 @@ class SearchApiSolrTest extends BackendTestBase {
    * Test tika extension PDF extraction.
    */
   public function testExtract() {
-    /** @var SearchApiSolrBackend $backend */
+    /** @var \Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend $backend */
     $backend = Server::load($this->serverId)->getBackend();
     // Initialise the Client.
     $client = $backend->getSolrConnector();

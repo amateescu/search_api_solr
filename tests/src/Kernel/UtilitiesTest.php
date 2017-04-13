@@ -46,4 +46,5 @@ class UtilitiesTest extends KernelTestBase {
 
     $this->assertEquals('ss_field_foo', Utility::encodeSolrName('ss_field_foo'));
   }
+
 }
