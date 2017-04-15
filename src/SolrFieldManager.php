@@ -7,6 +7,7 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Cache\UseCacheBackendTrait;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api_solr\SearchApiSolrException;
+use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr_datasource\TypedData\SolrFieldDefinition;
 
 /**
@@ -65,11 +66,13 @@ class SolrFieldManager implements SolrFieldManagerInterface {
    * @throws \InvalidArgumentException
    */
   protected function buildFieldDefinitions($server_id) {
-    // @todo Handle non-Solr servers.
     // Load the server entity.
     $server = Server::load($server_id);
     if ($server === NULL) {
       throw new \InvalidArgumentException('The Search API server could not be loaded.');
+    }
+    if (!$server->getBackend() instanceof SolrBackendInterface) {
+      throw new \InvalidArgumentException("The Search API server's backend must be an instance of SolrBackendInterface.");
     }
     $fields = [];
     try {
