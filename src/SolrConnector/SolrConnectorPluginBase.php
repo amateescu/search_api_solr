@@ -18,6 +18,7 @@ use Solarium\Core\Client\Response;
 use Solarium\Core\Query\Helper;
 use Solarium\Core\Query\QueryInterface;
 use Solarium\Exception\HttpException;
+use Solarium\QueryType\Extract\Result as ExtractResult;
 use Solarium\QueryType\Update\Query\Query as UpdateQuery;
 use Solarium\QueryType\Select\Query\Query;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -799,6 +800,16 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   public function extract(QueryInterface $query) {
     $this->connect();
     return $this->solr->extract($query);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getContentFromExtractResult(ExtractResult $result, $filepath){
+    $response = $result->getResponse();
+    $json_data = $response->getBody();
+    $array_data = Json::decode($json_data);
+    return $array_data[$filepath];
   }
 
   /**

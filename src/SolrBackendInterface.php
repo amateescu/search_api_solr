@@ -68,4 +68,15 @@ interface SolrBackendInterface extends BackendInterface {
    */
   public function getDocuments(IndexInterface $index, array $items, UpdateQuery $update_query = NULL);
 
+  /**
+   * Extract a file's content using tika within a solr server.
+   *
+   * @param string $filepath
+   *   The real path of the file to be extracted.
+   *
+   * @return string
+   *   The text extracted from the file.
+   */
+  public function extractContentFromFile($filepath);
+
 }

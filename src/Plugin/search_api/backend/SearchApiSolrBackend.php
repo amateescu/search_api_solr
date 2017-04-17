@@ -2509,4 +2509,19 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function extractContentFromFile($filepath) {
+    $connector = $this->getSolrConnector();
+
+    $query = $connector->getExtractQuery();
+    $query->setExtractOnly(TRUE);
+    $query->setFile($filepath);
+
+    // Execute the query.
+    $result = $connector->extract($query);
+    return $connector->getContentFromExtractResult($result, $filepath);
+  }
+
 }

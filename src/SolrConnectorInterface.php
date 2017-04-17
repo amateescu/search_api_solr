@@ -6,6 +6,7 @@ use Drupal\Component\Plugin\ConfigurablePluginInterface;
 use Solarium\Core\Client\Endpoint;
 use Solarium\Core\Client\Response;
 use Solarium\Core\Query\QueryInterface;
+use Solarium\QueryType\Extract\Result as ExtractResult;
 use Solarium\QueryType\Update\Query\Query as UpdateQuery;
 use Solarium\QueryType\Select\Query\Query;
 
@@ -297,13 +298,24 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
   public function optimize(Endpoint $endpoint = NULL);
 
   /**
-   * Execute a extract query.
+   * Execute an extract query.
    *
    * @param \Solarium\Core\Query\QueryInterface|\Solarium\QueryType\Extract\Query $query
    *
    * @return \Solarium\QueryType\Extract\Result
    */
   public function extract(QueryInterface $query);
+
+  /**
+   * Gets the content from an extract query result.
+   *
+   * @param \Solarium\QueryType\Extract\Result $result
+   *
+   * @param string $filepath
+   *
+   * @return string
+   */
+  public function getContentFromExtractResult(ExtractResult $result, $filepath);
 
   /**
    * Returns an endpoint.
