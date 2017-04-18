@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_solr_multilingual\Access\LocalActionAccessCheck.
- */
-
 namespace Drupal\search_api_solr_multilingual\Access;
 
 use Drupal\Core\Access\AccessResult;
@@ -30,4 +25,5 @@ class LocalActionAccessCheck implements AccessInterface {
     }
     return AccessResult::forbidden();
   }
+
 }

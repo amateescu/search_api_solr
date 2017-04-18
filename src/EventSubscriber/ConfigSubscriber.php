@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_solr_multilingual\EventSubscriber\ConfigSubscriber.
- */
-
 namespace Drupal\search_api_solr_multilingual\EventSubscriber;
 
 use Drupal\Core\Config\ConfigCrudEvent;
@@ -36,7 +31,7 @@ class ConfigSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  static function getSubscribedEvents() {
+  public static function getSubscribedEvents() {
     $events[ConfigEvents::SAVE][] = array('onConfigSave');
     return $events;
   }
@@ -50,8 +45,7 @@ class ConfigSubscriber implements EventSubscriberInterface {
     $saved_config = $event->getConfig();
 
     if (preg_match('@^language\.entity\.(.+)@', $saved_config->getName(), $matches) &&
-        $matches[1] != 'und')
-    {
+        $matches[1] != 'und') {
       $restrict_by_dependency = [
         'module' => 'search_api_solr_multilingual',
       ];
@@ -60,8 +54,8 @@ class ConfigSubscriber implements EventSubscriberInterface {
       $this->configInstaller->installOptionalConfig(NULL, $restrict_by_dependency);
     }
 
-    #drupal_set_message($saved_config->getName());
-    #drupal_set_message(print_r($saved_config->getRawData(), TRUE));
+    // drupal_set_message($saved_config->getName());
+    // drupal_set_message(print_r($saved_config->getRawData(), TRUE));.
   }
 
 }

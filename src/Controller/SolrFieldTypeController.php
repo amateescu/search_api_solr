@@ -1,15 +1,10 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeController.
- */
-
 namespace Drupal\search_api_solr_multilingual\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\search_api\ServerInterface;
-use ZipStream\ZipStream;
+use ZipStream\Exception as ZipStreamException;
 
 /**
  * Provides different listings of SolrFieldType.
@@ -64,14 +59,14 @@ class SolrFieldTypeController extends ControllerBase {
     ob_clean();
 
     try {
-      /** @var ZipStream $zip */
+      /** @var \ZipStream\ZipStream $zip */
       $zip = $this->getListBuilder($search_api_server)->getConfigZip();
       $zip->finish();
 
       ob_end_flush();
       exit();
     }
-    catch (\ZipStream\Exception $e) {
+    catch (ZipStreamException $e) {
       watchdog_exception('search_api_solr_multilingual', $e);
       drupal_set_message($this->t('An error occured during the creation of the config.zip. Look at the logs for details.'), 'error');
     }

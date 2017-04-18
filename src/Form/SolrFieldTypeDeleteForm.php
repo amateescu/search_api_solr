@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\search_api_solr_multilingual\Form\SolrFieldTypeDeleteForm.
- */
-
 namespace Drupal\search_api_solr_multilingual\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;
@@ -14,6 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
  * Builds the form to delete a SolrFieldType.
  */
 class SolrFieldTypeDeleteForm extends EntityConfirmFormBase {
+
   /**
    * {@inheritdoc}
    */
@@ -45,9 +41,9 @@ class SolrFieldTypeDeleteForm extends EntityConfirmFormBase {
       $this->t('content @type: deleted @label.',
         [
           '@type' => $this->entity->bundle(),
-          '@label' => $this->entity->label()
+          '@label' => $this->entity->label(),
         ]
-        )
+      )
     );
 
     $form_state->setRedirectUrl($this->getCancelUrl());

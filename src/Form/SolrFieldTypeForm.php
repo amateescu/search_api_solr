@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\search_api_solr_multilingual\Form\SolrFieldTypeForm.
- */
-
 namespace Drupal\search_api_solr_multilingual\Form;
 
 use Drupal\Core\Entity\EntityForm;

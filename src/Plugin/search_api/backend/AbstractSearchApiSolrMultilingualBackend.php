@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_solr_multilingual\Plugin\search_api\backend\AbstractSearchApiSolrMultilingualBackend.
- */
-
 namespace Drupal\search_api_solr_multilingual\Plugin\search_api\backend;
 
 use Drupal\Core\Form\FormStateInterface;
@@ -190,7 +185,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
       $fulltext_fields = $index->getFulltextFields();
       $field_names = $this->getSolrFieldNames($index);
 
-      foreach($fulltext_fields as $fulltext_field) {
+      foreach ($fulltext_fields as $fulltext_field) {
         $field_name = $field_names[$fulltext_field];
         $boost = '';
         if (preg_match('@' . $field_name . '(\^[\d.]+)@', $query_fields, $matches)) {
@@ -260,7 +255,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
    *   The fields handled by the curent index.
    *
    * @return array
-   *    The language-specific mapping from Drupal to Solr field names.
+   *   The language-specific mapping from Drupal to Solr field names.
    */
   protected function getLanguageSpecificSolrFieldNames($lancgcode, array $solr_fields, IndexInterface $index) {
     // @todo Caching.
@@ -314,7 +309,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
         if ($field_name != $language_specific_field_name) {
           if (isset($data->facet_counts->facet_fields->{$field_name})) {
             // @todo this simple merge of all language specific fields to one
-            //    language unspecific fields should be configurable.
+            //   language unspecific fields should be configurable.
             $key_value = $facet_set_helper->convertToKeyValueArray($data->facet_counts->facet_fields->{$field_name}) +
               $facet_set_helper->convertToKeyValueArray($facet_terms);
             $facet_terms = [];
@@ -337,7 +332,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
    */
   protected function postQuery(ResultSetInterface $results, QueryInterface $query, $response) {
     parent::postQuery($results, $query, $response);
- }
+  }
 
   /**
    * Replaces language unspecific fulltext fields by language specific ones.
@@ -359,7 +354,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     $multiple_field_names = $this->getSolrFieldNames($index);
     $field_names = $this->getSolrFieldNames($index, TRUE);
     $fulltext_field_names = array_filter(array_flip($multiple_field_names) + array_flip($field_names),
-      function($value) use ($fulltext_fields) {
+      function ($value) use ($fulltext_fields) {
         return in_array($value, $fulltext_fields);
       }
     );
@@ -422,7 +417,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
    *   The name of the element.
    *
    * @return bool
-   *    True if an element of the given kind and name exists, false otherwise.
+   *   True if an element of the given kind and name exists, false otherwise.
    *
    * @throws \Drupal\search_api_solr_multilingual\SearchApiSolrMultilingualException
    */

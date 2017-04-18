@@ -110,4 +110,5 @@ class UtilitiesTest extends KernelTestBase {
     // tm_body => FALSE
     $this->assertFalse(Utility::getLanguageIdFromLanguageSpecificSolrDynamicFieldName($dynamic_field_name));
   }
+
 }

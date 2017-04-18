@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_solr_multilingual\Plugin\search_api\backend\SearchApiSolrMultilingualManagedSchemaBackend.
- */
-
 namespace Drupal\search_api_solr_multilingual\Plugin\search_api\backend;
 
 use Drupal\Component\Serialization\Json;
@@ -33,14 +28,16 @@ class SearchApiSolrMultilingualManagedSchemaBackend extends AbstractSearchApiSol
    */
   protected function createSolrDynamicField($solr_field_name, $solr_field_type_name) {
     // @todo leverage SolrFieldType::getDynamicFields().
-    $command = ['add-dynamic-field' => [
-      'name' => $solr_field_name,
-      'type' => $solr_field_type_name,
-      'stored' => TRUE,
-      'indexed' => TRUE,
-      'multiValued' => strpos($solr_field_name, 'tm_') === 0 ? TRUE : FALSE,
-      'termVectors' => strpos($solr_field_name, 't') === 0 ? TRUE : FALSE,
-    ]];
+    $command = [
+      'add-dynamic-field' => [
+        'name' => $solr_field_name,
+        'type' => $solr_field_type_name,
+        'stored' => TRUE,
+        'indexed' => TRUE,
+        'multiValued' => strpos($solr_field_name, 'tm_') === 0 ? TRUE : FALSE,
+        'termVectors' => strpos($solr_field_name, 't') === 0 ? TRUE : FALSE,
+      ],
+    ];
     try {
       $this->solrHelper()->coreRestPost('schema', Json::encode($command));
     }
@@ -69,7 +66,7 @@ class SearchApiSolrMultilingualManagedSchemaBackend extends AbstractSearchApiSol
 
     // Send the config to Solr.
     $command_json = '{ "add-field-type": ' . Json::encode($field_type_definition) . '}';
-    $command_json = str_replace('"'.$field_type_name.'"', '"'.$solr_field_type_name.'"', $command_json);
+    $command_json = str_replace('"' . $field_type_name . '"', '"' . $solr_field_type_name . '"', $command_json);
     try {
       $this->solrHelper()->coreRestPost('schema', $command_json);
     }

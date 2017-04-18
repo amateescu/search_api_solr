@@ -128,7 +128,7 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
   public function testLanguageFallback() {
     $server = $this->getIndex()->getServerInstance();
     $config = $server->getBackendConfig();
-    #$server->setBackendConfig(['solr_version' => '4.5.1'] + $server->getBackendConfig());
+    // $server->setBackendConfig(['solr_version' => '4.5.1'] + $server->getBackendConfig());
 
     // Only run further tests if we have a Solr core available.
     if ($this->solrAvailable) {

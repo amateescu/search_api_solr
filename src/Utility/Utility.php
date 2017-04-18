@@ -38,7 +38,7 @@ class Utility {
    * - tm_X3b_de_*
    * - tm_*
    *
-   * @see Drupal\search_api_solr\Utility\Utility::encodeSolrName().
+   * @see Drupal\search_api_solr\Utility\Utility::encodeSolrName()
    * @see https://wiki.apache.org/solr/SchemaXml#Dynamic_fields
    *
    * @param string $field_name
@@ -58,8 +58,8 @@ class Utility {
    *
    * For example the dynamic field tm;en_* for English will become tm_*.
    *
-   * @see Drupal\search_api_solr_multilingual\Utility\Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName().
-   * @see Drupal\search_api_solr\Utility\Utility::encodeSolrName().
+   * @see Drupal\search_api_solr_multilingual\Utility\Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName()
+   * @see Drupal\search_api_solr\Utility\Utility::encodeSolrName()
    * @see https://wiki.apache.org/solr/SchemaXml#Dynamic_fields
    *
    * @param string $field_name
@@ -80,7 +80,7 @@ class Utility {
    * If the field name is encoded it will be decoded before the regular
    * expression runs and encoded again before the modified is returned.
    *
-   * @see Drupal\search_api_solr\Utility\Utility::encodeSolrName().
+   * @see Drupal\search_api_solr\Utility\Utility::encodeSolrName()
    *
    * @param string $field_name
    *   The dynamic Solr field name.
@@ -119,8 +119,8 @@ class Utility {
   /**
    * Extracts the language code from a language-specific dynamic Solr field.
    *
-   * @param string  $field_name
-   *  The language-specific dynamic Solr field name.
+   * @param string $field_name
+   *   The language-specific dynamic Solr field name.
    *
    * @return mixed
    *   The Drupal language code as string or boolean FALSE if no language code
@@ -153,5 +153,3 @@ class Utility {
   }
 
 }
-
-

@@ -25,12 +25,11 @@ function search_api_solr_multilingual_drush_command() {
     ),
     'arguments' => array(
       'server_id' => dt('The numeric ID or machine name of a search server to enable.'),
-      'file_name' =>  dt('The file name of the config zip.'),
-      'solr_version' =>  dt('The targeted Solr version.'),
+      'file_name' => dt('The file name of the config zip.'),
+      'solr_version' => dt('The targeted Solr version.'),
     ),
     'aliases' => array('sasm-gsc'),
   );
-
 
   return $items;
 }

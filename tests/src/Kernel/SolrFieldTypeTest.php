@@ -19,12 +19,16 @@ class SolrFieldTypeTest extends KernelTestBase {
   use SchemaCheckTestTrait;
 
   /**
-   * @var array Solr filed type config names
+   * Solr field type config names.
+   *
+   * @var array
    */
   protected $configNames = [];
 
   /**
-   * @var array languages covered by Solr filed type configs
+   * Languages covered by Solr field type configs.
+   *
+   * @var array
    */
   protected $languageIds = [];
 

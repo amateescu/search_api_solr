@@ -1,14 +1,8 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_solr\SolrMultilingualBackendInterface.
- */
-
 namespace Drupal\search_api_solr_multilingual;
 
 use Drupal\search_api_solr\SolrBackendInterface;
-
 
 /**
  * Provides an interface defining a Multilingual Solr Search API Backend.
@@ -37,7 +31,7 @@ interface SolrMultilingualBackendInterface extends SolrBackendInterface {
   /**
    * Indicates if the fallback for not supported languages is active.
    *
-   * @return boolean
+   * @return bool
    */
   public function hasLanguageUndefinedFallback();
 

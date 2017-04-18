@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\search_api_solr_multilingual\SolrFieldTypeInterface.
- */
-
 namespace Drupal\search_api_solr_multilingual;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
@@ -97,7 +92,7 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    *   The name of the text file.
    *
    * @param string $content
-   *   The content of the text file
+   *   The content of the text file.
    */
   public function addTextFile($name, $content);
 

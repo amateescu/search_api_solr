@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\search_api_solr_multilingual\Entity\SolrFieldType.
- */
-
 namespace Drupal\search_api_solr_multilingual\Entity;
 
 use Drupal\Component\Serialization\Json;
@@ -62,7 +57,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   /**
    * Indicates if the field type requires a managed schema.
    *
-   * @var boolean
+   * @var bool
    */
   protected $managed_schema;
 
@@ -74,7 +69,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   protected $minimum_solr_version;
 
   /**
-   * Solr Field Type definition
+   * Solr Field Type definition.
    *
    * @var array
    */
@@ -197,7 +192,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
         "\n-->\n";
     }
 
-    // create formatted string
+    // Create formatted string.
     $dom = dom_import_simplexml($root)->ownerDocument;
     $dom->formatOutput = TRUE;
     $formatted_xml_string = $dom->saveXML();
@@ -215,7 +210,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
       $dynamic_fields[] = [
         'name' => SearchApiSolrUtility::encodeSolrName(
             Utility::getLanguageSpecificSolrDynamicFieldPrefix($prefix, $this->field_type_language_code)
-          ) . '*',
+        ) . '*',
         'type' => $this->field_type['name'],
         'stored' => TRUE,
         'indexed' => TRUE,

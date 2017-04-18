@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_solr_multilingual\Plugin\search_api\backend\SearchApiSolrMultilingualBackend.
- */
-
 namespace Drupal\search_api_solr_multilingual\Plugin\search_api\backend;
 
 /**
@@ -33,4 +28,5 @@ class SearchApiSolrMultilingualBackend extends AbstractSearchApiSolrMultilingual
 
     return FALSE;
   }
+
 }
