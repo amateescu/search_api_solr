@@ -78,13 +78,21 @@ function search_api_solr_datasource_search_api_solr_search_results_alter(ResultS
     return;
   }
 
-  // Prepend each item's itemId with the datasource ID.  A lot of the Search API
-  // assumes that the item IDs are formatted as 'datasouce_id/entity_id.'  Of
-  // course, the ID numbers of external Solr documents will not have this
-  // pattern and the datasource must be added.  Reflect into the class to set
-  // the itemId.
+  /** @var \Drupal\search_api_solr_datasource\SolrDocumentFactoryInterface $solr_document_factory */
+  $solr_document_factory = \Drupal::getContainer()->get('solr_document.factory');
+
   /** @var \Drupal\search_api\Item\Item $item */
   foreach ($results->getResultItems() as $item) {
+    // Create the typed data object for the Item immediately after the query has
+    // been run.  Doing this now can prevent the Search API from having to query
+    // for individual documents later.
+    $item->setOriginalObject($solr_document_factory->create($item));
+
+    // Prepend each item's itemId with the datasource ID.  A lot of the Search
+    // API assumes that the item IDs are formatted as 'datasouce_id/entity_id.'
+    // Of course, the ID numbers of external Solr documents will not have this
+    // pattern and the datasource must be added.  Reflect into the class to set
+    // the itemId.
     $reflection = new \ReflectionClass($item);
     $id_property = $reflection->getProperty('itemId');
     $id_property->setAccessible(TRUE);
