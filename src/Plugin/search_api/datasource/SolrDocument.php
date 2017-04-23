@@ -8,6 +8,7 @@ use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
 use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Plugin\PluginFormTrait;
+use Drupal\search_api_solr_datasource\SolrDocumentFactoryInterface;
 use Drupal\search_api_solr_datasource\SolrFieldManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -25,6 +26,13 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
   use PluginFormTrait;
 
   /**
+   * The Solr document factory.
+   *
+   * @var \Drupal\search_api_solr_datasource\SolrDocumentFactoryInterface
+   */
+  protected $solrDocumentFactory;
+
+  /**
    * The Solr field manager.
    *
    * @var \Drupal\search_api_solr_datasource\SolrFieldManagerInterface
@@ -38,9 +46,33 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
     /** @var static $datasource */
     $datasource = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
+    $datasource->setSolrDocumentFactory($container->get('solr_document.factory'));
     $datasource->setSolrFieldManager($container->get('solr_field.manager'));
 
     return $datasource;
+  }
+
+  /**
+   * Sets the Solr document factory.
+   *
+   * @param \Drupal\search_api_solr_datasource\SolrDocumentFactoryInterface $solr_document_factory
+   *   The new entity field manager.
+   *
+   * @return $this
+   */
+  public function setSolrDocumentFactory(SolrDocumentFactoryInterface $solr_document_factory) {
+    $this->solrDocumentFactory = $solr_document_factory;
+    return $this;
+  }
+
+  /**
+   * Returns the Solr document factory.
+   *
+   * @return \Drupal\search_api_solr_datasource\SolrDocumentFactoryInterface
+   *   The Solr document factory.
+   */
+  public function getSolrDocumentFactory() {
+    return $this->solrDocumentFactory ?: \Drupal::getContainer()->get('solr_document.factory');
   }
 
   /**
@@ -95,7 +127,7 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
     $results = $query->getResults()->getResultItems();
     $documents = [];
     foreach ($results as $id => $result) {
-      $documents[$id] = $this->createTypedDataFromItem($result);
+      $documents[$id] = $this->solrDocumentFactory->create($result);
     }
     return $documents;
   }
@@ -143,14 +175,6 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
       '#default_value' => $this->configuration['advanced']['default_query'],
     ];*/
     return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function createTypedDataFromItem(ItemInterface $item) {
-    $plugin = \Drupal::typedDataManager()->getDefinition('solr_document')['class'];
-    return $plugin::createFromItem($item);
   }
 
 }
