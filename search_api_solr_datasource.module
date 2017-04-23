@@ -16,10 +16,13 @@ use Solarium\QueryType\Select\Result\Result as SolariumResult;
  *
  * Override the default fields that Search API Solr sets up.  In particular,
  * set the ID field to the one that is configured via the datasource config
- * form.  Also, strip the field name prefixes from all of the field names.
- * Search API Solr adds the prefixes because it assumes that it has done the
+ * form.
+ *
+ * Also, map the index's field names to the original property paths.  Search API
+ * Solr adds prefixes to the paths because it assumes that it has done the
  * indexing according to its schema.xml rules.  Of course, in our case it hasn't
- * and we need it to use the raw field names.
+ * and we need it to use the raw paths.  Any field machine names that have been
+ * altered in the field list will have their mapping corrected by this step too.
  *
  * @see \Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend::getSolrFieldNames()
  */
@@ -35,13 +38,16 @@ function search_api_solr_datasource_search_api_solr_field_mapping_alter(IndexInt
   $config = $index->getDatasource('solr_document')->getConfiguration();
   $fields['search_api_id'] = $config['id_field'];
 
-  // Rename the indexed fields.
+  /** @var \Drupal\search_api\Item\FieldInterface[] $index_fields */
+  $index_fields = $index->getFields();
+
+  // Re-map the indexed fields.
   foreach ($fields as $raw => $name) {
     // Ignore the Search API fields.
     if (strpos($raw, 'search_api_') === 0) {
       continue;
     }
-    $fields[$raw] = $raw;
+    $fields[$raw] = $index_fields[$raw]->getPropertyPath();
   }
 }
 
