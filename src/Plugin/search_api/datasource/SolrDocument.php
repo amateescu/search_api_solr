@@ -6,7 +6,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
-use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Plugin\PluginFormTrait;
 use Drupal\search_api_solr_datasource\SolrDocumentFactoryInterface;
 use Drupal\search_api_solr_datasource\SolrFieldManagerInterface;
@@ -55,13 +54,13 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
   /**
    * Sets the Solr document factory.
    *
-   * @param \Drupal\search_api_solr_datasource\SolrDocumentFactoryInterface $solr_document_factory
+   * @param \Drupal\search_api_solr_datasource\SolrDocumentFactoryInterface $factory
    *   The new entity field manager.
    *
    * @return $this
    */
-  public function setSolrDocumentFactory(SolrDocumentFactoryInterface $solr_document_factory) {
-    $this->solrDocumentFactory = $solr_document_factory;
+  public function setSolrDocumentFactory(SolrDocumentFactoryInterface $factory) {
+    $this->solrDocumentFactory = $factory;
     return $this;
   }
 
