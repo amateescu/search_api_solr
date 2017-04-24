@@ -771,16 +771,19 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           break;
         }
         $this->addIndexField($doc, $field_names[$name], $field->getValues(), $field->getType());
+        // Enable sorts in some special cases.
         if (!array_key_exists($name, $special_fields) && version_compare($schema_version, '4.4', '>=')) {
           $values = $field->getValues();
           $first_value = reset($values);
           if ($first_value) {
             // Truncate the string to avoid Solr string field limitation.
-            // Use strlen() instead of Unicode::strlen() to get number of
-            // bytes rather than characters.
-            // https://www.drupal.org/node/2809429
-            if ($first_value instanceof TextValue && strlen($first_value->getText()) > 32766) {
-              $first_value = new TextValue(Unicode::truncateBytes($first_value->getText(), 32766));
+            // @see https://www.drupal.org/node/2809429
+            // @see https://www.drupal.org/node/2852606
+            // 32 characters should be enough for sorting and it makes no sense
+            // to heavily increase the index size. The DB backend limits the
+            // sort strings to 32 characters, too.
+            if ($first_value instanceof TextValue && Unicode::strlen($first_value->getText()) > 32) {
+              $first_value = new TextValue(Unicode::truncate($first_value->getText(), 32));
             }
             if (strpos($field_names[$name], 't') === 0 || strpos($field_names[$name], 's') === 0) {
               // Always copy fulltext fields to a dedicated field for faster
@@ -788,9 +791,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
               $this->addIndexField($doc, 'sort_' . $name, [$first_value], $field->getType());
             }
             elseif (preg_match('/^([a-z]+)m(_.*)/', $field_names[$name], $matches)) {
-              // For multi-valued fields (which aren't sortable by nature) we use
-              // the same hackish workaround like the DB backend: just copy the
-              // first value in a single value field for sorting.
+              // For other multi-valued fields (which aren't sortable by nature)
+              // we use the same hackish workaround like the DB backend: just
+              // copy the first value in a single value field for sorting.
               $values = $field->getValues();
               $this->addIndexField($doc, $matches[1] . 's' . $matches[2], [$first_value], $field->getType());
             }
@@ -1821,6 +1824,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       // For "OR" facets, add the expected tag for exclusion.
       if (isset($info['operator']) && strtolower($info['operator']) === 'or') {
+        // @see https://cwiki.apache.org/confluence/display/solr/Faceting#Faceting-LocalParametersforFaceting
         $facet_field->setExcludes(array('facet:' . $info['field']));
       }
 
