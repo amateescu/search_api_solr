@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\devel\DevelDumperManager;
 use Drupal\search_api\Backend\BackendPluginManager;
+use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -38,6 +39,11 @@ class DevelController extends ControllerBase {
   protected $develDumperManager;
 
   /**
+   * @var \Drupal\search_api\Utility\FieldsHelperInterface
+   */
+  protected $fieldsHelper;
+
+  /**
    * Constructs a DevelController object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -46,24 +52,26 @@ class DevelController extends ControllerBase {
    *   The backend plugin manager.
    * @param \Drupal\devel\DevelDumperManager $devel_dumper_manager
    *   The Devel dumper manager.
+   * @param \Drupal\search_api\Utility\FieldsHelperInterface $fields_helper
+   *   The Search API Fields Helper.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, BackendPluginManager $backend_plugin_manager, DevelDumperManager $devel_dumper_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, BackendPluginManager $backend_plugin_manager, DevelDumperManager $devel_dumper_manager, FieldsHelperInterface $fields_helper) {
     $this->storage = $entity_type_manager->getStorage('search_api_server');
     $this->backendPluginManager = $backend_plugin_manager;
     $this->develDumperManager = $devel_dumper_manager;
+    $this->fieldsHelper = $fields_helper;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
-    $entity_type_manager = $container->get('entity_type.manager');
-    /** @var \Drupal\search_api\Backend\BackendPluginManager $backend_plugin_manager */
-    $backend_plugin_manager = $container->get('plugin.manager.search_api.backend');
-    /** @var \Drupal\devel\DevelDumperManager $devel_dumper_manager */
-    $devel_dumper_manager = $container->get('devel.dumper');
-    return new static($entity_type_manager, $backend_plugin_manager, $devel_dumper_manager);
+    return new static(
+      $container->get('entity_type.manager'),
+      $container->get('plugin.manager.search_api.backend'),
+      $container->get('devel.dumper'),
+      $container->get('search_api.fields_helper')
+    );
   }
 
   /**
@@ -135,7 +143,7 @@ class DevelController extends ControllerBase {
                   foreach (array_keys($entity->getTranslationLanguages()) as $langcode) {
                     // @todo improve that ID generation?
                     $item_id = $datasource_id . '/' . $entity->id() . ':' . $langcode;
-                    $items[$item_id] = Utility::createItemFromObject($index, $entity->getTranslation($langcode)->getTypedData(), $item_id);
+                    $items[$item_id] = $this->fieldsHelper->createItemFromObject($index, $entity->getTranslation($langcode)->getTypedData(), $item_id);
                     // Preprocess the indexed items.
                     \Drupal::moduleHandler()->alter('search_api_index_items', $index, $items);
                     $index->preprocessIndexItems($items);
