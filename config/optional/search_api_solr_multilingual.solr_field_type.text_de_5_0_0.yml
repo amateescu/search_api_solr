@@ -11,6 +11,7 @@ label: 'German Text Field'
 managed_schema: false
 minimum_solr_version: 5.0.0
 field_type_language_code: de
+domains: {}
 field_type:
   name: text_de
   class: solr.TextField
@@ -27,14 +28,18 @@ field_type:
       filters:
         -
           class: solr.WordDelimiterFilterFactory
-          catenateNumbers: 1
-          generateNumberParts: 1
           protected: protwords_de.txt
-          splitOnCaseChange: 0
+          # If non-zero, splits words at delimiters. For example:"CamelCase", "hot-spot" -> "Camel", "Case", "hot", "spot"
           generateWordParts: 1
-          preserveOriginal: 1
-          catenateAll: 0
+          # If non-zero, splits numeric strings at delimiters:"1947-32" -> "1947", "32"
+          generateNumberParts: 1
+          splitOnCaseChange: 0
+          splitOnNumerics:
           catenateWords: 1
+          catenateNumbers: 1
+          catenateAll: 0
+          stemEnglishPossessive: 0
+          preserveOriginal: 1
         -
           class: solr.LengthFilterFactory
           min: 2

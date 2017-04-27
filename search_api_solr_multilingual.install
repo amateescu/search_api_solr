@@ -86,6 +86,34 @@ function search_api_solr_multilingual_update_helper_save_backend_config($server_
 }
 
 /**
+ * Gets all solr field type configs.
+ *
+ * @return array
+ *   All solr field type configs.
+ */
+function search_api_solr_multilingual_update_helper_get_field_type_configs() {
+  $config_factory = \Drupal::configFactory();
+  $field_type_configs = [];
+  foreach ($config_factory->listAll('search_api_solr_multilingual.solr_field_type.') as $field_type_name) {
+    $field_type_configs[$field_type_name] = $config_factory->get($field_type_name)->getRawData();
+  }
+  return $field_type_configs;
+}
+
+/**
+ * Saves a modified solr field type config.
+ *
+ * @param string $field_type_name
+ * @param array $field_type_config
+ * @param bool $trusted_data
+ */
+function search_api_solr_multilingual_update_helper_save_field_type_config($field_type_name, array $field_type_config, $trusted_data = TRUE) {
+  \Drupal::configFactory()->getEditable($field_type_name)
+    ->setData($field_type_config)
+    ->save($trusted_data);
+}
+
+/**
  * Fixes erroneous left overs from managed field types in unmanaged field types.
  */
 function search_api_solr_multilingual_update_8001() {
@@ -100,6 +128,20 @@ function search_api_solr_multilingual_update_8002() {
   foreach (search_api_solr_multilingual_update_helper_get_backend_configs() as $server_name => $backend_config) {
     $backend_config['field_type_language_code'] = $backend_config['langcode'];
     $backend_config['langcode'] = 'en';
+    search_api_solr_multilingual_update_helper_save_backend_config($server_name, $backend_config);
+  }
+}
+
+/**
+ * Add default domain settings to existing solr field types and backends.
+ */
+function search_api_solr_multilingual_update_8003() {
+  foreach (search_api_solr_multilingual_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+    $field_type_config['domains'] = [];
+    search_api_solr_multilingual_update_helper_save_field_type_config($field_type_name, $field_type_config);
+  }
+  foreach (search_api_solr_multilingual_update_helper_get_backend_configs() as $server_name => $backend_config) {
+    $backend_config['sasm_domain'] = 'generic';
     search_api_solr_multilingual_update_helper_save_backend_config($server_name, $backend_config);
   }
 }

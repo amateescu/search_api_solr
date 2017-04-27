@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api_solr_multilingual;
 
+use Drupal\search_api\IndexInterface;
 use Drupal\search_api_solr\SolrBackendInterface;
 
 /**
@@ -34,5 +35,12 @@ interface SolrMultilingualBackendInterface extends SolrBackendInterface {
    * @return bool
    */
   public function hasLanguageUndefinedFallback();
+
+  /**
+   * Returns the targeted content domain of the server.
+   *
+   * @return string
+   */
+  public function getDomain();
 
 }

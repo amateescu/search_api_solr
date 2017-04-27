@@ -33,6 +33,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       'minimum_solr_version' => $this->t('Minimum Solr Version'),
       'managed_schema' => $this->t('Managed Schema Required'),
       'langcode' => $this->t('Language'),
+      'domains' => $this->t('Domains'),
       'id' => $this->t('Machine name'),
     ];
     return $header + parent::buildHeader();
@@ -43,6 +44,10 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    */
   public function buildRow(EntityInterface $solr_field_type) {
     /** @var \Drupal\search_api_solr_multilingual\SolrFieldTypeInterface $solr_field_type */
+    $domains = $solr_field_type->getDomains();
+    if (empty($domains)) {
+      $domains = ['generic'];
+    }
     $row = [
       'label' => $solr_field_type->label(),
       'minimum_solr_version' => $solr_field_type->getMinimumSolrVersion(),
@@ -50,6 +55,8 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       'managed_schema' => $solr_field_type->isManagedSchema(),
       // @todo format
       'langcode' => $solr_field_type->getFieldTypeLanguageCode(),
+      // @todo format
+      'domains' => implode(', ', $domains),
       'id' => $solr_field_type->id(),
     ];
     return $row + parent::buildRow($solr_field_type);
@@ -64,11 +71,13 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     if (!$entities) {
       $solr_version = '9999.0.0';
       $operator = '>=';
+      $domain = 'generic';
       $warning = FALSE;
       try {
         /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
         $backend = $this->getBackend();
         $solr_version = $backend->getSolrConnector()->getSolrVersion();
+        $domain = $backend->getDomain();
       }
       catch (SearchApiSolrException $e) {
         $operator = '<=';
@@ -81,35 +90,53 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
       // We filter to those field types that are relevant for the current server.
       // There are multiple entities having the same field_type.name but different
-      // values for managed_schema and minimum_solr_version.
-      $minimium_versions = [];
+      // values for managed_schema, minimum_solr_version and domains.
+      $selection = [];
       foreach ($entities as $key => $solr_field_type) {
         /** @var \Drupal\search_api_solr_multilingual\SolrFieldTypeInterface $solr_field_type */
         $version = $solr_field_type->getMinimumSolrVersion();
-        if ($solr_field_type->isManagedSchema() != $this->getBackend()->isManagedSchema() ||
-          version_compare($version, $solr_version, '>')
+        $domains = $solr_field_type->getDomains();
+        if (
+          $solr_field_type->isManagedSchema() != $this->getBackend()->isManagedSchema() ||
+          version_compare($version, $solr_version, '>') ||
+          (!in_array($domain, $domains) && !in_array('generic', $domains))
         ) {
           unset($entities[$key]);
         }
         else {
           $name = $solr_field_type->getFieldTypeName();
-          if (isset($minimium_versions[$name])) {
-            if (version_compare($version, $minimium_versions[$name]['version'], $operator)) {
-              unset($entities[$minimium_versions[$name]['key']]);
-              $minimium_versions[$name] = [
+          if (isset($selection[$name])) {
+            // The more specific domain has precedence over a newer version.
+            if (
+              // Current selection domain is 'generic' but something more
+              // specific is found.
+              ('generic' != $domain && 'generic' == $selection[$name]['domain'] && in_array($domain, $domains)) ||
+              // A newer version of the current selection domain is found.
+              (version_compare($version, $selection[$name]['version'], $operator) && in_array($selection[$name]['domain'], $domains))
+            ) {
+              unset($entities[$selection[$name]['key']]);
+              $selection[$name] = [
                 'version' => $version,
                 'key' => $key,
+                'domain' => in_array($domain, $domains) ? $domain : 'generic',
               ];
+            }
+            else {
+              unset($entities[$key]);
             }
           }
           else {
-            $minimium_versions[$name] = ['version' => $version, 'key' => $key];
+            $selection[$name] = [
+              'version' => $version,
+              'key' => $key,
+              'domain' => in_array($domain, $domains) ? $domain : 'generic',
+            ];
           }
         }
       }
 
       if ($warning) {
-        $this->assumed_minimum_version = array_reduce($minimium_versions, function ($version, $item) {
+        $this->assumed_minimum_version = array_reduce($selection, function ($version, $item) {
           if (version_compare($item['version'], $version, '<')) {
             return $item['version'];
           }

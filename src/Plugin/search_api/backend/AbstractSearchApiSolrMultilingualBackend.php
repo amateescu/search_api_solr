@@ -5,6 +5,7 @@ namespace Drupal\search_api_solr_multilingual\Plugin\search_api\backend;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
+use Drupal\search_api_solr_multilingual\Entity\SolrFieldType;
 use Drupal\search_api_solr_multilingual\SearchApiSolrMultilingualException;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
@@ -78,6 +79,14 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
       '#title' => $this->t('Use language fallbacks.'),
       '#description' => $this->t('This option is suitable for two use-cases. First, if you have languages like "de" and "de-at", both could be handled by a shared configuration for "de". Second, new languages will be handled by language-unspecific fallback configuration until the schema gets updated on your Solr server.'),
       '#default_value' => isset($this->configuration['sasm_language_unspecific_fallback_on_schema_issues']) ? $this->configuration['sasm_language_unspecific_fallback_on_schema_issues'] : TRUE,
+    );
+    $domains = SolrFieldType::getAvailableDomains();
+    $form['multilingual']['sasm_domain'] = array(
+      '#type' => 'select',
+      '#options' => array_combine($domains, $domains),
+      '#title' => $this->t('Targeted content domain'),
+      '#description' => $this->t('For example "UltraBot3000" would be indexed as "Ultra" "Bot" "3000" in a generic domain, "CYP2D6" has to stay like it is in a scientific domain.'),
+      '#default_value' => isset($this->configuration['sasm_domain']) ? $this->configuration['sasm_domain'] : 'generic',
     );
 
     return $form;
@@ -468,6 +477,13 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
   public function hasLanguageUndefinedFallback() {
     return isset($this->configuration['sasm_language_unspecific_fallback_on_schema_issues']) ?
       $this->configuration['sasm_language_unspecific_fallback_on_schema_issues'] : FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDomain() {
+    return isset($this->configuration['sasm_domain']) ? $this->configuration['sasm_domain'] : 'generic';
   }
 
   /**

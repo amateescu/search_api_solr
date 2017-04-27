@@ -11,6 +11,7 @@ label: 'Russian Text Field'
 managed_schema: false
 minimum_solr_version: 4.5.0
 field_type_language_code: ru
+domains: {}
 field_type:
   name: text_ru
   class: solr.TextField
