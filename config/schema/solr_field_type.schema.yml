@@ -86,6 +86,10 @@ search_api_solr_multilingual.solr_field_type.*:
                       type: integer
                       label: 'WordDelimiterFilter::splitOnCaseChange'
                       nullable: true
+                    splitOnNumerics:
+                      type: integer
+                      label: 'WordDelimiterFilter::splitOnNumerics'
+                      nullable: true
                     generateWordParts:
                       type: integer
                       label: 'WordDelimiterFilter::generateWordParts'
@@ -101,6 +105,10 @@ search_api_solr_multilingual.solr_field_type.*:
                     catenateWords:
                       type: integer
                       label: 'WordDelimiterFilter::catenateWords'
+                      nullable: true
+                    stemEnglishPossessive:
+                      type: integer
+                      label: 'WordDelimiterFilter::stemEnglishPossessive'
                       nullable: true
                     min:
                       type: integer
