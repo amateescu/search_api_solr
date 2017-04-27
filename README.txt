@@ -173,5 +173,27 @@ directory, not directly the ones provided with this module.
 You'll have to restart your Solr server after making such changes, for them to
 take effect.
 
+Troubleshooting Views
+---------------------
+
+When displaying search results from Solr in Views using the Search API Views
+integration, make sure to *disable the Views cache*. By default the Solr search
+index is updated asynchronously from Drupal, and this interferes with the Views
+cache. Having the cache enabled will cause stale results to be shown, and new
+content might not show up at all.
+
+For most typical use cases the best results are achieved by disabling the Views
+cache.
+
+In case you really need caching (for example because you are showing some search
+results on your front page) then you use the 'Search API (time based)' cache
+plugin. This will make sure the cache is cleared at certain time intervals, so
+your results will remain relevant. This can work well for views that have no
+exposed filters and are set up by site administrators.
+
+*Do not use the 'Search API (tag based)' cache!*
+This is not compatible with default Solr setups.
+
+
 Developers
 ----------
