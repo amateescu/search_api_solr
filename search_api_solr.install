@@ -200,3 +200,14 @@ function search_api_solr_update_8006() {
     search_api_solr_update_helper_save_backend_config($server_name, $backend_config);
   }
 }
+
+/**
+ * Remove old autocomplete settings in existing configs.
+ */
+function search_api_solr_update_8007() {
+  foreach (search_api_solr_update_helper_get_backend_configs() as $server_name => $backend_config) {
+    unset($backend_config['autocorrect_spell']);
+    unset($backend_config['autocorrect_suggest_words']);
+    search_api_solr_update_helper_save_backend_config($server_name, $backend_config);
+  }
+}
