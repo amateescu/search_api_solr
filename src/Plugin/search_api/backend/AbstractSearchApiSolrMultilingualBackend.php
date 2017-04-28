@@ -140,7 +140,11 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
       // languages we have to search for all languages using their specific
       // fields.
       if (!$query->hasTag('views') && $this->configuration['sasm_limit_search_page_to_content_language']) {
-        $query->setLanguages([\Drupal::languageManager()->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)->getId()]);
+        $query->setLanguages([
+          \Drupal::languageManager()
+            ->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)
+            ->getId()
+        ]);
       }
       else {
         $language_ids = [LanguageInterface::LANGCODE_NOT_SPECIFIED];
@@ -239,7 +243,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
       foreach ($query->getLanguages() as $langcode) {
         $language_specific_condition_group = $query->createConditionGroup();
         $language_specific_condition_group->addCondition(SEARCH_API_LANGUAGE_FIELD_NAME, $langcode);
-        $language_specific_conditions = & $language_specific_condition_group->getConditions();
+        $language_specific_conditions = &$language_specific_condition_group->getConditions();
         $language_specific_conditions[] = $condition;
         $language_fqs = array_merge($language_fqs, $this->reduceFilterQueries(
           $this->createFilterQueries($language_specific_condition_group, $this->getLanguageSpecificSolrFieldNames($langcode, $solr_fields, reset($index_fields)->getIndex()), $index_fields),
@@ -403,7 +407,9 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     foreach ($documents as $document) {
       $fields = $document->getFields();
       foreach ($field_name_map_per_language as $language_id => $map) {
-        if (/* @todo CLIR || */ $fields[$field_names[SEARCH_API_LANGUAGE_FIELD_NAME]] == $language_id) {
+        if (/* @todo CLIR || */
+          $fields[$field_names[SEARCH_API_LANGUAGE_FIELD_NAME]] == $language_id
+        ) {
           foreach ($fields as $monolingual_solr_field_name => $value) {
             if (isset($map[$monolingual_solr_field_name])) {
               $document->addField($map[$monolingual_solr_field_name], $value, $document->getFieldBoost($monolingual_solr_field_name));
@@ -442,7 +448,8 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
       !is_array($schema_parts) || empty($schema_parts[$kind]) ||
       (!in_array($name, $schema_parts[$kind]) && !isset($previous_calls[$kind]))
     ) {
-      $response = $this->getSolrConnector()->coreRestGet('schema/' . strtolower($kind));
+      $response = $this->getSolrConnector()
+        ->coreRestGet('schema/' . strtolower($kind));
       if (empty($response[$kind])) {
         throw new SearchApiSolrException('Missing information about ' . $kind . ' in response to REST request.');
       }
@@ -500,4 +507,17 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function viewSettings() {
+    $info = parent::viewSettings();
+
+    $info[] = [
+      'label' => $this->t('Targeted content domain'),
+      'info' => $this->getDomain(),
+    ];
+
+    return $info;
+  }
 }
