@@ -490,7 +490,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
    * {@inheritdoc}
    */
   public function getDomain() {
-    return (isset($this->configuration['sasm_domain'] && !empty($this->configuration['sasm_domain'])) ? $this->configuration['sasm_domain'] : 'generic';
+    return (isset($this->configuration['sasm_domain']) && !empty($this->configuration['sasm_domain'])) ? $this->configuration['sasm_domain'] : 'generic';
   }
 
   /**
