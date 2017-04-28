@@ -477,10 +477,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   public function viewSettings() {
     $connector = $this->getSolrConnector();
 
-    $info[] = array(
+    $info[] = [
       'label' => $this->t('Solr connector plugin'),
       'info' => $connector->label(),
-    );
+    ];
 
     $info[] = [
       'label' => $this->t('Solr server URI'),
@@ -620,10 +620,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $autocomplete_modes[] = $this->t('Suggest additional words');
       }
 
-      $info[] = array(
+      $info[] = [
         'label' => $this->t('Autocomplete suggestions'),
         'info' => !empty($autocomplete_modes) ? implode('; ', $autocomplete_modes) : $this->t('none'),
-      );
+      ];
     }
 
     return $info;
