@@ -99,19 +99,6 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  protected function getExpectedFacetsOfRegressionTest2469547() {
-    return [
-      ['count' => 4, 'filter' => '"test"'],
-      ['count' => 3, 'filter' => '"case"'],
-      ['count' => 2, 'filter' => '"cas"'],
-      ['count' => 1, 'filter' => '"bar"'],
-      ['count' => 1, 'filter' => '"foobar"'],
-    ];
-  }
-
-  /**
    * Tests classic multilingual schema.
    */
   public function testClassicMultilingualSchema() {
