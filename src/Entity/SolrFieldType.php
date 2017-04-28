@@ -192,22 +192,20 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
 
     $f = function (\SimpleXMLElement $element, array $attributes) use (&$f) {
       foreach ($attributes as $key => $value) {
-        if (!empty($value)) {
-          if (is_scalar($value)) {
-            $element->addAttribute($key, $value);
-          }
-          elseif (is_array($value)) {
-            if (array_key_exists(0, $value)) {
-              $key = rtrim($key, 's');
-              foreach ($value as $inner_attributes) {
-                $child = $element->addChild($key);
-                $f($child, $inner_attributes);
-              }
-            }
-            else {
+        if (is_scalar($value)) {
+          $element->addAttribute($key, $value);
+        }
+        elseif (is_array($value)) {
+          if (array_key_exists(0, $value)) {
+            $key = rtrim($key, 's');
+            foreach ($value as $inner_attributes) {
               $child = $element->addChild($key);
-              $f($child, $value);
+              $f($child, $inner_attributes);
             }
+          }
+          else {
+            $child = $element->addChild($key);
+            $f($child, $value);
           }
         }
       }
