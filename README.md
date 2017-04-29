@@ -52,5 +52,3 @@ Check the [issue queue](https://github.com/dcameron/search_api_solr_datasource/i
 for an up-to-date list.
 * Search API Solr's backend unsets the ID field that you configure in the
   datasource settings from the results arrays, making it unavailable for display.
-* Some Solr field types need to be mapped to Drupal data types before they can be
-  used, notably long and tdate.
