@@ -127,7 +127,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
   protected function alterSearchApiQuery(QueryInterface $query) {
     // Do not modify 'Server index status' queries.
     // @see https://www.drupal.org/node/2668852
-    if ($query->hasTag('server_index_status')) {
+    if ($query->hasTag('server_index_status') || $query->hasTag('mlt')) {
       return;
     }
 
