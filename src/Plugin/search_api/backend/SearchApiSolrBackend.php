@@ -996,6 +996,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       // Send search request.
       $response = $connector->search($solarium_query);
       $body = $response->getBody();
+      if (200 != $response->getStatusCode()) {
+        throw new SearchApiSolrException(strip_tags($body), $response->getStatusCode());
+      }
       $this->alterSolrResponseBody($body, $query);
       $response = new Response($body, $response->getHeaders());
 
