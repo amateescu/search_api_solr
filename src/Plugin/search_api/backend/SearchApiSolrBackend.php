@@ -5,12 +5,14 @@ namespace Drupal\search_api_solr\Plugin\search_api\backend;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\Config;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\TypedData\EntityDataDefinitionInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
@@ -76,13 +78,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected $fieldNames = array();
 
   /**
-   * Request handler to use for this search query.
-   *
-   * @var string
-   */
-  protected $requestHandler = NULL;
-
-  /**
    * The module handler.
    *
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
@@ -119,7 +114,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @var \Drupal\search_api\Utility\FieldsHelperInterface
    */
   protected $fieldsHelper;
-
 
   /**
    * The data type helper.
@@ -463,7 +457,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'search_api_facets',
       'search_api_facets_operator_or',
       // 'search_api_grouping',
-      // 'search_api_mlt',
+      'search_api_mlt',
       'search_api_random_sort',
       // 'search_api_spellcheck',
       // 'search_api_data_type_location',
@@ -862,10 +856,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @endcode
    */
   public function search(QueryInterface $query) {
+    $mlt_options = $query->getOption('search_api_mlt');
+    if (!empty($mlt_options)) {
+      $query->addTag('mlt');
+    }
+
     // Call an object oriented equivalent to hook_search_api_query_alter().
     $this->alterSearchApiQuery($query);
-    // Reset request handler.
-    $this->requestHandler = NULL;
+
     // Get field information.
     /** @var \Drupal\search_api\Entity\Index $index */
     $index = $query->getIndex();
@@ -873,46 +871,36 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $field_names = $this->getSolrFieldNames($index);
 
     $connector = $this->getSolrConnector();
-    // Instantiate a Solarium select query.
-    $solarium_query = $connector->getSelectQuery();
-    $query_helper = $connector->getQueryHelper($solarium_query);
-
-    // Extract keys.
-    $keys = $query->getKeys();
-    if (is_array($keys)) {
-      $keys = $this->flattenKeys($keys);
-    }
-    // Set them.
-    $solarium_query->setQuery($keys);
-    unset($keys);
-
-    // Set searched fields.
-    $options = $query->getOptions();
-    $search_fields = $this->getQueryFulltextFields($query);
-    // Get the index fields to be able to retrieve boosts.
+    $solarium_query = NULL;
     $index_fields = $index->getFields();
     $index_fields += $this->getSpecialFields($index);
-    $query_fields = [];
-    foreach ($search_fields as $search_field) {
-      /** @var \Drupal\search_api\Item\FieldInterface $field */
-      $field = $index_fields[$search_field];
-      $boost = $field->getBoost() ? '^' . $field->getBoost() : '';
-      $query_fields[] = $field_names[$search_field] . $boost;
+    if ($query->hasTag('mlt')) {
+      $solarium_query = $this->getMoreLikeThisQuery($query, $index_id, $index_fields, $field_names);
     }
-    $solarium_query->getEDisMax()->setQueryFields(implode(' ', $query_fields));
+    else {
+      // Instantiate a Solarium select query.
+      $solarium_query = $connector->getSelectQuery();
 
-    // Handle More Like This requests.
-    $mlt_options = $query->getOption('search_api_mlt');
-    if ($mlt_options) {
-      $this->setMoreLikeThis($solarium_query, $query, $mlt_options, $index_fields, $field_names);
+      // Extract keys.
+      $keys = $query->getKeys();
+      if (is_array($keys)) {
+        $keys = $this->flattenKeys($keys);
+      }
+      // Set them.
+      $solarium_query->setQuery($keys);
+      unset($keys);
 
-      // Override the search key by setting it to the solr document id
-      // we want to compare it with.
-      // @todo. Figure out how we can set MLT earlier in the process
-      // so we do not do unnecessary function calls.
-      $id = $this->createId($index_id, $mlt_options['id']);
-      $id = $query_helper->escapePhrase($id);
-      $solarium_query->setQuery('id:' . $id);
+      // Set searched fields.
+      $search_fields = $this->getQueryFulltextFields($query);
+      $query_fields = [];
+      foreach ($search_fields as $search_field) {
+        /** @var \Drupal\search_api\Item\FieldInterface $field */
+        $field = $index_fields[$search_field];
+        $boost = $field->getBoost() ? '^' . $field->getBoost() : '';
+        $query_fields[] = $field_names[$search_field] . $boost;
+      }
+      $solarium_query->getEDisMax()
+        ->setQueryFields(implode(' ', $query_fields));
     }
 
     // Set basic filters.
@@ -923,6 +911,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         ->addTags($filter_query['tags']);
     }
 
+    $query_helper = $connector->getQueryHelper($solarium_query);
     // Set the Index filter.
     $solarium_query->createFilterQuery('index_id')->setQuery('index_id:' . $query_helper->escapePhrase($index_id));
 
@@ -955,6 +944,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $this->setGrouping($solarium_query, $query, $grouping_options, $index_fields, $field_names);
     }
 
+    $options = $query->getOptions();
     if (isset($options['offset'])) {
       $solarium_query->setStart($options['offset']);
     }
@@ -2261,28 +2251,83 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *
    * @todo This code is outdated and needs to be reviewd and refactored.
    *
-   * @param \Solarium\QueryType\Select\Query\Query $solarium_query
-   *   The solr query to add MLT for.
-   * @param \Drupal\search_api\Query\QueryInterface $query
-   *   The search api query to add MLT for.
-   * @param array $mlt_options
-   *   The mlt options.
+   * @param \Solarium\QueryType\MorelikeThis\Query $solarium_query
+   *   The solr mlt query.
+   * @param string $index_id
+   *   Solr specific index ID.
    * @param array $index_fields
    *   The fields in the index to add mlt for.
    * @param array $fields
    *   The fields to add mlt for.
+   *
+   * @return \Solarium\QueryType\MorelikeThis\Query $solarium_query
    */
-  protected function setMoreLikeThis(Query &$solarium_query, QueryInterface $query, $mlt_options = array(), $index_fields = array(), $fields = array()) {
-    // The fields to look for similarities in.
-    if (empty($mlt_options['fields'])) {
-      return;
+  protected function getMoreLikeThisQuery(QueryInterface $query, $index_id, $index_fields = [], $fields = []) {
+    $connector = $this->getSolrConnector();
+    $solarium_query = $connector->getMoreLikeThisQuery();
+    $query_helper = $connector->getQueryHelper($solarium_query);
+    $mlt_options = $query->getOption('search_api_mlt');
+    $language_ids = $query->getLanguages();
+    if (empty($language_ids)) {
+      // If the query isn't already restricted by languages we have to do it
+      // here in order to limit the MLT suggestions to be of the same language
+      // as the currently shown one.
+      $language_ids[] = \Drupal::languageManager()
+        ->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)
+        ->getId();
+      $query->setLanguages($language_ids);
     }
 
-    $mlt_fl = array();
+    $ids = [];
+    foreach ($query->getIndex()->getDatasources() as $datasource) {
+      if ($entity_type_id = $datasource->getEntityTypeId()) {
+        $entity = \Drupal::entityTypeManager()
+          ->getStorage($entity_type_id)
+          ->load($mlt_options['id']);
+
+        if ($entity instanceof ContentEntityInterface) {
+          $translated = FALSE;
+          if ($entity->isTranslatable()) {
+            foreach ($language_ids as $language_id) {
+              if ($entity->hasTranslation($language_id)) {
+                $ids[] = SearchApiUtility::createCombinedId(
+                  $datasource->getPluginId(),
+                  $datasource->getItemId(
+                    $entity->getTranslation($language_id)->getTypedData()
+                  )
+                );
+                $translated = TRUE;
+              }
+            }
+          }
+
+          if (!$translated) {
+            // Fall back to the default language of the entity.
+            $ids[] = SearchApiUtility::createCombinedId(
+              $datasource->getPluginId(),
+              $datasource->getItemId($entity->getTypedData())
+            );
+          }
+        }
+        else {
+          $ids[] = $mlt_options['id'];
+        }
+      }
+    }
+
+    if (!empty($ids)) {
+      array_walk($ids, function (&$id, $key) use ($index_id, $query_helper) {
+        $id = $this->createId($index_id, $id);
+        $id = $query_helper->escapePhrase($id);
+      });
+
+      $solarium_query->setQuery('id:' . implode(' id:', $ids));
+    }
+
+    $mlt_fl = [];
     foreach ($mlt_options['fields'] as $mlt_field) {
       // Solr 4 has a bug which results in numeric fields not being supported
-      // in MLT queries.
-      // Date fields don't seem to be supported at all.
+      // in MLT queries. Date fields don't seem to be supported at all.
       $version = $this->getSolrConnector()->getSolrVersion();
       if ($fields[$mlt_field][0] === 'd' || (version_compare($version, '4', '==') && in_array($fields[$mlt_field][0], array('i', 'f')))) {
         continue;
@@ -2295,19 +2340,18 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
     }
 
-    // $solarium_query->setHandler('mlt');.
-    $solarium_query->addParam('qt', 'mlt');
+    $solarium_query->setMltFields($mlt_fl);
+    // @todo Add some configuration options here and support more MLT options.
+    $solarium_query->setMinimumDocumentFrequency(1);
+    $solarium_query->setMinimumTermFrequency(1);
 
-    $mlt_query = $solarium_query->getMoreLikeThis();
-    $mlt_query->setFields($mlt_fl);
-    $mlt_query->setMinimumDocumentFrequency(1);
-    $mlt_query->setMinimumTermFrequency(1);
+    return $solarium_query;
   }
 
   /**
    * Adds spatial features to the search query.
    *
-   * @todo This code is outdated and needs to be reviewd and refactored.
+   * @todo This code is outdated and needs to be reviewed and refactored.
    *
    * @param \Solarium\QueryType\Select\Query\Query $solarium_query
    *   The solr query.

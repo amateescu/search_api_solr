@@ -224,6 +224,14 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
   public function getSelectQuery();
 
   /**
+   * Creates a new Solarium more like this query.
+   *
+   * @return \Solarium\QueryType\MorelikeThis\Query
+   *   The MoreLikeThis query.
+   */
+  public function getMoreLikeThisQuery();
+
+  /**
    * Creates a new Solarium terms query.
    *
    * @return \Solarium\QueryType\Terms\Query
