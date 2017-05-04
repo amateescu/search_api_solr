@@ -8,6 +8,11 @@
         "irc": "irc://irc.freenode.org/drupal-search-api"
     },
     "require": {
-        "solarium/solarium": "3.8.*"
+        "solarium/solarium": "3.8.*",
+        "drupal/search_api": "~1.0"
+    },
+    "suggest": {
+        "drupal/facets": "Provides facetted search.",
+        "drupal/search_api_solr_multilingual": "Highly recommended if installation is multilingual or uses a language different than English."
     }
 }
