@@ -14,6 +14,7 @@ use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Drupal\search_api_solr_multilingual\SolrMultilingualBackendInterface;
 use Drupal\search_api_solr_multilingual\Utility\Utility;
+use Solarium\Core\Query\QueryInterface as SolariumQueryInterface;
 use Solarium\QueryType\Select\Query\Query;
 use Solarium\QueryType\Select\ResponseParser\Component\FacetSet;
 
@@ -174,13 +175,13 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
    * Replaces all language unspecific fulltext query fields by language specific
    * ones.
    *
-   * @param \Solarium\QueryType\Select\Query\Query $solarium_query
+   * @param \Solarium\Core\Query\QueryInterface $solarium_query
    *   The Solarium select query object.
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The \Drupal\search_api\Query\Query object representing the executed
    *   search query.
    */
-  protected function preQuery(Query $solarium_query, QueryInterface $query) {
+  protected function preQuery(SolariumQueryInterface $solarium_query, QueryInterface $query) {
     // Do not modify 'Server index status' queries.
     // @see https://www.drupal.org/node/2668852
     if ($query->hasTag('server_index_status')) {
@@ -192,8 +193,18 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     $language_ids = $query->getLanguages();
 
     if (!empty($language_ids)) {
-      $edismax = $solarium_query->getEDisMax();
-      $query_fields = $edismax->getQueryFields();
+      $mlt = $query->hasTag('mlt');
+      $edismax = NULL;
+      $solr_fields = NULL;
+      if ($mlt) {
+        /** @var \Solarium\QueryType\MoreLikeThis\Query $solarium_query */
+        $solr_fields = implode(' ', $solarium_query->getMltFields());
+      }
+      else {
+        /** @var \Solarium\QueryType\Select\Query\Query $solarium_query */
+        $edismax = $solarium_query->getEDisMax();
+        $solr_fields = $edismax->getQueryFields();
+      }
       $index = $query->getIndex();
       $fulltext_fields = $index->getFulltextFields();
       $field_names = $this->getSolrFieldNames($index);
@@ -201,7 +212,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
       foreach ($fulltext_fields as $fulltext_field) {
         $field_name = $field_names[$fulltext_field];
         $boost = '';
-        if (preg_match('@' . $field_name . '(\^[\d.]+)@', $query_fields, $matches)) {
+        if (preg_match('@' . $field_name . '(\^[\d.]+)@', $solr_fields, $matches)) {
           $boost = $matches[1];
         }
 
@@ -211,13 +222,18 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
           $language_specific_fields[] = $language_specific_field . $boost;
         }
 
-        $query_fields = str_replace(
+        $solr_fields = str_replace(
           $field_name . $boost,
           implode(' ', array_unique($language_specific_fields)),
-          $query_fields
+          $solr_fields
         );
       }
-      $edismax->setQueryFields($query_fields);
+      if ($mlt) {
+        $solarium_query->setMltFields(explode(' ', $solr_fields));
+      }
+      else {
+        $edismax->setQueryFields($solr_fields);
+      }
 
       if (empty($this->configuration['retrieve_data'])) {
         // We need the language to be part of the result to modify the result
