@@ -38,6 +38,7 @@ use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginManager;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Solarium\Core\Client\Response;
+use Solarium\Core\Query\QueryInterface as SolariumQueryInterface;
 use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\Exception\ExceptionInterface;
 use Solarium\QueryType\Update\Query\Query as UpdateQuery;
@@ -1862,13 +1863,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * This allows subclasses to apply custom changes before the query is sent to
    * Solr. Works exactly like hook_search_api_solr_query_alter().
    *
-   * @param \Solarium\QueryType\Select\Query\Query $solarium_query
-   *   The Solarium select query object.
+   * @param \Solarium\Core\Query\QueryInterface $solarium_query
+   *   The Solarium query object.
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The \Drupal\search_api\Query\Query object representing the executed
    *   search query.
    */
-  protected function preQuery(Query $solarium_query, QueryInterface $query) {
+  protected function preQuery(SolariumQueryInterface $solarium_query, QueryInterface $query) {
   }
 
   /**
