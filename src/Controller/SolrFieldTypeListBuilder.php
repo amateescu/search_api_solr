@@ -189,7 +189,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    *
    */
   protected function generateSchemaExtraTypesXml() {
-    $target_solr_version = $this->getBackend()->getServer()->getBackendConfig()['solr_version'];
+    $target_solr_version = $this->getBackend()->getSolrConnector()->getSolrVersion();
     $indentation = '  ';
     if (version_compare($target_solr_version, '6.0.0', '>=')) {
       $indentation .= '  ';
@@ -217,7 +217,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    *
    */
   protected function generateSchemaExtraFieldsXml() {
-    $target_solr_version = $this->getBackend()->getServer()->getBackendConfig()['solr_version'];
+    $target_solr_version = $this->getBackend()->getSolrConnector()->getSolrVersion();
     $xml = $this->getExtraFileHead($target_solr_version, 'fields');
     $indentation = '  ';
     if (version_compare($target_solr_version, '6.0.0', '>=')) {
