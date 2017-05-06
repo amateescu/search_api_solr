@@ -5,6 +5,7 @@ namespace Drupal\search_api_solr_datasource;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Cache\UseCacheBackendTrait;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
@@ -16,6 +17,7 @@ use Drupal\search_api_solr_datasource\TypedData\SolrFieldDefinition;
 class SolrFieldManager implements SolrFieldManagerInterface {
 
   use UseCacheBackendTrait;
+  use StringTranslationTrait;
 
   /**
    * Static cache of field definitions per Solr server.
@@ -44,9 +46,8 @@ class SolrFieldManager implements SolrFieldManagerInterface {
       if ($cache = $this->cacheGet($cid)) {
         $field_definitions = $cache->data;
       }
-      else {
-        // Rebuild the definitions and put it into the cache.
-        $field_definitions = $this->buildFieldDefinitions($server_id);
+      elseif ($field_definitions = $this->buildFieldDefinitions($server_id)) {
+        // Only cache the field definitions if they aren't empty.
         $this->cacheSet($cid, $field_definitions, Cache::PERMANENT, ['search_api_server' => $server_id]);
       }
       $this->fieldDefinitions[$server_id] = $field_definitions;
@@ -77,16 +78,16 @@ class SolrFieldManager implements SolrFieldManagerInterface {
     $fields = [];
     try {
       $luke = $server->getBackend()->getSolrConnector()->getLuke();
+      foreach ($luke['fields'] as $label => $definition) {
+        $field = new SolrFieldDefinition($definition);
+        $field->setLabel($label);
+        $fields[$label] = $field;
+      }
     }
     catch (SearchApiSolrException $e) {
       drupal_set_message($this->t('Could not connect to server %server, %message', ['%server' => $server->id(), '%message' => $e->getMessage()]), 'error');
       // @todo Inject the logger service.
       \Drupal::logger('search_api_solr_datasource')->error('Could not connect to server %server, %message', ['%server' => $server->id(), '%message' => $e->getMessage()]);
-    }
-    foreach ($luke['fields'] as $label => $definition) {
-      $field = new SolrFieldDefinition($definition);
-      $field->setLabel($label);
-      $fields[$label] = $field;
     }
     return $fields;
   }
