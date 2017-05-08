@@ -7,9 +7,6 @@ search_api_solr.settings:
     last_optimize:
       type: integer
       label: 'Last time the indexes were optimized'
-    autocomplete_max_occurrences:
-      type: float
-      label: 'Autocomplete max occurences'
     index_prefix:
       type: string
       label: 'The default prefix for Solr indexes'
