@@ -992,10 +992,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $this->alterSolrResponseBody($body, $query);
       $response = new Response($body, $response->getHeaders());
 
-      $resultset = $connector->createSearchResult($solarium_query, $response);
+      $result = $connector->createSearchResult($solarium_query, $response);
 
       // Extract results.
-      $results = $this->extractResults($query, $resultset);
+      $results = $this->extractResults($query, $result);
 
       // Add warnings, if present.
       if (!empty($warnings)) {
@@ -1005,14 +1005,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
 
       // Extract facets.
-      if ($resultset instanceof Result) {
-        if ($facets = $this->extractFacets($query, $resultset, $field_names)) {
+      if ($result instanceof Result) {
+        if ($facets = $this->extractFacets($query, $result, $field_names)) {
           $results->setExtraData('search_api_facets', $facets);
         }
       }
 
-      $this->moduleHandler->alter('search_api_solr_search_results', $results, $query, $resultset);
-      $this->postQuery($results, $query, $resultset);
+      $this->moduleHandler->alter('search_api_solr_search_results', $results, $query, $result);
+      $this->postQuery($results, $query, $result);
     }
     catch (\Exception $e) {
       throw new SearchApiSolrException($this->t('An error occurred while trying to search with Solr: @msg.', array('@msg' => $e->getMessage())), $e->getCode(), $e);
