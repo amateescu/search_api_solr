@@ -1,17 +1,14 @@
 Installation
 ------------
 
-Place the search_api_solr module either directly under the /modules directory
-at the root of your Drupal installation, or place it under /modules/contrib
-directory instead, to group all contributed modules together.
+The search_api_solr module manages it's dependencies and class loader via
+composer. So if you simply downloaded this module from drupal.org you have to
+delete it and install it again via composer!
 
-Next, you need to install the module's composer dependencies, there are
-multiple ways to do this; you can read more in the documentation[1] on d.o.
+Simply change into Drupal directory and use composer to install search_api_solr:
 
-You can now visit the /admin/modules page on your site and install the Solr
-search module.
-
-[1] https://www.drupal.org/documentation/install/composer-dependencies
+cd $DRUPAL
+composer require drupal/search_api_solr
 
 Solr search
 -----------
@@ -20,21 +17,14 @@ This module provides an implementation of the Search API which uses an Apache
 Solr search server for indexing and searching. Before enabling or using this
 module, you'll have to follow the instructions given in INSTALL.txt first.
 
-The minimum support version for Search API Solr 8.x is Solr 4.5.1.
+The minimum support version for Search API Solr Search 8.x is Solr 4.5.1.
 Any version below might work if you use your own Solr config.
+For better performance and more features, 6.x should be used!
+The support for 4.x and 5.x is deprecated and will be removed in 8.x-2.x.
 
 For more detailed documentation, see the handbook [2].
 
 [2] https://drupal.org/node/1999280
-
-Running the test suite
-----------------------
-
-This module comes with a suite of automated tests. To execute those, you just
-need to have a (correctly configured) Solr instance running at the following
-address:
-  http://localhost:8983/solr/d8
-(This represents a core named "d8" in a default installation of Solr.)
 
 Supported optional features
 ---------------------------
@@ -56,51 +46,28 @@ default, this module uses the dismax query handler, so searches like
 
 Regarding third-party features, the following are supported:
 
-- search_api_autocomplete
+- autocomplete
   Introduced by module: search_api_autocomplete
   Lets you add autocompletion capabilities to search forms on the site. (See
   also "Hidden variables" below for Solr-specific customization.)
-- search_api_facets
-  Introduced by module: search_api_facetapi
+- facets
+  Introduced by module: facet
   Allows you to create facetted searches for dynamically filtering search
   results.
-- search_api_facets_operator_or
-  Introduced by module: search_api_facetapi
-  Allows the creation of OR facets.
-- search_api_mlt
-  Introduced by module: search_api_views
+- more like this
+  Introduced by module: search_api
   Lets you display items that are similar to a given one. Use, e.g., to create
-  a "More like this" block for node pages.
-  NOTE: Due to a regression in Solr itself, "More like this" doesn't work with
-  integer and float fields in Solr 4. As a work-around, you can index the fields
-  (or copies of them) as string values. See [5] for details.
-  Also, MLT with date fields isn't currently supported at all for any version.
-- search_api_multi
-  Introduced by module: search_api_multi
-  Allows you to search multiple indexes at once, as long as they are on the same
-  server. You can use this to let users simultaneously search all content on the
-  site – nodes, comments, user profiles, etc.
-- search_api_spellcheck
-  Introduced by module: search_api_spellcheck
-  Gives the option to display automatic spellchecking for searches.
-- search_api_data_type_location
-  Introduced by module: search_api_location
-  Lets you index, filter and sort on location fields. Note, however, that only
-  single-valued fields are currently supported for Solr 3.x, and that the option
-  isn't supported at all in Solr 1.4.
-- search_api_grouping
-  Introduced by module: search_api_grouping [6]
-  Lets you group search results based on indexed fields. For further information
-  see the FieldCollapsing documentation in the solr wiki [7].
+  a "More like this" block for node pages build with Views.
+- multisite
+  Introduced by module: search_api_solr
+- spellcheck
+  Introduced by module: search_api_solr
 
 If you feel some service option is missing, or have other ideas for improving
 this implementation, please file a feature request in the project's issue queue,
-at [8].
+at [5].
 
-[5] https://drupal.org/node/2004596
-[6] https://drupal.org/sandbox/daspeter/1783280
-[7] http://wiki.apache.org/solr/FieldCollapsing
-[8] https://drupal.org/project/issues/search_api_solr
+[5] https://drupal.org/project/issues/search_api_solr
 
 Specifics
 ---------
@@ -116,10 +83,6 @@ tags.
 Hidden variables
 ----------------
 
-- search_api_solr.settings.autocomplete_max_occurrences (default: 0.9)
-  By default, keywords that occur in more than 90% of results are ignored for
-  autocomplete suggestions. This setting lets you modify that behaviour by
-  providing your own ratio. Use 1 or greater to use all suggestions.
 - search_api_solr.settings.index_prefix (default: '')
   By default, the index ID in the Solr server is the same as the index's machine
   name in Drupal. This setting will let you specify a prefix for the index IDs
@@ -133,10 +96,6 @@ Hidden variables
   prefix is added, so the global prefix will come first in the final name:
   (GLOBAL_PREFIX)(INDEX_PREFIX)(INDEX_ID)
   The same rules as above apply for setting the prefix.
-- search_api_solr.settings.http_get_max_length (default: 4000)
-  The maximum number of bytes that can be handled as an HTTP GET query when
-  HTTP method is AUTO. Typically Solr can handle up to 65355 bytes, but Tomcat
-  and Jetty will error at slightly less than 4096 bytes.
 - search_api_solr.settings.cron_action (default: "spellcheck")
   The Search API Solr Search module can automatically execute some upkeep
   operations daily during cron runs. This variable determines what particular
@@ -157,21 +116,35 @@ Hidden variables
 
 [9] http://wiki.apache.org/solr/UpdateXmlMessages#A.22commit.22_and_.22optimize.22
 
+Connectors
+----------
+
+The communication details between Drupal and Solr is implemented by connectors.
+This module includes the StandardSolrConnector and the BasicAuthSolrConnector.
+There're service provider specific connectors available, for example from Acquia
+and platform.sh. Pleas contact your provider for details if you don't run your
+own Solr server.
+
 Customizing your Solr server
 ----------------------------
 
 The schema.xml and solrconfig.xml files contain extensive comments on how to
 add additional features or modify behaviour, e.g., for adding a language-
 specific stemmer or a stopword list.
+But whenever you run a site that uses any language different than English or a
+multi-lingual setup, we suggest that you don't modify the configurations by
+yourself. Instead you should use the Search API Multilingual Solr Search
+backend [10].
 If you are interested in further customizing your Solr server to your needs,
-see the Solr wiki at [10] for documentation. When editing the schema.xml and
+see the Solr wiki at [11] for documentation. When editing the schema.xml and
 solrconfig.xml files, please only edit the copies in the Solr configuration
 directory, not directly the ones provided with this module.
 
-[10] http://wiki.apache.org/solr/
+[10] https://drupal.org/project/search_api_solr_multilingual
+[11] http://wiki.apache.org/solr/
 
-You'll have to restart your Solr server after making such changes, for them to
-take effect.
+NOTE! You'll have to restart your Solr server after making such changes, for
+them to take effect!
 
 Troubleshooting Views
 ---------------------
@@ -194,6 +167,19 @@ exposed filters and are set up by site administrators.
 *Do not use the 'Search API (tag based)' cache!*
 This is not compatible with default Solr setups.
 
-
 Developers
 ----------
+
+Whenever you need to enhance the functionality you should do it using the API
+instead of extending the SearchApiSolrBackend class!
+To customize connection-specific things you should provide your own
+implementation of the \Drupal\search_api_solr\SolrBackendInterface.
+
+Running the test suite
+----------------------
+
+This module comes with a suite of automated tests. To execute those, you just
+need to have a (correctly configured) Solr instance running at the following
+address:
+  http://localhost:8983/solr/d8
+(This represents a core named "d8" in a default installation of Solr.)
