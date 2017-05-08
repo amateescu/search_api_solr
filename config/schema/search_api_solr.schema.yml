@@ -10,9 +10,6 @@ search_api_solr.settings:
     index_prefix:
       type: string
       label: 'The default prefix for Solr indexes'
-    http_get_max_length:
-      type: integer
-      label: 'The maximum number of bytes that can be handled as an HTTP GET query'
     cron_action:
       type: string
       label: 'Cron action'

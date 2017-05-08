@@ -213,7 +213,7 @@ function search_api_solr_update_8007() {
 }
 
 /**
- * Remove old autocomplete settings in existing configs.
+ * Remove obsolete settings in existing configs.
  */
 function search_api_solr_update_8008() {
   $config_factory = \Drupal::configFactory();
@@ -221,6 +221,7 @@ function search_api_solr_update_8008() {
     $config = $config_factory->getEditable($setting);
     $data = $config->getRawData();
     unset($data['autocomplete_max_occurrences']);
+    unset($data['http_get_max_length']);
     $config->setData($data);
     $config->save(TRUE);
   }
