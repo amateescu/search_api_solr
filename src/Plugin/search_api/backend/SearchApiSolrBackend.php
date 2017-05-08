@@ -135,7 +135,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $this->solrConnectorPluginManager = $solr_connector_plugin_manager;
     $this->fieldsHelper = $fields_helper;
     $this->dataTypeHelper = $dataTypeHelper;
-
   }
 
   /**
@@ -457,9 +456,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'search_api_autocomplete',
       'search_api_facets',
       'search_api_facets_operator_or',
-      // 'search_api_grouping',
       'search_api_mlt',
       'search_api_random_sort',
+      // 'search_api_grouping',
       // 'search_api_spellcheck',
       // 'search_api_data_type_location',
       // 'search_api_data_type_geohash',
@@ -2249,8 +2248,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
   /**
    * Changes the query to a "More Like This" query.
-   *
-   * @todo This code is outdated and needs to be reviewd and refactored.
    *
    * @param \Solarium\QueryType\MorelikeThis\Query $solarium_query
    *   The solr mlt query.
