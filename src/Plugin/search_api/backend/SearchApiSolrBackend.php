@@ -886,8 +886,16 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       if (is_array($keys)) {
         $keys = $this->flattenKeys($keys);
       }
-      // Set them.
-      $solarium_query->setQuery($keys);
+
+      if (!empty($keys)) {
+        // Set them.
+        $solarium_query->setQuery($keys);
+
+        if (!empty($this->configuration['retrieve_data'])) {
+          // Set highlighting.
+          $this->setHighlighting($solarium_query, $query);
+        }
+      }
       unset($keys);
 
       // Set searched fields.
@@ -926,11 +934,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     // Set facet fields.
     $this->setFacets($query, $solarium_query, $field_names);
-
-    if (!empty($this->configuration['retrieve_data'])) {
-      // Set highlighting.
-      $this->setHighlighting($solarium_query, $query);
-    }
 
     // Handle spatial filters.
     $spatial_options = $query->getOption('search_api_location');
