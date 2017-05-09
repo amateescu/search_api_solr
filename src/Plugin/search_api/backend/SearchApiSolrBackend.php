@@ -452,7 +452,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getSupportedFeatures() {
-    return array(
+    return [
       'search_api_autocomplete',
       'search_api_facets',
       'search_api_facets_operator_or',
@@ -462,7 +462,19 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       // 'search_api_spellcheck',
       // 'search_api_data_type_location',
       // 'search_api_data_type_geohash',
-    );
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function supportsDataType($type) {
+    return in_array($type, [
+      'solr_text_ngram',
+      'solr_text_phonetic',
+      'solr_text_unstemmed',
+      'solr_text_wstoken',
+    ]);
   }
 
   /**

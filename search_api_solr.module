@@ -160,3 +160,32 @@ function search_api_solr_form_search_api_index_form_validate_server(&$element, F
     }
   }
 }
+
+/**
+ * Implements hook_search_api_views_handler_mapping_alter()
+ *
+ * @param array $mapping
+ *   An associative array with data types as the keys and Views field data
+ *   definitions as the values. In addition to all normally defined data types,
+ *   keys can also be "options" for any field with an options list, "entity" for
+ *   general entity-typed fields or "entity:ENTITY_TYPE" (with "ENTITY_TYPE"
+ *   being the machine name of an entity type) for entities of that type.
+ *
+ * @see _search_api_views_handler_mapping()
+ */
+function search_api_solr_search_api_views_handler_mapping_alter(&$mapping) {
+  $mapping['solr_text_ngram'] =
+  $mapping['solr_text_phonetic'] =
+  $mapping['solr_text_unstemmed'] =
+  $mapping['solr_text_wstoken'] = [
+    'argument' => [
+      'id' => 'search_api',
+    ],
+    'filter' => [
+      'id' => 'search_api_fulltext',
+    ],
+    'sort' => [
+      'id' => 'search_api',
+    ],
+  ];
+}
