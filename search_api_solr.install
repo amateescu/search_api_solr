@@ -95,6 +95,14 @@ function search_api_solr_get_active_servers() {
 }
 
 /**
+ * Implements hook_uninstall().
+ */
+function search_api_solr_uninstall() {
+  \Drupal::state()->delete('search_api_solr.last_optimize');
+  \Drupal::state()->delete('search_api_solr.endpoint.data');
+}
+
+/**
  * Gets all backend configs for active Solr servers.
  *
  * @return array
