@@ -2,10 +2,6 @@
 
 namespace Drupal\Tests\search_api_solr\Kernel;
 
-use Drupal\search_api\Entity\Index;
-use Drupal\search_api\Entity\Server;
-use Drupal\field\Entity\FieldConfig;
-use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
 
 /**
