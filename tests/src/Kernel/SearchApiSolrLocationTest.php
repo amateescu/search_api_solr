@@ -4,7 +4,6 @@ namespace Drupal\Tests\search_api_solr\Kernel;
 
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
-use Drupal\Tests\search_api\Functional\ExampleContentTrait;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
@@ -15,9 +14,6 @@ use Drupal\Tests\search_api\Kernel\BackendTestBase;
  * @group search_api_solr
  */
 class SearchApiSolrLocationTest extends BackendTestBase {
-
-  use InvokeMethodTrait;
-  use ExampleContentTrait;
 
   /**
    * Modules to enable for this test.
@@ -175,7 +171,7 @@ class SearchApiSolrLocationTest extends BackendTestBase {
   }
 
   /**
-   * Tests highlight and excerpt options.
+   * Tests location searches and distance facets.
    */
   public function testBackend() {
 
