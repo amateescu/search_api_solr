@@ -63,7 +63,9 @@ install:
   - composer require drupal/search_api:1.x-dev
   - composer require drupal/search_api_autocomplete:1.x-dev
   - composer require drupal/search_api_solr:999.0.0
+  - composer require drupal/search_api_location:1.x-dev
   - composer require drupal/facets:1.x-dev
+  - composer require drupal/geofield:1.x-dev
   - composer require drush/drush
   # Patch template.
   #########################################
