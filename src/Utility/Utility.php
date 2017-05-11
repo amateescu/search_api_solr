@@ -79,9 +79,11 @@ class Utility {
 
       // Extra data type info.
       $extra_types_info = array(
+        // Provided by Search API Location module.
         'location' => array(
           'prefix' => 'loc',
         ),
+        // @todo Who provides that type?
         'geohash' => array(
           'prefix' => 'geo',
         ),
