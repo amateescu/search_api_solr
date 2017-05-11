@@ -473,6 +473,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   public function supportsDataType($type) {
     return in_array($type, [
       'location',
+      'solr_string_storage',
       'solr_text_ngram',
       'solr_text_phonetic',
       'solr_text_unstemmed',
