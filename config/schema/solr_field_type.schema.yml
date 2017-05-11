@@ -174,10 +174,6 @@ search_api_solr_multilingual.solr_field_type.*:
                       type: integer
                       label: 'EdgeNGramFilterFactory::maxGramSize'
                       nullable: true
-                    side:
-                      type: string
-                      label: 'EdgeNGramFilterFactory::side'
-                      nullable: true
     text_files:
       type: mapping
       mapping:

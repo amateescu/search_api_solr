@@ -54,7 +54,6 @@ field_type:
           class: solr.EdgeNGramFilterFactory
           minGramSize: 2
           maxGramSize: 50
-          side: front
         -
           class: solr.DictionaryCompoundWordTokenFilterFactory
           dictionary: nouns_fi.txt
