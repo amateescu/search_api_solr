@@ -246,11 +246,11 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
   /**
    * {@inheritdoc}
    */
-  protected function getFilterQueries(QueryInterface $query, array $solr_fields, array $index_fields) {
+  protected function getFilterQueries(QueryInterface $query, array $solr_fields, array $index_fields, array &$options) {
     $condition_group = $query->getConditionGroup();
     $conditions = $condition_group->getConditions();
     if (empty($conditions) || empty($query->getLanguages())) {
-      return parent::getFilterQueries($query, $solr_fields, $index_fields);
+      return parent::getFilterQueries($query, $solr_fields, $index_fields, $options);
     }
 
     $fq = [];
@@ -262,7 +262,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
         $language_specific_conditions = &$language_specific_condition_group->getConditions();
         $language_specific_conditions[] = $condition;
         $language_fqs = array_merge($language_fqs, $this->reduceFilterQueries(
-          $this->createFilterQueries($language_specific_condition_group, $this->getLanguageSpecificSolrFieldNames($langcode, $solr_fields, reset($index_fields)->getIndex()), $index_fields),
+          $this->createFilterQueries($language_specific_condition_group, $this->getLanguageSpecificSolrFieldNames($langcode, $solr_fields, reset($index_fields)->getIndex()), $index_fields, $options),
           $condition_group
         ));
       }
