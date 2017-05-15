@@ -114,6 +114,14 @@ class SearchApiSolrLocationTest extends BackendTestBase {
   }
 
   /**
+   * Clear the index after every test.
+   */
+  public function tearDown() {
+    $this->clearIndex();
+    parent::tearDown();
+  }
+
+  /**
    * {@inheritdoc}
    */
   protected function indexItems($index_id) {
