@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\search_api_solr\Kernel;
 
-use Drupal\Component\Serialization\Json;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Query\QueryInterface;
@@ -10,6 +9,7 @@ use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api_autocomplete\Entity\SearchApiAutocompleteSearch;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
+use Drupal\Tests\search_api_solr\Traits\InvokeMethodTrait;
 use Drupal\user\Entity\User;
 
 /**
