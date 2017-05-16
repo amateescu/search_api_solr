@@ -72,6 +72,12 @@ class SearchApiBackendUnitTest extends UnitTestCase  {
    */
   public function addIndexFieldDataProvider() {
     return [
+      ['0', 'boolean', 'false'],
+      ['1', 'boolean', 'true'],
+      [0, 'boolean', 'false'],
+      [1, 'boolean', 'true'],
+      [FALSE, 'boolean', 'false'],
+      [TRUE, 'boolean', 'true'],
       ['2016-05-25T14:00:00+10', 'date', '2016-05-25T04:00:00Z'],
       ['1465819200', 'date', '2016-06-13T12:00:00Z'],
     ];
