@@ -6,7 +6,7 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
-use Drupal\search_api_autocomplete\Entity\SearchApiAutocompleteSearch;
+use Drupal\search_api_autocomplete\Entity\Search;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
 use Drupal\Tests\search_api_solr\Traits\InvokeMethodTrait;
@@ -746,7 +746,7 @@ class SearchApiSolrTest extends BackendTestBase {
 
       /** @var \Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend $backend */
       $backend = Server::load($this->serverId)->getBackend();
-      $autocompleteSearch = new SearchApiAutocompleteSearch([], 'search_api_autocomplete_search');
+      $autocompleteSearch = new Search([], 'search_api_autocomplete_search');
 
       $query = $this->buildSearch(['artic'], [], ['body'], FALSE);
       $suggestions = $backend->getAutocompleteSuggestions($query, $autocompleteSearch, 'artic', 'artic');

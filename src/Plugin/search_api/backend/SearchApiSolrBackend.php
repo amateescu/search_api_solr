@@ -33,7 +33,7 @@ use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\DataTypeHelperInterface;
 use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility as SearchApiUtility;
-use Drupal\search_api_autocomplete\Entity\SearchApiAutocompleteSearch;
+use Drupal\search_api_autocomplete\SearchInterface;
 use Drupal\search_api_autocomplete\Suggestion;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
@@ -1984,11 +1984,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
-   * Implements autocomplete compatible to SearchApiAutocompleteInterface.
+   * Implements autocomplete compatible to AutocompleteBackendInterface.
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   A query representing the completed user input so far.
-   * @param \Drupal\search_api_autocomplete\SearchApiAutocompleteSearchInterface $search
+   * @param \Drupal\search_api_autocomplete\SearchInterface $search
    *   An object containing details about the search the user is on, and
    *   settings for the autocompletion. See the class documentation for details.
    *   Especially $search->options should be checked for settings, like whether
@@ -2002,10 +2002,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   The complete user input for the fulltext search keywords so far.
    *
    * @return \Drupal\search_api_autocomplete\SuggestionInterface[]
-   *   An array of suggestions, as defined by
-   *   SearchApiAutocompleteSuggesterInterface::getAutocompleteSuggestions().
+   *   An array of suggestions.
+   *
+   * @see \Drupal\search_api_autocomplete\AutocompleteBackendInterface
    */
-  public function getAutocompleteSuggestions(QueryInterface $query, SearchApiAutocompleteSearch $search, $incomplete_key, $user_input) {
+  public function getAutocompleteSuggestions(QueryInterface $query, SearchInterface $search, $incomplete_key, $user_input) {
     $suggestions = [];
 
     if ($this->configuration['suggest_suffix'] || $this->configuration['suggest_corrections'] || $this->configuration['suggest_words']) {
@@ -2081,11 +2082,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           }
 
           if ($suggestion != $user_input && !array_key_exists($suggestion, $autocomplete_terms)) {
-            $suggestions[] = Suggestion::fromString($suggestion, $user_input);
+            $suggestions[] = Suggestion::fromSuggestedKeys($suggestion, $user_input);
             foreach (array_keys($autocomplete_terms) as $term) {
               $completion = preg_replace('@(\b)' . preg_quote($incomplete_key, '@') . '$@', '$1' . $term . '$2', $suggestion);
               if ($completion != $suggestion) {
-                $suggestions[] = Suggestion::fromString($completion, $user_input);
+                $suggestions[] = Suggestion::fromSuggestedKeys($completion, $user_input);
               }
             }
           }
