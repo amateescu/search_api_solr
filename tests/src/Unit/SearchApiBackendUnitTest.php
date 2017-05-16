@@ -9,6 +9,9 @@ use Drupal\Tests\UnitTestCase;
 use Solarium\Core\Query\Helper;
 use Solarium\QueryType\Update\Query\Document\Document;
 
+// @see datetime.module
+define('DATETIME_STORAGE_TIMEZONE', 'UTC');
+
 /**
  * Tests functionality of the backend.
  *
@@ -70,6 +73,7 @@ class SearchApiBackendUnitTest extends UnitTestCase  {
   public function addIndexFieldDataProvider() {
     return [
       ['2016-05-25T14:00:00+10', 'date', '2016-05-25T04:00:00Z'],
+      ['1465819200', 'date', '2016-06-13T12:00:00Z'],
     ];
   }
 
