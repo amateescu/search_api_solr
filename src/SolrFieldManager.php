@@ -90,7 +90,7 @@ class SolrFieldManager implements SolrFieldManagerInterface {
           $field->setDataType('search_api_text');
         }
         elseif (strpos($field->getDataType(), 'date') !== FALSE) {
-          $field->setDataType('date');
+          $field->setDataType('timestamp');
         }
         elseif (strpos($field->getDataType(), 'int') !== FALSE) {
           $field->setDataType('integer');
