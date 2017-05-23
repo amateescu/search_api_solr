@@ -12,17 +12,6 @@ use Solarium\QueryType\Select\Query\Query as SolariumQuery;
 use Solarium\QueryType\Select\Result\Result as SolariumResult;
 
 /**
- * Implements hook_search_api_field_type_mapping_alter().
- *
- * Add mappings for Solr data types to Search API data types.
- */
-function search_api_solr_datasource_search_api_field_type_mapping_alter(array &$mapping) {
-  $mapping['long'] = 'integer';
-  $mapping['tdate'] = 'date';
-  $mapping['text'] = 'text';
-}
-
-/**
  * Implements hook_search_api_solr_field_mapping_alter().
  *
  * Override the default fields that Search API Solr sets up.  In particular,

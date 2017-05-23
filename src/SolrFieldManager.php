@@ -72,15 +72,42 @@ class SolrFieldManager implements SolrFieldManagerInterface {
     if ($server === NULL) {
       throw new \InvalidArgumentException('The Search API server could not be loaded.');
     }
-    if (!$server->getBackend() instanceof SolrBackendInterface) {
+    $backend = $server->getBackend();
+    if (!$backend instanceof SolrBackendInterface) {
       throw new \InvalidArgumentException("The Search API server's backend must be an instance of SolrBackendInterface.");
     }
     $fields = [];
     try {
-      $luke = $server->getBackend()->getSolrConnector()->getLuke();
+      $luke = $backend->getSolrConnector()->getLuke();
       foreach ($luke['fields'] as $label => $definition) {
         $field = new SolrFieldDefinition($definition);
         $field->setLabel($label);
+        // The Search API can't deal with arbitrary item types. To make things
+        // easier, just use one of those known to the Search API.
+        if (strpos($field->getDataType(), 'text') !== FALSE) {
+          $field->setDataType('search_api_text');
+        }
+        elseif (strpos($field->getDataType(), 'date') !== FALSE) {
+          $field->setDataType('date');
+        }
+        elseif (strpos($field->getDataType(), 'int') !== FALSE) {
+          $field->setDataType('integer');
+        }
+        elseif (strpos($field->getDataType(), 'long') !== FALSE) {
+          $field->setDataType('integer');
+        }
+        elseif (strpos($field->getDataType(), 'float') !== FALSE) {
+          $field->setDataType('float');
+        }
+        elseif (strpos($field->getDataType(), 'double') !== FALSE) {
+          $field->setDataType('float');
+        }
+        elseif (strpos($field->getDataType(), 'bool') !== FALSE) {
+          $field->setDataType('boolean');
+        }
+        else {
+          $field->setDataType('string');
+        }
         $fields[$label] = $field;
       }
     }
