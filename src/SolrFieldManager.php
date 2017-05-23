@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api_solr_datasource;
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Cache\UseCacheBackendTrait;
@@ -79,8 +80,9 @@ class SolrFieldManager implements SolrFieldManagerInterface {
     $fields = [];
     try {
       $luke = $backend->getSolrConnector()->getLuke();
-      foreach ($luke['fields'] as $label => $definition) {
+      foreach ($luke['fields'] as $name => $definition) {
         $field = new SolrFieldDefinition($definition);
+        $label = Unicode::ucfirst(trim(str_replace('_', ' ', $name)));
         $field->setLabel($label);
         // The Search API can't deal with arbitrary item types. To make things
         // easier, just use one of those known to the Search API.
@@ -108,7 +110,7 @@ class SolrFieldManager implements SolrFieldManagerInterface {
         else {
           $field->setDataType('string');
         }
-        $fields[$label] = $field;
+        $fields[$name] = $field;
       }
     }
     catch (SearchApiSolrException $e) {
