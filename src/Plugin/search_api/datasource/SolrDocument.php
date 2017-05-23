@@ -156,6 +156,19 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
       '#description' => $this->t('Enter the name of a field from your Solr schema that contains unique ID values.'),
       '#default_value' => $this->configuration['id_field'],
     ];
+    // If there is already a valid server, we can transform the text field into
+    // a select box.
+    $field_options = [];
+    foreach ($this->getPropertyDefinitions() as $name => $property) {
+      if (!$property->isMultivalued()) {
+        $field_options[$name] = $property->getLabel();
+      }
+    }
+    if ($field_options) {
+      $form['id_field']['#type'] = 'select';
+      $form['id_field']['#options'] = $field_options;
+      $form['id_field']['#description'] = $this->t('Select the Solr index field that contains unique ID values.');
+    }
     $form['advanced'] = [
       '#type' => 'details',
       '#title' => $this->t('Advanced configuration'),
