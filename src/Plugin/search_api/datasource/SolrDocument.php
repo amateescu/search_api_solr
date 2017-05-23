@@ -17,7 +17,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @SearchApiDatasource(
  *   id = "solr_document",
  *   label = @Translation("Solr Document"),
- *   description = @Translation("Exposes external Solr Documents as a datasource."),
+ *   description = @Translation("Search through external Solr content. (Only works if this index is attached to a Solr-based server.)"),
  * )
  */
 class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
