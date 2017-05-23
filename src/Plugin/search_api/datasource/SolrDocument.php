@@ -108,8 +108,11 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function getPropertyDefinitions() {
-    // @todo Handle IndexInterface::getServerInstance() returning NULL.
-    $fields = $this->getSolrFieldManager()->getFieldDefinitions($this->index->getServerInstance()->id());
+    $fields = [];
+    $server_id = $this->index->getServerId();
+    if ($server_id) {
+      $fields = $this->getSolrFieldManager()->getFieldDefinitions($server_id);
+    }
     return $fields;
   }
 
