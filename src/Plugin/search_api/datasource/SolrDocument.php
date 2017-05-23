@@ -107,6 +107,36 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
   /**
    * {@inheritdoc}
    */
+  public function getItemLabel(ComplexDataInterface $item) {
+    if ($this->configuration['label_field']) {
+      return $item->get($this->configuration['label_field'])->getValue();
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getItemLanguage(ComplexDataInterface $item) {
+    if ($this->configuration['language_field']) {
+      return $item->get($this->configuration['language_field'])->getValue();
+    }
+    return parent::getItemLanguage($item);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getItemUrl(ComplexDataInterface $item) {
+    if ($this->configuration['url_field']) {
+      return $item->get($this->configuration['url_field'])->getValue();
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPropertyDefinitions() {
     $fields = [];
     $server_id = $this->index->getServerId();
@@ -140,8 +170,11 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
   public function defaultConfiguration() {
     $config = [];
     $config['id_field'] = '';
-    $config['advanced']['request_handler'] = '';
-    $config['advanced']['default_query'] = '*:*';
+    $config['request_handler'] = '';
+    $config['label_field'] = '';
+    $config['language_field'] = '';
+    $config['url_field'] = '';
+//    $config['default_query'] = '*:*';
     return $config;
   }
 
@@ -149,24 +182,28 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    // Get the available fields from the server (if a server has already been
+    // set).
+    $fields = $single_valued_fields = [];
+    foreach ($this->getPropertyDefinitions() as $name => $property) {
+      $fields[$name] = $property->getLabel();
+      if (!$property->isMultivalued()) {
+        $single_valued_fields[$name] = $property->getLabel();
+      }
+    }
+
     $form['id_field'] = [
       '#type' => 'textfield',
       '#title' => $this->t('ID field'),
       '#required' => TRUE,
-      '#description' => $this->t('Enter the name of a field from your Solr schema that contains unique ID values.'),
+      '#description' => $this->t('Enter the name of the field from your Solr schema that contains unique ID values.'),
       '#default_value' => $this->configuration['id_field'],
     ];
     // If there is already a valid server, we can transform the text field into
     // a select box.
-    $field_options = [];
-    foreach ($this->getPropertyDefinitions() as $name => $property) {
-      if (!$property->isMultivalued()) {
-        $field_options[$name] = $property->getLabel();
-      }
-    }
-    if ($field_options) {
+    if ($single_valued_fields) {
       $form['id_field']['#type'] = 'select';
-      $form['id_field']['#options'] = $field_options;
+      $form['id_field']['#options'] = $single_valued_fields;
       $form['id_field']['#description'] = $this->t('Select the Solr index field that contains unique ID values.');
     }
     $form['advanced'] = [
@@ -178,7 +215,7 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
       '#type' => 'textfield',
       '#title' => $this->t('Request handler'),
       '#description' => $this->t("Enter the name of a requestHandler from the core's solrconfig.xml file.  This should only be necessary if you need to specify a handler to use other than the default."),
-      '#default_value' => $this->configuration['advanced']['request_handler'],
+      '#default_value' => $this->configuration['request_handler'],
     ];
     // @todo Figure out if we actually need this setting.  It was copied over
     //   from Sarnia, but it seems like in D8 Search API Solr defaults to
@@ -189,7 +226,55 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
       '#description' => $this->t("Enter a default query parameter. This may only be necessary if a default query cannot be specified in the solrconfig.xml."),
       '#default_value' => $this->configuration['advanced']['default_query'],
     ];*/
+    $form['advanced']['label_field'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Label field'),
+      '#description' => $this->t('Enter the name of the field from your Solr schema that should be considered the label (if any).'),
+      '#default_value' => $this->configuration['label_field'],
+    ];
+    $form['advanced']['language_field'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Language field'),
+      '#description' => $this->t('Enter the name of the field from your Solr schema that should be considered the label (if any).'),
+      '#default_value' => $this->configuration['language_field'],
+    ];
+    $form['advanced']['url_field'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('URL field'),
+      '#description' => $this->t('Enter the name of the field from your Solr schema that should be considered the label (if any).'),
+      '#default_value' => $this->configuration['url_field'],
+    ];
+    // If there is already a valid server, we can transform the text fields into
+    // select boxes.
+    if ($fields) {
+      $fields = [
+        '' => $this->t('None'),
+      ] + $fields;
+      $form['advanced']['label_field']['#type'] = 'select';
+      $form['advanced']['label_field']['#options'] = $fields;
+      $form['advanced']['label_field']['#description'] = $this->t('Select the Solr index field that should be considered the label (if any).');
+      $form['advanced']['language_field']['#type'] = 'select';
+      $form['advanced']['language_field']['#options'] = $fields;
+      $form['advanced']['language_field']['#description'] = $this->t("Select the Solr index field that contains the document's language code (if any).");
+      $form['advanced']['url_field']['#type'] = 'select';
+      $form['advanced']['url_field']['#options'] = $fields;
+      $form['advanced']['url_field']['#description'] = $this->t("Select the Solr index field that contains the document's URL (if any).");
+    }
+
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
+    // We want the form fields displayed inside an "Advanced configuration"
+    // fieldset, but we don't want them to be actually stored inside a nested
+    // "advanced" key. (This could also be done via "#parents", but that's
+    // pretty tricky to get right in a subform.)
+    $values = &$form_state->getValues();
+    $values += $values['advanced'];
+    unset($values['advanced']);
   }
 
 }
