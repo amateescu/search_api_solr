@@ -7,6 +7,7 @@ use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
 use Drupal\search_api\Plugin\PluginFormTrait;
+use Drupal\search_api\SearchApiException;
 use Drupal\search_api_solr_datasource\SolrDocumentFactoryInterface;
 use Drupal\search_api_solr_datasource\SolrFieldManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -150,16 +151,19 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function loadMultiple(array $ids) {
-    // Query the index for the Solr documents.
-    $query = $this->index->query(['limit' => 1]);
-    foreach ($ids as $id) {
-      $query->addCondition('search_api_id', $id);
-    }
-    $query->execute();
-    $results = $query->getResults()->getResultItems();
     $documents = [];
-    foreach ($results as $id => $result) {
-      $documents[$id] = $this->solrDocumentFactory->create($result);
+    try {
+      // Query the index for the Solr documents.
+      $results = $this->index->query()
+        ->addCondition('search_api_id', $ids, 'IN')
+        ->execute()
+        ->getResultItems();
+      foreach ($results as $id => $result) {
+        $documents[$id] = $this->solrDocumentFactory->create($result);
+      }
+    }
+    catch (SearchApiException $e) {
+      // Couldn't load items from server, return an empty array.
     }
     return $documents;
   }
