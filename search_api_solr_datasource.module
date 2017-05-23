@@ -55,7 +55,9 @@ function search_api_solr_datasource_search_api_solr_field_mapping_alter(IndexInt
   // Re-map the indexed fields.
   foreach ($fields as $raw => $name) {
     // Ignore the Search API fields.
-    if (strpos($raw, 'search_api_') === 0) {
+    if (strpos($raw, 'search_api_') === 0
+        || empty($index_fields[$raw])
+        || $index_fields[$raw]->getDatasourceId() !== 'solr_document') {
       continue;
     }
     $fields[$raw] = $index_fields[$raw]->getPropertyPath();
