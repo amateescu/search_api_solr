@@ -101,7 +101,7 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function getItemId(ComplexDataInterface $item) {
-    // @todo Implement this.
+    return $item->get($this->configuration['id_field'])->getValue();
   }
 
   /**

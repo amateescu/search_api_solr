@@ -59,7 +59,7 @@ class SolrFieldManager implements SolrFieldManagerInterface {
    * Builds the field definitions for a Solr server from its Luke handler.
    *
    * @param string $server_id
-   *   The server from which we are retreiving field information.
+   *   The server from which we are retrieving field information.
    *
    * @return \Drupal\search_api_solr_datasource\TypedData\SolrFieldDefinitionInterface[]
    *   The array of field definitions for the server, keyed by field name.
