@@ -8,6 +8,7 @@
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
+use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Solarium\QueryType\Select\Query\Query as SolariumQuery;
 use Solarium\QueryType\Select\Result\Result as SolariumResult;
 
@@ -59,8 +60,8 @@ function search_api_solr_datasource_search_api_solr_field_mapping_alter(IndexInt
 function search_api_solr_datasource_search_api_solr_query_alter(SolariumQuery $solarium_query, QueryInterface $query) {
   // Do not alter the query if the index does not use the solr_document
   // datasource.
-  $datasources = $query->getIndex()->getDatasources();
-  if (!isset($datasources['solr_document'])) {
+  $index = $query->getIndex();
+  if (!$index->isValidDatasource('solr_document')) {
     return;
   }
 
@@ -69,9 +70,23 @@ function search_api_solr_datasource_search_api_solr_query_alter(SolariumQuery $s
   $solarium_query->removeFilterQuery('index_id');
 
   // Set requestHandler for the query type.
-  $config = $query->getIndex()->getDatasource('solr_document')->getConfiguration();
-  if (!empty($config['advanced']['request_handler'])) {
-    $solarium_query->addParam('qt', $config['advanced']['request_handler']);
+  $config = $index->getDatasource('solr_document')->getConfiguration();
+  if (!empty($config['request_handler'])) {
+    $solarium_query->addParam('qt', $config['request_handler']);
+  }
+
+  $backend = $index->getServerInstance()->getBackend();
+  if ($backend instanceof SearchApiSolrBackend) {
+    $solr_config = $backend->getConfiguration();
+    // @todo Should we maybe not even check that setting and use this to
+    //   auto-enable fields retrieval from Solr?
+    if (!empty($solr_config['retrieve_data'])) {
+      $fields_list = [];
+      foreach ($backend->getSolrFieldNames($index) as $solr_field_name) {
+        $fields_list[] = $solr_field_name;
+      }
+      $solarium_query->setFields($fields_list);
+    }
   }
 }
 
