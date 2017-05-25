@@ -22,11 +22,11 @@ use Drupal\search_api\Item\FieldInterface;
 class SolrField extends TypedData implements \IteratorAggregate, TypedDataInterface {
 
   /**
-   * The wrapped Search API field.
+   * The field value(s).
    *
-   * @var \Drupal\search_api\Item\FieldInterface|null
+   * @var mixed
    */
-  protected $field;
+  protected $value;
 
   /**
    * Creates an instance wrapping the given Field.
@@ -48,39 +48,15 @@ class SolrField extends TypedData implements \IteratorAggregate, TypedDataInterf
     $field_id = $field->getFieldIdentifier();
     $definition = $field_manager->getFieldDefinitions($server_id)[$field_id];
     $instance = new static($definition, $name, $parent);
-    $instance->setValue($field);
+    $instance->setValue($field->getValues());
     return $instance;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getValue() {
-    return $this->field ? $this->field->getValues() : NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setValue($field, $notify = TRUE) {
-    $this->field = $field;
-    // Notify the parent of any changes.
-    if ($notify && isset($this->parent)) {
-      $this->parent->onChange($this->name);
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getIterator() {
-    if ($this->field instanceof \Iterator) {
-      return $this->field;
-    }
-    if ($this->field instanceof \IteratorAggregate) {
-      return $this->field->getIterator();
-    }
-    return new \ArrayIterator([]);
+    return new \ArrayIterator((array) $this->value);
   }
 
 }
