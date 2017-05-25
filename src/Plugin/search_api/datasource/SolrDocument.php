@@ -102,17 +102,14 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function getItemId(ComplexDataInterface $item) {
-    return $item->get($this->configuration['id_field'])->getValue();
+    return $this->getFieldValue($item, 'id_field');
   }
 
   /**
    * {@inheritdoc}
    */
   public function getItemLabel(ComplexDataInterface $item) {
-    if ($this->configuration['label_field']) {
-      return $item->get($this->configuration['label_field'])->getValue();
-    }
-    return NULL;
+    return $this->getFieldValue($item, 'label_field');
   }
 
   /**
@@ -120,7 +117,7 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
    */
   public function getItemLanguage(ComplexDataInterface $item) {
     if ($this->configuration['language_field']) {
-      return $item->get($this->configuration['language_field'])->getValue();
+      return $this->getFieldValue($item, 'language_field');
     }
     return parent::getItemLanguage($item);
   }
@@ -129,10 +126,30 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function getItemUrl(ComplexDataInterface $item) {
-    if ($this->configuration['url_field']) {
-      return $item->get($this->configuration['url_field'])->getValue();
+    return $this->getFieldValue($item, 'url_field');
+  }
+
+  /**
+   * Retrieves a scalar field value from a result item.
+   *
+   * @param \Drupal\Core\TypedData\ComplexDataInterface $item
+   *   The result item.
+   * @param string $config_key
+   *   The key in the configuration.
+   *
+   * @return mixed|null
+   *   The scalar value of the specified field (first value for multi-valued
+   *   fields), if it exists; NULL otherwise.
+   */
+  protected function getFieldValue(ComplexDataInterface $item, $config_key) {
+    if (empty($this->configuration[$config_key])) {
+      return NULL;
     }
-    return NULL;
+    $values = $item->get($this->configuration[$config_key])->getValue();
+    if (is_array($values)) {
+      $values = $values ? reset($values) : NULL;
+    }
+    return $values ?: NULL;
   }
 
   /**

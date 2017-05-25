@@ -22,7 +22,7 @@ use Drupal\search_api\Item\FieldInterface;
 class SolrField extends TypedData implements \IteratorAggregate, TypedDataInterface {
 
   /**
-   * The wrapped Search API Field.
+   * The wrapped Search API field.
    *
    * @var \Drupal\search_api\Item\FieldInterface|null
    */
@@ -56,7 +56,7 @@ class SolrField extends TypedData implements \IteratorAggregate, TypedDataInterf
    * {@inheritdoc}
    */
   public function getValue() {
-    return $this->field;
+    return $this->field ? $this->field->getValues() : NULL;
   }
 
   /**
@@ -74,7 +74,13 @@ class SolrField extends TypedData implements \IteratorAggregate, TypedDataInterf
    * {@inheritdoc}
    */
   public function getIterator() {
-    return isset($this->field) ? $this->field->getIterator() : new \ArrayIterator([]);
+    if ($this->field instanceof \Iterator) {
+      return $this->field;
+    }
+    if ($this->field instanceof \IteratorAggregate) {
+      return $this->field->getIterator();
+    }
+    return new \ArrayIterator([]);
   }
 
 }
