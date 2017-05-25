@@ -75,6 +75,11 @@ function search_api_solr_datasource_search_api_solr_query_alter(SolariumQuery $s
     $solarium_query->addParam('qt', $config['request_handler']);
   }
 
+  // Set the default query, if necessary and configured.
+  if (!$solarium_query->getQuery() && !empty($config['default_query'])) {
+    $solarium_query->setQuery($config['default_query']);
+  }
+
   $backend = $index->getServerInstance()->getBackend();
   if ($backend instanceof SearchApiSolrBackend) {
     $solr_config = $backend->getConfiguration();
