@@ -3,6 +3,7 @@
 namespace Drupal\search_api_solr_datasource\Plugin\DataType;
 
 use Drupal\Core\TypedData\ComplexDataInterface;
+use Drupal\Core\TypedData\Exception\MissingDataException;
 use Drupal\Core\TypedData\TypedData;
 use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api_solr_datasource\TypedData\SolrDocumentDefinition;
