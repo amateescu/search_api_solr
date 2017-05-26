@@ -1404,6 +1404,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $item_id = $doc_fields['hash'] . '--' . $item_id;
       }
       $result_item = $this->fieldsHelper->createItem($index, $item_id);
+      $result_item->setExtraData('search_api_solr_document', $doc);
       $result_item->setScore($doc_fields[$score_field]);
       unset($doc_fields[$id_field], $doc_fields[$score_field]);
 
@@ -2326,7 +2327,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $hl->setFields('*');
         // @todo the amount of snippets need to be increased to get highlighting
         //   of multi value fields to work.
-        // @see hhtps://drupal.org/node/2753635
+        // @see https://drupal.org/node/2753635
         $hl->setSnippets(1);
         $hl->setFragSize(0);
         $hl->setMergeContiguous($highlighter->get('highlight.mergeContiguous'));
