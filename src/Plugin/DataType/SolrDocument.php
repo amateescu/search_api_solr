@@ -84,13 +84,18 @@ class SolrDocument extends TypedData implements \IteratorAggregate, ComplexDataI
 
     // Now that we have the property, try to find its values. We first look at
     // the field values contained in the result item.
-    $field = $this->item->getField($property_name, FALSE);
-
-    // If that didn't work, maybe we can get the field from the Solr document?
-    if ($field) {
-      $property->setValue($field->getValues());
+    $found = FALSE;
+    foreach ($this->item->getFields(FALSE) as $field) {
+      if ($field->getDatasourceId() === 'solr_document'
+          && $field->getPropertyPath() === $property_name) {
+        $property->setValue($field->getValues());
+        $found = TRUE;
+        break;
+      }
     }
-    else {
+
+    if (!$found) {
+      // If that didn't work, maybe we can get the field from the Solr document?
       $document = $this->item->getExtraData('search_api_solr_document');
       if ($document instanceof AbstractDocument
           && isset($document[$property_name])) {
