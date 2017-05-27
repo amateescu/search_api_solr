@@ -7,6 +7,7 @@ use Drupal\Core\TypedData\Exception\MissingDataException;
 use Drupal\Core\TypedData\TypedData;
 use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api_solr_datasource\TypedData\SolrDocumentDefinition;
+use Solarium\QueryType\Select\Result\AbstractDocument;
 
 /**
  * Defines the "Solr document" data type.
@@ -67,14 +68,37 @@ class SolrDocument extends TypedData implements \IteratorAggregate, ComplexDataI
     if (!isset($this->item)) {
       throw new MissingDataException("Unable to get Solr field $property_name as no item has been provided.");
     }
-    $field = $this->item->getField($property_name);
-    if ($field === NULL) {
-      throw new \InvalidArgumentException("The Solr field $property_name has not been configured in the index.");
-    }
-    // Create a new typed data object from the item's field data.
+
+    // First, verify that this field actually exists in the Solr server. If we
+    // can't get a definition for it, it doesn't exist.
     /** @var \Drupal\search_api_solr_datasource\Plugin\DataType\SolrField $plugin */
     $plugin = \Drupal::typedDataManager()->getDefinition('solr_field')['class'];
-    return $plugin::createFromField($field, $property_name, $this);
+    $field_manager = \Drupal::getContainer()->get('solr_field.manager');
+    $server_id = $this->item->getIndex()->getServerInstance()->id();
+    $fields = $field_manager->getFieldDefinitions($server_id);
+    if (empty($fields[$property_name])) {
+      throw new \InvalidArgumentException("The Solr field $property_name could not be found on the $server_id server.");
+    }
+    // Create a new typed data object from the item's field data.
+    $property = $plugin::createInstance($fields[$property_name], $property_name, $this);
+
+    // Now that we have the property, try to find its values. We first look at
+    // the field values contained in the result item.
+    $field = $this->item->getField($property_name, FALSE);
+
+    // If that didn't work, maybe we can get the field from the Solr document?
+    if ($field) {
+      $property->setValue($field->getValues());
+    }
+    else {
+      $document = $this->item->getExtraData('search_api_solr_document');
+      if ($document instanceof AbstractDocument
+          && isset($document[$property_name])) {
+        $property->setValue($document[$property_name]);
+      }
+    }
+
+    return $property;
   }
 
   /**

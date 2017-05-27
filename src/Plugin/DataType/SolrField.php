@@ -45,7 +45,7 @@ class SolrField extends TypedData implements \IteratorAggregate, TypedDataInterf
     /** @var \Drupal\search_api_solr_datasource\SolrFieldManagerInterface $field_manager */
     $field_manager = \Drupal::getContainer()->get('solr_field.manager');
     $server_id = $field->getIndex()->getServerInstance()->id();
-    $field_id = $field->getFieldIdentifier();
+    $field_id = $field->getPropertyPath();
     $definition = $field_manager->getFieldDefinitions($server_id)[$field_id];
     $instance = new static($definition, $name, $parent);
     $instance->setValue($field->getValues());

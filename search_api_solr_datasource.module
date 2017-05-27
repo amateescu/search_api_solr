@@ -90,7 +90,17 @@ function search_api_solr_datasource_search_api_solr_query_alter(SolariumQuery $s
       foreach ($backend->getSolrFieldNames($index) as $solr_field_name) {
         $fields_list[] = $solr_field_name;
       }
-      $solarium_query->setFields($fields_list);
+      $extra_fields = [
+        'language_field',
+        'label_field',
+        'url_field',
+      ];
+      foreach ($extra_fields as $config_key) {
+        if (!empty($config[$config_key])) {
+          $fields_list[] = $config[$config_key];
+        }
+      }
+      $solarium_query->setFields(array_unique($fields_list));
     }
   }
 }
