@@ -906,25 +906,26 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       if (!empty($keys)) {
         // Set them.
         $solarium_query->setQuery($keys);
-
-        if (!empty($this->configuration['retrieve_data'])) {
-          // Set highlighting.
-          $this->setHighlighting($solarium_query, $query);
-        }
       }
-      unset($keys);
 
       // Set searched fields.
       $search_fields = $this->getQueryFulltextFields($query);
       $query_fields = [];
+      $query_fields_boosted = [];
       foreach ($search_fields as $search_field) {
+        $query_fields[] = $field_names[$search_field];
         /** @var \Drupal\search_api\Item\FieldInterface $field */
         $field = $index_fields[$search_field];
         $boost = $field->getBoost() ? '^' . $field->getBoost() : '';
-        $query_fields[] = $field_names[$search_field] . $boost;
+        $query_fields_boosted[] = $field_names[$search_field] . $boost;
       }
       $solarium_query->getEDisMax()
-        ->setQueryFields(implode(' ', $query_fields));
+        ->setQueryFields(implode(' ', $query_fields_boosted));
+
+      if (!empty($this->configuration['retrieve_data'])) {
+        // Set highlighting.
+        $this->setHighlighting($solarium_query, $query, $query_fields);
+      }
     }
 
     $options = $query->getOptions();
@@ -2184,8 +2185,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     if (!empty($this->configuration['highlight_data'])) {
       $item_fields = $item->getFields();
       foreach ($field_mapping as $search_api_property => $solr_property) {
-        // @todo We now have more fulltext field variants to be highlighted.
-        if ((strpos($solr_property, 'ts_') === 0 || strpos($solr_property, 'tm_') === 0) && !empty($data['highlighting'][$solr_id][$solr_property])) {
+        if (!empty($data['highlighting'][$solr_id][$solr_property])) {
           $snippets = [];
           foreach ($data['highlighting'][$solr_id][$solr_property] as $value) {
             // Contrary to above, we here want to preserve HTML, so we just
@@ -2279,8 +2279,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   The Solarium select query object.
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The query object.
+   * @param array $query_fields
+   *   The solr fields to be highlighted.
    */
-  protected function setHighlighting(Query $solarium_query, QueryInterface $query) {
+  protected function setHighlighting(Query $solarium_query, QueryInterface $query, $highlighted_fields = []) {
     $excerpt = !empty($this->configuration['excerpt']);
     $highlight = !empty($this->configuration['highlight_data']);
 
@@ -2315,16 +2317,18 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $hl->setRegexMaxAnalyzedChars($highlighter->get('regex.maxAnalyzedChars'));
       }
       if ($excerpt) {
+        // If the field doesn't exist yet getField() will add it.
         $excerpt_field = $hl->getField('spell');
         $excerpt_field->setSnippets($highlighter->get('excerpt.snippets'));
         $excerpt_field->setFragSize($highlighter->get('excerpt.fragsize'));
         $excerpt_field->setMergeContiguous($highlighter->get('excerpt.mergeContiguous'));
       }
-      if ($highlight) {
-        // It regrettably doesn't seem to be possible to set hl.fl to several
-        // values, if one contains wild cards, i.e., "ts_*,tm_*,spell" wouldn't
-        // work.
-        $hl->setFields('*');
+      if ($highlight && !empty($highlighted_fields)) {
+        foreach ($highlighted_fields as $highlighted_field) {
+          // We must not set the fields at once using setFields() to not break
+          // the excerpt feature above.
+          $hl->addField($highlighted_field);
+        }
         // @todo the amount of snippets need to be increased to get highlighting
         //   of multi value fields to work.
         // @see https://drupal.org/node/2753635
