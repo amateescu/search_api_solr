@@ -2014,6 +2014,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     if ($this->configuration['suggest_suffix'] || $this->configuration['suggest_corrections'] || $this->configuration['suggest_words']) {
       $connector = $this->getSolrConnector();
+      $solr_version = $connector->getSolrVersion();
+      if (version_compare($solr_version, '6.5', '=')) {
+        \Drupal::logger('search_api_solr')->error('Solr 6.5.x contains a bug that breaks the autocomplete feature. Downgrade to 6.4.x or upgrade to 6.6.x.');
+        return [];
+      }
       $solarium_query = $connector->getTermsQuery();
       $schema_version = $connector->getSchemaVersion();
       if (version_compare($schema_version, '5.4', '>=')) {
@@ -2171,6 +2176,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
     $output = '';
     // @todo using the spell field is not the optimal solution.
+    // @see https://www.drupal.org/node/2735881
     if (!empty($this->configuration['excerpt']) && !empty($data['highlighting'][$solr_id]['spell'])) {
       foreach ($data['highlighting'][$solr_id]['spell'] as $snippet) {
         $snippet = strip_tags($snippet);
