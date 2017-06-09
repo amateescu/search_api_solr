@@ -948,6 +948,20 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $solarium_query->createFilterQuery('site_hash')->setQuery('hash:' . $site_hash);
     }
 
+    // @todo Make this more configurable so that Search API can choose which
+    //   fields it wants to fetch.
+    //   @see https://www.drupal.org/node/2880674
+    if (!empty($this->configuration['retrieve_data'])) {
+      $solarium_query->setFields(['*', 'score']);
+    }
+    else {
+      $returned_fields = [SEARCH_API_ID_FIELD_NAME, 'score'];
+      if (!$this->configuration['site_hash']) {
+        $returned_fields[] = 'hash';
+      }
+      $solarium_query->setFields($returned_fields);
+    }
+
     // Set sorts.
     $this->setSorts($solarium_query, $query, $field_names);
 
@@ -979,19 +993,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       if (strpos($option, 'solr_param_') === 0) {
         $solarium_query->addParam(substr($option, 11), $value);
       }
-    }
-
-    // @todo Make this more configurable so that views can choose which fields
-    //   it wants to fetch.
-    if (!empty($this->configuration['retrieve_data'])) {
-      $solarium_query->addFields(['*', 'score']);
-    }
-    else {
-      $returned_fields = [SEARCH_API_ID_FIELD_NAME, 'score'];
-      if (!$this->configuration['site_hash']) {
-        $returned_fields[] = 'hash';
-      }
-      $solarium_query->addFields($returned_fields);
     }
 
     $this->applySearchWorkarounds($solarium_query, $query);
