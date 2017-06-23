@@ -2204,11 +2204,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           }
           if ($snippets) {
             $values = $item_fields[$search_api_property]->getValues();
-            /** @var \Drupal\search_api\Plugin\search_api\data_type\value\TextValue $value */
             foreach ($values as $value) {
               foreach ($snippets as $snippet) {
-                if ($value->getText() === $snippet['raw']) {
-                  $value->setText($snippet['replace']);
+                if ($value instanceof TextValue) {
+                  if ($value->getText() === $snippet['raw']) {
+                    $value->setText($snippet['replace']);
+                  }
+                }
+                else {
+                  if ($value == $snippet['raw']) {
+                    $value == $snippet['replace'];
+                  }
                 }
               }
             }
