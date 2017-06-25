@@ -21,7 +21,7 @@
     },
     "require": {
         "solarium/solarium": "3.8.*",
-        "drupal/search_api": "~1.0"
+        "drupal/search_api": "~1.1"
     },
     "suggest": {
         "drupal/facets": "Provides facetted search.",
