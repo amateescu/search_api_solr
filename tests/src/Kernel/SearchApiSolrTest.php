@@ -835,7 +835,7 @@ class SearchApiSolrTest extends BackendTestBase {
   /**
    * Test tika extension PDF extraction.
    */
-  public function _testExtract() {
+  public function testExtract() {
     $filepath = drupal_get_path('module', 'search_api_solr_test') . '/assets/test_extraction.pdf';
     /** @var \Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend $backend */
     $backend = Server::load($this->serverId)->getBackend();
