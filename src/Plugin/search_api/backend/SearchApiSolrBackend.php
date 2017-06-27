@@ -1748,7 +1748,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           return "$field:[* TO *]";
         }
         else {
-          return "-$field:$value";
+          return "(*:* -$field:$value)";
         }
 
       case '<':
@@ -1767,7 +1767,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         return "$field:[" . array_shift($value) . ' TO ' . array_shift($value) . ']';
 
       case 'NOT BETWEEN':
-        return "-$field:[" . array_shift($value) . ' TO ' . array_shift($value) . ']';
+        return "(*:* -$field:[" . array_shift($value) . ' TO ' . array_shift($value) . '])';
 
       case 'IN':
         $parts = [];
@@ -1781,7 +1781,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           }
         }
         if ($null) {
-          $parts[] = "(-$field:[* TO *])";
+          // @see https://stackoverflow.com/questions/4238609/how-to-query-solr-for-empty-fields/28859224#28859224
+          return "(*:* -$field:[* TO *])";
         }
         return '(' . implode(" ", $parts) . ')';
 
@@ -1801,7 +1802,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       case '=':
       default:
         if (is_null($value)) {
-          return "-$field:[* TO *]";
+          // @see https://stackoverflow.com/questions/4238609/how-to-query-solr-for-empty-fields/28859224#28859224
+          return "(*:* -$field:[* TO *])";
         }
         else {
           return "$field:$value";
