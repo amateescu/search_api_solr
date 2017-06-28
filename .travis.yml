@@ -58,14 +58,14 @@ install:
   - cd $TRAVIS_BUILD_DIR/../drupal
   - composer install
   - composer config repositories.search_api_solr_multilingual vcs $TRAVIS_BUILD_DIR
-  - composer require drupal/search_api:1.x-dev
+  # - composer require drupal/search_api:1.x-dev
   - composer require drupal/search_api_autocomplete:1.x-dev
-  - composer require drupal/search_api_solr:1.x-dev
+  # - composer require drupal/search_api_solr:1.x-dev
   - composer require drupal/search_api_solr_multilingual:999.0.0
   - composer require drupal/search_api_location:1.x-dev
   - composer require drupal/facets:1.x-dev
   - composer require drupal/geofield:1.x-dev
-  - composer require drush/drush
+  - composer require drush/drush:9.0.x-dev
   # Patch template.
   #########################################
   # to be removed once #2824932 is resolved
