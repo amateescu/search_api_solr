@@ -749,6 +749,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $doc->setField('id', $this->createId($index_id, $id));
       $doc->setField('index_id', $index_id);
 
+      // Add document level boost from Search API item.
+      if ($boost = $item->getBoost()) {
+        $doc->setBoost($boost);
+      }
+
       // Add the site hash and language-specific base URL.
       $doc->setField('hash', SearchApiSolrUtility::getSiteHash());
       $lang = $item->getLanguage();

@@ -6,6 +6,7 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
+use Drupal\search_api\Utility\Utility;
 use Drupal\search_api_autocomplete\Entity\Search;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
@@ -148,6 +149,7 @@ class SearchApiSolrTest extends BackendTestBase {
    */
   protected function backendSpecificRegressionTests() {
     $this->regressionTest2888629();
+    $this->regressionTest2850160();
   }
 
   /**
@@ -253,6 +255,39 @@ class SearchApiSolrTest extends BackendTestBase {
     $query->addConditionGroup($conditions);
     $results = $query->execute();
     $this->assertResults([1, 2], $results, 'group comparing against body NOT NULL AND category NOT article_category AND category NOT NULL');
+  }
+
+  /**
+   *  Regression tests for #2850160.
+   */
+  public function regressionTest2850160() {
+    // Only run the tests if we have a Solr core available.
+    if ($this->solrAvailable) {
+      $backend = Server::load($this->serverId)->getBackend();
+      $index = $this->getIndex();
+
+      // Create a test node.
+      $entity = $this->addTestEntity(1, [
+        'name' => $this->randomString(),
+        'body' => $this->randomString(),
+        'type' => 'article',
+      ]);
+
+      // Prepare Search API item.
+      $id = Utility::createCombinedId('entity:entity_test_mulrev_changed', $entity->id());
+      /** @var \Drupal\search_api\Item\ItemInterface $item */
+      $item = \Drupal::getContainer()
+        ->get('search_api.fields_helper')
+        ->createItemFromObject($index, $entity->getTypedData(), $id);
+      $item->setBoost('3.0');
+
+      // Get Solr document.
+      /** @var \Solarium\QueryType\Update\Query\Document\Document $document */
+      $document = $this->invokeMethod($backend, 'getDocument', [$index, $item]);
+
+      // Compare boost values.
+      $this->assertEquals($item->getBoost(), $document->getBoost());
+    }
   }
 
   /**
