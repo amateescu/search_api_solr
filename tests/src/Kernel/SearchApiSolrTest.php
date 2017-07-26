@@ -266,12 +266,8 @@ class SearchApiSolrTest extends BackendTestBase {
       $backend = Server::load($this->serverId)->getBackend();
       $index = $this->getIndex();
 
-      // Create a test node.
-      $entity = $this->addTestEntity(1, [
-        'name' => $this->randomString(),
-        'body' => $this->randomString(),
-        'type' => 'article',
-      ]);
+      // Load existing test entity.
+      $entity = \Drupal::entityTypeManager()->getStorage('entity_test_mulrev_changed')->load(1);
 
       // Prepare Search API item.
       $id = Utility::createCombinedId('entity:entity_test_mulrev_changed', $entity->id());
