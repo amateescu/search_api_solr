@@ -2047,6 +2047,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         else {
           $fl[] = 'spell';
         }
+
+        // Make the input lowercase as the indexed data is (usually) also all
+        // lowercase.
+        $incomplete_key = Unicode::strtolower($incomplete_key);
+        $user_input = Unicode::strtolower($user_input);
+
         $solarium_query->setFields($fl);
         $solarium_query->setPrefix($incomplete_key);
         $solarium_query->setLimit(10);
