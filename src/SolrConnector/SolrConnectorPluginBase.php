@@ -426,25 +426,28 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * Gets data from a Solr endpoint using a given handler.
    *
+   * @param $endpoint_name
+   * @param $handler
    * @param bool $reset
    *   If TRUE the server will be asked regardless if a previous call is cached.
    *
    * @return object
    *   A response object with system information.
    */
-  protected function getDataFromHandler($endpoint, $handler, $reset = FALSE) {
+  protected function getDataFromHandler($endpoint_name, $handler, $reset = FALSE) {
     static $previous_calls = [];
 
     $this->connect();
 
-    $endpoint_uri = $this->solr->getEndpoint($endpoint)->getBaseUri();
+    $endpoint = $this->solr->getEndpoint($endpoint_name);
+    $endpoint_uri = $endpoint->getBaseUri();
     $state_key = 'search_api_solr.endpoint.data';
     $state = \Drupal::state();
     $endpoint_data = $state->get($state_key);
 
     if (!isset($previous_calls[$endpoint_uri][$handler]) || $reset) {
       // Don't retry multiple times in case of an exception.
-      $previous_calls[$endpoint] = TRUE;
+      $previous_calls[$endpoint_name] = TRUE;
 
       if (!is_array($endpoint_data) || !isset($endpoint_data[$endpoint_uri][$handler]) || $reset) {
         // @todo Finish https://github.com/solariumphp/solarium/pull/155 and stop
