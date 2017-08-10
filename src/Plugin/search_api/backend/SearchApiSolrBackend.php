@@ -954,13 +954,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     // @todo Make this more configurable so that Search API can choose which
-    //   fields it wants to fetch.
+    //   fields it wants to fetch. But don't skip the minimum required fields as
+    //   currently set in the "else" path.
     //   @see https://www.drupal.org/node/2880674
     if (!empty($this->configuration['retrieve_data'])) {
       $solarium_query->setFields(['*', 'score']);
     }
     else {
-      $returned_fields = [SEARCH_API_ID_FIELD_NAME, 'score'];
+      $returned_fields = [$field_names['search_api_id'], $field_names['search_api_language'], $field_names['search_api_relevance']];
       if (!$this->configuration['site_hash']) {
         $returned_fields[] = 'hash';
       }
@@ -1365,6 +1366,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // SearchApiSolrBackend::getFieldNames().
     $id_field = $field_names['search_api_id'];
     $score_field = $field_names['search_api_relevance'];
+    $language_field = $field_names['search_api_language'];
 
     // Set up the results array.
     $result_set = $query->getResults();
@@ -1412,7 +1414,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
       $result_item = $this->fieldsHelper->createItem($index, $item_id);
       $result_item->setExtraData('search_api_solr_document', $doc);
+      $result_item->setLanguage($doc_fields[$language_field]);
       $result_item->setScore($doc_fields[$score_field]);
+      // The language field should not be removed. We keep it in the values as
+      // well for backward compatibility and for easy access.
       unset($doc_fields[$id_field], $doc_fields[$score_field]);
 
       // Extract properties from the Solr document, translating from Solr to
