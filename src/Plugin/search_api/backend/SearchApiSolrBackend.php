@@ -2480,10 +2480,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   The spatial options to add.
    * @param array $field_names
    *   The field names, to add the spatial options for.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  protected function setSpatial(Query $solarium_query, array &$spatial_options, $field_names = array()) {
+  protected function setSpatial(Query $solarium_query, array $spatial_options, $field_names = []) {
     if (count($spatial_options) > 1) {
-      throw new SearchApiSolrException('Only one spatial searche can be handled per query.');
+      throw new SearchApiSolrException('Only one spatial search can be handled per query.');
     }
 
     $spatial = reset($spatial_options);
