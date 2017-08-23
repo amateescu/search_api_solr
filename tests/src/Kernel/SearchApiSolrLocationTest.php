@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\search_api_solr\Kernel;
 
-use Drupal\search_api\Entity\Index;
-use Drupal\search_api\Entity\Server;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Entity\Server;
+use Drupal\search_api_solr_test\Logger\InMemoryLogger;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
-use Drupal\Tests\search_api_solr\Logger\InMemoryLogger;
 
 /**
  * Tests location searches and distance facets using the Solr search backend.
@@ -55,7 +55,7 @@ class SearchApiSolrLocationTest extends BackendTestBase {
   protected $waitForCommit = 2;
 
   /**
-   * @var \Drupal\Tests\search_api_solr\Logger\Logger
+   * @var \Drupal\search_api_solr_test\Logger\InMemoryLogger
    */
   protected $logger;
 
