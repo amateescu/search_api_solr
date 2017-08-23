@@ -831,32 +831,32 @@ class SearchApiSolrTest extends BackendTestBase {
       $suggestions = $backend->getAutocompleteSuggestions($query, $autocompleteSearch, 'artic', 'artic');
       $this->assertEquals(1, count($suggestions));
       $this->assertEquals('le', $suggestions[0]->getSuggestionSuffix());
-      $this->assertEquals(2, $suggestions[0]->getResults());
+      $this->assertEquals(2, $suggestions[0]->getResultsCount());
 
       $query = $this->buildSearch(['articel'], [], ['body'], FALSE);
       $suggestions = $backend->getAutocompleteSuggestions($query, $autocompleteSearch, 'articel', 'articel');
       $this->assertEquals(1, count($suggestions));
-      $this->assertEquals('article', $suggestions[0]->getSuggestionSuffix());
-      $this->assertEquals(0, $suggestions[0]->getResults());
+      $this->assertEquals('article', $suggestions[0]->getSuggestedKeys());
+      $this->assertEquals(0, $suggestions[0]->getResultsCount());
 
       $query = $this->buildSearch(['articel doks'], [], ['body'], FALSE);
       $suggestions = $backend->getAutocompleteSuggestions($query, $autocompleteSearch, 'doks', 'articel doks');
       $this->assertEquals(1, count($suggestions));
-      $this->assertEquals('article dogs', $suggestions[0]->getSuggestionSuffix());
+      $this->assertEquals('article dogs', $suggestions[0]->getSuggestedKeys());
 
       $query = $this->buildSearch(['articel tre'], [], ['body'], FALSE);
       $suggestions = $backend->getAutocompleteSuggestions($query, $autocompleteSearch, 'tre', 'articel tre');
       $this->assertEquals(5, count($suggestions));
       $this->assertEquals('e', $suggestions[0]->getSuggestionSuffix());
-      $this->assertEquals(1, $suggestions[0]->getResults());
+      $this->assertEquals(1, $suggestions[0]->getResultsCount());
       $this->assertEquals('es', $suggestions[1]->getSuggestionSuffix());
-      $this->assertEquals(1, $suggestions[1]->getResults());
-      $this->assertEquals('article tre', $suggestions[2]->getSuggestionSuffix());
-      $this->assertEquals(0, $suggestions[2]->getResults());
-      $this->assertEquals('article tree', $suggestions[3]->getSuggestionSuffix());
-      $this->assertEquals(0, $suggestions[3]->getResults());
-      $this->assertEquals('article trees', $suggestions[4]->getSuggestionSuffix());
-      $this->assertEquals(0, $suggestions[4]->getResults());
+      $this->assertEquals(1, $suggestions[1]->getResultsCount());
+      $this->assertEquals('article tre', $suggestions[2]->getSuggestedKeys());
+      $this->assertEquals(0, $suggestions[2]->getResultsCount());
+      $this->assertEquals('article tree', $suggestions[3]->getSuggestedKeys());
+      $this->assertEquals(0, $suggestions[3]->getResultsCount());
+      $this->assertEquals('article trees', $suggestions[4]->getSuggestedKeys());
+      $this->assertEquals(0, $suggestions[4]->getResultsCount());
     }
     else {
       $this->assertTrue(TRUE, 'Error: The Solr instance could not be found. Please enable a multi-core one on http://localhost:8983/solr/d8');

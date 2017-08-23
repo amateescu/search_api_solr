@@ -35,6 +35,7 @@ use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility as SearchApiUtility;
 use Drupal\search_api_autocomplete\SearchInterface;
 use Drupal\search_api_autocomplete\Suggestion;
+use Drupal\search_api_autocomplete\Suggestion\SuggestionFactory;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginManager;
@@ -2016,13 +2017,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @param string $user_input
    *   The complete user input for the fulltext search keywords so far.
    *
-   * @return \Drupal\search_api_autocomplete\SuggestionInterface[]
+   * @return \Drupal\search_api_autocomplete\Suggestion\SuggestionInterface[]
    *   An array of suggestions.
    *
    * @see \Drupal\search_api_autocomplete\AutocompleteBackendInterface
    */
   public function getAutocompleteSuggestions(QueryInterface $query, SearchInterface $search, $incomplete_key, $user_input) {
     $suggestions = [];
+    $factory = NULL;
+    if (class_exists(SuggestionFactory::class)) {
+      $factory = new SuggestionFactory($user_input);
+    }
 
     if ($this->configuration['suggest_suffix'] || $this->configuration['suggest_corrections'] || $this->configuration['suggest_words']) {
       $connector = $this->getSolrConnector();
@@ -2082,7 +2087,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
         if ($this->configuration['suggest_suffix']) {
           foreach ($autocomplete_terms as $term => $count) {
-            $suggestions[] = Suggestion::fromSuggestionSuffix(mb_substr($term, mb_strlen($incomplete_key)), $count, $user_input);
+            $suggestion_suffix = mb_substr($term, mb_strlen($incomplete_key));
+            if ($factory) {
+              $suggestions[] = $factory->createFromSuggestionSuffix($suggestion_suffix, $count);
+            }
+            else {
+              $suggestions[] = Suggestion::fromSuggestionSuffix($suggestion_suffix, $count, $user_input);
+            }
           }
         }
 
@@ -2108,11 +2119,21 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           }
 
           if ($suggestion != $user_input && !array_key_exists($suggestion, $autocomplete_terms)) {
-            $suggestions[] = Suggestion::fromSuggestedKeys($suggestion, $user_input);
+            if ($factory) {
+              $suggestions[] = $factory->createFromSuggestedKeys($suggestion);
+            }
+            else {
+              $suggestions[] = Suggestion::fromSuggestedKeys($suggestion, $user_input);
+            }
             foreach (array_keys($autocomplete_terms) as $term) {
               $completion = preg_replace('@(\b)' . preg_quote($incomplete_key, '@') . '$@', '$1' . $term . '$2', $suggestion);
               if ($completion != $suggestion) {
-                $suggestions[] = Suggestion::fromSuggestedKeys($completion, $user_input);
+                if ($factory) {
+                  $suggestions[] = $factory->createFromSuggestedKeys($completion);
+                }
+                else {
+                  $suggestions[] = Suggestion::fromSuggestedKeys($completion, $user_input);
+                }
               }
             }
           }
