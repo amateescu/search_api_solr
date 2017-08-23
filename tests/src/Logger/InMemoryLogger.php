@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\search_api_solr;
+namespace Drupal\Tests\search_api_solr\Logger;
 
 use Psr\Log\AbstractLogger;
 
@@ -8,7 +8,7 @@ use Psr\Log\AbstractLogger;
 /**
  * A simple in memory logger.
  */
-class Logger extends AbstractLogger {
+class InMemoryLogger extends AbstractLogger {
 
   private $messages = [];
 

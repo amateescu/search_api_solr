@@ -7,7 +7,7 @@ use Drupal\search_api\Entity\Server;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
-use Drupal\Tests\search_api_solr\Logger;
+use Drupal\Tests\search_api_solr\Logger\InMemoryLogger;
 
 /**
  * Tests location searches and distance facets using the Solr search backend.
@@ -55,7 +55,7 @@ class SearchApiSolrLocationTest extends BackendTestBase {
   protected $waitForCommit = 2;
 
   /**
-   * @var \Drupal\Tests\search_api_solr\Logger
+   * @var \Drupal\Tests\search_api_solr\Logger\Logger
    */
   protected $logger;
 
@@ -129,7 +129,7 @@ class SearchApiSolrLocationTest extends BackendTestBase {
 
     /** @var \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory */
     $loggerFactory = \Drupal::service('logger.factory');
-    $loggerFactory->addLogger(new Logger());
+    $loggerFactory->addLogger(new InMemoryLogger());
     $this->logger = $loggerFactory->get('search_api_solr');
   }
 
