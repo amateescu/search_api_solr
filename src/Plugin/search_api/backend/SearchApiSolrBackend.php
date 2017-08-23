@@ -474,6 +474,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   public function supportsDataType($type) {
     return in_array($type, [
       'location',
+      'rpt',
       'solr_string_storage',
       'solr_text_ngram',
       'solr_text_phonetic',
@@ -978,6 +979,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Handle spatial filters.
     if (isset($options['search_api_location'])) {
       $this->setSpatial($solarium_query, $options['search_api_location'], $field_names);
+    }
+
+    // Handle spatial filters.
+    if (isset($options['search_api_rpt'])) {
+      if (version_compare($connector->getSolrVersion(), 5.1, '>=')) {
+        $this->setRpt($solarium_query, $options['search_api_rpt'], $field_names);
+      }
+      else {
+        \Drupal::logger('search_api_solr')->error('Rpt data type feature is only supported by Solr version 5.1 or higher.');
+      }
+
     }
 
     // Handle field collapsing / grouping.
@@ -1562,11 +1574,33 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           }
           $facet = $extract_facets[$matches[1]];
           if ($count >= $facet['min_count']) {
-            $facets[$matches[1]][] = array(
+            $facets[$matches[1]][] = [
               'filter' => "[{$matches[2]} {$matches[3]}]",
               'count' => $count,
-            );
+            ];
           }
+        }
+      }
+    }
+    // Extract heatmaps.
+    if (isset($result_data['facet_counts']['facet_heatmaps'])) {
+      if ($spatials = $query->getOption('search_api_rpt')) {
+        foreach ($result_data['facet_counts']['facet_heatmaps'] as $key => $value) {
+          if (!preg_match('/^rpts_(.*)$/', $key, $matches)) {
+            continue;
+          }
+          if (empty($extract_facets[$matches[1]])) {
+            continue;
+          }
+          $heatmaps = array_slice($value, 15);
+          array_walk_recursive($heatmaps, function ($heatmaps) use (&$heatmap) {
+            $heatmap[] = $heatmaps;
+          });
+          $count = array_sum($heatmap);
+          $facets[$matches[1]][] = [
+            'filter' => $value,
+            'count' => $count,
+          ];
         }
       }
     }
@@ -2590,6 +2624,41 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
       }
     }
+  }
+
+  /**
+   * Adds rpt spatial features to the search query.
+   *
+   * @param \Solarium\QueryType\Select\Query\Query $solarium_query
+   *   The solr query.
+   * @param array $rpt_options
+   *   The rpt spatial options to add.
+   * @param array $field_names
+   *   The field names, to add the rpt spatial options for.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   *   Thrown when more than one rpt spatial searches are added.
+   */
+  protected function setRpt(Query $solarium_query, array $rpt_options, $field_names = array()) {
+    // Add location filter
+    if (count($rpt_options) > 1) {
+      throw new SearchApiSolrException('Only one spatial search can be handled per query.');
+    }
+
+    $rpt = reset($rpt_options);
+    $solr_field = $field_names[$rpt['field']];
+    $rpt['geom'] = isset($rpt['geom']) ? $rpt['geom'] : '["-180 -90" TO "180 90"]';
+
+    // Add location filter
+    $solarium_query->createFilterQuery($solr_field)->setQuery($solr_field . ':' . $rpt['geom']);
+
+    // Add Solr Query params
+    $solarium_query->addParam('facet', 'on');
+    $solarium_query->addParam('facet.heatmap', $solr_field);
+    $solarium_query->addParam('facet.heatmap.geom', $rpt['geom']);
+    $solarium_query->addParam('facet.heatmap.format', $rpt['format']);
+    $solarium_query->addParam('facet.heatmap.maxCells', $rpt['maxCells']);
+    $solarium_query->addParam('facet.heatmap.gridLevel', $rpt['gridLevel']);
   }
 
   /**

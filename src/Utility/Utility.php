@@ -87,6 +87,10 @@ class Utility {
         'geohash' => array(
           'prefix' => 'geo',
         ),
+        // Provided by Search API Location module.
+        'rpt' => [
+          'prefix' => 'rpt',
+        ],
       );
 
       // For the extra types, only add our extra info if it's already been

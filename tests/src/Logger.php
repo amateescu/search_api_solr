@@ -1,32 +1,29 @@
 <?php
 
-namespace Drupal\Tests\search_api_solr\Traits;
+namespace Drupal\Tests\search_api_solr;
+
+use Psr\Log\AbstractLogger;
 
 
 /**
- * Provides a function to invoke protected/private methods of a class.
+ * A simple in memory logger.
  */
-trait InvokeMethodTrait {
+class Logger extends AbstractLogger {
+
+  private $messages = [];
 
   /**
-   * Calls protected/private method of a class.
-   *
-   * @param object &$object
-   *   Instantiated object that we will run method on.
-   * @param string
-   *   Method name to call.
-   * @param array $parameters
-   *   Array of parameters to pass into method.
-   *
-   * @return mixed
-   *   Method return.
+   *  {@inheritdoc}
    */
-  protected function invokeMethod(&$object, $methodName, array $parameters = []) {
-    $reflection = new \ReflectionClass(get_class($object));
-    $method = $reflection->getMethod($methodName);
-    $method->setAccessible(TRUE);
-
-    return $method->invokeArgs($object, $parameters);
+  public function log($level, $message, array $context = []) {
+    $this->messages[] = [
+      'level' => $level,
+      'message' => $message,
+      'context' => $context,
+    ];
   }
 
+  public function getLastMessage() {
+    return end($this->messages);
+  }
 }
