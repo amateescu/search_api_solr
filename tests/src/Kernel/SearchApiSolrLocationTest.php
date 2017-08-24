@@ -127,10 +127,10 @@ class SearchApiSolrLocationTest extends BackendTestBase {
 
     $this->indexItems($this->indexId);
 
-    /** @var \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory */
-    $loggerFactory = \Drupal::service('logger.factory');
-    $loggerFactory->addLogger(new InMemoryLogger());
-    $this->logger = $loggerFactory->get('search_api_solr');
+    $this->logger = new InMemoryLogger();
+      /** @var \Drupal\Core\Logger\LoggerChannelInterface $loggerChannel */
+    $loggerChannel = \Drupal::service('logger.factory')->get('search_api_solr');
+    $loggerChannel->addLogger($this->logger);
   }
 
   protected function assertLogMessage($level, $message, array $context = []) {
