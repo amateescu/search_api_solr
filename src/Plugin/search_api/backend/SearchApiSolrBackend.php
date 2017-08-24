@@ -1428,10 +1428,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $result_item = $this->fieldsHelper->createItem($index, $item_id);
       $result_item->setExtraData('search_api_solr_document', $doc);
       $result_item->setLanguage($doc_fields[$language_field]);
-      $result_item->setScore($doc_fields[$score_field]);
+
+      if(isset($doc_fields[$score_field])) {
+        $result_item->setScore($doc_fields[$score_field]);
+        unset($doc_fields[$score_field]);
+      }
       // The language field should not be removed. We keep it in the values as
       // well for backward compatibility and for easy access.
-      unset($doc_fields[$id_field], $doc_fields[$score_field]);
+      unset($doc_fields[$id_field]);
 
       // Extract properties from the Solr document, translating from Solr to
       // Search API property names. This reverses the mapping in
@@ -2312,7 +2316,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected function flattenKeys(array $keys) {
     $k = [];
-    $pre = ($keys['#conjunction'] == 'OR') ? '' : '+';
+    $pre = '+';
+
+    if(isset($keys['#conjunction']) && $keys['#conjunction'] == 'OR') {
+      $pre = '';
+    }
+
     $neg = empty($keys['#negation']) ? '' : '-';
 
     foreach ($keys as $key_nr => $key) {
