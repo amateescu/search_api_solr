@@ -364,7 +364,7 @@ class SearchApiSolrLocationTest extends BackendTestBase {
       $this->assertEquals($expected, $facets, 'The correct location facets are returned');
     }
     else {
-      $this->assertLogMessage('error', 'Rpt data type feature is only supported by Solr version 5.1 or higher.');
+      $this->assertLogMessage(LOG_ERR, 'Rpt data type feature is only supported by Solr version 5.1 or higher.');
     }
 
     $query = $this->buildSearch(NULL, [], NULL, FALSE);
@@ -415,7 +415,7 @@ class SearchApiSolrLocationTest extends BackendTestBase {
       $this->assertEquals($expected, $facets, 'The correct location facets are returned');
     }
     else {
-      $this->assertLogMessage('error', 'Rpt data type feature is only supported by Solr version 5.1 or higher.');
+      $this->assertLogMessage(LOG_ERR, 'Rpt data type feature is only supported by Solr version 5.1 or higher.');
     }
 
   }
