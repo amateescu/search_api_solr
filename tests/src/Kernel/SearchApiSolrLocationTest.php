@@ -187,6 +187,7 @@ class SearchApiSolrLocationTest extends BackendTestBase {
    * Tests location searches and distance facets.
    */
   public function testBackend() {
+    $solr_version = $this->getServer()->getBackend()->getSolrConnector()->getSolrVersion();
 
     // Search 500km from Antwerp.
     $location_options = [
@@ -334,7 +335,6 @@ class SearchApiSolrLocationTest extends BackendTestBase {
       'format' => 'ints2D',
     ];
     $result = $query->execute();
-    $facets = $result->getExtraData('search_api_facets', [])['rpt'];
     $expected = [
       [
         'filter' => [
@@ -359,8 +359,8 @@ class SearchApiSolrLocationTest extends BackendTestBase {
       ],
     ];
 
-    $solr_version = $this->getServer()->getBackend()->getSolrConnector()->getSolrVersion();
     if (version_compare($solr_version, 5.1, '>=')) {
+      $facets = $result->getExtraData('search_api_facets', [])['rpt'];
       $this->assertEquals($expected, $facets, 'The correct location facets are returned');
     }
     else {
@@ -386,7 +386,6 @@ class SearchApiSolrLocationTest extends BackendTestBase {
       'format' => 'ints2D',
     ];
     $result = $query->execute();
-    $facets = $result->getExtraData('search_api_facets', [])['rpt'];
     $expected = [
       [
         'filter' => [
@@ -412,6 +411,7 @@ class SearchApiSolrLocationTest extends BackendTestBase {
     ];
 
     if (version_compare($solr_version, 5.1, '>=')) {
+      $facets = $result->getExtraData('search_api_facets', [])['rpt'];
       $this->assertEquals($expected, $facets, 'The correct location facets are returned');
     }
     else {
