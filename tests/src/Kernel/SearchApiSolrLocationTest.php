@@ -133,11 +133,10 @@ class SearchApiSolrLocationTest extends BackendTestBase {
     $loggerChannel->addLogger($this->logger);
   }
 
-  protected function assertLogMessage($level, $message, array $context = []) {
+  protected function assertLogMessage($level, $message) {
     $last_message = $this->logger->getLastMessage();
     $this->assertEquals($level, $last_message['level']);
     $this->assertEquals($message, $last_message['message']);
-    $this->assertEquals($context, $last_message['context']);
   }
 
   /**
