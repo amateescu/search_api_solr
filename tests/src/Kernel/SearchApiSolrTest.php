@@ -874,4 +874,50 @@ class SearchApiSolrTest extends BackendTestBase {
     $this->assertContains('The extraction seems working!', $content);
   }
 
+  /**
+   * Tests ngram search result.
+   */
+  public function testNgramResult() {
+    // Only run the tests if we have a Solr core available.
+    if ($this->solrAvailable) {
+      $this->addTestEntity(1, [
+        'name' => 'Test Article 1',
+        'body' => 'The test article number 1 about cats, dogs and trees.',
+        'type' => 'article',
+        'category' => 'dogs and trees',
+      ]);
+
+      // Add another node with body length equal to the limit.
+      $this->addTestEntity(2, [
+        'name' => 'Test Article 1',
+        'body' => 'The test article number 2 about a tree.',
+        'type' => 'article',
+        'category' => 'trees',
+      ]);
+
+      $this->indexItems($this->indexId);
+
+      $results = $this->buildSearch(['tre'], [], ['category_ngram'])
+        ->execute();
+      $this->assertResults([1, 2], $results, 'Ngram text "tre".');
+
+      $results = $this->buildSearch([], [], [])
+        ->addCondition('category_ngram_string', 'tre')
+        ->execute();
+      $this->assertResults([2], $results, 'Ngram string "tre".');
+
+      $results = $this->buildSearch(['Dog'], [], ['category_ngram'])
+        ->execute();
+      $this->assertResults([1], $results, 'Ngram text "Dog".');
+
+      $results = $this->buildSearch([], [], [])
+        ->addCondition('category_ngram_string', 'Dog')
+        ->execute();
+      $this->assertResults([1], $results, 'Ngram string "Dog".');
+    }
+    else {
+      $this->assertTrue(TRUE, 'Error: The Solr instance could not be found. Please enable a multi-core one on http://localhost:8983/solr/d8');
+    }
+  }
+
 }

@@ -188,4 +188,16 @@ function search_api_solr_search_api_views_handler_mapping_alter(&$mapping) {
       'id' => 'search_api',
     ],
   ];
+
+  $mapping['solr_string_ngram'] = [
+    'argument' => [
+      'id' => 'search_api',
+    ],
+    'filter' => [
+      'id' => 'search_api_string',
+    ],
+    'sort' => [
+      'id' => 'search_api',
+    ],
+  ];
 }
