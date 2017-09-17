@@ -1,3 +1,7 @@
+<!-- Search Api specific fields -->
+<!-- item_id contains the entity ID, e.g. a node's nid. -->
+<field name="item_id"  type="string" indexed="true" stored="true" />
+
 <!-- Apache Solr Search Integration specific fields -->
 <!-- entity_id is the numeric object ID, e.g. Node ID, File ID -->
 <field name="entity_id"  type="long" indexed="true" stored="true" />

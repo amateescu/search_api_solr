@@ -432,7 +432,7 @@ armee
 armen
 armuts
 arrest
-arsch/n
+arsch
 arsen
 art
 arten
@@ -987,7 +987,7 @@ cello
 cellophan
 charakter
 charter
-chat/n
+chat
 chauffeur
 chef
 chemie
@@ -1001,7 +1001,7 @@ chromosomen
 cliquen
 club
 code
-comic/n
+comic
 computer
 container
 couch
@@ -1287,7 +1287,7 @@ elch
 elefanten
 elektrizitäts
 elektro
-elektronen/n
+elektronen
 elektronik
 element
 elementar
@@ -1427,7 +1427,7 @@ etappen
 etat
 ethik
 etiketten
-etüden/n
+etüden
 eulen
 euro
 europa
@@ -1507,7 +1507,7 @@ fett
 feuchtigkeits
 feuer
 fichten
-fick/n
+fick
 fieber
 film
 filter
@@ -1586,7 +1586,7 @@ fress
 freuden
 freundschafts
 friedens
-frisch/n
+frisch
 friseur
 front
 frontal
@@ -2361,7 +2361,7 @@ listen
 literatur
 lizenz
 löffel
-löss/n
+löss
 lösch
 lösungs
 löt
@@ -2522,7 +2522,7 @@ mücken
 müll
 münz
 mütze
-mull/n
+mull
 multimedia
 mund
 munitions
@@ -2565,11 +2565,11 @@ nazi
 nebel
 neben
 negativ
-neger/n
+neger
 neigungs
 nelken
 nenn
-neo/n
+neo
 nerven
 netto
 netz
@@ -2656,7 +2656,7 @@ papier
 papp
 paprika
 papst
-para/n
+para
 parade
 paradies
 parallel
@@ -2665,7 +2665,7 @@ park
 parkett
 parlaments
 partei
-parteien/n
+parteien
 parteitags
 partisanen
 partner
@@ -2736,7 +2736,7 @@ politik
 polizei
 polster
 poren
-porno/n
+porno
 porzellan
 posaunen
 positions
@@ -3287,8 +3287,8 @@ süd
 sünden
 süss
 süssigkeiten
-sub/n
-subjekt/n
+sub
+subjekt
 subventions
 such
 sucht
@@ -3705,7 +3705,7 @@ weiss
 weisungs
 weiter
 weizen
-well/n
+well
 wellen
 welt
 wendel

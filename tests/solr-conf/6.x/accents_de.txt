@@ -6,8 +6,9 @@
 "\u00C2" => "A"
 # Ã => A
 "\u00C3" => "A"
-# Ä => A
-"\u00C4" => "Ae"
+# Ä => Ae
+# Not needed if German2 Porter stemmer is used. This way word lists like
+# stopwords are easier to maintain.
 # Å => A
 "\u00C5" => "A"
 # Æ => AE
@@ -44,8 +45,9 @@
 "\u00D4" => "O"
 # Õ => O
 "\u00D5" => "O"
-# Ö => O
-"\u00D6" => "Oe"
+# Ö => Oe
+# Not needed if German2 Porter stemmer is used. This way word lists like
+# stopwords are easier to maintain.
 # Ø => O
 "\u00D8" => "O"
 # Œ => OE
@@ -58,8 +60,9 @@
 "\u00DA" => "U"
 # Û => U
 "\u00DB" => "U"
-# Ü => U
-"\u00DC" => "Ue"
+# Ü => Ue
+# Not needed if German2 Porter stemmer is used. This way word lists like
+# stopwords are easier to maintain.
 # Ý => Y
 "\u00DD" => "Y"
 # Ÿ => Y
@@ -72,8 +75,9 @@
 "\u00E2" => "a"
 # ã => a
 "\u00E3" => "a"
-# ä => a
-"\u00E4" => "ae"
+# ä => ae
+# Not needed if German2 Porter stemmer is used. This way word lists like
+# stopwords are easier to maintain.
 # å => a
 "\u00E5" => "a"
 # æ => ae
@@ -110,14 +114,16 @@
 "\u00F4" => "o"
 # õ => o
 "\u00F5" => "o"
-# ö => o
-"\u00F6" => "oe"
+# ö => oe
+# Not needed if German2 Porter stemmer is used. This way word lists like
+# stopwords are easier to maintain.
 # ø => o
 "\u00F8" => "o"
 # œ => oe
 "\u0153" => "oe"
 # ß => ss
-"\u00DF" => "ss"
+# Not needed if German2 Porter stemmer is used. This way word lists like
+# stopwords are easier to maintain.
 # þ => th
 "\u00FE" => "th"
 # ù => u
@@ -126,8 +132,9 @@
 "\u00FA" => "u"
 # û => u
 "\u00FB" => "u"
-# ü => u
-"\u00FC" => "ue"
+# ü => ue
+# Not needed if German2 Porter stemmer is used. This way word lists like
+# stopwords are easier to maintain.
 # ý => y
 "\u00FD" => "y"
 # ÿ => y
