@@ -20,7 +20,7 @@ php:
 env:
   - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=4.5.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/4.x"
   - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=5.5.4 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/5.x"
-  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=6.6.0 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/6.x"
+  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=6.6.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/6.x"
 
 notifications:
   irc:
@@ -37,7 +37,6 @@ mysql:
 # than e.g. phantomjs
 before_install:
   - phpenv config-rm xdebug.ini
-  - composer self-update
   - composer global require "hirak/prestissimo:^0.3"
   - sudo apt-get update -qq > /dev/null
   - "export DISPLAY=:99.0"
@@ -58,15 +57,7 @@ install:
   - cd $TRAVIS_BUILD_DIR/../drupal
   - composer install
   - composer config repositories.search_api_solr_multilingual vcs $TRAVIS_BUILD_DIR
-  - composer require drupal/search_api:1.x-dev
-  - composer require drupal/search_api_autocomplete:1.x-dev
-  - composer require drupal/search_api_solr:1.x-dev
-  - composer require drupal/search_api_solr_multilingual:999.0.0
-  - composer require drupal/search_api_location:1.x-dev
-  - composer require drupal/facets:1.x-dev
-  - composer require drupal/geofield:1.x-dev
-  - composer require drupal/composer_deploy
-  - composer require drush/drush
+  - composer require drupal/search_api:1.x-dev drupal/search_api_autocomplete:1.x-dev drupal/search_api_solr:1.x-dev drupal/search_api_solr_multilingual:999.0.0 drupal/search_api_location:1.x-dev drupal/facets:1.x-dev drupal/geofield:1.x-dev drupal/composer_deploy drush/drush
   # Patch template.
   #########################################
   # to be removed once #2824932 is resolved
