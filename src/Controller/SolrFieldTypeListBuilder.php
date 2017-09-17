@@ -76,8 +76,12 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       try {
         /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
         $backend = $this->getBackend();
-        $solr_version = $backend->getSolrConnector()->getSolrVersion();
         $domain = $backend->getDomain();
+        $solr_version = $backend->getSolrConnector()->getSolrVersion();
+        if (version_compare($solr_version, '0.0.0', '==')) {
+          $solr_version = '9999.0.0';
+          throw new SearchApiSolrException();
+        }
       }
       catch (SearchApiSolrException $e) {
         $operator = '<=';
