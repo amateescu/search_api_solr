@@ -145,3 +145,13 @@ function search_api_solr_multilingual_update_8003() {
     search_api_solr_multilingual_update_helper_save_backend_config($server_name, $backend_config);
   }
 }
+
+/**
+ * Add search page independent language setting to existing solr backends.
+ */
+function search_api_solr_multilingual_update_8004() {
+  foreach (search_api_solr_multilingual_update_helper_get_backend_configs() as $server_name => $backend_config) {
+    $backend_config['sasm_search_page_include_language_independent'] = FALSE;
+    search_api_solr_multilingual_update_helper_save_backend_config($server_name, $backend_config);
+  }
+}
