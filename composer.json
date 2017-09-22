@@ -4,6 +4,7 @@
   "type": "drupal-module",
   "license": "GPL-2.0+",
   "require": {
-    "maennchen/zipstream-php": "0.4.*"
+    "maennchen/zipstream-php": "0.4.*",
+    "drupal/search_api_solr": "~1.1"
   }
 }
