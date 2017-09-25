@@ -221,9 +221,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    *
    */
   protected function generateSchemaExtraFieldsXml() {
-    $connector = $this->getBackend()->getSolrConnector();
-    $target_solr_version = $connector->getSolrVersion();
-    $target_schema_version = $connector->getSchemaVersion();
+    $target_solr_version = $this->getBackend()->getSolrConnector()->getSolrVersion();
     $xml = $this->getExtraFileHead($target_solr_version, 'fields');
     $indentation = '  ';
     if (version_compare($target_solr_version, '6.0.0', '>=')) {
@@ -240,9 +238,8 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
           }
           $xml .= "/>\n";
         }
-        if (version_compare($target_schema_version, '5.4', '>=')) {
-          // Schema version >= 5.4 is only available on Solr 6. Therefore we're
-          // not in that "legacy mode" and inside an fields tag.
+        if (version_compare($target_solr_version, '6.0.0', '>=')) {
+          // On Solr 6 we're not in that "legacy mode" and inside an fields tag.
           foreach ($solr_field_type->getCopyFields() as $copy_field) {
             $xml .= $indentation . '<copyField ';
             foreach ($copy_field as $attribute => $value) {
