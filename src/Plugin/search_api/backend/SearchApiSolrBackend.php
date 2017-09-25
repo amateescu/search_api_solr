@@ -2087,11 +2087,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       try {
         $fl = [];
         if (version_compare($schema_version, '5.4', '>=')) {
-          $solr_field_names = $this->getSolrFieldNames($query->getIndex());
-          $fulltext_fields = $search->getOption('fields') ? $search->getOption('fields') : $this->getQueryFulltextFields($query);
-          foreach ($fulltext_fields as $fulltext_field) {
-            $fl[] = 'terms_' . $solr_field_names[$fulltext_field];
-          }
+          $fl = $this->getAutocompleteFields($query, $search);
         }
         else {
           $fl[] = 'spell';
@@ -2186,6 +2182,29 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     return $suggestions;
+  }
+
+  /**
+   * Get the fields to search for autocomplete terms.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   A query representing the completed user input so far.
+   * @param \Drupal\search_api_autocomplete\SearchInterface $search
+   *   An object containing details about the search the user is on, and
+   *   settings for the autocompletion. See the class documentation for details.
+   *   Especially $search->options should be checked for settings, like whether
+   *   to try and estimate result counts for returned suggestions.
+   *
+   * @return array
+   */
+  protected function getAutocompleteFields(QueryInterface $query, SearchInterface $search) {
+    $fl = [];
+    $solr_field_names = $this->getSolrFieldNames($query->getIndex());
+    $fulltext_fields = $search->getOption('fields') ? $search->getOption('fields') : $this->getQueryFulltextFields($query);
+    foreach ($fulltext_fields as $fulltext_field) {
+      $fl[] = 'terms_' . $solr_field_names[$fulltext_field];
+    }
+    return $fl;
   }
 
   /**
