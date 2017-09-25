@@ -4,6 +4,7 @@ namespace Drupal\search_api_solr_multilingual\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\search_api\ServerInterface;
+use Symfony\Component\HttpFoundation\Response;
 use ZipStream\Exception as ZipStreamException;
 
 /**
@@ -32,7 +33,9 @@ class SolrFieldTypeController extends ControllerBase {
    *   A render array as expected by drupal_render().
    */
   public function getSchemaExtraTypesXml(ServerInterface $search_api_server) {
-    return $this->getListBuilder($search_api_server)->getSchemaExtraTypesXml();
+    $response = new Response();
+    $response->setContent(\Drupal::service('renderer')->render($this->getListBuilder($search_api_server)->getSchemaExtraTypesXml()));
+    return $response;
   }
 
   /**
@@ -44,7 +47,9 @@ class SolrFieldTypeController extends ControllerBase {
    *   A render array as expected by drupal_render().
    */
   public function getSchemaExtraFieldsXml(ServerInterface $search_api_server) {
-    return $this->getListBuilder($search_api_server)->getSchemaExtraFieldsXml();
+    $response = new Response();
+    $response->setContent(\Drupal::service('renderer')->render($this->getListBuilder($search_api_server)->getSchemaExtraFieldsXml()));
+    return $response;
   }
 
   /**
