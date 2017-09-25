@@ -234,7 +234,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   public function getDynamicFields() {
     $dynamic_fields = [];
-    foreach (array('ts', 'tm') as $prefix) {
+    foreach (array('ts', 'tm', 'terms_ts', 'terms_tm') as $prefix) {
       $dynamic_fields[] = [
         'name' => SearchApiSolrUtility::encodeSolrName(
             Utility::getLanguageSpecificSolrDynamicFieldPrefix($prefix, $this->field_type_language_code)
@@ -248,6 +248,24 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
       ];
     }
     return $dynamic_fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCopyFields() {
+    $copy_fields = [];
+    foreach (array('ts' => 'terms_ts', 'tm' => 'terms_tm') as $src_prefix => $dest_prefix) {
+      $copy_fields[] = [
+        'src' => SearchApiSolrUtility::encodeSolrName(
+          Utility::getLanguageSpecificSolrDynamicFieldPrefix($src_prefix, $this->field_type_language_code)
+        ) . '*',
+        'dest' => SearchApiSolrUtility::encodeSolrName(
+          Utility::getLanguageSpecificSolrDynamicFieldPrefix($dest_prefix, $this->field_type_language_code)
+        ) . '*',
+      ];
+    }
+    return $copy_fields;
   }
 
   /**

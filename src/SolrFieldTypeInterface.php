@@ -86,6 +86,13 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
   public function getDynamicFields();
 
   /**
+   * Gets a list of copy fields that will use this Solr Field Type.
+   *
+   * @return array
+   */
+  public function getCopyFields();
+
+  /**
    * Gets all text files required by the Solr Field Type definition.
    *
    * @return array

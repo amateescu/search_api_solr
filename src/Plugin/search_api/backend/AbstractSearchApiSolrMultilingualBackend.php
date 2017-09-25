@@ -4,6 +4,7 @@ namespace Drupal\search_api_solr_multilingual\Plugin\search_api\backend;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\search_api_autocomplete\SearchInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr_multilingual\Entity\SolrFieldType;
 use Drupal\search_api_solr_multilingual\SearchApiSolrMultilingualException;
@@ -553,4 +554,21 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
 
     return $info;
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getAutocompleteFields(QueryInterface $query, SearchInterface $search) {
+    $fl = [];
+    $solr_field_names = $this->getSolrFieldNames($query->getIndex());
+    foreach ($query->getLanguages() as $langcode) {
+      $fulltext_fields = $search->getOption('fields') ? $search->getOption('fields') : $this->getQueryFulltextFields($query);
+      $language_specific_fulltext_fields = $this->getLanguageSpecificSolrFieldNames($langcode, $solr_field_names, $query->getIndex());
+      foreach ($fulltext_fields as $fulltext_field) {
+        $fl[] = 'terms_' . $language_specific_fulltext_fields[$fulltext_field];
+      }
+    }
+    return $fl;
+  }
+
 }
