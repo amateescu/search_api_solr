@@ -257,7 +257,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     $copy_fields = [];
     foreach (array('ts' => 'terms_ts', 'tm' => 'terms_tm') as $src_prefix => $dest_prefix) {
       $copy_fields[] = [
-        'src' => SearchApiSolrUtility::encodeSolrName(
+        'source' => SearchApiSolrUtility::encodeSolrName(
           Utility::getLanguageSpecificSolrDynamicFieldPrefix($src_prefix, $this->field_type_language_code)
         ) . '*',
         'dest' => SearchApiSolrUtility::encodeSolrName(
