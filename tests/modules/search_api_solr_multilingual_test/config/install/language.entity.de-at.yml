@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies: {  }
+id: de-at
+label: German/Austria
+direction: ltr
+weight: 0
+locked: false

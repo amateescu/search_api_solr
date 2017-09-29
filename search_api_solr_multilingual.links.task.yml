@@ -1,0 +1,5 @@
+entity.solr_field_type.collection:
+  route_name: entity.solr_field_type.collection
+  base_route: entity.search_api_server.canonical
+  title: 'Multilingual Field Types'
+  weight: 10
