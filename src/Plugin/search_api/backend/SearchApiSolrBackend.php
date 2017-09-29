@@ -238,12 +238,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#description' => $this->t('Skip the automatic check for schema-compatibillity. Use this override if you are seeing an error-message about an incompatible schema.xml configuration file, and you are sure the configuration is compatible.'),
       '#default_value' => $this->configuration['skip_schema_check'],
     );
-    // Highlighting retrieved data and getting an excerpt only makes sense when
-    // we retrieve data. (Actually, internally it doesn't really matter.
-    // However, from a user's perspective, having to check both probably makes
-    // sense.)
+    // Highlighting retrieved data only makes sense when we retrieve data.
+    // (Actually, internally it doesn't really matter. However, from a user's
+    // perspective, having to check both probably makes sense.)
     $form['advanced']['highlight_data']['#states']['invisible'][':input[name="backend_config[advanced][retrieve_data]"]']['checked'] = FALSE;
-    $form['advanced']['excerpt']['#states']['invisible'][':input[name="backend_config[advanced][retrieve_data]"]']['checked'] = FALSE;
 
     if ($this->moduleHandler->moduleExists('search_api_autocomplete')) {
       $form['autocomplete'] = array(
@@ -408,10 +406,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $values['suggest_words'] = $defaults['suggest_words'];
     }
 
-    // Highlighting retrieved data and getting an excerpt only makes sense when
-    // we retrieve data from the Solr backend.
+    // Highlighting retrieved data only makes sense when we retrieve data from
+    // the Solr backend.
     $values['highlight_data'] &= $values['retrieve_data'];
-    $values['excerpt'] &= $values['retrieve_data'];
 
     foreach ($values as $key => $value) {
       $form_state->setValue($key, $value);
@@ -930,10 +927,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $solarium_query->getEDisMax()
         ->setQueryFields(implode(' ', $query_fields_boosted));
 
-      if (!empty($this->configuration['retrieve_data'])) {
-        // Set highlighting.
-        $this->setHighlighting($solarium_query, $query, $query_fields);
-      }
+      // Set highlighting and excerpt.
+      $this->setHighlighting($solarium_query, $query, $query_fields);
     }
 
     $options = $query->getOptions();
@@ -1465,12 +1460,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
       }
 
-      if (!empty($backend_config['retrieve_data'])) {
-        $solr_id = $this->createId($index->id(), $result_item->getId());
-        $excerpt = $this->getExcerpt($result->getData(), $solr_id, $result_item, $field_names);
-        if ($excerpt) {
-          $result_item->setExcerpt($excerpt);
-        }
+      $solr_id = $this->createId($index->id(), $result_item->getId());
+      if ($excerpt = $this->getExcerpt($result->getData(), $solr_id, $result_item, $field_names)) {
+        $result_item->setExcerpt($excerpt);
       }
 
       $result_set->addResultItem($result_item);
@@ -2310,7 +2302,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                 }
                 else {
                   if ($value == $snippet['raw']) {
-                    $value == $snippet['replace'];
+                    $value = $snippet['replace'];
                   }
                 }
               }
