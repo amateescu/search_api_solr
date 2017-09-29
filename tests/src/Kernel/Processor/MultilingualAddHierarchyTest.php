@@ -2,8 +2,6 @@
 
 namespace Drupal\Tests\search_api_solr\Kernel\Processor;
 
-use Drupal\Tests\search_api_solr\Kernel\Processor\SolrBackendTrait;
-
 /**
  * Tests the "Hierarchy" processor.
  *
