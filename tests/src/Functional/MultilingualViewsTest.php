@@ -11,7 +11,7 @@ use Drupal\Tests\search_api\Functional\SearchApiBrowserTestBase;
  *
  * @group search_api_solr
  */
-class ViewsTest extends \Drupal\Tests\search_api\Functional\ViewsTest {
+class MultilingualViewsTest extends \Drupal\Tests\search_api\Functional\ViewsTest {
 
   /**
    * Modules to enable for this test.
