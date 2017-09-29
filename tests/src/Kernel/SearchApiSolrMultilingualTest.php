@@ -11,7 +11,7 @@ use Drupal\Tests\search_api_solr\Kernel\SearchApiSolrTest;
 /**
  * Tests index and search capabilities using the Solr search backend.
  *
- * @group search_api_solr_multilingual
+ * @group search_api_solr
  */
 class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
 

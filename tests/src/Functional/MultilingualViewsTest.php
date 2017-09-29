@@ -9,7 +9,7 @@ use Drupal\Tests\search_api\Functional\SearchApiBrowserTestBase;
 /**
  * Tests the Views integration of the Search API.
  *
- * @group search_api_solr_multilingual
+ * @group search_api_solr
  */
 class ViewsTest extends \Drupal\Tests\search_api\Functional\ViewsTest {
 
