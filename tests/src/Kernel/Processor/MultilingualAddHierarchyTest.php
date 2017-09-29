@@ -2,14 +2,12 @@
 
 namespace Drupal\Tests\search_api_solr\Kernel\Processor;
 
-use Drupal\Tests\search_api_solr\Kernel\Processor\SolrBackendTrait;
-
 /**
  * Tests the "Hierarchy" processor.
  *
  * @see \Drupal\search_api\Plugin\search_api\processor\AddHierarchy
  *
- * @group search_api_solr_multilingual
+ * @group search_api_solr
  *
  * @coversDefaultClass \Drupal\search_api\Plugin\search_api\processor\AddHierarchy
  */

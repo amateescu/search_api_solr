@@ -3,12 +3,11 @@
 namespace Drupal\Tests\search_api_solr\Kernel;
 
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
-use Drupal\Tests\search_api_solr\Kernel\SearchApiSolrLocationTest;
 
 /**
  * Tests index and search capabilities using the Solr search backend.
  *
- * @group search_api_solr_multilingual
+ * @group search_api_solr
  */
 class SearchApiSolrMultilingualLocationTest extends SearchApiSolrLocationTest {
 

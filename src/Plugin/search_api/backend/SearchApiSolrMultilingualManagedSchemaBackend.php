@@ -5,7 +5,7 @@ namespace Drupal\search_api_solr\Plugin\search_api\backend;
 use Drupal\Component\Serialization\Json;
 use Drupal\search_api_solr\Utility\Utility;
 use Drupal\search_api_solr\Entity\SolrFieldType;
-use Drupal\search_api_solr\SearchApiSolrMultilingualException;
+use Drupal\search_api_solr\SearchApiSolrException;
 
 /**
  * @SearchApiBackend(
@@ -41,7 +41,7 @@ class SearchApiSolrMultilingualManagedSchemaBackend extends AbstractSearchApiSol
     try {
       $this->solrHelper()->coreRestPost('schema', Json::encode($command));
     }
-    catch (SearchApiSolrMultilingualException $e) {
+    catch (SearchApiSolrException $e) {
       watchdog_exception('solr', $e);
       return FALSE;
     }
@@ -59,7 +59,7 @@ class SearchApiSolrMultilingualManagedSchemaBackend extends AbstractSearchApiSol
     /** @var \Drupal\search_api_solr\Entity\SolrFieldType $field_type_entity */
     $field_type_entity = SolrFieldType::load($field_type_name);
     if (!$field_type_entity) {
-      throw new SearchApiSolrMultilingualException("There's no field type $field_type_name.");
+      throw new SearchApiSolrException("There's no field type $field_type_name.");
     }
     $field_type_definition = $field_type_entity->getFieldType();
     $field_type_definition['name'] = $solr_field_type_name;
@@ -70,7 +70,7 @@ class SearchApiSolrMultilingualManagedSchemaBackend extends AbstractSearchApiSol
     try {
       $this->solrHelper()->coreRestPost('schema', $command_json);
     }
-    catch (SearchApiSolrMultilingualException $e) {
+    catch (SearchApiSolrException $e) {
       watchdog_exception('solr', $e);
       return FALSE;
     }

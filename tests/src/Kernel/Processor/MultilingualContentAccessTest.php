@@ -7,7 +7,7 @@ use Drupal\Tests\search_api_solr\Kernel\Processor\SolrBackendTrait;
 /**
  * Tests the "Content access" processor.
  *
- * @group search_api_solr_multilingual
+ * @group search_api_solr
  *
  * @see \Drupal\search_api\Plugin\search_api\processor\ContentAccess
  */

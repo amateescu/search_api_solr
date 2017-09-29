@@ -12,7 +12,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
 /**
  * Provides tests for Solr field typa configs.
  *
- * @group search_api_solr_multilingual
+ * @group search_api_solr
  */
 class SolrFieldTypeTest extends KernelTestBase {
 

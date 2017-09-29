@@ -7,11 +7,9 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api_autocomplete\SearchInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\Entity\SolrFieldType;
-use Drupal\search_api_solr\SearchApiSolrMultilingualException;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
-use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Drupal\search_api_solr\SolrMultilingualBackendInterface;
 use Drupal\search_api_solr\Utility\Utility;
@@ -423,7 +421,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
         !$this->createSolrMultilingualFieldType($solr_field_type_name) &&
         !$this->hasLanguageUndefinedFallback()
       ) {
-        throw new SearchApiSolrMultilingualException('Missing field type ' . $solr_field_type_name . ' in schema.');
+        throw new SearchApiSolrException('Missing field type ' . $solr_field_type_name . ' in schema.');
       }
 
       // Handle dynamic fields for multilingual tm and ts.
@@ -433,7 +431,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
           !$this->createSolrDynamicField($multilingual_solr_field_name, $solr_field_type_name) &&
           !$this->hasLanguageUndefinedFallback()
         ) {
-          throw new SearchApiSolrMultilingualException('Missing dynamic field ' . $multilingual_solr_field_name . ' in schema.');
+          throw new SearchApiSolrException('Missing dynamic field ' . $multilingual_solr_field_name . ' in schema.');
         }
       }
     }
@@ -468,7 +466,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
    * @return bool
    *   True if an element of the given kind and name exists, false otherwise.
    *
-   * @throws \Drupal\search_api_solr\SearchApiSolrMultilingualException
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   protected function isPartOfSchema($kind, $name) {
     static $previous_calls;
