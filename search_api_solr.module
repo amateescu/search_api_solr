@@ -118,7 +118,13 @@ function search_api_solr_entity_type_alter(array &$entity_types) {
  *
  */
 function search_api_solr_form_search_api_index_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  $form['server']['#element_validate'][] = 'search_api_solr_form_search_api_index_form_validate_server';
+  // We need to restrict by form ID here because this function is also called
+  // via hook_form_BASE_FORM_ID_alter (which is wrong, e.g. in the case of the
+  // form ID search_api_field_config).
+  if (in_array($form_id, ['search_api_index_form', 'search_api_index_edit_form']) &&
+      isset($form['server'])) {
+    $form['server']['#element_validate'][] = 'search_api_solr_form_search_api_index_form_validate_server';
+  }
 }
 
 /**
