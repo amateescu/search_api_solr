@@ -1,0 +1,8 @@
+name: search_api_solr_multilingual
+type: module
+description: Search API Multilingual Solr Search.
+core: 8.x
+package: Search
+dependencies:
+  - language
+  - search_api_solr

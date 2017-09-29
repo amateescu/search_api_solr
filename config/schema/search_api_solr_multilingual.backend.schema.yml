@@ -1,0 +1,20 @@
+plugin.plugin_configuration.search_api_backend.search_api_solr_multilingual:
+  type: plugin.plugin_configuration.search_api_backend.search_api_solr
+  label: 'Search API Multilingual Solr Schema settings'
+  mapping:
+    sasm_limit_search_page_to_content_language:
+      type: boolean
+      label: 'Limit to current content language'
+    sasm_search_page_include_language_independent:
+      type: boolean
+      label: 'Include languages independent content in search results'
+    sasm_language_unspecific_fallback_on_schema_issues:
+      type: boolean
+      label: 'Use language undefined fall back'
+    sasm_domain:
+      type: string
+      label: 'The targeted content domain'
+
+plugin.plugin_configuration.search_api_backend.search_api_solr_multilingual_managed_schema:
+  type: plugin.plugin_configuration.search_api_backend.search_api_solr_multilingual
+  label: 'Search API Multilingual Solr Managed Schema settings'

@@ -1,0 +1,23 @@
+entity.solr_field_type.add_form:
+  route_name: 'entity.solr_field_type.add_form'
+  title: 'Add SolrFieldType'
+  appears_on:
+    - entity.solr_field_type.collection
+entity.solr_field_type.schema_extra_types_collection:
+  route_name: 'entity.solr_field_type.schema_extra_types_collection'
+  title: 'Get schema_extra_types.xml'
+  appears_on:
+    - entity.solr_field_type.collection
+    - entity.search_api_server.canonical
+entity.solr_field_type.schema_extra_fields_collection:
+  route_name: 'entity.solr_field_type.schema_extra_fields_collection'
+  title: 'Get schema_extra_fields.xml'
+  appears_on:
+    - entity.solr_field_type.collection
+    - entity.search_api_server.canonical
+entity.solr_field_type.config_zip_collection:
+  route_name: 'entity.solr_field_type.config_zip_collection'
+  title: 'Get config.zip'
+  appears_on:
+    - entity.solr_field_type.collection
+    - entity.search_api_server.canonical

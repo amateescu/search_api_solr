@@ -13,15 +13,14 @@ git:
 
 php:
   - 7.0
-  - 5.5
+  - 5.6
+#  - 5.5
 
+# This creates a build with each php environment. 6 builds in total.
 env:
-  # 4.5.1 is the oldest version we support
-  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=4.5.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/4.x"
-  # 5.5.0 introduced major changes for boolean operators.
-  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=5.5.4 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/5.x"
-  # 6.6.0 is the latest currently supported release.
-  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=6.6.0 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/solr-conf/6.x"
+  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=4.5.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/4.x"
+  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=5.5.4 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/5.x"
+  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=6.6.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/6.x"
 
 notifications:
   irc:
@@ -58,7 +57,7 @@ install:
   - cd $TRAVIS_BUILD_DIR/../drupal
   - composer install
   - composer config repositories.search_api_solr vcs $TRAVIS_BUILD_DIR
-  - composer require drupal/search_api:1.x-dev drupal/search_api_autocomplete:1.x-dev drupal/search_api_solr:999.0.0 drupal/search_api_location:1.x-dev drupal/facets:1.x-dev drupal/geofield:1.x-dev drush/drush
+  - composer require drupal/search_api:1.x-dev drupal/search_api_autocomplete:1.x-dev drupal/search_api_solr:999.0.0 drupal/search_api_location:1.x-dev drupal/facets:1.x-dev drupal/geofield:1.x-dev drupal/composer_deploy drush/drush
   # Patch template.
   #########################################
   # to be removed once #2824932 is resolved
@@ -73,9 +72,19 @@ before_script:
   - php -S localhost:8888 >& /dev/null &
   # Install the site
   - ./vendor/bin/drush -v site-install minimal --db-url=mysql://root:@localhost/drupal --yes
-  - ./vendor/bin/drush en --yes simpletest
+  # Let dev versions fullfill module version dependencies.
+  - ./vendor/bin/drush en composer_deploy --yes
+  # Generate a multilingual Solr configuration.
+  # Therefore we have to install the test modules before the tests.
+  - cp -R core/modules/system/tests/modules/entity_test core/modules/system/entity_test
+  - cp -R modules/contrib/search_api/tests/search_api_test_example_content modules/contrib/search_api/search_api_test_example_content
+  - cp -R modules/contrib/search_api_solr_multilingual/tests/modules/search_api_solr_multilingual_test modules/contrib/search_api_solr_multilingual/search_api_solr_multilingual_test
+  - ./vendor/bin/drush en --yes search_api_solr_multilingual_test
+  - ./vendor/bin/drush sasm-gsc solr_multilingual_search_server conf.zip $SOLR_VERSION
+  - unzip -o conf.zip -d $SOLR_CONFS
+  - ls -lh $SOLR_CONFS
   # Install Solr
-  - cat $TRAVIS_BUILD_DIR/travis-solr.sh | bash
+  - cat modules/contrib/search_api_solr/travis-solr.sh | bash
 
 script:
   # Run the tests

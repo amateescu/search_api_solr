@@ -1,0 +1,157 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall functions for Search API Multilingual Solr.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function search_api_solr_multilingual_requirements($phase) {
+  $requirements = [];
+
+  if ($phase == 'runtime') {
+
+    $storage = \Drupal::entityTypeManager()->getStorage('search_api_server');
+    /** @var \Drupal\search_api\ServerInterface[] $servers */
+    if ($servers = $storage->loadByProperties(['backend' => 'search_api_solr_multilingual'])) {
+      foreach ($servers as $server) {
+        $key = 'search_api_solr_multilingual_' . $server->id();
+        $requirements[$key] = [
+          'title' => t('Multilingual Solr Server'),
+          'value' => t('Schema complete'),
+          'severity' => REQUIREMENT_OK,
+          'description' => t('Schema on server <a href=":url">@server</a> contains all required language-specific fields.', [
+            ':url' => $server->toUrl('canonical')->toString(),
+            '@server' => $server->label(),
+          ]),
+        ];
+
+        /** @var \Drupal\search_api_solr_multilingual\SolrMultilingualBackendInterface $backend */
+        $backend = $server->getBackend();
+        if ($backend->isAvailable()) {
+          $stats = $backend->getSchemaLanguageStatistics();
+          if ($missing_languages = array_filter($stats, function ($state) {
+            return !$state;
+          })) {
+            $requirements[$key]['value'] = t('Schema incomplete');
+            $requirements[$key]['severity'] = $backend->hasLanguageUndefinedFallback() ? REQUIREMENT_WARNING : REQUIREMENT_ERROR;
+            $requirements[$key]['description'] = t(
+                'There are some language-specific field types missing in schema of Solr server <a href=":url">@server</a>: @languages.', [
+                  ':url' => $server->toUrl('canonical')->toString(),
+                  '@server' => $server->label(),
+                  '@languages' => implode(', ', array_keys($missing_languages)),
+                ]);
+          }
+        }
+        else {
+          $requirements[$key]['value'] = t('Not reachable');
+          $requirements[$key]['severity'] = REQUIREMENT_ERROR;
+          $requirements[$key]['description'] = t(
+              'Solr server <a href=":url">@server</a> is not reachable.', [
+                ':url' => $server->toUrl('canonical')->toString(),
+                '@server' => $server->label(),
+              ]);
+        }
+      }
+    }
+  }
+
+  return $requirements;
+}
+
+/**
+ * Gets all backend configs for active Solr multilingual servers.
+ *
+ * @return array
+ *   All backend configs for active Solr multilingual servers keyed by server
+ *   name.
+ */
+function search_api_solr_multilingual_update_helper_get_backend_configs() {
+  module_load_install('search_api_solr');
+  return search_api_solr_update_helper_get_backend_configs('search_api_solr_multilingual');
+}
+
+/**
+ * Saves a modified backend config for a given Solr server.
+ *
+ * @param string $server_name
+ * @param array $backend_config
+ * @param bool $trusted_data
+ */
+function search_api_solr_multilingual_update_helper_save_backend_config($server_name, array $backend_config, $trusted_data = TRUE) {
+  module_load_install('search_api_solr');
+  search_api_solr_update_helper_save_backend_config($server_name, $backend_config, $trusted_data);
+}
+
+/**
+ * Gets all solr field type configs.
+ *
+ * @return array
+ *   All solr field type configs.
+ */
+function search_api_solr_multilingual_update_helper_get_field_type_configs() {
+  $config_factory = \Drupal::configFactory();
+  $field_type_configs = [];
+  foreach ($config_factory->listAll('search_api_solr_multilingual.solr_field_type.') as $field_type_name) {
+    $field_type_configs[$field_type_name] = $config_factory->get($field_type_name)->getRawData();
+  }
+  return $field_type_configs;
+}
+
+/**
+ * Saves a modified solr field type config.
+ *
+ * @param string $field_type_name
+ * @param array $field_type_config
+ * @param bool $trusted_data
+ */
+function search_api_solr_multilingual_update_helper_save_field_type_config($field_type_name, array $field_type_config, $trusted_data = TRUE) {
+  \Drupal::configFactory()->getEditable($field_type_name)
+    ->setData($field_type_config)
+    ->save($trusted_data);
+}
+
+/**
+ * Fixes erroneous left overs from managed field types in unmanaged field types.
+ */
+function search_api_solr_multilingual_update_8001() {
+  // Removed due to race condition with
+  // search_api_solr_multilingual_post_update_replace_solr_field_types().
+}
+
+/**
+ * Migrate langcode to field_type_language_code.
+ */
+function search_api_solr_multilingual_update_8002() {
+  foreach (search_api_solr_multilingual_update_helper_get_backend_configs() as $server_name => $backend_config) {
+    $backend_config['field_type_language_code'] = $backend_config['langcode'];
+    $backend_config['langcode'] = 'en';
+    search_api_solr_multilingual_update_helper_save_backend_config($server_name, $backend_config);
+  }
+}
+
+/**
+ * Add default domain settings to existing solr field types and backends.
+ */
+function search_api_solr_multilingual_update_8003() {
+  foreach (search_api_solr_multilingual_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+    $field_type_config['domains'] = [];
+    search_api_solr_multilingual_update_helper_save_field_type_config($field_type_name, $field_type_config);
+  }
+  foreach (search_api_solr_multilingual_update_helper_get_backend_configs() as $server_name => $backend_config) {
+    $backend_config['sasm_domain'] = 'generic';
+    search_api_solr_multilingual_update_helper_save_backend_config($server_name, $backend_config);
+  }
+}
+
+/**
+ * Add search page independent language setting to existing solr backends.
+ */
+function search_api_solr_multilingual_update_8004() {
+  foreach (search_api_solr_multilingual_update_helper_get_backend_configs() as $server_name => $backend_config) {
+    $backend_config['sasm_search_page_include_language_independent'] = FALSE;
+    search_api_solr_multilingual_update_helper_save_backend_config($server_name, $backend_config);
+  }
+}

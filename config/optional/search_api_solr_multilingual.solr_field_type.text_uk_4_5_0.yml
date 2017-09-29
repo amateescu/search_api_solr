@@ -1,0 +1,244 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - search_api_solr_multilingual
+    - language
+  config:
+    - language.entity.uk
+id: text_uk_4_5_0
+label: 'Ukrainian Text Field'
+managed_schema: false
+minimum_solr_version: 4.5.0
+field_type_language_code: uk
+domains: {}
+field_type:
+  name: text_uk
+  class: solr.TextField
+  positionIncrementGap: 100
+  analyzers:
+    -
+      type: index
+      tokenizer:
+        class: solr.WhitespaceTokenizerFactory
+      filters:
+        -
+          class: solr.WordDelimiterFilterFactory
+          catenateNumbers: 0
+          generateNumberParts: 0
+          protected: protwords_uk.txt
+          splitOnCaseChange: 1
+          generateWordParts: 1
+          preserveOriginal: 1
+          catenateAll: 0
+          catenateWords: 0
+        -
+          class: solr.LowerCaseFilterFactory
+        -
+          class: solr.StopFilterFactory
+          ignoreCase: true
+          words: stopwords_uk.txt
+        -
+          class: solr.SnowballPorterFilterFactory
+          language: Russian
+          protected: protwords_uk.txt
+        -
+          class: solr.RemoveDuplicatesTokenFilterFactory
+    -
+      type: query
+      tokenizer:
+        class: solr.WhitespaceTokenizerFactory
+      filters:
+        -
+          class: solr.WordDelimiterFilterFactory
+          catenateNumbers: 0
+          generateNumberParts: 0
+          protected: protwords_uk.txt
+          splitOnCaseChange: 1
+          generateWordParts: 1
+          preserveOriginal: 1
+          catenateAll: 0
+          catenateWords: 0
+        -
+          class: solr.LowerCaseFilterFactory
+        -
+          class: solr.SynonymFilterFactory
+          synonyms: synonyms_uk.txt
+          expand: true
+          ignoreCase: true
+        -
+          class: solr.StopFilterFactory
+          ignoreCase: true
+          words: stopwords_uk.txt
+        -
+          class: solr.SnowballPorterFilterFactory
+          language: Russian
+          protected: protwords_uk.txt
+        -
+          class: solr.RemoveDuplicatesTokenFilterFactory
+text_files:
+  stopwords: |
+    и
+    в
+    во
+    не
+    что
+    он
+    на
+    я
+    с
+    со
+    как
+    а
+    то
+    все
+    она
+    так
+    его
+    но
+    да
+    ты
+    к
+    у
+    же
+    вы
+    за
+    бы
+    по
+    только
+    ее
+    мне
+    было
+    вот
+    от
+    меня
+    еще
+    нет
+    о
+    из
+    ему
+    теперь
+    когда
+    даже
+    ну
+    вдруг
+    ли
+    если
+    уже
+    или
+    ни
+    быть
+    был
+    него
+    до
+    вас
+    нибудь
+    опять
+    уж
+    вам
+    сказал
+    ведь
+    там
+    потом
+    себя
+    ничего
+    ей
+    может
+    они
+    тут
+    где
+    есть
+    надо
+    ней
+    для
+    мы
+    тебя
+    их
+    чем
+    была
+    сам
+    чтоб
+    без
+    будто
+    человек
+    чего
+    раз
+    тоже
+    себе
+    под
+    жизнь
+    будет
+    ж
+    тогда
+    кто
+    этот
+    говорил
+    того
+    потому
+    этого
+    какой
+    совсем
+    ним
+    здесь
+    этом
+    один
+    почти
+    мой
+    тем
+    чтобы
+    нее
+    кажется
+    сейчас
+    были
+    куда
+    зачем
+    сказать
+    всех
+    никогда
+    сегодня
+    можно
+    при
+    наконец
+    два
+    об
+    другой
+    хоть
+    после
+    над
+    больше
+    тот
+    через
+    эти
+    нас
+    про
+    всего
+    них
+    какая
+    много
+    разве
+    сказала
+    три
+    эту
+    моя
+    впрочем
+    хорошо
+    свою
+    этой
+    перед
+    иногда
+    лучше
+    чуть
+    том
+    нельзя
+    такой
+    им
+    более
+    всегда
+    конечно
+    всю
+    между
+  synonyms: |
+    drupal, durpal
+  nouns: |
+  protwords: |
+  accents: |

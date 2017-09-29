@@ -1,0 +1,11 @@
+services:
+  search_api_solr_multilingual.config_subscriber:
+    class: Drupal\search_api_solr_multilingual\EventSubscriber\ConfigSubscriber
+    arguments: ['@config.installer']
+    tags:
+      - {name: event_subscriber}
+  search_api_solr_multilingual.local_action_access_check:
+    class: Drupal\search_api_solr_multilingual\Access\LocalActionAccessCheck
+    arguments: ['@current_user']
+    tags:
+      - { name: access_check, applies_to: _search_api_solr_multilingual_local_action_access_check }

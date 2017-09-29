@@ -1,0 +1,104 @@
+# SolrFieldType routing definition
+entity.solr_field_type.collection:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type'
+  defaults:
+    _title: 'SolrFieldType Configuration'
+    _controller: '\Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeController::listing'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
+  requirements:
+    _permission: 'administer search_api'
+    _search_api_solr_multilingual_local_action_access_check: 'TRUE'
+
+entity.solr_field_type.add_form:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/add'
+  defaults:
+    _entity_form: 'solr_field_type.add'
+    _title: 'Add SolrFieldType'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
+  requirements:
+    _permission: 'administer search_api'
+    _search_api_solr_multilingual_local_action_access_check: 'TRUE'
+
+entity.solr_field_type.edit_form:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}'
+  defaults:
+    _entity_form: 'solr_field_type.edit'
+    _title: 'Edit SolrFieldType'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
+  requirements:
+    _permission: 'administer search_api'
+    _search_api_solr_multilingual_local_action_access_check: 'TRUE'
+
+entity.solr_field_type.delete_form:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}/delete'
+  defaults:
+    _entity_form: 'solr_field_type.delete'
+    _title: 'Delete SolrFieldType'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
+  requirements:
+    _permission: 'administer search_api'
+    _search_api_solr_multilingual_local_action_access_check: 'TRUE'
+
+entity.solr_field_type.export_form:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}/export'
+  defaults:
+    _entity_form: 'solr_field_type.export'
+    _title: 'Export SolrFieldType'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
+  requirements:
+    _permission: 'administer search_api'
+    _search_api_solr_multilingual_local_action_access_check: 'TRUE'
+
+entity.solr_field_type.schema_extra_types_collection:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/schema-extra-types-collection'
+  defaults:
+    _title: 'schema_extra_types.xml'
+    _controller: '\Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeController::getSchemaExtraTypesXml'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
+  requirements:
+    _permission: 'administer search_api'
+    _search_api_solr_multilingual_local_action_access_check: 'TRUE'
+
+entity.solr_field_type.schema_extra_fields_collection:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/schema-extra-fields-collection'
+  defaults:
+    _title: 'schema_extra_fields.xml'
+    _controller: '\Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeController::getSchemaExtraFieldsXml'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
+  requirements:
+    _permission: 'administer search_api'
+    _search_api_solr_multilingual_local_action_access_check: 'TRUE'
+
+entity.solr_field_type.config_zip_collection:
+  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/config-zip-collection'
+  defaults:
+    _title: 'config.zip'
+    _controller: '\Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeController::getConfigZip'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
+  requirements:
+    _permission: 'administer search_api'
+    _search_api_solr_multilingual_local_action_access_check: 'TRUE'
