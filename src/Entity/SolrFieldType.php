@@ -1,12 +1,12 @@
 <?php
 
-namespace Drupal\search_api_solr_multilingual\Entity;
+namespace Drupal\search_api_solr\Entity;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
-use Drupal\search_api_solr_multilingual\SolrFieldTypeInterface;
-use Drupal\search_api_solr_multilingual\Utility\Utility;
+use Drupal\search_api_solr\SolrFieldTypeInterface;
+use Drupal\search_api_solr\Utility\Utility;
 
 /**
  * Defines the SolrFieldType entity.
@@ -15,12 +15,12 @@ use Drupal\search_api_solr_multilingual\Utility\Utility;
  *   id = "solr_field_type",
  *   label = @Translation("Solr Field Type"),
  *   handlers = {
- *     "list_builder" = "Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeListBuilder",
+ *     "list_builder" = "Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder",
  *     "form" = {
- *       "add" = "Drupal\search_api_solr_multilingual\Form\SolrFieldTypeForm",
- *       "edit" = "Drupal\search_api_solr_multilingual\Form\SolrFieldTypeForm",
- *       "delete" = "Drupal\search_api_solr_multilingual\Form\SolrFieldTypeDeleteForm",
- *       "export" = "Drupal\search_api_solr_multilingual\Form\SolrFieldTypeExportForm"
+ *       "add" = "Drupal\search_api_solr\Form\SolrFieldTypeForm",
+ *       "edit" = "Drupal\search_api_solr\Form\SolrFieldTypeForm",
+ *       "delete" = "Drupal\search_api_solr\Form\SolrFieldTypeDeleteForm",
+ *       "export" = "Drupal\search_api_solr\Form\SolrFieldTypeExportForm"
  *     }
  *   },
  *   config_prefix = "solr_field_type",
@@ -125,7 +125,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   public static function getAvailableDomains() {
     $domains = ['generic'];
     $config_factory = \Drupal::configFactory();
-    foreach ($config_factory->listAll('search_api_solr_multilingual.solr_field_type.') as $field_type_name) {
+    foreach ($config_factory->listAll('search_api_solr.solr_field_type.') as $field_type_name) {
       $config = $config_factory->get($field_type_name);
       $domains = array_merge($domains, $config->get('domains'));
     }

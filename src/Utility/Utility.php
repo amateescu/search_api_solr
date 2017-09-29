@@ -15,7 +15,7 @@ use Drupal\search_api\ServerInterface;
  * @see http://de2.php.net/manual/en/regexp.reference.meta.php
  * @see https://www.w3.org/International/articles/language-tags/
  */
-define('SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR', ';');
+define('SEARCH_API_SOLR_LANGUAGE_SEPARATOR', ';');
 
 /**
  * Provides various helper functions for Solr backends.
@@ -300,7 +300,7 @@ class Utility {
    *   The language-specific name.
    */
   public static function getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id) {
-    return Utility::modifySolrDynamicFieldName($field_name, '@^([a-z]+)_@', '$1' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . $language_id . '_');
+    return Utility::modifySolrDynamicFieldName($field_name, '@^([a-z]+)_@', '$1' . SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $language_id . '_');
   }
 
   /**
@@ -308,7 +308,7 @@ class Utility {
    *
    * For example the dynamic field tm;en_* for English will become tm_*.
    *
-   * @see Drupal\search_api_solr_multilingual\Utility\Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName()
+   * @see Drupal\search_api_solr\Utility\Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName()
    * @see Drupal\search_api_solr\Utility\Utility::encodeSolrName()
    * @see https://wiki.apache.org/solr/SchemaXml#Dynamic_fields
    *
@@ -321,7 +321,7 @@ class Utility {
    *   The language-specific name.
    */
   public static function getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($field_name) {
-    return Utility::modifySolrDynamicFieldName($field_name, '@^([a-z]+)' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . '[^_]+?_@', '$1_');
+    return Utility::modifySolrDynamicFieldName($field_name, '@^([a-z]+)' . SEARCH_API_SOLR_LANGUAGE_SEPARATOR . '[^_]+?_@', '$1_');
   }
 
   /**
@@ -363,7 +363,7 @@ class Utility {
    *   The language-specific prefix.
    */
   public static function getLanguageSpecificSolrDynamicFieldPrefix($prefix, $language_id) {
-    return $prefix . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . $language_id . '_';
+    return $prefix . SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $language_id . '_';
   }
 
   /**
@@ -378,7 +378,7 @@ class Utility {
    */
   public static function getLanguageIdFromLanguageSpecificSolrDynamicFieldName($field_name) {
     $decoded_field_name = Utility::decodeSolrName($field_name);
-    if (preg_match('@^[a-z]+' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . '([^_]+?)_@', $decoded_field_name, $matches)) {
+    if (preg_match('@^[a-z]+' . SEARCH_API_SOLR_LANGUAGE_SEPARATOR . '([^_]+?)_@', $decoded_field_name, $matches)) {
       return $matches[1];
     }
     return FALSE;
@@ -396,7 +396,7 @@ class Utility {
    */
   public static function extractLanguageSpecificSolrDynamicFieldDefinition($field_name) {
     $decoded_field_name = Utility::decodeSolrName($field_name);
-    if (preg_match('@^[a-z]+' . SEARCH_API_SOLR_MULTILINGUAL_LANGUAGE_SEPARATOR . '[^_]+?_@', $decoded_field_name, $matches)) {
+    if (preg_match('@^[a-z]+' . SEARCH_API_SOLR_LANGUAGE_SEPARATOR . '[^_]+?_@', $decoded_field_name, $matches)) {
       return Utility::encodeSolrName($matches[0]) . '*';
     }
     return FALSE;

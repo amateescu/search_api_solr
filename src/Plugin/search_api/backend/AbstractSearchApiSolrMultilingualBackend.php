@@ -1,20 +1,20 @@
 <?php
 
-namespace Drupal\search_api_solr_multilingual\Plugin\search_api\backend;
+namespace Drupal\search_api_solr\Plugin\search_api\backend;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api_autocomplete\SearchInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
-use Drupal\search_api_solr_multilingual\Entity\SolrFieldType;
-use Drupal\search_api_solr_multilingual\SearchApiSolrMultilingualException;
+use Drupal\search_api_solr\Entity\SolrFieldType;
+use Drupal\search_api_solr\SearchApiSolrMultilingualException;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
-use Drupal\search_api_solr_multilingual\SolrMultilingualBackendInterface;
-use Drupal\search_api_solr_multilingual\Utility\Utility;
+use Drupal\search_api_solr\SolrMultilingualBackendInterface;
+use Drupal\search_api_solr\Utility\Utility;
 use Solarium\Core\Query\QueryInterface as SolariumQueryInterface;
 use Solarium\QueryType\Select\Query\Query;
 use Solarium\QueryType\Select\ResponseParser\Component\FacetSet;
@@ -468,7 +468,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
    * @return bool
    *   True if an element of the given kind and name exists, false otherwise.
    *
-   * @throws \Drupal\search_api_solr_multilingual\SearchApiSolrMultilingualException
+   * @throws \Drupal\search_api_solr\SearchApiSolrMultilingualException
    */
   protected function isPartOfSchema($kind, $name) {
     static $previous_calls;

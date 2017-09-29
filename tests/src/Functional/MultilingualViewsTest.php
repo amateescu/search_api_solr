@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\search_api_solr_multilingual\Functional;
+namespace Drupal\Tests\search_api_solr\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;

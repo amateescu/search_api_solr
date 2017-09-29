@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api_solr_multilingual\Plugin\search_api\backend;
+namespace Drupal\search_api_solr\Plugin\search_api\backend;
 
 /**
  * @SearchApiBackend(

@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\search_api_solr_multilingual\Kernel\Processor;
+namespace Drupal\Tests\search_api_solr\Kernel\Processor;
 
 use Drupal\Tests\search_api_solr\Kernel\Processor\SolrBackendTrait;
 
@@ -13,7 +13,7 @@ use Drupal\Tests\search_api_solr\Kernel\Processor\SolrBackendTrait;
  *
  * @coversDefaultClass \Drupal\search_api\Plugin\search_api\processor\AddHierarchy
  */
-class AddHierarchyTest extends \Drupal\Tests\search_api\Kernel\Processor\AddHierarchyTest {
+class MultilingualAddHierarchyTest extends \Drupal\Tests\search_api\Kernel\Processor\AddHierarchyTest {
 
   use SolrBackendTrait;
 

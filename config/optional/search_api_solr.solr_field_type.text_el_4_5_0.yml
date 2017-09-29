@@ -2,18 +2,18 @@ langcode: en
 status: true
 dependencies:
   module:
-    - search_api_solr_multilingual
+    - search_api_solr
     - language
   config:
-    - language.entity.nl
-id: text_nl_4_5_0
-label: 'Dutch Text Field'
+    - language.entity.el
+id: text_el_4_5_0
+label: 'Greek Text Field'
 managed_schema: false
 minimum_solr_version: 4.5.0
-field_type_language_code: nl
+field_type_language_code: el
 domains: {}
 field_type:
-  name: text_nl
+  name: text_el
   class: solr.TextField
   positionIncrementGap: 100
   analyzers:
@@ -22,7 +22,7 @@ field_type:
       charFilters:
         -
           class: solr.MappingCharFilterFactory
-          mapping: accents_nl.txt
+          mapping: accents_el.txt
       tokenizer:
         class: solr.WhitespaceTokenizerFactory
       filters:
@@ -30,33 +30,20 @@ field_type:
           class: solr.WordDelimiterFilterFactory
           catenateNumbers: 1
           generateNumberParts: 1
-          protected: protwords_nl.txt
-          splitOnCaseChange: 0
+          protected: protwords_el.txt
+          splitOnCaseChange: 1
           generateWordParts: 1
           preserveOriginal: 1
           catenateAll: 0
           catenateWords: 1
         -
-          class: solr.LengthFilterFactory
-          min: 2
-          max: 100
-        -
-          class: solr.LowerCaseFilterFactory
-        -
-          class: solr.DictionaryCompoundWordTokenFilterFactory
-          dictionary: nouns_nl.txt
-          minWordSize: 5
-          minSubwordSize: 4
-          maxSubwordSize: 15
-          onlyLongestMatch: false
+          class: solr.GreekLowerCaseFilterFactory
         -
           class: solr.StopFilterFactory
           ignoreCase: true
-          words: stopwords_nl.txt
+          words: stopwords_el.txt
         -
-          class: solr.SnowballPorterFilterFactory
-          language: Dutch
-          protected: protwords_nl.txt
+          class: solr.GreekStemFilterFactory
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
     -
@@ -64,144 +51,112 @@ field_type:
       charFilters:
         -
           class: solr.MappingCharFilterFactory
-          mapping: accents_nl.txt
+          mapping: accents_el.txt
       tokenizer:
         class: solr.WhitespaceTokenizerFactory
       filters:
         -
           class: solr.WordDelimiterFilterFactory
           catenateNumbers: 0
-          generateNumberParts: 1
-          protected: protwords_nl.txt
-          splitOnCaseChange: 0
+          generateNumberParts: 0
+          protected: protwords_el.txt
+          splitOnCaseChange: 1
           generateWordParts: 1
           preserveOriginal: 1
           catenateAll: 0
           catenateWords: 0
         -
-          class: solr.LengthFilterFactory
-          min: 2
-          max: 100
-        -
-          class: solr.LowerCaseFilterFactory
+          class: solr.GreekLowerCaseFilterFactory
         -
           class: solr.SynonymFilterFactory
-          synonyms: synonyms_nl.txt
+          synonyms: synonyms_el.txt
           expand: true
           ignoreCase: true
         -
           class: solr.StopFilterFactory
           ignoreCase: true
-          words: stopwords_nl.txt
+          words: stopwords_el.txt
         -
-          class: solr.SnowballPorterFilterFactory
-          language: Dutch
-          protected: protwords_nl.txt
+          class: solr.GreekStemFilterFactory
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
 text_files:
   stopwords: |
-    de
-    en
-    van
-    ik
-    te
-    dat
-    die
-    in
-    een
-    hij
-    het
-    niet
-    zijn
-    is
-    was
-    op
-    aan
-    met
-    als
-    voor
-    had
-    er
-    maar
-    om
-    hem
-    dan
-    zou
-    of
-    wat
-    mijn
-    men
-    dit
-    zo
-    door
-    over
-    ze
-    zich
-    bij
-    ook
-    tot
-    je
-    mij
-    uit
-    der
-    daar
-    haar
-    naar
-    heb
-    hoe
-    heeft
-    hebben
-    deze
-    u
-    want
-    nog
-    zal
-    me
-    zij
-    nu
-    ge
-    geen
-    omdat
-    iets
-    worden
-    toch
-    al
-    waren
-    veel
-    meer
-    doen
-    toen
-    moet
-    ben
-    zonder
-    kan
-    hun
-    dus
-    alles
-    onder
-    ja
-    eens
-    hier
-    wie
-    werd
-    altijd
-    doch
-    wordt
-    wezen
-    kunnen
-    ons
-    zelf
-    tegen
-    na
-    wil
-    reeds
-    kon
-    niets
-    uw
-    iemand
-    geweest
-    andere
+    ο
+    η
+    το
+    οι
+    τα
+    του
+    τησ
+    των
+    τον
+    την
+    και
+    κι
+    κ
+    ειμαι
+    εισαι
+    ειναι
+    ειμαστε
+    ειστε
+    στο
+    στον
+    στη
+    στην
+    μα
+    αλλα
+    απο
+    για
+    προσ
+    με
+    σε
+    ωσ
+    παρα
+    αντι
+    κατα
+    μετα
+    θα
+    να
+    δε
+    δεν
+    μη
+    μην
+    επι
+    ενω
+    εαν
+    αν
+    τοτε
+    που
+    πωσ
+    ποιοσ
+    ποια
+    ποιο
+    ποιοι
+    ποιεσ
+    ποιων
+    ποιουσ
+    αυτοσ
+    αυτη
+    αυτο
+    αυτοι
+    αυτων
+    αυτουσ
+    αυτεσ
+    αυτα
+    εκεινοσ
+    εκεινη
+    εκεινο
+    εκεινοι
+    εκεινεσ
+    εκεινα
+    εκεινων
+    εκεινουσ
+    οπωσ
+    ομωσ
+    ισωσ
+    οσο
+    οτι
   synonyms: |
     drupal, durpal
   nouns: |

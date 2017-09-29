@@ -78,7 +78,7 @@ before_script:
   # Therefore we have to install the test modules before the tests.
   - cp -R core/modules/system/tests/modules/entity_test core/modules/system/entity_test
   - cp -R modules/contrib/search_api/tests/search_api_test_example_content modules/contrib/search_api/search_api_test_example_content
-  - cp -R modules/contrib/search_api_solr_multilingual/tests/modules/search_api_solr_multilingual_test modules/contrib/search_api_solr_multilingual/search_api_solr_multilingual_test
+  - cp -R modules/contrib/search_api_solr/tests/modules/search_api_solr_multilingual_test modules/contrib/search_api_solr/search_api_solr_multilingual_test
   - ./vendor/bin/drush en --yes search_api_solr_multilingual_test
   - ./vendor/bin/drush sasm-gsc solr_multilingual_search_server conf.zip $SOLR_VERSION
   - unzip -o conf.zip -d $SOLR_CONFS

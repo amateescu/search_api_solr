@@ -1,11 +1,11 @@
 <?php
 
-namespace Drupal\search_api_solr_multilingual\Access;
+namespace Drupal\search_api_solr\Access;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\search_api_solr_multilingual\Plugin\search_api\backend\AbstractSearchApiSolrMultilingualBackend;
+use Drupal\search_api_solr\Plugin\search_api\backend\AbstractSearchApiSolrMultilingualBackend;
 use Drupal\search_api\ServerInterface;
 
 /**

@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api_solr_multilingual\Form;
+namespace Drupal\search_api_solr\Form;
 
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
@@ -14,14 +14,14 @@ class SolrFieldTypeExportForm extends EntityForm {
    * {@inheritdoc}
    */
   public function form(array $form, FormStateInterface $form_state) {
-    /** @var \Drupal\search_api_solr_multilingual\Entity\SolrFieldType $solr_field_type */
+    /** @var \Drupal\search_api_solr\Entity\SolrFieldType $solr_field_type */
     $solr_field_type = $this->entity;
 
     $form['id'] = array(
       '#type' => 'machine_name',
       '#default_value' => $solr_field_type->id(),
       '#machine_name' => array(
-        'exists' => '\Drupal\search_api_solr_multilingual\Entity\SolrFieldType::load',
+        'exists' => '\Drupal\search_api_solr\Entity\SolrFieldType::load',
       ),
       '#disabled' => TRUE,
     );
@@ -76,7 +76,7 @@ class SolrFieldTypeExportForm extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    /** @var \Drupal\search_api_solr_multilingual\Entity\SolrFieldType $solr_field_type */
+    /** @var \Drupal\search_api_solr\Entity\SolrFieldType $solr_field_type */
     $solr_field_type = $this->entity;
 
     $form_state->setRedirectUrl($solr_field_type->urlInfo('collection'));

@@ -2,7 +2,7 @@ langcode: en
 status: true
 dependencies:
   module:
-    - search_api_solr_multilingual
+    - search_api_solr
     - language
   config:
     - language.entity.ru

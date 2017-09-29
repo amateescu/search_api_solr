@@ -28,7 +28,7 @@ function search_api_solr_multilingual_requirements($phase) {
           ]),
         ];
 
-        /** @var \Drupal\search_api_solr_multilingual\SolrMultilingualBackendInterface $backend */
+        /** @var \Drupal\search_api_solr\SolrMultilingualBackendInterface $backend */
         $backend = $server->getBackend();
         if ($backend->isAvailable()) {
           $stats = $backend->getSchemaLanguageStatistics();

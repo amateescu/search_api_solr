@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\search_api_solr_multilingual\Kernel;
+namespace Drupal\Tests\search_api_solr\Kernel;
 
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api\Entity\Server;
@@ -22,7 +22,6 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
    */
   public static $modules = array(
     'language',
-    'search_api_solr_multilingual',
     'search_api_solr_multilingual_test',
   );
 
@@ -54,7 +53,7 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
     BackendTestBase::setUp();
 
     $this->installEntitySchema('user');
-    $this->installConfig(['search_api_solr', 'search_api_solr_multilingual', 'search_api_solr_multilingual_test']);
+    $this->installConfig(['search_api_solr', 'search_api_solr_multilingual_test']);
 
     $this->logger = $this->getMock('Psr\Log\LoggerInterface');
     $this->logger->method('log')->willThrowException(new \Exception('logger triggered'));
@@ -105,7 +104,7 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
    * Tests classic multilingual schema.
    */
   public function testClassicMultilingualSchema() {
-    /** @var Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeListBuilder $list_builder */
+    /** @var Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
     $list_builder = \Drupal::entityTypeManager()
       ->getListBuilder('solr_field_type');
 

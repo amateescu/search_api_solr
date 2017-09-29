@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\search_api_solr_multilingual\Kernel;
+namespace Drupal\Tests\search_api_solr\Kernel;
 
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
 use Drupal\Tests\search_api_solr\Kernel\SearchApiSolrLocationTest;
@@ -19,7 +19,6 @@ class SearchApiSolrMultilingualLocationTest extends SearchApiSolrLocationTest {
    */
   public static $modules = array(
     'language',
-    'search_api_solr_multilingual',
     'search_api_solr_multilingual_test',
   );
 
@@ -45,7 +44,6 @@ class SearchApiSolrMultilingualLocationTest extends SearchApiSolrLocationTest {
 
     $this->installConfig([
       'search_api_solr',
-      'search_api_solr_multilingual',
       'search_api_solr_multilingual_test',
     ]);
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\search_api_solr_multilingual\Kernel\Processor;
+namespace Drupal\Tests\search_api_solr\Kernel\Processor;
 
 use Drupal\Tests\search_api_solr\Kernel\Processor\SolrBackendTrait;
 
@@ -11,7 +11,7 @@ use Drupal\Tests\search_api_solr\Kernel\Processor\SolrBackendTrait;
  *
  * @see \Drupal\search_api\Plugin\search_api\processor\ContentAccess
  */
-class ContentAccessTest extends \Drupal\Tests\search_api\Kernel\Processor\ContentAccessTest  {
+class MultilingualContentAccessTest extends \Drupal\Tests\search_api\Kernel\Processor\ContentAccessTest  {
 
   use SolrBackendTrait;
 
@@ -20,7 +20,6 @@ class ContentAccessTest extends \Drupal\Tests\search_api\Kernel\Processor\Conten
    */
   public static $modules = [
     'search_api_solr',
-    'search_api_solr_multilingual',
     'search_api_solr_multilingual_test',
   ];
 

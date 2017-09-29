@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api_solr_multilingual\Controller;
+namespace Drupal\search_api_solr\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\search_api\ServerInterface;
@@ -72,7 +72,7 @@ class SolrFieldTypeController extends ControllerBase {
       exit();
     }
     catch (ZipStreamException $e) {
-      watchdog_exception('search_api_solr_multilingual', $e);
+      watchdog_exception('search_api_solr', $e);
       drupal_set_message($this->t('An error occured during the creation of the config.zip. Look at the logs for details.'), 'error');
     }
 
@@ -86,7 +86,7 @@ class SolrFieldTypeController extends ControllerBase {
    *
    * @param \Drupal\search_api\ServerInterface $search_api_server
    *
-   * @return \Drupal\search_api_solr_multilingual\Controller\SolrFieldTypeListBuilder
+   * @return \Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder
    */
   protected function getListBuilder(ServerInterface $search_api_server) {
     /** @var SolrFieldTypeListBuilder $list_builder */

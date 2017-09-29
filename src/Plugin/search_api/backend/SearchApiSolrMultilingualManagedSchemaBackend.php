@@ -1,11 +1,11 @@
 <?php
 
-namespace Drupal\search_api_solr_multilingual\Plugin\search_api\backend;
+namespace Drupal\search_api_solr\Plugin\search_api\backend;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\search_api_solr\Utility\Utility;
-use Drupal\search_api_solr_multilingual\Entity\SolrFieldType;
-use Drupal\search_api_solr_multilingual\SearchApiSolrMultilingualException;
+use Drupal\search_api_solr\Entity\SolrFieldType;
+use Drupal\search_api_solr\SearchApiSolrMultilingualException;
 
 /**
  * @SearchApiBackend(
@@ -56,7 +56,7 @@ class SearchApiSolrMultilingualManagedSchemaBackend extends AbstractSearchApiSol
     $field_type_name = 'm_' . Utility::decodeSolrName($solr_field_type_name) . '_5_2_0';
 
     // Get the field type definition from Drupal.
-    /** @var \Drupal\search_api_solr_multilingual\Entity\SolrFieldType $field_type_entity */
+    /** @var \Drupal\search_api_solr\Entity\SolrFieldType $field_type_entity */
     $field_type_entity = SolrFieldType::load($field_type_name);
     if (!$field_type_entity) {
       throw new SearchApiSolrMultilingualException("There's no field type $field_type_name.");
