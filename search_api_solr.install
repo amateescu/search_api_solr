@@ -8,11 +8,11 @@ use Drupal\Core\Url;
  * Implements hook_requirements().
  */
 function search_api_solr_requirements($phase) {
-  $ret = array();
+  $requirements = array();
 
   if ($phase == 'install') {
     if (!class_exists('\Solarium\Core\Client\Request')) {
-      $ret['search_api_solr_library'] = [
+      $requirements['search_api_solr_library'] = [
         'description' => t('Solr search requires the solarium/solarium library.'),
         'severity' => REQUIREMENT_ERROR,
       ];
@@ -46,40 +46,84 @@ function search_api_solr_requirements($phase) {
     if (!$count) {
       return array();
     }
-    $ret['search_api_solr'] = array(
+    $requirements['search_api_solr'] = array(
       'title' => \Drupal::translation()->translate('Solr servers'),
       'value' => \Drupal::translation()->formatPlural($count, '1 server', '@count servers'),
     );
     if ($unavailable) {
       if ($unavailable == 1) {
-        $ret['search_api_solr']['description'] = \Drupal::translation()->translate('The Solr server of <a href=":url">%name</a> could not be reached.',
+        $requirements['search_api_solr']['description'] = \Drupal::translation()->translate('The Solr server of <a href=":url">%name</a> could not be reached.',
           array(':url' => Url::fromRoute('entity.search_api_server.canonical', array('search_api_server' => $last->id()))->toString(), '%name' => $last->label()));
       }
       else {
-        $ret['search_api_solr']['description'] = \Drupal::translation()->translate('@count Solr servers could not be reached.', array('@count' => $unavailable));
+        $requirements['search_api_solr']['description'] = \Drupal::translation()->translate('@count Solr servers could not be reached.', array('@count' => $unavailable));
       }
-      $ret['search_api_solr']['severity'] = REQUIREMENT_ERROR;
+      $requirements['search_api_solr']['severity'] = REQUIREMENT_ERROR;
     }
     else {
-      $ret['search_api_solr']['description'] = \Drupal::translation()->formatPlural($count, 'The Solr server could be reached.', 'All @count Solr servers could be reached.');
-      $ret['search_api_solr']['severity'] = REQUIREMENT_OK;
+      $requirements['search_api_solr']['description'] = \Drupal::translation()->formatPlural($count, 'The Solr server could be reached.', 'All @count Solr servers could be reached.');
+      $requirements['search_api_solr']['severity'] = REQUIREMENT_OK;
     }
 
-    $ret['search_api_solr_multiple_indexes'] = [
+    $requirements['search_api_solr_multiple_indexes'] = [
       'title' => \Drupal::translation()->translate('Solr server indexes'),
       'value' => \Drupal::translation()->formatPlural($count, '1 server', '@count servers'),
     ];
     if ($multiple_indexes) {
-      $ret['search_api_solr_multiple_indexes']['description'] = \Drupal::translation()->formatPlural($multiple_indexes, 'One Solr server contains more than one enabled index.', '@count Solr servers contain more than one enabled index.');
-      $ret['search_api_solr_multiple_indexes']['severity'] = REQUIREMENT_ERROR;
+      $requirements['search_api_solr_multiple_indexes']['description'] = \Drupal::translation()->formatPlural($multiple_indexes, 'One Solr server contains more than one enabled index.', '@count Solr servers contain more than one enabled index.');
+      $requirements['search_api_solr_multiple_indexes']['severity'] = REQUIREMENT_ERROR;
     }
     else {
-      $ret['search_api_solr_multiple_indexes']['description'] = \Drupal::translation()->formatPlural($count, 'The Solr server does not contain more than one enabled index.', 'All @count Solr servers do not contain more than one enabled index.');
-      $ret['search_api_solr_multiple_indexes']['severity'] = REQUIREMENT_OK;
+      $requirements['search_api_solr_multiple_indexes']['description'] = \Drupal::translation()->formatPlural($count, 'The Solr server does not contain more than one enabled index.', 'All @count Solr servers do not contain more than one enabled index.');
+      $requirements['search_api_solr_multiple_indexes']['severity'] = REQUIREMENT_OK;
+    }
+
+    $storage = \Drupal::entityTypeManager()->getStorage('search_api_server');
+    /** @var \Drupal\search_api\ServerInterface[] $servers */
+    if ($servers = $storage->loadByProperties(['backend' => 'search_api_solr_multilingual'])) {
+      foreach ($servers as $server) {
+        $key = 'search_api_solr_multilingual_' . $server->id();
+        $requirements[$key] = [
+          'title' => t('Multilingual Solr Server'),
+          'value' => t('Schema complete'),
+          'severity' => REQUIREMENT_OK,
+          'description' => t('Schema on server <a href=":url">@server</a> contains all required language-specific fields.', [
+            ':url' => $server->toUrl('canonical')->toString(),
+            '@server' => $server->label(),
+          ]),
+        ];
+
+        /** @var \Drupal\search_api_solr\SolrMultilingualBackendInterface $backend */
+        $backend = $server->getBackend();
+        if ($backend->isAvailable()) {
+          $stats = $backend->getSchemaLanguageStatistics();
+          if ($missing_languages = array_filter($stats, function ($state) {
+            return !$state;
+          })) {
+            $requirements[$key]['value'] = t('Schema incomplete');
+            $requirements[$key]['severity'] = $backend->hasLanguageUndefinedFallback() ? REQUIREMENT_WARNING : REQUIREMENT_ERROR;
+            $requirements[$key]['description'] = t(
+              'There are some language-specific field types missing in schema of Solr server <a href=":url">@server</a>: @languages.', [
+              ':url' => $server->toUrl('canonical')->toString(),
+              '@server' => $server->label(),
+              '@languages' => implode(', ', array_keys($missing_languages)),
+            ]);
+          }
+        }
+        else {
+          $requirements[$key]['value'] = t('Not reachable');
+          $requirements[$key]['severity'] = REQUIREMENT_ERROR;
+          $requirements[$key]['description'] = t(
+            'Solr server <a href=":url">@server</a> is not reachable.', [
+            ':url' => $server->toUrl('canonical')->toString(),
+            '@server' => $server->label(),
+          ]);
+        }
+      }
     }
   }
 
-  return $ret;
+  return $requirements;
 }
 
 /**
@@ -139,6 +183,34 @@ function search_api_solr_update_helper_get_backend_configs($prefix = 'search_api
 function search_api_solr_update_helper_save_backend_config($server_name, array $backend_config, $trusted_data = TRUE) {
   \Drupal::configFactory()->getEditable($server_name)
     ->set('backend_config', $backend_config)
+    ->save($trusted_data);
+}
+
+/**
+ * Gets all solr field type configs.
+ *
+ * @return array
+ *   All solr field type configs.
+ */
+function search_api_solr_update_helper_get_field_type_configs() {
+  $config_factory = \Drupal::configFactory();
+  $field_type_configs = [];
+  foreach ($config_factory->listAll('search_api_solr_multilingual.solr_field_type.') as $field_type_name) {
+    $field_type_configs[$field_type_name] = $config_factory->get($field_type_name)->getRawData();
+  }
+  return $field_type_configs;
+}
+
+/**
+ * Saves a modified solr field type config.
+ *
+ * @param string $field_type_name
+ * @param array $field_type_config
+ * @param bool $trusted_data
+ */
+function search_api_solr_update_helper_save_field_type_config($field_type_name, array $field_type_config, $trusted_data = TRUE) {
+  \Drupal::configFactory()->getEditable($field_type_name)
+    ->setData($field_type_config)
     ->save($trusted_data);
 }
 
