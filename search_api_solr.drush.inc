@@ -17,6 +17,7 @@ function search_api_solr_drush_command() {
     'aliases' => array(
       'solr-reinstall-ft',
       'sasm-reinstall-ft', // backward compatibility
+      'search-api-solr-multilingual-delete-and-reinstall-all-field-types', // backward compatibility
     ),
   );
 
@@ -34,6 +35,7 @@ function search_api_solr_drush_command() {
     'aliases' => array(
       'solr-gsc',
       'sasm-gsc', // backward compatibility
+      'search-api-solr-multilingual-get-server-config', // backward compatibility
     ),
   );
 
