@@ -16,10 +16,9 @@ php:
   - 5.6
 #  - 5.5
 
-# This creates a build with each php environment. 6 builds in total.
+# This creates a build with each php environment. 4 builds in total.
 env:
-  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=4.5.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/4.x"
-  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=5.5.4 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/5.x"
+#  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=7.0.0 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/5.x"
   - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=6.6.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/6.x"
 
 notifications:

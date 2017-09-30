@@ -358,13 +358,8 @@ class SearchApiSolrLocationTest extends BackendTestBase {
       ],
     ];
 
-    if (version_compare($solr_version, 5.1, '>=')) {
-      $facets = $result->getExtraData('search_api_facets', [])['rpt'];
-      $this->assertEquals($expected, $facets, 'The correct location facets are returned');
-    }
-    else {
-      $this->assertLogMessage(LOG_ERR, 'Rpt data type feature is only supported by Solr version 5.1 or higher.');
-    }
+    $facets = $result->getExtraData('search_api_facets', [])['rpt'];
+    $this->assertEquals($expected, $facets, 'The correct location facets are returned');
 
     $query = $this->buildSearch(NULL, [], NULL, FALSE);
     $options = &$query->getOptions();
@@ -409,14 +404,8 @@ class SearchApiSolrLocationTest extends BackendTestBase {
       ],
     ];
 
-    if (version_compare($solr_version, 5.1, '>=')) {
-      $facets = $result->getExtraData('search_api_facets', [])['rpt'];
-      $this->assertEquals($expected, $facets, 'The correct location facets are returned');
-    }
-    else {
-      $this->assertLogMessage(LOG_ERR, 'Rpt data type feature is only supported by Solr version 5.1 or higher.');
-    }
-
+    $facets = $result->getExtraData('search_api_facets', [])['rpt'];
+    $this->assertEquals($expected, $facets, 'The correct location facets are returned');
   }
 
   /**
