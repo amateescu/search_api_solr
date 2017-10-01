@@ -34,7 +34,6 @@ use Drupal\search_api\Utility\DataTypeHelperInterface;
 use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility as SearchApiUtility;
 use Drupal\search_api_autocomplete\SearchInterface;
-use Drupal\search_api_autocomplete\Suggestion;
 use Drupal\search_api_autocomplete\Suggestion\SuggestionFactory;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
@@ -55,7 +54,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * The minimum required Solr schema version.
  */
-define('SEARCH_API_SOLR_MIN_SCHEMA_VERSION', 4);
+define('SEARCH_API_SOLR_MIN_SCHEMA_VERSION', 6);
 
 define('SEARCH_API_ID_FIELD_NAME', 'ss_search_api_id');
 
@@ -787,7 +786,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
         $this->addIndexField($doc, $field_names[$name], $field->getValues(), $field->getType());
         // Enable sorts in some special cases.
-        if (!array_key_exists($name, $special_fields) && version_compare($schema_version, '4.4', '>=')) {
+        if (!array_key_exists($name, $special_fields)) {
           $values = $field->getValues();
           $first_value = reset($values);
           if ($first_value) {
@@ -979,13 +978,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     // Handle spatial filters.
     if (isset($options['search_api_rpt'])) {
-      if (version_compare($connector->getSolrVersion(), 5.1, '>=')) {
-        $this->setRpt($solarium_query, $options['search_api_rpt'], $field_names);
-      }
-      else {
-        \Drupal::logger('search_api_solr')->error('Rpt data type feature is only supported by Solr version 5.1 or higher.');
-      }
-
+      $this->setRpt($solarium_query, $options['search_api_rpt'], $field_names);
     }
 
     // Handle field collapsing / grouping.
@@ -1069,6 +1062,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       return;
     }
 
+    /* We keep this as an example.
     $connector = $this->getSolrConnector();
     $schema_version = $connector->getSchemaVersion();
     $solr_version = $connector->getSolrVersion();
@@ -1083,6 +1077,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $solarium_query->addParam('q.op', 'OR');
       }
     }
+     */
   }
 
   /**
@@ -2055,10 +2050,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function getAutocompleteSuggestions(QueryInterface $query, SearchInterface $search, $incomplete_key, $user_input) {
     $suggestions = [];
-    $factory = NULL;
-    if (class_exists(SuggestionFactory::class)) {
-      $factory = new SuggestionFactory($user_input);
-    }
+    $factory = new SuggestionFactory($user_input);
 
     if ($this->configuration['suggest_suffix'] || $this->configuration['suggest_corrections'] || $this->configuration['suggest_words']) {
       $connector = $this->getSolrConnector();
@@ -2068,22 +2060,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         return [];
       }
       $solarium_query = $connector->getTermsQuery();
-      $schema_version = $connector->getSchemaVersion();
-      if (version_compare($schema_version, '5.4', '>=')) {
-        $solarium_query->setHandler('autocomplete');
-      }
-      else {
-        $solarium_query->setHandler('terms');
-      }
+      $solarium_query->setHandler('autocomplete');
 
       try {
-        $fl = [];
-        if (version_compare($schema_version, '5.4', '>=')) {
-          $fl = $this->getAutocompleteFields($query, $search);
-        }
-        else {
-          $fl[] = 'spell';
-        }
+        $fl = $this->getAutocompleteFields($query, $search);
 
         // Make the input lowercase as the indexed data is (usually) also all
         // lowercase.
@@ -2115,20 +2095,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         if ($this->configuration['suggest_suffix']) {
           foreach ($autocomplete_terms as $term => $count) {
             $suggestion_suffix = mb_substr($term, mb_strlen($incomplete_key));
-            if ($factory) {
-              $suggestions[] = $factory->createFromSuggestionSuffix($suggestion_suffix, $count);
-            }
-            else {
-              $suggestions[] = Suggestion::fromSuggestionSuffix($suggestion_suffix, $count, $user_input);
-            }
+            $suggestions[] = $factory->createFromSuggestionSuffix($suggestion_suffix, $count);
           }
         }
 
         if ($this->configuration['suggest_corrections']) {
-          if (version_compare($schema_version, '5.4', '<')) {
-            $solarium_query->setHandler('select');
-            $terms_result = $connector->execute($solarium_query);
-          }
           $suggestion = $user_input;
           $suggester_result = new SuggesterResult(NULL, new SuggesterQuery(), $terms_result->getResponse());
           foreach ($suggester_result as $term => $termResult) {
@@ -2146,21 +2117,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           }
 
           if ($suggestion != $user_input && !array_key_exists($suggestion, $autocomplete_terms)) {
-            if ($factory) {
-              $suggestions[] = $factory->createFromSuggestedKeys($suggestion);
-            }
-            else {
-              $suggestions[] = Suggestion::fromSuggestedKeys($suggestion, $user_input);
-            }
+            $suggestions[] = $factory->createFromSuggestedKeys($suggestion);
             foreach (array_keys($autocomplete_terms) as $term) {
               $completion = preg_replace('@(\b)' . preg_quote($incomplete_key, '@') . '$@', '$1' . $term . '$2', $suggestion);
               if ($completion != $suggestion) {
-                if ($factory) {
-                  $suggestions[] = $factory->createFromSuggestedKeys($completion);
-                }
-                else {
-                  $suggestions[] = Suggestion::fromSuggestedKeys($completion, $user_input);
-                }
+                $suggestions[] = $factory->createFromSuggestedKeys($completion);
               }
             }
           }
@@ -2525,10 +2486,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     $mlt_fl = [];
     foreach ($mlt_options['fields'] as $mlt_field) {
-      // Solr 4 has a bug which results in numeric fields not being supported
-      // in MLT queries. Date fields don't seem to be supported at all.
+      // Date fields don't seem to be supported at all in MLT queries.
       $version = $this->getSolrConnector()->getSolrVersion();
-      if ($fields[$mlt_field][0] === 'd' || (version_compare($version, '4', '==') && in_array($fields[$mlt_field][0], array('i', 'f')))) {
+      if ($fields[$mlt_field][0] === 'd') {
         continue;
       }
 
@@ -2686,7 +2646,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * Sets sorting for the query.
    */
   protected function setSorts(Query $solarium_query, QueryInterface $query, $field_names = []) {
-    $new_schema_version = version_compare($this->getSolrConnector()->getSchemaVersion(), '4.4', '>=');
     foreach ($query->getSorts() as $field => $order) {
       $f = '';
       // First wee need to handle special fields which are prefixed by
@@ -2707,7 +2666,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $f = $field_names[$field] . '_' . $seed;
         }
       }
-      elseif ($new_schema_version) {
+      else {
         // @todo Both detections are redundant to some parts of
         //   SearchApiSolrBackend::getDocuments(). They should be combined in a
         //   single place to avoid errors in the future.

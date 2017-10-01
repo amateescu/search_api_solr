@@ -193,20 +193,13 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    *
    */
   protected function generateSchemaExtraTypesXml() {
-    $target_solr_version = $this->getBackend()->getSolrConnector()->getSolrVersion();
-    $indentation = '  ';
-    if (version_compare($target_solr_version, '6.0.0', '>=')) {
-      $indentation .= '  ';
-    }
-    $xml = $this->getExtraFileHead($target_solr_version, 'types');
+    $xml = '';
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
     foreach ($this->load() as $solr_field_type) {
       if (!$solr_field_type->isManagedSchema()) {
-        $xml .= "\n$indentation" . str_replace("\n", "\n$indentation", $solr_field_type->getFieldTypeAsXml());
+        $xml .= $solr_field_type->getFieldTypeAsXml();
       }
     }
-    $xml .= "\n" . $this->getExtraFileFoot($target_solr_version, 'types');
-
     return $xml;
   }
 
@@ -221,37 +214,26 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    *
    */
   protected function generateSchemaExtraFieldsXml() {
-    $target_solr_version = $this->getBackend()->getSolrConnector()->getSolrVersion();
-    $xml = $this->getExtraFileHead($target_solr_version, 'fields');
-    $indentation = '  ';
-    if (version_compare($target_solr_version, '6.0.0', '>=')) {
-      $indentation .= '  ';
-    }
-
+    $xml = '';
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
     foreach ($this->load() as $solr_field_type) {
       if (!$solr_field_type->isManagedSchema()) {
         foreach ($solr_field_type->getDynamicFields() as $dynamic_field) {
-          $xml .= $indentation . '<dynamicField ';
+          $xml .= '<dynamicField ';
           foreach ($dynamic_field as $attribute => $value) {
             $xml .= $attribute . '="' . (is_bool($value) ? ($value ? 'true' : 'false') : $value) . '" ';
           }
           $xml .= "/>\n";
         }
-        if (version_compare($target_solr_version, '6.0.0', '>=')) {
-          // On Solr 6 we're not in that "legacy mode" and inside an fields tag.
-          foreach ($solr_field_type->getCopyFields() as $copy_field) {
-            $xml .= $indentation . '<copyField ';
-            foreach ($copy_field as $attribute => $value) {
-              $xml .= $attribute . '="' . (is_bool($value) ? ($value ? 'true' : 'false') : $value) . '" ';
-            }
-            $xml .= "/>\n";
+        foreach ($solr_field_type->getCopyFields() as $copy_field) {
+          $xml .= '<copyField ';
+          foreach ($copy_field as $attribute => $value) {
+            $xml .= $attribute . '="' . (is_bool($value) ? ($value ? 'true' : 'false') : $value) . '" ';
           }
+          $xml .= "/>\n";
         }
       }
     }
-    $xml .= $this->getExtraFileFoot($target_solr_version, 'fields');
-
     return $xml;
   }
 
@@ -268,50 +250,6 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
         ],
       ],
     ];
-  }
-
-  /**
-   * Creates the head part of an extra file XML (not wellformed on its own).
-   *
-   * @param $target_solr_version
-   *   string The version string of the Solr version to
-   *   create the file for.
-   * @param $legacy_element
-   *   string The XML element to use as a wrapper for versions of
-   *   Solr below 6.0.0.
-   *
-   * @return string The created fragment.
-   */
-  protected function getExtraFileHead($target_solr_version, $legacy_element) {
-    $head = '';
-    if (version_compare($target_solr_version, '6.0.0', '<')) {
-      $head = <<<'EOD'
-<?xml version="1.0" encoding="UTF-8" ?>
-EOD;
-      $head .= "\n\n";
-      $head .= "<$legacy_element>\n";
-    }
-    return $head;
-  }
-
-  /**
-   * Creates the foot part of an extra file XML (not wellformed on its own).
-   *
-   * @param $target_solr_version
-   *   string The version string of the Solr version to
-   *   create the file for.
-   * @param $legacy_element
-   *   string The XML element to use as a wrapper for versions of
-   *   Solr below 6.0.0.
-   *
-   * @return string The created fragment.
-   */
-  protected function getExtraFileFoot($target_solr_version, $legacy_element) {
-    $foot = '';
-    if (version_compare($target_solr_version, '6.0.0', '<')) {
-      $foot .= "</$legacy_element>";
-    }
-    return $foot;
   }
 
   /**
