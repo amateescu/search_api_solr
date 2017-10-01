@@ -3,15 +3,14 @@
 namespace Drupal\search_api_solr\Access;
 
 use Drupal\Core\Access\AccessResult;
-use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\search_api\ServerInterface;
-use Drupal\search_api_solr\SolrBackendInterface;
+use Drupal\search_api_solr\SolrMultilingualBackendInterface;
 
 /**
- * Checks access for displaying Solr configuration generator actions.
+ * Checks access for displaying multilingual Solr configuration actions.
  */
-class LocalActionAccessCheck implements AccessInterface {
+class LocalActionMultilingualAccessCheck extends LocalActionAccessCheck {
 
   /**
    * A custom access check.
@@ -20,7 +19,7 @@ class LocalActionAccessCheck implements AccessInterface {
    *   Run access checks for this account.
    */
   public function access(AccountInterface $account, ServerInterface $search_api_server = NULL) {
-    if ($search_api_server && $search_api_server->getBackend() instanceof SolrBackendInterface) {
+    if ($search_api_server && $search_api_server->getBackend() instanceof SolrMultilingualBackendInterface) {
       return AccessResult::allowed();
     }
     return AccessResult::forbidden();
