@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api_solr_datasource\TypedData;
+namespace Drupal\search_api_solr\TypedData;
 
 use Drupal\Core\TypedData\ComplexDataDefinitionBase;
 
@@ -68,7 +68,7 @@ class SolrDocumentDefinition extends ComplexDataDefinitionBase implements SolrDo
     if (!isset($this->propertyDefinitions)) {
       $this->propertyDefinitions = [];
       if (!empty($this->getServerId())) {
-        /** @var \Drupal\search_api_solr_datasource\SolrFieldManagerInterface $field_manager */
+        /** @var \Drupal\search_api_solr\SolrFieldManagerInterface $field_manager */
         $field_manager = \Drupal::getContainer()->get('solr_field.manager');
         $this->propertyDefinitions = $field_manager->getFieldDefinitions($this->getServerId());
       }

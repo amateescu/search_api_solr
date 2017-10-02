@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api_solr_datasource;
+namespace Drupal\search_api_solr;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Cache\Cache;
@@ -10,7 +10,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
-use Drupal\search_api_solr_datasource\TypedData\SolrFieldDefinition;
+use Drupal\search_api_solr\TypedData\SolrFieldDefinition;
 
 /**
  * Manages the discovery of Solr fields.
@@ -62,7 +62,7 @@ class SolrFieldManager implements SolrFieldManagerInterface {
    * @param string $server_id
    *   The server from which we are retrieving field information.
    *
-   * @return \Drupal\search_api_solr_datasource\TypedData\SolrFieldDefinitionInterface[]
+   * @return \Drupal\search_api_solr\TypedData\SolrFieldDefinitionInterface[]
    *   The array of field definitions for the server, keyed by field name.
    *
    * @throws \InvalidArgumentException
@@ -116,7 +116,7 @@ class SolrFieldManager implements SolrFieldManagerInterface {
     catch (SearchApiSolrException $e) {
       drupal_set_message($this->t('Could not connect to server %server, %message', ['%server' => $server->id(), '%message' => $e->getMessage()]), 'error');
       // @todo Inject the logger service.
-      \Drupal::logger('search_api_solr_datasource')->error('Could not connect to server %server, %message', ['%server' => $server->id(), '%message' => $e->getMessage()]);
+      \Drupal::logger('search_api_solr')->error('Could not connect to server %server, %message', ['%server' => $server->id(), '%message' => $e->getMessage()]);
     }
     return $fields;
   }

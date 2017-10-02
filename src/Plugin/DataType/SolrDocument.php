@@ -1,12 +1,12 @@
 <?php
 
-namespace Drupal\search_api_solr_datasource\Plugin\DataType;
+namespace Drupal\search_api_solr\Plugin\DataType;
 
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\Exception\MissingDataException;
 use Drupal\Core\TypedData\TypedData;
 use Drupal\search_api\Item\ItemInterface;
-use Drupal\search_api_solr_datasource\TypedData\SolrDocumentDefinition;
+use Drupal\search_api_solr\TypedData\SolrDocumentDefinition;
 use Solarium\QueryType\Select\Result\AbstractDocument;
 
 /**
@@ -19,7 +19,7 @@ use Solarium\QueryType\Select\Result\AbstractDocument;
  *   id = "solr_document",
  *   label = @Translation("Solr document"),
  *   description = @Translation("Records from a Solr index."),
- *   definition_class = "\Drupal\search_api_solr_datasource\TypedData\SolrDocumentDefinition"
+ *   definition_class = "\Drupal\search_api_solr\TypedData\SolrDocumentDefinition"
  * )
  */
 class SolrDocument extends TypedData implements \IteratorAggregate, ComplexDataInterface {
@@ -71,7 +71,7 @@ class SolrDocument extends TypedData implements \IteratorAggregate, ComplexDataI
 
     // First, verify that this field actually exists in the Solr server. If we
     // can't get a definition for it, it doesn't exist.
-    /** @var \Drupal\search_api_solr_datasource\Plugin\DataType\SolrField $plugin */
+    /** @var \Drupal\search_api_solr\Plugin\DataType\SolrField $plugin */
     $plugin = \Drupal::typedDataManager()->getDefinition('solr_field')['class'];
     $field_manager = \Drupal::getContainer()->get('solr_field.manager');
     $server_id = $this->item->getIndex()->getServerInstance()->id();

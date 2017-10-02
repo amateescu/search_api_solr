@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api_solr_datasource\Plugin\search_api\datasource;
+namespace Drupal\search_api_solr\Plugin\search_api\datasource;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
@@ -8,8 +8,8 @@ use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
 use Drupal\search_api\Plugin\PluginFormTrait;
 use Drupal\search_api\SearchApiException;
-use Drupal\search_api_solr_datasource\SolrDocumentFactoryInterface;
-use Drupal\search_api_solr_datasource\SolrFieldManagerInterface;
+use Drupal\search_api_solr\SolrDocumentFactoryInterface;
+use Drupal\search_api_solr\SolrFieldManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -28,14 +28,14 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
   /**
    * The Solr document factory.
    *
-   * @var \Drupal\search_api_solr_datasource\SolrDocumentFactoryInterface
+   * @var \Drupal\search_api_solr\SolrDocumentFactoryInterface
    */
   protected $solrDocumentFactory;
 
   /**
    * The Solr field manager.
    *
-   * @var \Drupal\search_api_solr_datasource\SolrFieldManagerInterface
+   * @var \Drupal\search_api_solr\SolrFieldManagerInterface
    */
   protected $solrFieldManager;
 
@@ -55,7 +55,7 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
   /**
    * Sets the Solr document factory.
    *
-   * @param \Drupal\search_api_solr_datasource\SolrDocumentFactoryInterface $factory
+   * @param \Drupal\search_api_solr\SolrDocumentFactoryInterface $factory
    *   The new entity field manager.
    *
    * @return $this
@@ -68,7 +68,7 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
   /**
    * Returns the Solr document factory.
    *
-   * @return \Drupal\search_api_solr_datasource\SolrDocumentFactoryInterface
+   * @return \Drupal\search_api_solr\SolrDocumentFactoryInterface
    *   The Solr document factory.
    */
   public function getSolrDocumentFactory() {
@@ -78,7 +78,7 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
   /**
    * Sets the Solr field manager.
    *
-   * @param \Drupal\search_api_solr_datasource\SolrFieldManagerInterface $solr_field_manager
+   * @param \Drupal\search_api_solr\SolrFieldManagerInterface $solr_field_manager
    *   The new entity field manager.
    *
    * @return $this
@@ -91,7 +91,7 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
   /**
    * Returns the Solr field manager.
    *
-   * @return \Drupal\search_api_solr_datasource\SolrFieldManagerInterface
+   * @return \Drupal\search_api_solr\SolrFieldManagerInterface
    *   The Solr field manager.
    */
   public function getSolrFieldManager() {

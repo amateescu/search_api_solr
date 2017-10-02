@@ -204,6 +204,22 @@ function search_api_solr_search_api_views_handler_mapping_alter(&$mapping) {
 }
 
 /**
+ * Implements hook_views_data_alter().
+ *
+ * Remove fields from solr_document datasources from the views data. Datasource
+ * fields that have been added to the index would be duplicated in the Views Add
+ * fields list. Fields that aren't added to the index can't be displayed.
+ */
+function search_api_solr_views_data_alter(array &$data) {
+  // @todo check for a search_api based view first.
+  foreach ($data as $key => $fields) {
+    if (preg_match('/search_api_datasource_(.+)_solr_document/', $key)) {
+      unset($data[$key]);
+    }
+  }
+}
+
+/**
  * Deletes all Solr Field Type and re-installs them from their yml files.
  */
 function search_api_solr_delete_and_reinstall_all_field_types() {

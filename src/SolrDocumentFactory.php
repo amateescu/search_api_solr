@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api_solr_datasource;
+namespace Drupal\search_api_solr;
 
 use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\search_api\Item\ItemInterface;
