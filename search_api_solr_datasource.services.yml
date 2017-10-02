@@ -1,0 +1,7 @@
+services:
+  solr_document.factory:
+    class: Drupal\search_api_solr_datasource\SolrDocumentFactory
+    arguments: ['@typed_data_manager']
+  solr_field.manager:
+    class: Drupal\search_api_solr_datasource\SolrFieldManager
+    arguments: ['@cache.discovery']

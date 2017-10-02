@@ -1,0 +1,8 @@
+type: module
+name: 'Search API Solr Datasource'
+description: 'Provides a datasource for searching external Solr indexes.'
+package: Search
+core: '8.x'
+project: 'search_api_solr_datasource'
+dependencies:
+ - search_api_solr
