@@ -31,10 +31,10 @@ use Drupal\search_api_solr\Utility\Utility;
  *     "uuid" = "uuid"
  *   },
  *   links = {
- *     "edit-form" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}",
- *     "delete-form" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}/delete",
- *     "export-form" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}/export",
- *     "collection" = "/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type"
+ *     "edit-form" = "/admin/config/search/search-api/server/{search_api_server}/solr_field_type/{solr_field_type}",
+ *     "delete-form" = "/admin/config/search/search-api/server/{search_api_server}/solr_field_type/{solr_field_type}/delete",
+ *     "export-form" = "/admin/config/search/search-api/server/{search_api_server}/solr_field_type/{solr_field_type}/export",
+ *     "collection" = "/admin/config/search/search-api/server/{search_api_server}/solr_field_type"
  *   }
  * )
  */

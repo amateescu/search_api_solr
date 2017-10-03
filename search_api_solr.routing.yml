@@ -12,7 +12,7 @@ search_api_solr.solr_config_form:
 
 # SolrFieldType routing definition
 entity.solr_field_type.collection:
-  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type'
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_field_type'
   defaults:
     _title: 'SolrFieldType Configuration'
     _controller: '\Drupal\search_api_solr\Controller\SolrFieldTypeController::listing'
@@ -22,10 +22,10 @@ entity.solr_field_type.collection:
         type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
-    _search_api_solr_local_action_access_check: 'TRUE'
+    _search_api_solr_local_action_multilingual_access_check: 'TRUE'
 
 entity.solr_field_type.add_form:
-  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/add'
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_field_type/add'
   defaults:
     _entity_form: 'solr_field_type.add'
     _title: 'Add SolrFieldType'
@@ -35,10 +35,10 @@ entity.solr_field_type.add_form:
         type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
-    _search_api_solr_local_action_access_check: 'TRUE'
+    _search_api_solr_local_action_multilingual_access_check: 'TRUE'
 
 entity.solr_field_type.edit_form:
-  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}'
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_field_type/{solr_field_type}'
   defaults:
     _entity_form: 'solr_field_type.edit'
     _title: 'Edit SolrFieldType'
@@ -48,10 +48,10 @@ entity.solr_field_type.edit_form:
         type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
-    _search_api_solr_local_action_access_check: 'TRUE'
+    _search_api_solr_local_action_multilingual_access_check: 'TRUE'
 
 entity.solr_field_type.delete_form:
-  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}/delete'
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_field_type/{solr_field_type}/delete'
   defaults:
     _entity_form: 'solr_field_type.delete'
     _title: 'Delete SolrFieldType'
@@ -61,10 +61,10 @@ entity.solr_field_type.delete_form:
         type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
-    _search_api_solr_local_action_access_check: 'TRUE'
+    _search_api_solr_local_action_multilingual_access_check: 'TRUE'
 
 entity.solr_field_type.export_form:
-  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/{solr_field_type}/export'
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_field_type/{solr_field_type}/export'
   defaults:
     _entity_form: 'solr_field_type.export'
     _title: 'Export SolrFieldType'
@@ -74,10 +74,10 @@ entity.solr_field_type.export_form:
         type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
-    _search_api_solr_local_action_access_check: 'TRUE'
+    _search_api_solr_local_action_multilingual_access_check: 'TRUE'
 
 entity.solr_field_type.schema_extra_types_collection:
-  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/schema-extra-types-collection'
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_field_type/schema-extra-types-collection'
   defaults:
     _title: 'schema_extra_types.xml'
     _controller: '\Drupal\search_api_solr\Controller\SolrFieldTypeController::getSchemaExtraTypesXml'
@@ -87,10 +87,10 @@ entity.solr_field_type.schema_extra_types_collection:
         type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
-    _search_api_solr_local_action_access_check: 'TRUE'
+    _search_api_solr_local_action_multilingual_access_check: 'TRUE'
 
 entity.solr_field_type.schema_extra_fields_collection:
-  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/schema-extra-fields-collection'
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_field_type/schema-extra-fields-collection'
   defaults:
     _title: 'schema_extra_fields.xml'
     _controller: '\Drupal\search_api_solr\Controller\SolrFieldTypeController::getSchemaExtraFieldsXml'
@@ -100,10 +100,10 @@ entity.solr_field_type.schema_extra_fields_collection:
         type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
-    _search_api_solr_local_action_access_check: 'TRUE'
+    _search_api_solr_local_action_multilingual_access_check: 'TRUE'
 
 entity.solr_field_type.config_zip_collection:
-  path: '/admin/config/search/search-api/server/{search_api_server}/multilingual/solr_field_type/config-zip-collection'
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_field_type/config-zip-collection'
   defaults:
     _title: 'config.zip'
     _controller: '\Drupal\search_api_solr\Controller\SolrFieldTypeController::getConfigZip'
