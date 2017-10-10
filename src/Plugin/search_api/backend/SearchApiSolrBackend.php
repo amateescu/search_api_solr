@@ -2770,12 +2770,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     foreach ($index->getFields() as $field) {
       if ($field->getType() == 'location') {
         $distance_field_name = $field->getFieldIdentifier() . '__distance';
+        $property_path_name = $field->getPropertyPath() . '__distance';
         $distance_field = new Field($index, $distance_field_name);
         $distance_field->setLabel($field->getLabel() . ' (distance)');
         $distance_field->setDataDefinition(DataDefinition::create('decimal'));
         $distance_field->setType('decimal');
         $distance_field->setDatasourceId($field->getDatasourceId());
-        $distance_field->setPropertyPath($distance_field_name);
+        $distance_field->setPropertyPath($property_path_name);
 
         $location_distance_fields[$distance_field_name] = $distance_field;
       }
