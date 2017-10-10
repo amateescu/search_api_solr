@@ -234,7 +234,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   public function getDynamicFields() {
     $dynamic_fields = [];
-    foreach (array('ts', 'tm', 'terms_ts', 'terms_tm') as $prefix) {
+    foreach (array('ts', 'tm', 'tos', 'tom', 'terms_ts', 'terms_tm') as $prefix) {
       $dynamic_fields[] = [
         'name' => SearchApiSolrUtility::encodeSolrName(
             Utility::getLanguageSpecificSolrDynamicFieldPrefix($prefix, $this->field_type_language_code)
@@ -244,7 +244,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
         'indexed' => TRUE,
         'multiValued' => strpos($prefix, 'm') !== FALSE,
         'termVectors' => strpos($prefix, 't') === 0,
-
+        'omitNorms' => strpos($prefix, 'o') === 1,
       ];
     }
     return $dynamic_fields;
@@ -255,6 +255,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   public function getCopyFields() {
     $copy_fields = [];
+    // @todo How should we handle the other full text fields here?
     foreach (array('ts' => 'terms_ts', 'tm' => 'terms_tm') as $src_prefix => $dest_prefix) {
       $copy_fields[] = [
         'source' => SearchApiSolrUtility::encodeSolrName(
