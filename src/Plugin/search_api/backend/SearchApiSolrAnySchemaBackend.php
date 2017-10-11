@@ -22,9 +22,20 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
   /**
    * {@inheritdoc}
    */
+  public function defaultConfiguration() {
+    $conf = parent::defaultConfiguration();
+    $conf['retrieve_data'] = TRUE;
+    $conf['skip_schema_check'] = TRUE;
+    return $conf;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
-
+    $form['advanced']['retrieve_data']['#disabled'] = TRUE;
+    $form['advanced']['skip_schema_check']['#disabled'] = TRUE;
     // @todo force read-only
 
     return $form;
