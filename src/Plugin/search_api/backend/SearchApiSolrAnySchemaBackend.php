@@ -165,6 +165,7 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
         // Set the ID field.
         $config = $index->getDatasource('solr_document')->getConfiguration();
         $this->fieldNames[$index->id()]['search_api_id'] = $config['id_field'];
+        $this->fieldNames[$index->id()]['search_api_language'] = $config['language_field'];
 
         /** @var \Drupal\search_api\Item\FieldInterface[] $index_fields */
         $index_fields = $index->getFields();
@@ -174,7 +175,8 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
           // Ignore the Search API fields.
           if (strpos($raw, 'search_api_') === 0
             || empty($index_fields[$raw])
-            || $index_fields[$raw]->getDatasourceId() !== 'solr_document') {
+            || $index_fields[$raw]->getDatasourceId() !== 'solr_document'
+          ) {
             continue;
           }
           $this->fieldNames[$index->id()][$raw] = $index_fields[$raw]->getPropertyPath();
