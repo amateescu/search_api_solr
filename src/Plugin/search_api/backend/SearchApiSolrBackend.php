@@ -1414,12 +1414,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $doc_fields = $doc->getFields();
       $item_id = $doc_fields[$id_field];
       // For items coming from a different site, we need to adapt the item ID.
-      if (!$this->configuration['site_hash'] && $doc_fields['hash'] != $site_hash) {
+      if (isset($doc_fields['hash']) && !$this->configuration['site_hash'] && $doc_fields['hash'] != $site_hash) {
         $item_id = $doc_fields['hash'] . '--' . $item_id;
       }
       $result_item = $this->fieldsHelper->createItem($index, $item_id);
       $result_item->setExtraData('search_api_solr_document', $doc);
-      $result_item->setLanguage($doc_fields[$language_field]);
+      // If the schema doesn't contain a language field or it is empty we
+      // satisfy Seach API by setting the site's default language.
+      $result_item->setLanguage(isset($doc_fields[$language_field]) ? $doc_fields[$language_field] : LanguageInterface::LANGCODE_SITE_DEFAULT);
 
       if(isset($doc_fields[$score_field])) {
         $result_item->setScore($doc_fields[$score_field]);
