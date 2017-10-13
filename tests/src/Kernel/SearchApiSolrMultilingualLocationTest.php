@@ -2,8 +2,6 @@
 
 namespace Drupal\Tests\search_api_solr\Kernel;
 
-use Drupal\Tests\search_api\Kernel\BackendTestBase;
-
 /**
  * Tests index and search capabilities using the Solr search backend.
  *
@@ -39,14 +37,11 @@ class SearchApiSolrMultilingualLocationTest extends SearchApiSolrLocationTest {
    * {@inheritdoc}
    */
   public function setUp() {
-    BackendTestBase::setUp();
+    SolrBackendTestBase::setUp();
 
     $this->installConfig([
-      'search_api_solr',
       'search_api_solr_multilingual_test',
     ]);
-
-    $this->commonSolrBackendSetUp();
   }
 
 }
