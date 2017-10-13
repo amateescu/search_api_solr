@@ -49,6 +49,7 @@ run_6() {
     # go to the solr folder
     cd $dir_name
     bin/solr start -p $solr_port
+    bin/solr start -e techproducts -p 8993
     cd ../
 }
 
