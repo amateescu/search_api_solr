@@ -19,8 +19,6 @@ abstract class SolrBackendTestBase extends BackendTestBase {
    * @var string[]
    */
   public static $modules = [
-    'system',
-    'search_api',
     'search_api_solr',
   ];
 

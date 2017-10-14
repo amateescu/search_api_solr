@@ -32,16 +32,16 @@ class SearchApiSolrLocationTest extends SolrBackendTestBase {
    */
   public function setUp() {
     parent::setUp();
-
-    $this->installConfig([
-      'search_api_solr_test',
-    ]);
   }
 
   /**
    * Required parts of the setUp() function that are the same for all backends.
    */
   protected function commonSolrBackendSetUp() {
+    $this->installConfig([
+      'search_api_solr_test',
+    ]);
+
     $this->installEntitySchema('field_storage_config');
     $this->installEntitySchema('field_config');
 
