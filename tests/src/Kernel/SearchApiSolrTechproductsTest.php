@@ -35,8 +35,8 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
-    parent::setUp();
+  protected function installConfigs() {
+    parent::installConfigs();
 
     $this->installConfig([
       'search_api_solr_techproducts_test',

@@ -20,13 +20,6 @@ class UtilitiesTest extends KernelTestBase {
   );
 
   /**
-   * {@inheritdoc}
-   */
-  public function setUp() {
-    parent::setUp();
-  }
-
-  /**
    * Tests encoding and decoding of Solr field names.
    */
   public function testFieldNameEncoder() {

@@ -38,6 +38,13 @@ class SearchApiSolrMultilingualLocationTest extends SearchApiSolrLocationTest {
    */
   public function setUp() {
     SolrBackendTestBase::setUp();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function installConfigs() {
+    parent::installConfigs();
 
     $this->installConfig([
       'search_api_solr_multilingual_test',
