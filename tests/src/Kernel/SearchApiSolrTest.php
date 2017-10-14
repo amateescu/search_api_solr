@@ -9,7 +9,6 @@ use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\Utility;
 use Drupal\search_api_autocomplete\Entity\Search;
 use Drupal\search_api_solr\SolrBackendInterface;
-use Drupal\Tests\search_api\Kernel\BackendTestBase;
 use Drupal\Tests\search_api_solr\Traits\InvokeMethodTrait;
 use Drupal\user\Entity\User;
 
@@ -18,7 +17,7 @@ use Drupal\user\Entity\User;
  *
  * @group search_api_solr
  */
-class SearchApiSolrTest extends BackendTestBase {
+class SearchApiSolrTest extends SolrBackendTestBase {
 
   use InvokeMethodTrait;
 
@@ -29,41 +28,9 @@ class SearchApiSolrTest extends BackendTestBase {
    */
   public static $modules = array(
     'search_api_autocomplete',
-    'search_api_solr',
     'search_api_solr_test',
     'user',
   );
-
-  /**
-   * A Search API server ID.
-   *
-   * @var string
-   */
-  protected $serverId = 'solr_search_server';
-
-  /**
-   * A Search API index ID.
-   *
-   * @var string
-   */
-  protected $indexId = 'solr_search_index';
-
-  /**
-   * Whether a Solr core is available for testing.
-   *
-   * Drupal testbots do not support having a solr server, so they can't execute
-   * these tests.
-   *
-   * @var bool
-   */
-  protected $solrAvailable = FALSE;
-
-  /**
-   * Seconds to wait for a soft commit on Solr.
-   *
-   * @var int
-   */
-  protected $waitForCommit = 2;
 
   /**
    * @var \Drupal\search_api\Utility\FieldsHelperInterface
@@ -76,72 +43,14 @@ class SearchApiSolrTest extends BackendTestBase {
   public function setUp() {
     parent::setUp();
 
+    $this->installConfig(['search_api_solr_test']);
+  }
+
+  protected function commonSolrBackendSetUp() {
+    parent::commonSolrBackendSetUp();
+
     $this->installEntitySchema('user');
-    $this->installConfig(['search_api_solr', 'search_api_solr_test']);
-
-    $this->detectSolrAvailability();
-
     $this->fieldsHelper = \Drupal::getContainer()->get('search_api.fields_helper');
-  }
-
-  /**
-   * Detects the availability of a Solr Server and sets $this->solrAvailable.
-   */
-  protected function detectSolrAvailability() {
-    // Because this is a kernel test, the routing isn't built by default, so
-    // we have to force it.
-    \Drupal::service('router.builder')->rebuild();
-
-    try {
-      $backend = Server::load($this->serverId)->getBackend();
-      if ($backend->isAvailable()) {
-        $this->solrAvailable = TRUE;
-      }
-    }
-    catch (\Exception $e) {
-    }
-  }
-
-  /**
-   * Executes a query and skips search_api post processing of results.
-   *
-   * A light weight alternative to $query->execute() if we don't want to get
-   * heavy weight search_api results here, but more or less raw solr results.
-   * The data as it is returned by Solr could be accessed by calling
-   * getExtraData('search_api_solr_response') on the result set returned here.
-   *
-   * @param \Drupal\search_api\Query\QueryInterface $query
-   *   The query to be executed.
-   *
-   * @return \Drupal\search_api\Query\ResultSetInterface
-   */
-  protected function executeQueryWithoutPostProcessing(QueryInterface $query) {
-    /** @var \Drupal\search_api\IndexInterface $index */
-    $index = Index::load($this->indexId);
-
-    $query->preExecute();
-    return $index->getServerInstance()->search($query);
-  }
-
-  /**
-   * Clear the index after every test.
-   */
-  public function tearDown() {
-    $this->clearIndex();
-    parent::tearDown();
-  }
-
-  /**
-   * Tests various indexing scenarios for the Solr search backend.
-   */
-  public function testBackend() {
-    // Only run the tests if we have a Solr core available.
-    if ($this->solrAvailable) {
-      parent::testBackend();
-    }
-    else {
-      $this->assertTrue(TRUE, 'Error: The Solr instance could not be found. Please enable a multi-core one on http://localhost:8983/solr/d8');
-    }
   }
 
   /**
@@ -150,60 +59,6 @@ class SearchApiSolrTest extends BackendTestBase {
   protected function backendSpecificRegressionTests() {
     $this->regressionTest2888629();
     $this->regressionTest2850160();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function indexItems($index_id) {
-    $index_status = parent::indexItems($index_id);
-    sleep($this->waitForCommit);
-    return $index_status;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function clearIndex() {
-    if ($this->solrAvailable) {
-      /** @var \Drupal\search_api\IndexInterface $index */
-      $index = Index::load($this->indexId);
-      $index->clear();
-      // Deleting items take at least 1 second for Solr to parse it so that
-      // drupal doesn't get timeouts while waiting for Solr. Lets give it 2
-      // seconds to make sure we are in bounds.
-      sleep(2);
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function checkServerBackend() {
-    // The Solr backend doesn't create any database tables.
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function updateIndex() {
-    // The parent assertions don't make sense for the Solr backend.
-  }
-
-  /**
-   * Second server.
-   */
-  protected function checkSecondServer() {
-    // @todo
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function checkIndexWithoutFields() {
-    $index = parent::checkIndexWithoutFields();
-    $index->clear();
-    sleep(2);
   }
 
   /**
@@ -316,7 +171,7 @@ class SearchApiSolrTest extends BackendTestBase {
     // Deleting items take at least 1 second for Solr to parse it so that drupal
     // doesn't get timeouts while waiting for Solr. Lets give it 2 seconds to
     // make sure we are in bounds.
-    sleep(2);
+    sleep($this->waitForCommit);
     $query = $this->buildSearch();
     $results = $query->execute();
     $this->assertEquals(0, $results->getResultCount(), 'Clearing the server worked correctly.');
@@ -861,17 +716,6 @@ class SearchApiSolrTest extends BackendTestBase {
     else {
       $this->assertTrue(TRUE, 'Error: The Solr instance could not be found. Please enable a multi-core one on http://localhost:8983/solr/d8');
     }
-  }
-
-  /**
-   * Test tika extension PDF extraction.
-   */
-  public function testExtract() {
-    $filepath = drupal_get_path('module', 'search_api_solr_test') . '/assets/test_extraction.pdf';
-    /** @var \Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend $backend */
-    $backend = Server::load($this->serverId)->getBackend();
-    $content = $backend->extractContentFromFile($filepath);
-    $this->assertContains('The extraction seems working!', $content);
   }
 
   /**

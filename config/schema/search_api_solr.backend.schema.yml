@@ -52,3 +52,7 @@ plugin.plugin_configuration.search_api_backend.search_api_solr_multilingual:
 plugin.plugin_configuration.search_api_backend.search_api_solr_multilingual_managed_schema:
   type: plugin.plugin_configuration.search_api_backend.search_api_solr_multilingual
   label: 'Search API Multilingual Solr Managed Schema settings'
+
+plugin.plugin_configuration.search_api_backend.search_api_solr_any_schema:
+  type: plugin.plugin_configuration.search_api_backend.search_api_solr
+  label: 'Search API Solr Any Schema settings'

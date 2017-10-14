@@ -5,7 +5,6 @@ namespace Drupal\Tests\search_api_solr\Kernel;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Utility\Utility;
-use Drupal\Tests\search_api\Kernel\BackendTestBase;
 
 /**
  * Tests index and search capabilities using the Solr search backend.
@@ -39,28 +38,13 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
   protected $indexId = 'solr_multilingual_search_index';
 
   /**
-   * The mocked logger.
-   *
-   * @var \Psr\Log\LoggerInterface
-   */
-  protected $logger;
-
-  /**
    * {@inheritdoc}
    */
   public function setUp() {
-    BackendTestBase::setUp();
+    SolrBackendTestBase::setUp();
 
     $this->installEntitySchema('user');
-    $this->installConfig(['search_api_solr', 'search_api_solr_multilingual_test']);
-
-    $this->logger = $this->getMock('Psr\Log\LoggerInterface');
-    $this->logger->method('log')->willThrowException(new \Exception('logger triggered'));
-    \Drupal::getContainer()->get('logger.factory')->addLogger($this->logger);
-
-    $this->detectSolrAvailability();
-
-    $this->fieldsHelper = \Drupal::getContainer()->get('search_api.fields_helper');
+    $this->installConfig(['search_api_solr_multilingual_test']);
   }
 
   /**
@@ -103,7 +87,7 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
    * Tests classic multilingual schema.
    */
   public function testClassicMultilingualSchema() {
-    /** @var Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
+    /** @var \Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
     $list_builder = \Drupal::entityTypeManager()
       ->getListBuilder('solr_field_type');
 
@@ -116,128 +100,108 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
   public function testLanguageFallback() {
     $server = $this->getIndex()->getServerInstance();
     $config = $server->getBackendConfig();
-    // $server->setBackendConfig(['solr_version' => '4.5.1'] + $server->getBackendConfig());
 
-    // Only run further tests if we have a Solr core available.
-    if ($this->solrAvailable) {
-      $config['sasm_language_unspecific_fallback_on_schema_issues'] = FALSE;
-      $server->setBackendConfig($config)->save();
-      $this->assertFalse($this->getIndex()->getServerInstance()->getBackendConfig()['sasm_language_unspecific_fallback_on_schema_issues']);
+    $config['sasm_language_unspecific_fallback_on_schema_issues'] = FALSE;
+    $server->setBackendConfig($config)->save();
+    $this->assertFalse($this->getIndex()->getServerInstance()->getBackendConfig()['sasm_language_unspecific_fallback_on_schema_issues']);
 
-      $this->insertMultilingualExampleContent();
+    $this->insertMultilingualExampleContent();
 
-      try {
-        $this->indexItems($this->indexId);
-        $this->fail('Indexing a non-existing language without fallback enabled did not throw an exception.');
-      }
-      catch (\Exception $e) {
-        $this->assertEquals('logger triggered', $e->getMessage());
-      }
+    $this->indexItems($this->indexId);
+    $this->assertLogMessage(LOG_ERR, '%type while trying to index items on index %index: @message in %function (line %line of %file)');
 
-      $this->clearIndex();
+    $this->clearIndex();
 
-      $config['sasm_language_unspecific_fallback_on_schema_issues'] = TRUE;
-      $server->setBackendConfig($config)->save();
-      $this->assertTrue($this->getIndex()->getServerInstance()->getBackendConfig()['sasm_language_unspecific_fallback_on_schema_issues']);
+    $config['sasm_language_unspecific_fallback_on_schema_issues'] = TRUE;
+    $server->setBackendConfig($config)->save();
+    $this->assertTrue($this->getIndex()->getServerInstance()->getBackendConfig()['sasm_language_unspecific_fallback_on_schema_issues']);
 
-      $this->indexItems($this->indexId);
+    $this->indexItems($this->indexId);
 
-      $results = $this->buildSearch()->execute();
-      $this->assertEquals(6, $results->getResultCount(), 'Number of indexed entities is correct.');
+    $results = $this->buildSearch()->execute();
+    $this->assertEquals(6, $results->getResultCount(), 'Number of indexed entities is correct.');
 
-      // Stemming "en":
-      // gene => gene
-      // genes => gene
-      //
-      // Stemming "de":
-      // Gen => gen
-      // Gene => gen
-      $query = $this->buildSearch('Gen');
-      $query->setLanguages(['en', 'de']);
-      $results = $query->execute();
-      $this->assertEquals(2, $results->getResultCount(), 'Two results for "Gen" in German entities. No results for "Gen" in English entities.');
+    // Stemming "en":
+    // gene => gene
+    // genes => gene
+    //
+    // Stemming "de":
+    // Gen => gen
+    // Gene => gen
+    $query = $this->buildSearch('Gen');
+    $query->setLanguages(['en', 'de']);
+    $results = $query->execute();
+    $this->assertEquals(2, $results->getResultCount(), 'Two results for "Gen" in German entities. No results for "Gen" in English entities.');
 
-      $query = $this->buildSearch('Gene');
-      $query->setLanguages(['en', 'de']);
-      $results = $query->execute();
-      $this->assertEquals(4, $results->getResultCount(), 'Two results for "Gene" in German entities. Two results for "Gene" in English entities.');
+    $query = $this->buildSearch('Gene');
+    $query->setLanguages(['en', 'de']);
+    $results = $query->execute();
+    $this->assertEquals(4, $results->getResultCount(), 'Two results for "Gene" in German entities. Two results for "Gene" in English entities.');
 
-      // Stemming of "de-at" should fall back to "de".
-      $query = $this->buildSearch('Gen');
-      $query->setLanguages(['de-at']);
-      $results = $query->execute();
-      $this->assertEquals(2, $results->getResultCount(), 'Two results for "Gen" in Austrian entities.');
-      $query = $this->buildSearch('Gene');
-      $query->setLanguages(['de-at']);
-      $results = $query->execute();
-      $this->assertEquals(2, $results->getResultCount(), 'Two results for "Gene" in Austrian entities.');
-    }
-    else {
-      $this->assertTrue(TRUE, 'Error: The Solr instance could not be found. Please enable a multi-core one on http://localhost:8983/solr/d8');
-    }
-
+    // Stemming of "de-at" should fall back to "de".
+    $query = $this->buildSearch('Gen');
+    $query->setLanguages(['de-at']);
+    $results = $query->execute();
+    $this->assertEquals(2, $results->getResultCount(), 'Two results for "Gen" in Austrian entities.');
+    $query = $this->buildSearch('Gene');
+    $query->setLanguages(['de-at']);
+    $results = $query->execute();
+    $this->assertEquals(2, $results->getResultCount(), 'Two results for "Gene" in Austrian entities.');
   }
 
   /**
    * Tests language limiting via options.
    */
   public function testLanguageLimitedByOptions() {
-    // Only run further tests if we have a Solr core available.
-    if ($this->solrAvailable) {
-      $this->insertMultilingualExampleContent();
-      $this->indexItems($this->indexId);
+    $this->insertMultilingualExampleContent();
+    $this->indexItems($this->indexId);
 
-      $server = $this->getIndex()->getServerInstance();
-      $config = $server->getBackendConfig();
+    $server = $this->getIndex()->getServerInstance();
+    $config = $server->getBackendConfig();
 
-      $config['sasm_limit_search_page_to_content_language'] = FALSE;
-      $server->setBackendConfig($config)->save();
-      $this->assertFalse($this->getIndex()->getServerInstance()->getBackendConfig()['sasm_limit_search_page_to_content_language']);
+    $config['sasm_limit_search_page_to_content_language'] = FALSE;
+    $server->setBackendConfig($config)->save();
+    $this->assertFalse($this->getIndex()->getServerInstance()->getBackendConfig()['sasm_limit_search_page_to_content_language']);
 
-      $config['sasm_search_page_include_language_independent'] = FALSE;
-      $server->setBackendConfig($config)->save();
-      $this->assertFalse($this->getIndex()->getServerInstance()->getBackendConfig()['sasm_search_page_include_language_independent']);
+    $config['sasm_search_page_include_language_independent'] = FALSE;
+    $server->setBackendConfig($config)->save();
+    $this->assertFalse($this->getIndex()->getServerInstance()->getBackendConfig()['sasm_search_page_include_language_independent']);
 
-      // Stemming "en":
-      // gene => gene
-      // genes => gene
-      //
-      // Stemming "de":
-      // Gen => gen
-      // Gene => gen
-      $results = $this->buildSearch('gene', [], ['body'])->execute();
-      $this->assertResults([1 => 'en', 2 => 'en', 3 => 'de', 4 => 'de', 5 => 'de-at', 6 => 'de-at'], $results, 'Search all languages for "gene".');
+    // Stemming "en":
+    // gene => gene
+    // genes => gene
+    //
+    // Stemming "de":
+    // Gen => gen
+    // Gene => gen
+    $results = $this->buildSearch('gene', [], ['body'])->execute();
+    $this->assertResults([1 => 'en', 2 => 'en', 3 => 'de', 4 => 'de', 5 => 'de-at', 6 => 'de-at'], $results, 'Search all languages for "gene".');
 
-      $config['sasm_limit_search_page_to_content_language'] = TRUE;
-      $server->setBackendConfig($config)->save();
-      $this->assertTrue($this->getIndex()->getServerInstance()->getBackendConfig()['sasm_limit_search_page_to_content_language']);
+    $config['sasm_limit_search_page_to_content_language'] = TRUE;
+    $server->setBackendConfig($config)->save();
+    $this->assertTrue($this->getIndex()->getServerInstance()->getBackendConfig()['sasm_limit_search_page_to_content_language']);
 
-      // Current content language is "en".
-      $results = $this->buildSearch('gene', [], ['body'])->execute();
-      $this->assertResults([1 => 'en', 2 => 'en'], $results, 'Search content language for "gene".');
+    // Current content language is "en".
+    $results = $this->buildSearch('gene', [], ['body'])->execute();
+    $this->assertResults([1 => 'en', 2 => 'en'], $results, 'Search content language for "gene".');
 
-      // A query created by Views must not be overruled.
-      $results = $this->buildSearch('gene', [], ['body'])->addTag('views')->execute();
-      $this->assertResults([1 => 'en', 2 => 'en', 3 => 'de', 4 => 'de', 5 => 'de-at', 6 => 'de-at'], $results, 'Search all languages for "gene".');
+    // A query created by Views must not be overruled.
+    $results = $this->buildSearch('gene', [], ['body'])->addTag('views')->execute();
+    $this->assertResults([1 => 'en', 2 => 'en', 3 => 'de', 4 => 'de', 5 => 'de-at', 6 => 'de-at'], $results, 'Search all languages for "gene".');
 
-      $config['sasm_search_page_include_language_independent'] = TRUE;
-      $server->setBackendConfig($config)->save();
-      $this->assertTrue($this->getIndex()->getServerInstance()->getBackendConfig()['sasm_search_page_include_language_independent']);
+    $config['sasm_search_page_include_language_independent'] = TRUE;
+    $server->setBackendConfig($config)->save();
+    $this->assertTrue($this->getIndex()->getServerInstance()->getBackendConfig()['sasm_search_page_include_language_independent']);
 
-      $results = $this->buildSearch('gene', [], ['body'])->execute();
-      $this->assertResults([1 => 'en', 2 => 'en', 7 => LanguageInterface::LANGCODE_NOT_SPECIFIED, 8 => LanguageInterface::LANGCODE_NOT_APPLICABLE], $results, 'Search content and unspecified language for "gene".');
+    $results = $this->buildSearch('gene', [], ['body'])->execute();
+    $this->assertResults([1 => 'en', 2 => 'en', 7 => LanguageInterface::LANGCODE_NOT_SPECIFIED, 8 => LanguageInterface::LANGCODE_NOT_APPLICABLE], $results, 'Search content and unspecified language for "gene".');
 
-      $config['sasm_limit_search_page_to_content_language'] = FALSE;
-      $server->setBackendConfig($config)->save();
-      $this->assertFalse($this->getIndex()->getServerInstance()->getBackendConfig()['sasm_limit_search_page_to_content_language']);
+    $config['sasm_limit_search_page_to_content_language'] = FALSE;
+    $server->setBackendConfig($config)->save();
+    $this->assertFalse($this->getIndex()->getServerInstance()->getBackendConfig()['sasm_limit_search_page_to_content_language']);
 
-      $results = $this->buildSearch('gene', [], ['body'])->execute();
-      $this->assertResults([1 => 'en', 2 => 'en', 3 => 'de', 4 => 'de', 5 => 'de-at', 6 => 'de-at', 7 => LanguageInterface::LANGCODE_NOT_SPECIFIED, 8 => LanguageInterface::LANGCODE_NOT_APPLICABLE], $results, 'Search all and unspecified languages for "gene".');
-    }
-    else {
-      $this->assertTrue(TRUE, 'Error: The Solr instance could not be found. Please enable a multi-core one on http://localhost:8983/solr/d8');
-    }
-
+    $results = $this->buildSearch('gene', [], ['body'])->execute();
+    $this->assertResults([1 => 'en', 2 => 'en', 3 => 'de', 4 => 'de', 5 => 'de-at', 6 => 'de-at', 7 => LanguageInterface::LANGCODE_NOT_SPECIFIED, 8 => LanguageInterface::LANGCODE_NOT_APPLICABLE], $results, 'Search all and unspecified languages for "gene".');
   }
 
   /**

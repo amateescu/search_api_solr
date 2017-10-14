@@ -5,10 +5,18 @@ plugin.plugin_configuration.search_api_datasource.solr_document:
     id_field:
       type: string
       label: "ID field"
-    advanced:
-      type: mapping
-      label: "Advanced configuration"
-      mapping:
-        request_handler:
-          type: string
-          label: "Request handler"
+    request_handler:
+      type: string
+      label: "Request handler"
+    default_query:
+      type: string
+      label: "Default query"
+    label_field:
+      type: string
+      label: "Label field"
+    language_field:
+      type: string
+      label: "Language field"
+    url_field:
+      type: string
+      label: "URL field"

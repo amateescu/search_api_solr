@@ -1,0 +1,46 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - search_api.server.techproducts
+  module:
+    - search_api
+    - search_api_solr
+id: techproducts
+name: techproducts
+description: ''
+read_only: true
+field_settings:
+  cat:
+    label: Cat
+    datasource_id: solr_document
+    property_path: cat
+    type: string
+  id:
+    label: Id
+    datasource_id: solr_document
+    property_path: id
+    type: string
+  manu:
+    label: Manu
+    datasource_id: solr_document
+    property_path: manu
+    type: text
+datasource_settings:
+  solr_document:
+    id_field: id
+    request_handler: ''
+    default_query: '*:*'
+    label_field: ''
+    language_field: ''
+    url_field: ''
+processor_settings:
+  add_url: {  }
+  aggregated_field: {  }
+  rendered_item: {  }
+tracker_settings:
+  default: {  }
+options:
+  index_directly: true
+  cron_limit: 50
+server: techproducts
