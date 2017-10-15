@@ -743,10 +743,10 @@
     <!-- In Drupal we only use prefixes for dynmaic fields. Tht might change in
       the future but for now we keep this pattern.
     -->
-    <fieldType name="point" class="solr.PointType" dimension="2" subFieldType="tdouble"/>
+    <fieldType name="point" class="solr.PointType" dimension="2" subFieldType="pdouble"/>
 
     <!-- A specialized field for geospatial search. If indexed, this fieldType must not be multivalued. -->
-    <fieldType name="location" class="solr.LatLonType"  subFieldType="tdouble"/>
+    <fieldType name="location" class="solr.LatLonType"  subFieldType="pdouble"/>
 
     <!-- An alternative geospatial field type new to Solr 4.  It supports multiValued and polygon shapes.
       For more information about this and other Spatial fields new to Solr 4, see:
@@ -765,7 +765,7 @@
    relevancy. -->
     <fieldType name="bbox" class="solr.BBoxField"
                geo="true" distanceUnits="kilometers" numberType="_bbox_coord" />
-    <fieldType name="_bbox_coord" class="solr.DoublePointField" precisionStep="8" docValues="true" stored="false"/>
+    <fieldType name="_bbox_coord" class="solr.DoublePointField" docValues="true" stored="false"/>
 
   <!-- Money/currency field type. See http://wiki.apache.org/solr/MoneyFieldType
        Parameters:
