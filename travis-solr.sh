@@ -64,6 +64,10 @@ download_and_run() {
             add_core_6 $dir_name $SOLR_CORE $SOLR_CONFS
             run_6 $dir_name $SOLR_PORT $SOLR_CORE
             ;;
+        7)
+            add_core_6 $dir_name $SOLR_CORE $SOLR_CONFS
+            run_6 $dir_name $SOLR_PORT $SOLR_CORE
+            ;;
     esac
 }
 
