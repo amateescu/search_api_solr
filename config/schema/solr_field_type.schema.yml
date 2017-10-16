@@ -72,43 +72,43 @@ search_api_solr.solr_field_type.*:
                       label: 'The filter class'
                     catenateNumbers:
                       type: integer
-                      label: 'WordDelimiterFilter::catenateNumbers'
+                      label: 'WordDelimiterGraphFilter:: WordDelimiterFilter::catenateNumbers'
                       nullable: true
                     generateNumberParts:
                       type: integer
-                      label: 'WordDelimiterFilter::generateNumberParts'
+                      label: 'WordDelimiterGraphFilter:: WordDelimiterFilter::generateNumberParts'
                       nullable: true
                     protected:
                       type: string
-                      label: 'WordDelimiterFilter:: SnowballPorterFilter::protected'
+                      label: 'WordDelimiterGraphFilter:: WordDelimiterFilter:: SnowballPorterFilter::protected'
                       nullable: true
                     splitOnCaseChange:
                       type: integer
-                      label: 'WordDelimiterFilter::splitOnCaseChange'
+                      label: 'WordDelimiterGraphFilter:: WordDelimiterFilter::splitOnCaseChange'
                       nullable: true
                     splitOnNumerics:
                       type: integer
-                      label: 'WordDelimiterFilter::splitOnNumerics'
+                      label: 'WordDelimiterGraphFilter:: WordDelimiterFilter::splitOnNumerics'
                       nullable: true
                     generateWordParts:
                       type: integer
-                      label: 'WordDelimiterFilter::generateWordParts'
+                      label: 'WordDelimiterGraphFilter:: WordDelimiterFilter::generateWordParts'
                       nullable: true
                     preserveOriginal:
                       type: integer
-                      label: 'WordDelimiterFilter::preserveOriginal'
+                      label: 'WordDelimiterGraphFilter:: WordDelimiterFilter::preserveOriginal'
                       nullable: true
                     catenateAll:
                       type: integer
-                      label: 'WordDelimiterFilter::catenateAll'
+                      label: 'WordDelimiterGraphFilter:: WordDelimiterFilter::catenateAll'
                       nullable: true
                     catenateWords:
                       type: integer
-                      label: 'WordDelimiterFilter::catenateWords'
+                      label: 'WordDelimiterGraphFilter:: WordDelimiterFilter::catenateWords'
                       nullable: true
                     stemEnglishPossessive:
                       type: integer
-                      label: 'WordDelimiterFilter::stemEnglishPossessive'
+                      label: 'WordDelimiterGraphFilter:: WordDelimiterFilter::stemEnglishPossessive'
                       nullable: true
                     min:
                       type: integer

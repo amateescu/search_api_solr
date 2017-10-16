@@ -409,7 +409,7 @@
                 ignoreCase="true"
                 words="stopwords.txt"
                 />
-        <filter class="solr.WordDelimiterFilterFactory"
+        <filter class="solr.WordDelimiterGraphFilterFactory"
                 protected="protwords.txt"
                 generateWordParts="1"
                 generateNumberParts="1"
@@ -431,7 +431,7 @@
                 ignoreCase="true"
                 words="stopwords.txt"
                 />
-        <filter class="solr.WordDelimiterFilterFactory"
+        <filter class="solr.WordDelimiterGraphFilterFactory"
                 protected="protwords.txt"
                 generateWordParts="1"
                 generateNumberParts="1"
@@ -453,7 +453,7 @@
                 ignoreCase="true"
                 words="stopwords.txt"
                 />
-        <filter class="solr.WordDelimiterFilterFactory"
+        <filter class="solr.WordDelimiterGraphFilterFactory"
                 protected="protwords.txt"
                 generateWordParts="1"
                 generateNumberParts="1"
@@ -474,7 +474,7 @@
       <analyzer type="index">
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
         <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt" />
-        <filter class="solr.WordDelimiterFilterFactory"
+        <filter class="solr.WordDelimiterGraphFilterFactory"
                 protected="protwords.txt"
                 generateWordParts="1"
                 generateNumberParts="1"
@@ -492,7 +492,7 @@
                 ignoreCase="true"
                 words="stopwords.txt"
                 />
-        <filter class="solr.WordDelimiterFilterFactory"
+        <filter class="solr.WordDelimiterGraphFilterFactory"
                 protected="protwords.txt"
                 generateWordParts="1"
                 generateNumberParts="1"
@@ -510,7 +510,7 @@
                 ignoreCase="true"
                 words="stopwords.txt"
                 />
-        <filter class="solr.WordDelimiterFilterFactory"
+        <filter class="solr.WordDelimiterGraphFilterFactory"
                 protected="protwords.txt"
                 generateWordParts="1"
                 generateNumberParts="1"
@@ -532,7 +532,7 @@
                 ignoreCase="true"
                 words="stopwords.txt"
         />
-        <filter class="solr.WordDelimiterFilterFactory"
+        <filter class="solr.WordDelimiterGraphFilterFactory"
                 protected="protwords.txt"
                 generateWordParts="1"
                 generateNumberParts="1"
