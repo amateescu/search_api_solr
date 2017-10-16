@@ -6,10 +6,10 @@ dependencies:
     - language
   config:
     - language.entity.it
-id: text_it_4_5_0
+id: text_it_7_0_0
 label: 'Italian Text Field'
 managed_schema: false
-minimum_solr_version: 4.5.0
+minimum_solr_version: 7.0.0
 field_type_language_code: it
 domains: {}
 field_type:

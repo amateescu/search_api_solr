@@ -6,10 +6,10 @@ dependencies:
     - language
   config:
     - language.entity.de
-id: text_de_5_0_0
+id: text_de_7_0_0
 label: 'German Text Field'
 managed_schema: false
-minimum_solr_version: 5.0.0
+minimum_solr_version: 7.0.0
 field_type_language_code: de
 domains: {}
 field_type:

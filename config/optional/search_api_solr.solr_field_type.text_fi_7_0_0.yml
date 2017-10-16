@@ -6,10 +6,10 @@ dependencies:
     - language
   config:
     - language.entity.fi
-id: text_fi_4_5_0
+id: text_fi_7_0_0
 label: 'Finnish Text Field'
 managed_schema: false
-minimum_solr_version: 4.5.0
+minimum_solr_version: 7.0.0
 field_type_language_code: fi
 domains: {}
 field_type:

@@ -6,10 +6,10 @@ dependencies:
     - language
   config:
     - language.entity.el
-id: text_el_4_5_0
+id: text_el_7_0_0
 label: 'Greek Text Field'
 managed_schema: false
-minimum_solr_version: 4.5.0
+minimum_solr_version: 7.0.0
 field_type_language_code: el
 domains: {}
 field_type:

@@ -6,10 +6,10 @@ dependencies:
     - language
   config:
     - language.entity.cs
-id: text_cs_5_0_0
+id: text_cs_7_0_0
 label: 'Czech Text Field'
 managed_schema: false
-minimum_solr_version: 5.0.0
+minimum_solr_version: 7.0.0
 field_type_language_code: cs
 domains: {}
 field_type:
