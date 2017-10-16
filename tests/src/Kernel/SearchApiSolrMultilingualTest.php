@@ -44,7 +44,17 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
     SolrBackendTestBase::setUp();
 
     $this->installEntitySchema('user');
-    $this->installConfig(['search_api_solr_multilingual_test']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function installConfigs() {
+    parent::installConfigs();
+
+    $this->installConfig([
+      'search_api_solr_multilingual_test',
+    ]);
   }
 
   /**

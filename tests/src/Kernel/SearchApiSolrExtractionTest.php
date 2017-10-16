@@ -23,8 +23,8 @@ class SearchApiSolrExtractionTest extends SolrBackendTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
-    parent::setUp();
+  protected function installConfigs() {
+    parent::installConfigs();
 
     $this->installConfig(['search_api_solr_test']);
   }

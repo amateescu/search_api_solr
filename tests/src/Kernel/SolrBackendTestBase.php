@@ -54,10 +54,7 @@ abstract class SolrBackendTestBase extends BackendTestBase {
   public function setUp() {
     parent::setUp();
 
-    $this->installConfig([
-      'search_api_solr',
-    ]);
-
+    $this->installConfigs();
     $this->commonSolrBackendSetUp();
 
     $this->logger = new InMemoryLogger();
@@ -65,10 +62,18 @@ abstract class SolrBackendTestBase extends BackendTestBase {
   }
 
   /**
+   * Called by setUp() to install required configs.
+   */
+  protected function installConfigs() {
+    $this->installConfig([
+      'search_api_solr',
+    ]);
+  }
+
+  /**
    * Required parts of the setUp() function that are the same for all backends.
    */
-  protected function commonSolrBackendSetUp() {
-  }
+  protected function commonSolrBackendSetUp() {}
 
   /**
    * Clear the index after every test.

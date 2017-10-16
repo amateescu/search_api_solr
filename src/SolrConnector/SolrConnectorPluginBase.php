@@ -528,24 +528,37 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     $query->setHandler('admin/mbeans?stats=true');
     $stats = $this->execute($query)->getData();
     if (!empty($stats)) {
-      $update_handler_stats = $stats['solr-mbeans']['UPDATEHANDLER']['updateHandler']['stats'];
-      $summary['@pending_docs'] = (int) $update_handler_stats['docsPending'];
-      $max_time = (int) $update_handler_stats['autocommit maxTime'];
-      // Convert to seconds.
-      $summary['@autocommit_time_seconds'] = $max_time / 1000;
-      $summary['@autocommit_time'] = \Drupal::service('date.formatter')->formatInterval($max_time / 1000);
-      $summary['@deletes_by_id'] = (int) $update_handler_stats['deletesById'];
-      $summary['@deletes_by_query'] = (int) $update_handler_stats['deletesByQuery'];
-      $summary['@deletes_total'] = $summary['@deletes_by_id'] + $summary['@deletes_by_query'];
-      $summary['@schema_version'] = $this->getSchemaVersionString(TRUE);
-      $summary['@core_name'] = $stats['solr-mbeans']['CORE']['core']['stats']['coreName'];
-      if (version_compare($this->getSolrVersion(TRUE), '6.4', '>=')) {
-        // @see https://issues.apache.org/jira/browse/SOLR-3990
-        $summary['@index_size'] = $stats['solr-mbeans']['CORE']['core']['stats']['size'];
+      $solr_version = $this->getSolrVersion(TRUE);
+      $max_time = 0;
+      if (version_compare($solr_version, '7.0', '>=')) {
+        $update_handler_stats = $stats['solr-mbeans']['UPDATE']['updateHandler']['stats'];
+        $summary['@pending_docs'] = (int) $update_handler_stats['UPDATE.updateHandler.docsPending'];
+        $max_time = (int) $update_handler_stats['UPDATE.updateHandler.softAutoCommitMaxTime'];
+        $summary['@deletes_by_id'] = (int) $update_handler_stats['UPDATE.updateHandler.deletesById'];
+        $summary['@deletes_by_query'] = (int) $update_handler_stats['UPDATE.updateHandler.deletesByQuery'];
+        $summary['@core_name'] = $stats['solr-mbeans']['CORE']['core']['stats']['CORE.coreName'];
+        $summary['@index_size'] = $stats['solr-mbeans']['CORE']['core']['stats']['INDEX.size'];
       }
       else {
-        $summary['@index_size'] = $stats['solr-mbeans']['QUERYHANDLER']['/replication']['stats']['indexSize'];
+        $update_handler_stats = $stats['solr-mbeans']['UPDATEHANDLER']['updateHandler']['stats'];
+        $summary['@pending_docs'] = (int) $update_handler_stats['docsPending'];
+        $max_time = (int) $update_handler_stats['autocommit maxTime'];
+        $summary['@deletes_by_id'] = (int) $update_handler_stats['deletesById'];
+        $summary['@deletes_by_query'] = (int) $update_handler_stats['deletesByQuery'];
+        $summary['@core_name'] = $stats['solr-mbeans']['CORE']['core']['stats']['coreName'];
+        if (version_compare($solr_version, '6.4', '>=')) {
+          // @see https://issues.apache.org/jira/browse/SOLR-3990
+          $summary['@index_size'] = $stats['solr-mbeans']['CORE']['core']['stats']['size'];
+        }
+        else {
+          $summary['@index_size'] = $stats['solr-mbeans']['QUERYHANDLER']['/replication']['stats']['indexSize'];
+        }
       }
+
+      $summary['@autocommit_time_seconds'] = $max_time / 1000;
+      $summary['@autocommit_time'] = \Drupal::service('date.formatter')->formatInterval($max_time / 1000);
+      $summary['@deletes_total'] = $summary['@deletes_by_id'] + $summary['@deletes_by_query'];
+      $summary['@schema_version'] = $this->getSchemaVersionString(TRUE);
     }
     return $summary;
   }
