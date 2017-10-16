@@ -537,7 +537,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
         $summary['@deletes_by_id'] = (int) $update_handler_stats['UPDATE.updateHandler.deletesById'];
         $summary['@deletes_by_query'] = (int) $update_handler_stats['UPDATE.updateHandler.deletesByQuery'];
         $summary['@core_name'] = $stats['solr-mbeans']['CORE']['core']['stats']['CORE.coreName'];
-        $summary['@index_size'] = $stats['solr-mbeans']['CORE']['core']['stats']['CORE.size'];
+        $summary['@index_size'] = $stats['solr-mbeans']['CORE']['core']['stats']['INDEX.size'];
       }
       else {
         $update_handler_stats = $stats['solr-mbeans']['UPDATEHANDLER']['updateHandler']['stats'];
