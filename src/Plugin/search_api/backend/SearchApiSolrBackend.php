@@ -809,7 +809,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
               // For other multi-valued fields (which aren't sortable by nature)
               // we use the same hackish workaround like the DB backend: just
               // copy the first value in a single value field for sorting.
-              $values = $field->getValues();
               $this->addIndexField($doc, $matches[1] . 's' . $matches[2], [$first_value], $field->getType());
             }
           }
