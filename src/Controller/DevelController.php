@@ -130,7 +130,7 @@ class DevelController extends ControllerBase {
     if ($entity && $entity instanceof EntityInterface) {
       foreach ($this->getBackends() as $backend) {
         /** @var \Drupal\search_api\ServerInterface[] $servers */
-        $servers = $this->getStorage()->loadByProperties(['backend' => $backend]);
+        $servers = $this->getStorage()->loadByProperties(['backend' => $backend, 'status' => true]);
         foreach ($servers as $server) {
           /** @var SolrBackendInterface $backend */
           $backend = $server->getBackend();

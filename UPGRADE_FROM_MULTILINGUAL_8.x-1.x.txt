@@ -1,0 +1,31 @@
+ensure that all your composer managed stuff is up to date, for example run
+"composer install" or "composer update" depending on your setup and update your
+drupal installation:
+  drush updb
+
+export all Search API server configs that use a multilingual solr backend
+export all Search API index configs that use such a server
+
+Uninstall the module from drupal
+(ignore these Exceptions, see https://www.drupal.org/node/2909645):
+  drush pm-uninstall search_api_solr_multilingual
+
+Remove the module from your composer setup:
+  composer remove drupal/search_api_solr_multilingual
+
+Upgrade to Search API Solr 8.x-2.x (adjust the version to your needs, for
+example ~2.0-dev):
+  composer require drupal/search_api_solr ~2.0
+
+re-import all Search API server configs that use a multilingual solr backend
+re-import all Search API index configs that use such a server
+
+run all search_api_solr update hooks:
+  drush updb
+
+re-install the latest solr field type configs:
+  drush sasm-reinstall-ft
+
+generate up-to-date configs for all servers and deploy them to your solr
+servers:
+  drush sasm-gsc ...

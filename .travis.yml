@@ -52,7 +52,7 @@ install:
   - echo "error_log=syslog" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
   # Get latest Drupal 8 core
   - cd $TRAVIS_BUILD_DIR/..
-  - git clone --depth=1 --branch 8.3.x https://git.drupal.org/project/drupal.git
+  - git clone --depth=1 --branch 8.4.x https://git.drupal.org/project/drupal.git
   - cd $TRAVIS_BUILD_DIR/../drupal
   - composer install
   - composer config repositories.search_api_solr vcs $TRAVIS_BUILD_DIR

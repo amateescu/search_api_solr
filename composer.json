@@ -31,6 +31,9 @@
         "drupal/search_api_autocomplete": "1.x-dev",
         "drupal/search_api_location": "1.x-dev"
     },
+    "conflict": {
+        "drupal/search_api_solr_multilingual": "*"
+    },
     "suggest": {
         "drupal/facets": "Provides facetted search."
     }
