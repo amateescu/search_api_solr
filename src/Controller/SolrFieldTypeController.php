@@ -29,13 +29,17 @@ class SolrFieldTypeController extends ControllerBase {
    *
    * @param \Drupal\search_api\ServerInterface $search_api_server
    *
-   * @return array
-   *   A render array as expected by drupal_render().
+   * @return \Symfony\Component\HttpFoundation\Response
    */
   public function getSchemaExtraTypesXml(ServerInterface $search_api_server) {
-    $response = new Response();
-    $response->setContent(\Drupal::service('renderer')->render($this->getListBuilder($search_api_server)->getSchemaExtraTypesXml()));
-    return $response;
+    return new Response(
+      $this->getListBuilder($search_api_server)->getSchemaExtraTypesXml(),
+      200,
+      [
+        'Content-Type' => 'application/xml',
+        'Content-Disposition' => 'attachment; filename=schema_extra_types.xml',
+      ]
+    );
   }
 
   /**
@@ -43,13 +47,17 @@ class SolrFieldTypeController extends ControllerBase {
    *
    * @param \Drupal\search_api\ServerInterface $search_api_server
    *
-   * @return array
-   *   A render array as expected by drupal_render().
+   * @return \Symfony\Component\HttpFoundation\Response
    */
   public function getSchemaExtraFieldsXml(ServerInterface $search_api_server) {
-    $response = new Response();
-    $response->setContent(\Drupal::service('renderer')->render($this->getListBuilder($search_api_server)->getSchemaExtraFieldsXml()));
-    return $response;
+    return new Response(
+      $this->getListBuilder($search_api_server)->getSchemaExtraFieldsXml(),
+      200,
+      [
+        'Content-Type' => 'application/xml',
+        'Content-Disposition' => 'attachment; filename=schema_extra_fields.xml',
+      ]
+    );
   }
 
   /**

@@ -187,13 +187,6 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    *
    */
   public function getSchemaExtraTypesXml() {
-    return $this->getPlainTextRenderArray($this->generateSchemaExtraTypesXml());
-  }
-
-  /**
-   *
-   */
-  protected function generateSchemaExtraTypesXml() {
     $xml = '';
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
     foreach ($this->load() as $solr_field_type) {
@@ -208,13 +201,6 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    *
    */
   public function getSchemaExtraFieldsXml() {
-    return $this->getPlainTextRenderArray($this->generateSchemaExtraFieldsXml());
-  }
-
-  /**
-   *
-   */
-  protected function generateSchemaExtraFieldsXml() {
     $xml = '';
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
     foreach ($this->load() as $solr_field_type) {
@@ -239,21 +225,6 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   }
 
   /**
-   *
-   */
-  protected function getPlainTextRenderArray($plain_text) {
-    return [
-      'file' => [
-        '#plain_text' => $plain_text,
-        '#cache' => [
-          'contexts' => $this->entityType->getListCacheContexts(),
-          'tags' => $this->entityType->getListCacheTags(),
-        ],
-      ],
-    ];
-  }
-
-  /**
    * @return \ZipStream\ZipStream
    */
   public function getConfigZip() {
@@ -274,8 +245,8 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     $zip = new ZipStream('solr_' . $solr_branch . '_config.zip');
     $zip->addFile('schema.xml', $schema);
     if ($is_multilingual) {
-      $zip->addFile('schema_extra_types.xml', $this->generateSchemaExtraTypesXml());
-      $zip->addFile('schema_extra_fields.xml', $this->generateSchemaExtraFieldsXml());
+      $zip->addFile('schema_extra_types.xml', $this->getSchemaExtraTypesXml());
+      $zip->addFile('schema_extra_fields.xml', $this->getSchemaExtraFieldsXml());
 
       // Add language specific text files.
       $solr_field_types = $this->load();
