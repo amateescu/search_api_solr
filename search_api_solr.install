@@ -315,3 +315,14 @@ function search_api_solr_update_8008() {
   }
 }
 
+/**
+ * Remove Search API Multilingual Solr Search left-overs.
+ */
+function search_api_solr_update_8200() {
+  $database = Drupal::database();
+
+  $database->delete('key_value')
+    ->condition('collection', 'system.schema')
+    ->condition('name', 'search_api_solr_multilingual')
+    ->execute();
+}
