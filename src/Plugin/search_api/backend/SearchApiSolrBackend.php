@@ -38,7 +38,7 @@ use Drupal\search_api_autocomplete\Suggestion\SuggestionFactory;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginManager;
-use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
+use Drupal\search_api_solr\Utility\Utility;
 use Solarium\Core\Client\Response;
 use Solarium\Core\Query\QueryInterface as SolariumQueryInterface;
 use Solarium\Core\Query\Result\ResultInterface;
@@ -748,6 +748,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $doc = $update_query->createDocument();
       $doc->setField('id', $this->createId($index_id, $id));
       $doc->setField('index_id', $index_id);
+      // Suggester context boolean filter queries have issues with special
+      // characters like '/' or ':' if not properly quoted (by solarium). We
+      // avoid that by reusing our field name encoding.
+      $doc->addField('sm_context_tags', Utility::encodeSolrName('search_api/index:' . $index_id));
 
       // Add document level boost from Search API item.
       if ($boost = $item->getBoost()) {
@@ -755,8 +759,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
 
       // Add the site hash and language-specific base URL.
-      $doc->setField('hash', SearchApiSolrUtility::getSiteHash());
+      $site_hash = Utility::getSiteHash();
+      $doc->setField('hash', $site_hash);
+      $doc->addField('sm_context_tags', Utility::encodeSolrName('search_api_solr/site_hash:' . $site_hash));
       $lang = $item->getLanguage();
+      $doc->addField('sm_context_tags', Utility::encodeSolrName('drupal/langcode:' . $lang));
       if (empty($base_urls[$lang])) {
         $url_options = array('absolute' => TRUE);
         if (isset($languages[$lang])) {
@@ -856,7 +863,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $connector = $this->getSolrConnector();
     $query_helper = $connector->getQueryHelper();
     $query = '+index_id:' . $this->getIndexId($query_helper->escapePhrase($index->id()));
-    $query .= ' +hash:' . $query_helper->escapePhrase(SearchApiSolrUtility::getSiteHash());
+    $query .= ' +hash:' . $query_helper->escapePhrase(Utility::getSiteHash());
     if ($datasource_id) {
       $query .= ' +' . $this->getSolrFieldNames($index)['search_api_datasource'] . ':' . $query_helper->escapePhrase($datasource_id);
     }
@@ -946,7 +953,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     // Set the site hash filter, if enabled.
     if ($this->configuration['site_hash']) {
-      $site_hash = $query_helper->escapePhrase(SearchApiSolrUtility::getSiteHash());
+      $site_hash = $query_helper->escapePhrase(Utility::getSiteHash());
       $solarium_query->createFilterQuery('site_hash')->setQuery('hash:' . $site_hash);
     }
 
@@ -1089,7 +1096,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @see \Drupal\search_api_solr\Utility\Utility::getSiteHash()
    */
   protected function createId($index_id, $item_id) {
-    return SearchApiSolrUtility::getSiteHash() . "-$index_id-$item_id";
+    return Utility::getSiteHash() . "-$index_id-$item_id";
   }
 
   /**
@@ -1114,7 +1121,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           // Generate a field name; this corresponds with naming conventions in
           // our schema.xml.
           $type = $field->getType();
-          $type_info = SearchApiSolrUtility::getDataTypeInfo($type);
+          $type_info = Utility::getDataTypeInfo($type);
           $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
           if ($this->fieldsHelper->isFieldIdReserved($key)) {
             $pref .= 's';
@@ -1141,14 +1148,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             }
           }
           $name = $pref . '_' . $key;
-          $ret[$key] = SearchApiSolrUtility::encodeSolrName($name);
+          $ret[$key] = Utility::encodeSolrName($name);
 
           // Add a distance pseudo field for any location field. These fields
           // don't really exist in the solr core, but we tell solr to name the
           // distance calculation results that way. Later we directly pass these
           // as "fields" to Drupal and especially Views.
           if ($type == 'location') {
-            $ret[$key . '__distance'] = SearchApiSolrUtility::encodeSolrName($name . '__distance');
+            $ret[$key . '__distance'] = Utility::encodeSolrName($name . '__distance');
           }
         }
       }
@@ -1364,7 +1371,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $backend_config = $index->getServerInstance()->getBackendConfig();
     $field_names = $this->getSolrFieldNames($index);
     $fields = $index->getFields(TRUE);
-    $site_hash = SearchApiSolrUtility::getSiteHash();
+    $site_hash = Utility::getSiteHash();
     // We can find the item ID and the score in the special 'search_api_*'
     // properties. Mappings are provided for these properties in
     // SearchApiSolrBackend::getFieldNames().
@@ -2058,7 +2065,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $connector = $this->getSolrConnector();
       $solr_version = $connector->getSolrVersion();
       if (version_compare($solr_version, '6.5', '=')) {
-        \Drupal::logger('search_api_solr')->error('Solr 6.5.x contains a bug that breaks the autocomplete feature. Downgrade to 6.4.x or upgrade to 6.6.x.');
+        \Drupal::logger('search_api_solr')->error('Solr 6.5.x contains a bug that breaks the autocomplete feature. Downgrade to 6.4.x or upgrade to 6.6.x at least.');
         return [];
       }
       $solarium_query = $connector->getTermsQuery();
@@ -2233,7 +2240,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       foreach ($data['highlighting'][$solr_id]['spell'] as $snippet) {
         $snippet = strip_tags($snippet);
         $snippet = preg_replace('/^.*>|<.*$/', '', $snippet);
-        $snippet = SearchApiSolrUtility::formatHighlighting($snippet);
+        $snippet = Utility::formatHighlighting($snippet);
         // The created fragments sometimes have leading or trailing punctuation.
         // We remove that here for all common cases, but take care not to remove
         // < or > (so HTML tags stay valid).
@@ -2251,7 +2258,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             // replace the [HIGHLIGHT] tags with the appropriate format.
             $snippets[] = [
               'raw' => preg_replace('#\[(/?)HIGHLIGHT\]#', '', $value),
-              'replace' => SearchApiSolrUtility::formatHighlighting($value),
+              'replace' => Utility::formatHighlighting($value),
             ];
           }
           if ($snippets) {
