@@ -86,6 +86,7 @@ field_type:
           protected: protwords_fr.txt
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
+solr_configs: {}
 text_files:
   stopwords: |
     au

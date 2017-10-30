@@ -225,6 +225,21 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   }
 
   /**
+   *
+   */
+  public function getSolrconfigExtraXml() {
+    $xml = '';
+    /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
+    foreach ($this->load() as $solr_field_type) {
+      if (!$solr_field_type->isManagedSchema()) {
+        $xml .= $solr_field_type->getSolrConfigsAsXml();
+      }
+    }
+    return $xml;
+  }
+
+
+  /**
    * @return \ZipStream\ZipStream
    */
   public function getConfigZip() {
@@ -247,6 +262,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     if ($is_multilingual) {
       $zip->addFile('schema_extra_types.xml', $this->getSchemaExtraTypesXml());
       $zip->addFile('schema_extra_fields.xml', $this->getSchemaExtraFieldsXml());
+      $zip->addFile('solrconfig_extra.xml', $this->getSolrconfigExtraXml());
 
       // Add language specific text files.
       $solr_field_types = $this->load();

@@ -669,6 +669,14 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
+  public function getSuggesterQuery() {
+    $this->connect();
+    return $this->solr->createSuggester();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getQueryHelper(QueryInterface $query = NULL) {
     if ($query) {
       return $query->getHelper();

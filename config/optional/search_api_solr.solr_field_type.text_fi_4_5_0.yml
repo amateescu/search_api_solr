@@ -103,6 +103,7 @@ field_type:
           protected: protwords_fi.txt
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
+solr_configs: {}
 text_files:
   stopwords: |
     olla

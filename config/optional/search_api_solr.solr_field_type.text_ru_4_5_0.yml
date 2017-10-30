@@ -76,6 +76,7 @@ field_type:
           protected: protwords_ru.txt
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
+solr_configs: {}
 text_files:
   stopwords: |
     и

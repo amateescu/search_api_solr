@@ -80,6 +80,7 @@ field_type:
           class: solr.GreekStemFilterFactory
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
+solr_configs: {}
 text_files:
   stopwords: |
     ο

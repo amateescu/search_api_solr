@@ -2164,7 +2164,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $solr_field_names = $this->getSolrFieldNames($query->getIndex());
     $fulltext_fields = $search->getOption('fields') ? $search->getOption('fields') : $this->getQueryFulltextFields($query);
     foreach ($fulltext_fields as $fulltext_field) {
-      $fl[] = 'terms_' . $solr_field_names[$fulltext_field];
+      $fl[] = $solr_field_names[$fulltext_field];
     }
     return $fl;
   }

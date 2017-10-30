@@ -76,7 +76,7 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    * @return string
    *   The Solr Field Type definition as XML.
    */
-  public function getFieldTypeAsXml();
+  public function getFieldTypeAsXml($add_commment = TRUE);
 
   /**
    * Gets a list of dynamic Solr fields that will use this Solr Field Type.
@@ -91,6 +91,29 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    * @return array
    */
   public function getCopyFields();
+
+  /**
+   * Gets the Solr Field Type specific additions to solrconfig.xml as array.
+   *
+   * @return array
+   *   The Solr Field Type specific additions to solrconfig.xml as nested
+   *   associative array.
+   */
+  public function getSolrConfigs();
+
+  /**
+   * Gets the Solr Field Type specific additions to solrconfig.xml as XML.
+   *
+   * The XML format is used as part of a classic Solr solrconf.xml.
+   *
+   * @param bool $add_commment
+   *   Wether to add a comment to the XML or not to explain the purpose of
+   *   these configs.
+   *
+   * @return string
+   *   The Solr Field Type specific additions to solrconfig.xml as XML.
+   */
+  public function getSolrConfigsAsXml($add_commment = TRUE);
 
   /**
    * Gets all text files required by the Solr Field Type definition.

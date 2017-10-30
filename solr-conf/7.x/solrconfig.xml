@@ -2,7 +2,7 @@
 
 <!DOCTYPE config [
   <!ENTITY spellcheck SYSTEM "solrconfig_spellcheck.xml">
-  <!ENTITY suggest SYSTEM "solrconfig_suggest.xml">
+  <!ENTITY extra SYSTEM "solrconfig_extra.xml">
 ]>
 
 <!--
@@ -1068,7 +1068,7 @@
   </requestHandler>
 
   <!-- Following is a dynamic way to include other components or any customized solrconfig.xml stuff, added by other contrib modules -->
-  &suggest;
+  &extra;
 
   <requestHandler name="/suggest" class="solr.SearchHandler" startup="lazy">
     <lst name="defaults">
