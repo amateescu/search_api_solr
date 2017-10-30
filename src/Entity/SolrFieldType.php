@@ -31,9 +31,9 @@ use Drupal\search_api_solr\Utility\Utility;
  *     "uuid" = "uuid"
  *   },
  *   links = {
- *     "edit-form" = "/admin/config/search/search-api/server/{search_api_server}/solr_field_type/{solr_field_type}",
- *     "delete-form" = "/admin/config/search/search-api/server/{search_api_server}/solr_field_type/{solr_field_type}/delete",
- *     "export-form" = "/admin/config/search/search-api/server/{search_api_server}/solr_field_type/{solr_field_type}/export",
+ *     "edit-form" = "/admin/config/search/search-api/solr_field_type/{solr_field_type}",
+ *     "delete-form" = "/admin/config/search/search-api/solr_field_type/{solr_field_type}/delete",
+ *     "export-form" = "/admin/config/search/search-api/solr_field_type/{solr_field_type}/export",
  *     "collection" = "/admin/config/search/search-api/server/{search_api_server}/solr_field_type"
  *   }
  * )
@@ -88,6 +88,13 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    * @var string[]
    */
   protected $domains;
+
+  /**
+   * Solr Field Type specific additions to solrconfig.xml.
+   *
+   * @var array
+   */
+  protected $solr_configs;
 
   /**
    * Array of various text files required by the Solr Field Type definition.
@@ -188,12 +195,38 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    * {@inheritdoc}
    */
   public function getFieldTypeAsXml($add_commment = TRUE) {
-    $root = new \SimpleXMLElement('<fieldType/>');
+    $formatted_xml_string = $this->buildXmlFromArray('fieldType', $this->field_type);
+
+    $comment = '';
+    if ($add_commment) {
+      $comment = "<!--\n  " . $this->label() . "\n  " .
+        ($this->isManagedSchema() ? " for managed schema\n  " : '') .
+        $this->getMinimumSolrVersion() .
+        "\n-->\n";
+    }
+
+    return $comment . $formatted_xml_string;
+  }
+
+  protected function buildXmlFromArray($root_element_name, array $attributes) {
+    $root = new \SimpleXMLElement('<' . $root_element_name . '/>');
 
     $f = function (\SimpleXMLElement $element, array $attributes) use (&$f) {
       foreach ($attributes as $key => $value) {
         if (is_scalar($value)) {
-          $element->addAttribute($key, $value);
+          switch ($key) {
+            case 'VALUE':
+              // @see https://stackoverflow.com/questions/3153477
+              $element[0] = $value;
+              break;
+
+            case 'CDATA':
+              $element[0] = '<![CDATA[' . $value . ']]>';
+              break;
+
+            default:
+              $element->addAttribute($key, $value);
+          }
         }
         elseif (is_array($value)) {
           if (array_key_exists(0, $value)) {
@@ -210,15 +243,8 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
         }
       }
     };
-    $f($root, $this->field_type);
 
-    $comment = '';
-    if ($add_commment) {
-      $comment = "<!--\n  " . $this->label() . "\n  " .
-        ($this->isManagedSchema() ? " for managed schema\n  " : '') .
-        $this->getMinimumSolrVersion() .
-        "\n-->\n";
-    }
+    $f($root, $attributes);
 
     // Create formatted string.
     $dom = dom_import_simplexml($root)->ownerDocument;
@@ -226,7 +252,32 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     $formatted_xml_string = $dom->saveXML();
 
     // Remove the XML declaration before returning the XML fragment.
-    return $comment . preg_replace('/<\?.*?\?>\s*\n?/', '', $formatted_xml_string);
+    return preg_replace('/<\?.*?\?>\s*\n?/', '', $formatted_xml_string);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSolrConfigs() {
+    return $this->solr_configs;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSolrConfigsAsXml($add_commment = TRUE) {
+    $formatted_xml_string = $this->buildXmlFromArray('solrconfigs', $this->solr_configs);
+
+    $comment = '';
+    if ($add_commment) {
+      $comment = "<!--\n  Special configs for " . $this->label() . "\n  " .
+        ($this->isManagedSchema() ? " for managed schema\n  " : '') .
+        $this->getMinimumSolrVersion() .
+        "\n-->\n";
+    }
+
+    // Remove the fake root element the XML fragment.
+    return $comment . preg_replace('@</?solrconfigs/?>@', '', $formatted_xml_string);
   }
 
   /**
@@ -234,7 +285,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   public function getDynamicFields() {
     $dynamic_fields = [];
-    foreach (array('ts', 'tm', 'tos', 'tom', 'terms_ts', 'terms_tm') as $prefix) {
+    foreach (array('ts', 'tm', 'tos', 'tom') as $prefix) {
       $dynamic_fields[] = [
         'name' => SearchApiSolrUtility::encodeSolrName(
             Utility::getLanguageSpecificSolrDynamicFieldPrefix($prefix, $this->field_type_language_code)
@@ -255,17 +306,16 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   public function getCopyFields() {
     $copy_fields = [];
-    // @todo How should we handle the other full text fields here?
-    foreach (array('ts' => 'terms_ts', 'tm' => 'terms_tm') as $src_prefix => $dest_prefix) {
-      $copy_fields[] = [
-        'source' => SearchApiSolrUtility::encodeSolrName(
-          Utility::getLanguageSpecificSolrDynamicFieldPrefix($src_prefix, $this->field_type_language_code)
-        ) . '*',
-        'dest' => SearchApiSolrUtility::encodeSolrName(
-          Utility::getLanguageSpecificSolrDynamicFieldPrefix($dest_prefix, $this->field_type_language_code)
-        ) . '*',
-      ];
-    }
+#    foreach (array('ts' => 'terms_ts', 'tm' => 'terms_tm', 'tos' => 'terms_ts', 'tom' => 'terms_tm') as $src_prefix => $dest_prefix) {
+#      $copy_fields[] = [
+#        'source' => SearchApiSolrUtility::encodeSolrName(
+#          Utility::getLanguageSpecificSolrDynamicFieldPrefix($src_prefix, $this->field_type_language_code)
+#        ) . '*',
+#        'dest' => SearchApiSolrUtility::encodeSolrName(
+#          Utility::getLanguageSpecificSolrDynamicFieldPrefix($dest_prefix, $this->field_type_language_code)
+#        ) . '*',
+#      ];
+#    }
     return $copy_fields;
   }
 
@@ -334,7 +384,11 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   protected function urlRouteParameters($rel) {
     $uri_route_parameters = parent::urlRouteParameters($rel);
 
-    $uri_route_parameters['search_api_server'] = \Drupal::routeMatch()->getRawParameter('search_api_server');
+    if ('collection' == $rel) {
+      $uri_route_parameters['search_api_server'] = \Drupal::routeMatch()->getRawParameter('search_api_server')
+        // To be removed when https://www.drupal.org/node/2919648 is fixed.
+        ?: 'core_issue_2919648_workaround';
+    }
 
     return $uri_route_parameters;
   }

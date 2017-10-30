@@ -47,6 +47,19 @@ class SolrFieldTypeExportForm extends EntityForm {
       '#disabled' => FALSE,
     );
 
+    $form['solr_configs'] = array(
+      '#type' => 'fieldset',
+      '#title' => $this->t('Solr configs'),
+    );
+
+    $form['solr_configs']['xml'] = array(
+      '#type' => 'textarea',
+      '#title' => $this->t('XML'),
+      '#description' => $this->t('XML representation to be used as part of schema.xml.'),
+      '#default_value' => $solr_field_type->getSolrConfigsAsXml(),
+      '#disabled' => TRUE,
+    );
+
     $form['text_files'] = array(
       '#type' => 'fieldset',
       '#title' => $this->t('Text Files'),

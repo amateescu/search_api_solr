@@ -156,8 +156,16 @@
   <copyField source="ts_*" dest="spell"/>
   <copyField source="tm_*" dest="spell"/>
 
-  <copyField source="ts_*" dest="terms_ts_*"/>
-  <copyField source="tm_*" dest="terms_tm_*"/>
+  <copyField source="ts_*" dest="sm_suggest"/>
+  <copyField source="tm_*" dest="sm_suggest"/>
+  <copyField source="tos_*" dest="sm_suggest"/>
+  <copyField source="tom_*" dest="sm_suggest"/>
+  <copyField source="tus_*" dest="sm_suggest"/>
+  <copyField source="tum_*" dest="sm_suggest"/>
+  <copyField source="tes_*" dest="sm_suggest"/>
+  <copyField source="tem_*" dest="sm_suggest"/>
+  <copyField source="tws_*" dest="sm_suggest"/>
+  <copyField source="twm_*" dest="sm_suggest"/>
 
   <!-- Dynamic field definitions.  If a field name is not found, dynamicFields
        will be used if the name matches any of the patterns.
@@ -201,9 +209,6 @@
   <dynamicField name="tem_*" type="edge_n2_kw_text" indexed="true" stored="true" multiValued="true" omitTermFreqAndPositions="true" />
   <dynamicField name="tws_*" type="text_ws" indexed="true" stored="true" multiValued="false"/>
   <dynamicField name="twm_*" type="text_ws" indexed="true" stored="true" multiValued="true"/>
-
-  <dynamicField name="terms_ts_*" type="textSpell" indexed="true" stored="true" multiValued="false" termVectors="true"/>
-  <dynamicField name="terms_tm_*" type="textSpell" indexed="true" stored="true" multiValued="true" termVectors="true"/>
 
   <!-- trie dates are preferred, so give them the 2 letter prefix -->
   <dynamicField name="ds_*"  type="tdate"   indexed="true"  stored="true" multiValued="false"/>

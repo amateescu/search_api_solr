@@ -92,6 +92,7 @@ field_type:
           protected: protwords_en.txt
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
+solr_configs: {}
 text_files:
   stopwords: |
     a

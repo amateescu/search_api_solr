@@ -241,6 +241,14 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
   public function getTermsQuery();
 
   /**
+   * Creates a new Solarium suggester query.
+   *
+   * @return \Solarium\QueryType\Terms\Query
+   *   The Select query.
+   */
+  public function getSuggesterQuery();
+
+  /**
    * Creates a new Solarium extract query.
    *
    * @return \Solarium\QueryType\Extract\Query
