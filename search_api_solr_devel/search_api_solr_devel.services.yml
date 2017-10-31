@@ -4,3 +4,9 @@ services:
     arguments: ['@entity_type.manager']
     tags:
       - { name: event_subscriber }
+
+  search_api_solr_devel.solarium_request_logger:
+    class: Drupal\search_api_solr_devel\Logging\SolariumRequestLogger
+    tags:
+      - { name: event_subscriber }
+    arguments: ['@devel.dumper']

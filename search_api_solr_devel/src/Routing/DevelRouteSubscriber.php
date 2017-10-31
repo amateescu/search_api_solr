@@ -57,7 +57,7 @@ class DevelRouteSubscriber extends RouteSubscriberBase {
       $route = new Route($devel_solr);
       $route
         ->addDefaults([
-          '_controller' => '\Drupal\search_api_solr\Controller\DevelController::entitySolr',
+          '_controller' => '\Drupal\search_api_solr_devel\Controller\DevelController::entitySolr',
           '_title' => 'Devel Solr',
         ])
         ->addRequirements([
