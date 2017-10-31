@@ -228,16 +228,29 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    *
    */
   public function getSolrconfigExtraXml() {
-    $xml = '';
+    $search_components = [];
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
     foreach ($this->load() as $solr_field_type) {
       if (!$solr_field_type->isManagedSchema()) {
-        $xml .= $solr_field_type->getSolrConfigsAsXml();
+        $xml = $solr_field_type->getSolrConfigsAsXml();
+        if (preg_match_all('@(<searchComponent name="[^"]+"[^>]*?>)(.*?)</searchComponent>@sm', $xml, $matches)) {
+          foreach ($matches[1] as $key => $search_component) {
+            $search_components[$search_component][] = $matches[2][$key];
+          }
+        }
       }
+    }
+
+    $xml = '';
+    foreach ($search_components as $search_component => $details) {
+      $xml .= $search_component;
+      foreach ($details as $detail) {
+        $xml .= $detail;
+      }
+      $xml .= "</searchComponent>\n";
     }
     return $xml;
   }
-
 
   /**
    * @return \ZipStream\ZipStream

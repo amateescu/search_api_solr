@@ -1,13 +1,13 @@
 <?php
 
-namespace Drupal\search_api_solr\Controller;
+namespace Drupal\search_api_solr_devel\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
-use Drupal\devel\DevelDumperManager;
+use Drupal\devel\DevelDumperManagerInterface;
 use Drupal\search_api\Backend\BackendPluginManager;
 use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility;
@@ -36,7 +36,7 @@ class DevelController extends ControllerBase {
   /**
    * The Devel dumper manager.
    *
-   * @var \Drupal\devel\DevelDumperManager
+   * @var \Drupal\devel\DevelDumperManagerInterface
    */
   protected $develDumperManager;
 
@@ -52,12 +52,12 @@ class DevelController extends ControllerBase {
    *   The entity type manager.
    * @param \Drupal\search_api\Backend\BackendPluginManager $backend_plugin_manager
    *   The backend plugin manager.
-   * @param \Drupal\devel\DevelDumperManager $devel_dumper_manager
+   * @param \Drupal\devel\DevelDumperManagerInterface $devel_dumper_manager
    *   The Devel dumper manager.
    * @param \Drupal\search_api\Utility\FieldsHelperInterface $fields_helper
    *   The Search API Fields Helper.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, BackendPluginManager $backend_plugin_manager, DevelDumperManager $devel_dumper_manager, FieldsHelperInterface $fields_helper) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, BackendPluginManager $backend_plugin_manager, DevelDumperManagerInterface $devel_dumper_manager, FieldsHelperInterface $fields_helper) {
     $this->storage = $entity_type_manager->getStorage('search_api_server');
     $this->backendPluginManager = $backend_plugin_manager;
     $this->develDumperManager = $devel_dumper_manager;

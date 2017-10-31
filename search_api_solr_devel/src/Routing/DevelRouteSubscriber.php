@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api_solr\Routing;
+namespace Drupal\search_api_solr_devel\Routing;
 
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -57,7 +57,7 @@ class DevelRouteSubscriber extends RouteSubscriberBase {
       $route = new Route($devel_solr);
       $route
         ->addDefaults([
-          '_controller' => '\Drupal\search_api_solr\Controller\DevelController::entitySolr',
+          '_controller' => '\Drupal\search_api_solr_devel\Controller\DevelController::entitySolr',
           '_title' => 'Devel Solr',
         ])
         ->addRequirements([
