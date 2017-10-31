@@ -27,7 +27,7 @@ function search_api_solr_defaults_requirements($phase) {
       if (!isset($node_types[$required_type_id])) {
         $requirements['search_api_solr_defaults:' . $required_type_id] = array(
           'severity' => REQUIREMENT_ERROR,
-          'description' => t('Content type @content_type not found. Database Search Defaults module could not be installed.', array('@content_type' => $required_type_id)),
+          'description' => t('Content type @content_type not found. Solr Search Defaults module could not be installed.', array('@content_type' => $required_type_id)),
         );
       }
       else {
@@ -37,7 +37,7 @@ function search_api_solr_defaults_requirements($phase) {
           if (!isset($fields[$required_field])) {
             $requirements['search_api_solr_defaults:' . $required_type_id . ':' . $required_field] = array(
               'severity' => REQUIREMENT_ERROR,
-              'description' => t('Field @field in content type @node_type not found. Database Search Defaults module could not be installed', array('@node_type' => $required_type_id, '@field' => $required_field)),
+              'description' => t('Field @field in content type @node_type not found. Solr Search Defaults module could not be installed', array('@node_type' => $required_type_id, '@field' => $required_field)),
             );
           }
         }
