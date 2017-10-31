@@ -1,0 +1,4 @@
+search_api_solr_devel.entities:
+  class: \Drupal\Core\Menu\LocalTaskDefault
+  deriver: \Drupal\search_api_solr_devel\Plugin\Derivative\DevelLocalTask
+

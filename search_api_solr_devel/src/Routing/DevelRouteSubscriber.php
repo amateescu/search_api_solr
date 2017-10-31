@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api_solr\Routing;
+namespace Drupal\search_api_solr_devel\Routing;
 
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;

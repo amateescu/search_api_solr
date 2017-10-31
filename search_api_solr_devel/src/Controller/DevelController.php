@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api_solr\Controller;
+namespace Drupal\search_api_solr_devel\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityInterface;

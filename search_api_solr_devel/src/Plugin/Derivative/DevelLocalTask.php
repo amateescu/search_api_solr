@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api_solr\Plugin\Derivative;
+namespace Drupal\search_api_solr_devel\Plugin\Derivative;
 
 use Drupal\Component\Plugin\Derivative\DeriverBase;
 use Drupal\Core\Entity\EntityManagerInterface;

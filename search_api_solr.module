@@ -101,20 +101,6 @@ function search_api_solr_search_api_server_update(ServerInterface $server) {
 }
 
 /**
- * Implements hook_entity_type_alter().
- */
-function search_api_solr_entity_type_alter(array &$entity_types) {
-  if (\Drupal::moduleHandler()->moduleExists('devel')) {
-    /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
-    foreach ($entity_types as $entity_type_id => $entity_type) {
-      if ($entity_type->hasViewBuilderClass() && $entity_type->hasLinkTemplate('canonical')) {
-        $entity_type->setLinkTemplate('devel-solr', "/devel/$entity_type_id/{{$entity_type_id}}/solr");
-      }
-    }
-  }
-}
-
-/**
  *
  */
 function search_api_solr_form_search_api_index_form_alter(&$form, FormStateInterface $form_state, $form_id) {
