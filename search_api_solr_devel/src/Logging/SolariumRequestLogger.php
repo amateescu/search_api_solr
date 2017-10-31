@@ -71,7 +71,18 @@ class SolariumRequestLogger implements EventSubscriberInterface {
     );
 
     $this->getLogger()->debug(print_r($response->getBody(), TRUE));
-    drupal_set_message($this->t('Check the logs for detailed Solr response bodies. (Type: search_api, Severity: Debug)'), 'warning');
+    $this->showLoggerHint();
   }
 
+  protected function showLoggerHint() {
+    static $hint = FALSE;
+
+    if (!$hint) {
+      $hint = TRUE;
+      $this->develDumperManager->message(
+        'Type: search_api, Severity: Debug',
+        $this->t('Check the logs for detailed Solr response bodies'),
+        'warning');
+    }
+  }
 }
