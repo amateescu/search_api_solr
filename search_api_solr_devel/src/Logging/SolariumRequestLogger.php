@@ -46,19 +46,36 @@ class SolariumRequestLogger implements EventSubscriberInterface {
   }
 
   /**
+   * Dumps a Solr query as drupal messages.
+   *
    * @param \Solarium\Core\Event\PreExecuteRequest $event
    *   The pre execute event.
    */
   public function preExecuteRequest(PreExecuteRequest $event) {
     $request = $event->getRequest();
+    $method = $request->getMethod();
 
     $this->develDumperManager->message(
       $request->getUri(),
       $this->t('Try to send Solr request')
     );
+
+    $dump = [];
+    $parameters = ($method == 'GET') ? explode('&', $request->getQueryString()) : explode('&', $request->getRawData());
+    foreach ($parameters as $parameter) {
+      list($name, $value) = explode('=', $parameter);
+      $dump[$name][] = urldecode($value);
+    }
+
+    $this->develDumperManager->message(
+      $dump,
+      $method
+    );
   }
 
   /**
+   * Dumps a Solr response status as drupal messages and logs the response body.
+   *
    * @param \Solarium\Core\Event\PostExecuteRequest $event
    *   The pre execute event.
    */
