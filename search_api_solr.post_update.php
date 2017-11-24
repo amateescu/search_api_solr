@@ -40,3 +40,13 @@ function search_api_solr_post_update_8200_reinstall_field_types() {
 
   search_api_solr_post_update_install_standard_highlighter_config();
 }
+
+/**
+ * Deletes potential left over configs from multilingual to alpha1 migration.
+ */
+function search_api_solr_post_update_8201_delete_multilingual_migration_left_over_configs() {
+  $config_factory = \Drupal::configFactory();
+  foreach ($config_factory->listAll('search_api_solr_multilingual') as $config_name) {
+    $config_factory->getEditable($config_name)->delete();
+  }
+}
