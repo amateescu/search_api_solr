@@ -195,7 +195,7 @@ function search_api_solr_update_helper_save_backend_config($server_name, array $
 function search_api_solr_update_helper_get_field_type_configs() {
   $config_factory = \Drupal::configFactory();
   $field_type_configs = [];
-  foreach ($config_factory->listAll('search_api_solr_multilingual.solr_field_type.') as $field_type_name) {
+  foreach ($config_factory->listAll('search_api_solr.solr_field_type.') as $field_type_name) {
     $field_type_configs[$field_type_name] = $config_factory->get($field_type_name)->getRawData();
   }
   return $field_type_configs;
@@ -325,4 +325,29 @@ function search_api_solr_update_8200() {
     ->condition('collection', 'system.schema')
     ->condition('name', 'search_api_solr_multilingual')
     ->execute();
+}
+
+/**
+ * Fix suggester field type.
+ */
+function search_api_solr_update_8201() {
+  foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+    If (!empty($field_type_config['solr_configs']) && !empty($field_type_config['solr_configs']['searchComponents'])) {
+      foreach($field_type_config['solr_configs']['searchComponents'] as &$component) {
+        if ($component['name'] == 'suggest') {
+          foreach($component['lst'] as &$lst) {
+            foreach($lst['str'] as &$str) {
+              foreach($lst['str'] as &$entry) {
+                if ($entry['name'] == 'field') {
+                  $entry['VALUE'] = 'twm_suggest';
+                  search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+    };
+  }
 }
