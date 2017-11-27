@@ -118,7 +118,7 @@ solr_configs:
               VALUE: DocumentDictionaryFactory
             -
               name: field
-              VALUE: sm_suggest
+              VALUE: twm_suggest
             -
               name: suggestAnalyzerFieldType
               VALUE: text_de
