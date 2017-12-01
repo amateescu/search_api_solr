@@ -1056,13 +1056,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * Apply workarounds for special Solr versions before searching.
    *
-   * @param \Solarium\QueryType\Select\Query\Query $solarium_query
+   * @param \Solarium\Core\Query\QueryInterface $solarium_query
    *   The Solarium select query object.
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The \Drupal\search_api\Query\Query object representing the executed
    *   search query.
    */
-  protected function applySearchWorkarounds(Query $solarium_query, QueryInterface $query) {
+  protected function applySearchWorkarounds(SolariumQueryInterface $solarium_query, QueryInterface $query) {
     // Do not modify 'Server index status' queries.
     // @see https://www.drupal.org/node/2668852
     if ($query->hasTag('server_index_status')) {
