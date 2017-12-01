@@ -103,6 +103,28 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
   /**
    * {@inheritdoc}
    */
+  protected function applySearchWorkarounds(SolariumQueryInterface $solarium_query, QueryInterface $query) {
+    parent::applySearchWorkarounds($solarium_query, $query);
+
+    // Do not modify 'Server index status' queries.
+    // @see https://www.drupal.org/node/2668852
+    if ($query->hasTag('server_index_status')) {
+      return;
+    }
+
+    // The query builder of Search API Solr Search bases on 'OR' which is the
+    // default value for solr, too. But a foreign schema could have a
+    // non-default config for q.op. Therefor we need to set it explicitly if not
+    // set.
+    $params = $solarium_query->getParams();
+    if (!isset($params['q.op'])) {
+      $solarium_query->addParam('q.op', 'OR');
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function postQuery(ResultSetInterface $results, QueryInterface $query, $response) {
     parent::postQuery($results, $query, $response);
 
