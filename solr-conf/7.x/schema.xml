@@ -561,7 +561,6 @@
         />
         <filter class="solr.LengthFilterFactory" min="2" max="100" />
         <filter class="solr.LowerCaseFilterFactory"/>
-        <filter class="solr.SnowballPorterFilterFactory" language="English" protected="protwords.txt"/>
       </analyzer>
       <analyzer type="multiterm">
         <charFilter class="solr.MappingCharFilterFactory" mapping="mapping-ISOLatin1Accent.txt"/>
@@ -573,7 +572,6 @@
         />
         <filter class="solr.LengthFilterFactory" min="2" max="100" />
         <filter class="solr.LowerCaseFilterFactory"/>
-        <filter class="solr.SnowballPorterFilterFactory" language="English" protected="protwords.txt"/>
       </analyzer>
     </fieldType>
 
