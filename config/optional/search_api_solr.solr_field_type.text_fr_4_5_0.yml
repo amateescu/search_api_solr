@@ -10,6 +10,7 @@ id: text_fr_4_5_0
 label: 'French Text Field'
 managed_schema: false
 minimum_solr_version: 4.5.0
+custom_code: ''
 field_type_language_code: fr
 domains: {}
 field_type:

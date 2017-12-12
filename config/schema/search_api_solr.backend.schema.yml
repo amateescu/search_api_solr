@@ -26,6 +26,9 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
     suggest_words:
       type: boolean
       label: 'Suggest additional words the user might want to search for'
+    domain:
+      type: string
+      label: 'The targeted content domain'
     connector:
       type: string
       label: 'The connector plugin ID'
@@ -45,9 +48,6 @@ plugin.plugin_configuration.search_api_backend.search_api_solr_multilingual:
     sasm_language_unspecific_fallback_on_schema_issues:
       type: boolean
       label: 'Use language undefined fall back'
-    sasm_domain:
-      type: string
-      label: 'The targeted content domain'
 
 plugin.plugin_configuration.search_api_backend.search_api_solr_multilingual_managed_schema:
   type: plugin.plugin_configuration.search_api_backend.search_api_solr_multilingual

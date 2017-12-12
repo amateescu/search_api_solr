@@ -10,6 +10,7 @@ id: text_es_4_5_0
 label: 'Spanish Text Field'
 managed_schema: false
 minimum_solr_version: 4.5.0
+custom_code: ''
 field_type_language_code: es
 domains: {}
 field_type:

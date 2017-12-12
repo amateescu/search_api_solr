@@ -18,6 +18,14 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
   public function getFieldTypeName();
 
   /**
+   * Gets the custom code targeted by this Solr Field Type.
+   *
+   * @return string
+   *   Custom code.
+   */
+  public function getCustomCode();
+
+  /**
    * Gets the language targeted by this Solr Field Type.
    *
    * @return string

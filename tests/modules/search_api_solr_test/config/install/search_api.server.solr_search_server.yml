@@ -11,6 +11,7 @@ backend_config:
   suggest_suffix: true
   suggest_corrections: true
   suggest_words: false
+  domain: generic
   connector: basic_auth
   connector_config:
     scheme: http
