@@ -6,7 +6,6 @@ use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
-use Drupal\search_api_solr\SolrMultilingualBackendInterface;
 use ZipStream\ZipStream;
 
 /**
@@ -258,35 +257,33 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   public function getConfigZip() {
     /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
     $backend = $this->getBackend();
-    $is_multilingual = $backend instanceof SolrMultilingualBackendInterface;
     $connector = $backend->getSolrConnector();
     $solr_branch = $connector->getSolrBranch($this->assumed_minimum_version);
     $search_api_solr_conf_path = drupal_get_path('module', 'search_api_solr') . '/solr-conf/' . $solr_branch;
     $solrcore_properties = parse_ini_file($search_api_solr_conf_path . '/solrcore.properties', FALSE, INI_SCANNER_RAW);
 
     $schema = file_get_contents($search_api_solr_conf_path . '/schema.xml');
-    if ($is_multilingual) {
-      $schema = preg_replace('@<fieldType name="text_und".*?</fieldType>@ms', '<!-- fieldType text_und is moved to schema_extra_types.xml -->', $schema);
-      $schema = preg_replace('@<dynamicField name="([^"]*)".*?type="text_und".*?/>@', "<!-- dynamicField $1 is moved to schema_extra_fields.xml -->", $schema);
-    }
+    $schema = preg_replace('@<fieldType name="text_und".*?</fieldType>@ms', '<!-- fieldType text_und is moved to schema_extra_types.xml -->', $schema);
+    $schema = preg_replace('@<dynamicField name="([^"]*)".*?type="text_und".*?/>@', "<!-- dynamicField $1 is moved to schema_extra_fields.xml -->", $schema);
 
     $zip = new ZipStream('solr_' . $solr_branch . '_config.zip');
     $zip->addFile('schema.xml', $schema);
-    if ($is_multilingual) {
-      $zip->addFile('schema_extra_types.xml', $this->getSchemaExtraTypesXml());
-      $zip->addFile('schema_extra_fields.xml', $this->getSchemaExtraFieldsXml());
-      $zip->addFile('solrconfig_extra.xml', $this->getSolrconfigExtraXml());
+    $zip->addFile('schema_extra_types.xml', $this->getSchemaExtraTypesXml());
+    $zip->addFile('schema_extra_fields.xml', $this->getSchemaExtraFieldsXml());
+    $zip->addFile('solrconfig_extra.xml', $this->getSolrconfigExtraXml());
 
-      // Add language specific text files.
-      $solr_field_types = $this->load();
-      /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
-      foreach ($solr_field_types as $solr_field_type) {
-        $text_files = $solr_field_type->getTextFiles();
-        foreach ($text_files as $text_file_name => $text_file) {
-          $language_specific_text_file_name = $text_file_name . '_' . $solr_field_type->getFieldTypeLanguageCode() . '.txt';
-          $zip->addFile($language_specific_text_file_name, $text_file);
-          $solrcore_properties['solr.replication.confFiles'] .= ',' . $language_specific_text_file_name;
+    // Add language specific text files.
+    $solr_field_types = $this->load();
+    /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
+    foreach ($solr_field_types as $solr_field_type) {
+      $text_files = $solr_field_type->getTextFiles();
+      foreach ($text_files as $text_file_name => $text_file) {
+        if ($custom_code = $solr_field_type->getCustomCode()) {
+          $text_file_name .= '_' .$custom_code;
         }
+        $text_file_name .= '_' . $solr_field_type->getFieldTypeLanguageCode() . '.txt';
+        $zip->addFile($text_file_name, $text_file);
+        $solrcore_properties['solr.replication.confFiles'] .= ',' . $text_file_name;
       }
     }
 

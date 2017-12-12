@@ -10,6 +10,7 @@ id: text_uk_4_5_0
 label: 'Ukrainian Text Field'
 managed_schema: false
 minimum_solr_version: 4.5.0
+custom_code: ''
 field_type_language_code: uk
 domains: {}
 field_type:

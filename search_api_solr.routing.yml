@@ -22,7 +22,7 @@ entity.solr_field_type.collection:
         type: entity:search_api_server
   requirements:
     _permission: 'administer search_api'
-    _search_api_solr_local_action_multilingual_access_check: 'TRUE'
+    _search_api_solr_local_action_access_check: 'TRUE'
 
 entity.solr_field_type.add_form:
   path: '/admin/config/search/search-api/solr_field_type/add'

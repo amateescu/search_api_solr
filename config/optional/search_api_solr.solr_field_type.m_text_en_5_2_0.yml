@@ -10,6 +10,7 @@ id: m_text_en_5_2_0
 label: 'English Text Field'
 managed_schema: true
 minimum_solr_version: 5.2.0
+custom_code: ''
 field_type_language_code: en
 domains: {}
 field_type:

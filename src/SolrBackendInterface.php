@@ -79,4 +79,20 @@ interface SolrBackendInterface extends BackendInterface {
    */
   public function extractContentFromFile($filepath);
 
+  /**
+   * Returns the targeted content domain of the server.
+   *
+   * @return string
+   */
+  public function getDomain();
+
+  /**
+   * Indicates if the Solr server uses a managed schema.
+   *
+   * @return bool
+   *   True if the Solr server uses a managed schema, false if the Solr server
+   *   uses a classic schema.
+   */
+  public function isManagedSchema();
+
 }

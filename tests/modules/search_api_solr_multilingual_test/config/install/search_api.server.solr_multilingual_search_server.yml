@@ -28,7 +28,7 @@ backend_config:
   sasm_limit_search_page_to_content_language: false
   sasm_search_page_include_language_independent: false
   sasm_language_unspecific_fallback_on_schema_issues: true
-  sasm_domain: generic
+  domain: generic
 status: true
 langcode: en
 dependencies:

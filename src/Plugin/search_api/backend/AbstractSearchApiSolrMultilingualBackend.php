@@ -6,7 +6,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api_autocomplete\SearchInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
-use Drupal\search_api_solr\Entity\SolrFieldType;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
@@ -51,13 +50,6 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
   /**
    * {@inheritdoc}
    */
-  public function isManagedSchema() {
-    return FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
@@ -84,14 +76,6 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
       '#title' => $this->t('Use language fallbacks.'),
       '#description' => $this->t('This option is suitable for two use-cases. First, if you have languages like "de" and "de-at", both could be handled by a shared configuration for "de". Second, new languages will be handled by language-unspecific fallback configuration until the schema gets updated on your Solr server.'),
       '#default_value' => isset($this->configuration['sasm_language_unspecific_fallback_on_schema_issues']) ? $this->configuration['sasm_language_unspecific_fallback_on_schema_issues'] : TRUE,
-    );
-    $domains = SolrFieldType::getAvailableDomains();
-    $form['multilingual']['sasm_domain'] = array(
-      '#type' => 'select',
-      '#options' => array_combine($domains, $domains),
-      '#title' => $this->t('Targeted content domain'),
-      '#description' => $this->t('For example "UltraBot3000" would be indexed as "Ultra" "Bot" "3000" in a generic domain, "CYP2D6" has to stay like it is in a scientific domain.'),
-      '#default_value' => isset($this->configuration['sasm_domain']) ? $this->configuration['sasm_domain'] : 'generic',
     );
 
     return $form;
@@ -520,13 +504,6 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
   /**
    * {@inheritdoc}
    */
-  public function getDomain() {
-    return (isset($this->configuration['sasm_domain']) && !empty($this->configuration['sasm_domain'])) ? $this->configuration['sasm_domain'] : 'generic';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   protected function setFacets(QueryInterface $query, Query $solarium_query, array $field_names) {
     parent::setFacets($query, $solarium_query, $field_names);
 
@@ -536,20 +513,6 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
         parent::setFacets($query, $solarium_query, array_diff_assoc($language_specific_field_names, $field_names));
       }
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function viewSettings() {
-    $info = parent::viewSettings();
-
-    $info[] = [
-      'label' => $this->t('Targeted content domain'),
-      'info' => $this->getDomain(),
-    ];
-
-    return $info;
   }
 
   /**
