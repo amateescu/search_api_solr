@@ -2234,6 +2234,16 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function calculateDependencies() {
     $this->calculatePluginDependencies($this->getSolrConnector());
+
+    /** @var \Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
+    $list_builder = \Drupal::entityTypeManager()->getListBuilder('solr_field_type');
+    $list_builder->setBackend($this);
+    $solr_field_types = $list_builder->load();
+    /** @var SolrFieldType $solr_field_type */
+    foreach ($solr_field_types as $solr_field_type) {
+      $this->addDependency('config', $solr_field_type->getConfigDependencyName());
+    }
+
     return $this->dependencies;
   }
 

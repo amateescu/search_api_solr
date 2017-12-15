@@ -314,7 +314,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   /**
    * {@inheritdoc}
    */
-  public function getDynamicFields() {
+  public function getDynamicFields($multilingual = FALSE) {
     $dynamic_fields = [];
     $prefixes = $this->custom_code ?
       [Utility::getCustomCodeSpecificSolrDynamicFieldPrefix(
@@ -323,10 +323,11 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     foreach ($prefixes as $prefix_without_cardinality) {
       foreach (['s', 'm'] as $cardinality) {
         $prefix = $prefix_without_cardinality . $cardinality;
+        $name = $multilingual ?
+          Utility::getLanguageSpecificSolrDynamicFieldPrefix($prefix, $this->field_type_language_code) :
+          $prefix . '_';
         $dynamic_fields[] = $dynamic_field = [
-          'name' => SearchApiSolrUtility::encodeSolrName(
-              Utility::getLanguageSpecificSolrDynamicFieldPrefix($prefix, $this->field_type_language_code)
-            ) . '*',
+          'name' => SearchApiSolrUtility::encodeSolrName($name) . '*',
           'type' => $this->field_type['name'],
           'stored' => TRUE,
           'indexed' => TRUE,
@@ -334,7 +335,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
           'termVectors' => strpos($prefix, 't') === 0,
           'omitNorms' => strpos($prefix, 'o') === (strlen($prefix) - 2),
         ];
-        if ($this->custom_code && 'und' == $this->field_type_language_code) {
+        if ($multilingual && $this->custom_code && 'und' == $this->field_type_language_code) {
           // Add a language-unspecific default dynamic field for that custom code.
           $dynamic_field['name'] = SearchApiSolrUtility::encodeSolrName($prefix) . '_*';
           $dynamic_fields[] = $dynamic_field;
