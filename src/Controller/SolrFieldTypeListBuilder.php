@@ -6,6 +6,7 @@ use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
+use Drupal\search_api_solr\SolrBackendInterface;
 use ZipStream\ZipStream;
 
 /**
@@ -316,10 +317,24 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   }
 
   /**
+   * Sets the Search API server and calls setBackend() afterwards.
    *
+   * @param \Drupal\search_api\ServerInterface $server
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function setServer(ServerInterface $server) {
-    $this->backend = $server->getBackend();
+    $this->setBackend($server->getBackend());
+
+  }
+
+  /**
+   * Sets the Search API server backend.
+   *
+   * @param \Drupal\search_api_solr\SolrBackendInterface $backend
+   */
+  public function setBackend(SolrBackendInterface $backend) {
+    $this->backend = $backend;
 
   }
 
