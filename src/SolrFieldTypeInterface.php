@@ -89,9 +89,11 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
   /**
    * Gets a list of dynamic Solr fields that will use this Solr Field Type.
    *
+   * @param bool $multilingual
+   *
    * @return array
    */
-  public function getDynamicFields();
+  public function getDynamicFields($multilingual = FALSE);
 
   /**
    * Gets a list of copy fields that will use this Solr Field Type.
