@@ -2803,7 +2803,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     // Execute the query.
     $result = $connector->extract($query);
-    return $connector->getContentFromExtractResult($result, $filepath);
+    return $connector->getContentFromExtractResult($result, basename($filepath));
   }
 
   /**
