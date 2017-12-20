@@ -1,0 +1,157 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - search_api_solr
+    - language
+  config:
+    - language.entity.el
+id: text_phonetic_el_7_0_0
+label: 'Fulltext Phonetic Greek'
+managed_schema: false
+minimum_solr_version: 7.0.0
+custom_code: phonetic
+field_type_language_code: el
+domains: {}
+field_type:
+  name: text_phonetic_el
+  class: solr.TextField
+  positionIncrementGap: 100
+  analyzers:
+    -
+      type: index
+      tokenizer:
+        class: solr.WhitespaceTokenizerFactory
+      filters:
+        -
+          class: solr.WordDelimiterGraphFilterFactory
+          catenateNumbers: 1
+          generateNumberParts: 1
+          protected: protwords_phonetic_el.txt
+          splitOnCaseChange: 1
+          generateWordParts: 1
+          preserveOriginal: 1
+          catenateAll: 0
+          catenateWords: 1
+        -
+          class: solr.GreekLowerCaseFilterFactory
+        -
+          class: solr.StopFilterFactory
+          ignoreCase: true
+          words: stopwords_phonetic_el.txt
+        -
+          class: solr.BeiderMorseFilterFactory
+          languageSet: greek
+          nameType: GENERIC
+          ruleType: APPROX
+          concat: true
+        -
+          class: solr.RemoveDuplicatesTokenFilterFactory
+    -
+      type: query
+      tokenizer:
+        class: solr.WhitespaceTokenizerFactory
+      filters:
+        -
+          class: solr.WordDelimiterGraphFilterFactory
+          catenateNumbers: 0
+          generateNumberParts: 0
+          protected: protwords_phonetic_el.txt
+          splitOnCaseChange: 1
+          generateWordParts: 1
+          preserveOriginal: 1
+          catenateAll: 0
+          catenateWords: 0
+        -
+          class: solr.GreekLowerCaseFilterFactory
+        -
+          class: solr.StopFilterFactory
+          ignoreCase: true
+          words: stopwords_phonetic_el.txt
+        -
+          class: solr.BeiderMorseFilterFactory
+          languageSet: greek
+          nameType: GENERIC
+          ruleType: APPROX
+          concat: true
+        -
+          class: solr.RemoveDuplicatesTokenFilterFactory
+solr_configs: {}
+text_files:
+  stopwords: |
+    ο
+    η
+    το
+    οι
+    τα
+    του
+    τησ
+    των
+    τον
+    την
+    και
+    κι
+    κ
+    ειμαι
+    εισαι
+    ειναι
+    ειμαστε
+    ειστε
+    στο
+    στον
+    στη
+    στην
+    μα
+    αλλα
+    απο
+    για
+    προσ
+    με
+    σε
+    ωσ
+    παρα
+    αντι
+    κατα
+    μετα
+    θα
+    να
+    δε
+    δεν
+    μη
+    μην
+    επι
+    ενω
+    εαν
+    αν
+    τοτε
+    που
+    πωσ
+    ποιοσ
+    ποια
+    ποιο
+    ποιοι
+    ποιεσ
+    ποιων
+    ποιουσ
+    αυτοσ
+    αυτη
+    αυτο
+    αυτοι
+    αυτων
+    αυτουσ
+    αυτεσ
+    αυτα
+    εκεινοσ
+    εκεινη
+    εκεινο
+    εκεινοι
+    εκεινεσ
+    εκεινα
+    εκεινων
+    εκεινουσ
+    οπωσ
+    ομωσ
+    ισωσ
+    οσο
+    οτι
+  protwords: |

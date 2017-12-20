@@ -1,0 +1,232 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - search_api_solr
+    - language
+  config:
+    - language.entity.pl
+id: text_phonetic_pl_7_0_0
+label: 'Fulltext Phonetic Polish'
+managed_schema: false
+minimum_solr_version: 7.0.0
+custom_code: phonetic
+field_type_language_code: pl
+domains: {}
+field_type:
+  name: text_phonetic_pl
+  class: solr.TextField
+  positionIncrementGap: 100
+  analyzers:
+    -
+      type: index
+      tokenizer:
+        class: solr.WhitespaceTokenizerFactory
+      filters:
+        -
+          class: solr.WordDelimiterGraphFilterFactory
+          protected: protwords_phonetic_pl.txt
+          # If non-zero, splits words at delimiters. For example:"CamelCase", "hot-spot" -> "Camel", "Case", "hot", "spot"
+          generateWordParts: 1
+          # If non-zero, splits numeric strings at delimiters:"1947-32" -> "1947", "32"
+          generateNumberParts: 1
+          splitOnCaseChange: 0
+          splitOnNumerics:
+          catenateWords: 1
+          catenateNumbers: 1
+          catenateAll: 0
+          stemEnglishPossessive: 0
+          preserveOriginal: 1
+        -
+          class: solr.LengthFilterFactory
+          min: 2
+          max: 100
+        -
+          class: solr.LowerCaseFilterFactory
+        -
+          class: solr.StopFilterFactory
+          ignoreCase: true
+          words: stopwords_phonetic_pl.txt
+        -
+          class: solr.BeiderMorseFilterFactory
+          languageSet: polish
+          nameType: GENERIC
+          ruleType: APPROX
+          concat: true
+        -
+          class: solr.RemoveDuplicatesTokenFilterFactory
+    -
+      type: query
+      tokenizer:
+        class: solr.WhitespaceTokenizerFactory
+      filters:
+        -
+          class: solr.WordDelimiterGraphFilterFactory
+          catenateNumbers: 0
+          generateNumberParts: 1
+          protected: protwords_phonetic_de.txt
+          splitOnCaseChange: 0
+          generateWordParts: 1
+          preserveOriginal: 1
+          catenateAll: 0
+          catenateWords: 0
+        -
+          class: solr.LengthFilterFactory
+          min: 2
+          max: 100
+        -
+          class: solr.LowerCaseFilterFactory
+        -
+          class: solr.StopFilterFactory
+          ignoreCase: true
+          words: stopwords_phonetic_pl.txt
+        -
+          class: solr.BeiderMorseFilterFactory
+          languageSet: polish
+          nameType: GENERIC
+          ruleType: APPROX
+          concat: true
+        -
+          class: solr.RemoveDuplicatesTokenFilterFactory
+solr_configs: {}
+text_files:
+  stopwords: |
+    ach
+    aj
+    albo
+    bardzo
+    bez
+    bo
+    być
+    ci
+    cię
+    ciebie
+    co
+    czy
+    daleko
+    dla
+    dlaczego
+    dlatego
+    do
+    dobrze
+    dokąd
+    dość
+    dużo
+    dwa
+    dwaj
+    dwie
+    dwoje
+    dziś
+    dzisiaj
+    gdyby
+    gdzie
+    go
+    ich
+    ile
+    im
+    inny
+    ja
+    ją
+    jak
+    jakby
+    jaki
+    je
+    jeden
+    jedna
+    jedno
+    jego
+    jej
+    jemu
+    jeśli
+    jest
+    jestem
+    jeżeli
+    już
+    każdy
+    kiedy
+    kierunku
+    kto
+    ku
+    lub
+    ma
+    mają
+    mam
+    mi
+    mną
+    mnie
+    moi
+    mój
+    moja
+    moje
+    może
+    mu
+    my
+    na
+    nam
+    nami
+    nas
+    nasi
+    nasz
+    nasza
+    nasze
+    natychmiast
+    nią
+    nic
+    nich
+    nie
+    niego
+    niej
+    niemu
+    nigdy
+    nim
+    nimi
+    niż
+    obok
+    od
+    około
+    on
+    ona
+    one
+    oni
+    ono
+    owszem
+    po
+    pod
+    ponieważ
+    przed
+    przedtem
+    są
+    sam
+    sama
+    się
+    skąd
+    tak
+    taki
+    tam
+    ten
+    to
+    tobą
+    tobie
+    tu
+    tutaj
+    twoi
+    twój
+    twoja
+    twoje
+    ty
+    wam
+    wami
+    was
+    wasi
+    wasz
+    wasza
+    wasze
+    we
+    więc
+    wszystko
+    wtedy
+    wy
+    żaden
+    zawsze
+    że
+  protwords: |
