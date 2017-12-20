@@ -180,6 +180,22 @@ search_api_solr.solr_field_type.*:
                       type: integer
                       label: 'EdgeNGramFilterFactory::maxGramSize'
                       nullable: true
+                    languageSet:
+                      type: string
+                      label: 'BeiderMorseFilter::languageSet'
+                      nullable: true
+                    nameType:
+                      type: string
+                      label: 'BeiderMorseFilter::nameType'
+                      nullable: true
+                    ruleType:
+                      type: string
+                      label: 'BeiderMorseFilter::ruleType'
+                      nullable: true
+                    concat:
+                      type: boolean
+                      label: 'BeiderMorseFilter::concat'
+                      nullable: true
     solr_configs:
       type: mapping
       mapping:

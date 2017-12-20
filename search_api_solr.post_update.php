@@ -1,12 +1,33 @@
 <?php
 
 /**
- * Installs the standard highlighter config.
+ * Helper function to install all new optional configs.
  */
-function search_api_solr_post_update_install_standard_highlighter_config() {
+function search_api_solr_install_new_optional_configs() {
+  $optional_install_path = \Drupal::moduleHandler()->getModule('search_api_solr')->getPath() . '/' . \Drupal\Core\Config\InstallStorage::CONFIG_OPTIONAL_DIRECTORY;
+  if (is_dir($optional_install_path)) {
+    // Install any optional config the module provides.
+    $storage = new \Drupal\Core\Config\FileStorage($optional_install_path, \Drupal\Core\Config\StorageInterface::DEFAULT_COLLECTION);
+    /** @var \Drupal\Core\Config\ConfigInstallerInterface $config_installer */
+    $config_installer = \Drupal::service('config.installer');
+    $config_installer->installOptionalConfig($storage);
+  }
+}
+
+/**
+ * Helper function to install all new configs.
+ */
+function search_api_solr_install_new_configs() {
   /** @var \Drupal\Core\Config\ConfigInstallerInterface $config_installer */
   $config_installer = \Drupal::service('config.installer');
   $config_installer->installDefaultConfig('module', 'search_api_solr');
+}
+
+/**
+ * Installs the standard highlighter config.
+ */
+function search_api_solr_post_update_install_standard_highlighter_config() {
+  search_api_solr_install_new_configs();
 }
 
 /**
@@ -49,4 +70,11 @@ function search_api_solr_post_update_8201_delete_multilingual_migration_left_ove
   foreach ($config_factory->listAll('search_api_solr_multilingual') as $config_name) {
     $config_factory->getEditable($config_name)->delete();
   }
+}
+
+/**
+ * Installs new solr field types.
+ */
+function search_api_solr_post_update_8202_install_new_optional_field_types() {
+  search_api_solr_install_new_configs();
 }
