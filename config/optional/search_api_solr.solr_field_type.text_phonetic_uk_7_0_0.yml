@@ -6,7 +6,7 @@ dependencies:
     - language
   config:
     - language.entity.uk
-id: text_uk_7_0_0
+id: text_phonetic_uk_7_0_0
 label: 'Fulltext Phonetic Ukrainian'
 managed_schema: false
 minimum_solr_version: 7.0.0
