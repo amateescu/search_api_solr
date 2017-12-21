@@ -316,10 +316,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   public function getDynamicFields($multilingual = FALSE) {
     $dynamic_fields = [];
-    $prefixes = $this->custom_code ?
-      [Utility::getCustomCodeSpecificSolrDynamicFieldPrefix(
-        'tc', $prefixes = $this->custom_code)] :
-      ['t', 'to'];
+    $prefixes = $this->custom_code ? ['tc' . $this->custom_code] : ['t', 'to'];
     foreach ($prefixes as $prefix_without_cardinality) {
       foreach (['s', 'm'] as $cardinality) {
         $prefix = $prefix_without_cardinality . $cardinality;

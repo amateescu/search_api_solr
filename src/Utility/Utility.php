@@ -16,7 +16,6 @@ use Drupal\search_api\ServerInterface;
  * @see https://www.w3.org/International/articles/language-tags/
  */
 define('SEARCH_API_SOLR_LANGUAGE_SEPARATOR', ';');
-define('SEARCH_API_SOLR_CUSTOM_SEPARATOR', '+');
 
 /**
  * Provides various helper functions for Solr backends.
@@ -351,25 +350,6 @@ class Utility {
       $modified_field_name = Utility::encodeSolrName($modified_field_name);
     }
     return $modified_field_name;
-  }
-
-  /**
-   * Gets the custom-code-specific prefix for a dynamic Solr field.
-   *
-   * @param string $prefix
-   *   The custom-code-unspecific prefix.
-   * @param string $custom-code
-   *   The custom code.
-   *
-   * @return string
-   *   The custom-code-specific prefix.
-   */
-  public static function getCustomCodeSpecificSolrDynamicFieldPrefix($prefix, $custom_code = '') {
-    if ($custom_code) {
-      return $prefix . SEARCH_API_SOLR_CUSTOM_SEPARATOR . $custom_code . '_';
-    }
-
-    return $prefix;
   }
 
   /**

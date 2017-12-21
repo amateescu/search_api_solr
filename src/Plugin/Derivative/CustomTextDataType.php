@@ -32,10 +32,8 @@ class CustomTextDataType extends DeriverBase implements ContainerDeriverInterfac
     foreach (SolrFieldType::getAvailableCustomCodes() as $custom_code) {
       $this->derivatives[$custom_code] = $base_plugin_definition;
       $this->derivatives[$custom_code]['label'] =
-        $this->t('Fulltext Custom ":custom_code"', [':custom_code' => $custom_code]);
-      $this->derivatives[$custom_code]['prefix'] =
-        Utility::getCustomCodeSpecificSolrDynamicFieldPrefix(
-          $this->derivatives[$custom_code]['prefix'], $custom_code);
+        $this->t('Fulltext ":custom_code"', [':custom_code' => $custom_code]);
+      $this->derivatives[$custom_code]['prefix'] .= $custom_code;
     }
     return $this->derivatives;
   }
