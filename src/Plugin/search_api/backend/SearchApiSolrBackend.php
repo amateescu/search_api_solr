@@ -756,7 +756,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function getDocuments(IndexInterface $index, array $items, UpdateQuery $update_query = NULL) {
     $connector = $this->getSolrConnector();
-    $schema_version = $connector->getSchemaVersion();
 
     $documents = array();
     $index_id = $this->getIndexId($index->id());
@@ -818,31 +817,34 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $doc = NULL;
           break;
         }
-        $this->addIndexField($doc, $field_names[$name], $field->getValues(), $field->getType());
+        $first_value = $this->addIndexField($doc, $field_names[$name], $field->getValues(), $field->getType());
         // Enable sorts in some special cases.
-        if (!array_key_exists($name, $special_fields)) {
-          $values = $field->getValues();
-          $first_value = reset($values);
-          if ($first_value) {
-            // Truncate the string to avoid Solr string field limitation.
-            // @see https://www.drupal.org/node/2809429
-            // @see https://www.drupal.org/node/2852606
-            // 32 characters should be enough for sorting and it makes no sense
-            // to heavily increase the index size. The DB backend limits the
-            // sort strings to 32 characters, too.
-            if ($first_value instanceof TextValue && Unicode::strlen($first_value->getText()) > 32) {
-              $first_value = new TextValue(Unicode::truncate($first_value->getText(), 32));
-            }
-            if (strpos($field_names[$name], 't') === 0 || strpos($field_names[$name], 's') === 0) {
+        if ($first_value && !array_key_exists($name, $special_fields)) {
+          // Truncate the string to avoid Solr string field limitation.
+          // @see https://www.drupal.org/node/2809429
+          // @see https://www.drupal.org/node/2852606
+          // 32 characters should be enough for sorting and it makes no sense
+          // to heavily increase the index size. The DB backend limits the
+          // sort strings to 32 characters, too.
+          if (Unicode::strlen($first_value) > 32) {
+            $first_value = Unicode::truncate($first_value, 32);
+          }
+
+          if (strpos($field_names[$name], 't') === 0 || strpos($field_names[$name], 's') === 0) {
+            $key = 'sort_' . $name;
+            if (!$doc->{$key}) {
               // Always copy fulltext fields to a dedicated field for faster
               // alpha sorts. Copy strings as well to normalize them.
-              $this->addIndexField($doc, 'sort_' . $name, [$first_value], $field->getType());
+              $doc->addField($key, $first_value);
             }
-            elseif (preg_match('/^([a-z]+)m(_.*)/', $field_names[$name], $matches)) {
+          }
+          elseif (preg_match('/^([a-z]+)m(_.*)/', $field_names[$name], $matches)) {
+            $key = $matches[1] . 's' . $matches[2];
+            if (!$doc->{$key}) {
               // For other multi-valued fields (which aren't sortable by nature)
               // we use the same hackish workaround like the DB backend: just
               // copy the first value in a single value field for sorting.
-              $this->addIndexField($doc, $matches[1] . 's' . $matches[2], [$first_value], $field->getType());
+              $doc->addField($key, $first_value);
             }
           }
         }
@@ -1307,12 +1309,26 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * Adds $value with field name $key to the document $doc. The format of $value
    * is the same as specified in
    * \Drupal\search_api\Backend\BackendSpecificInterface::indexItems().
+   *
+   * @param \Solarium\QueryType\Update\Query\Document\Document $doc
+   * @param $key
+   * @param array $values
+   * @param $type
+   *
+   * @return bool|float|int|string
+   *   The first value of $values that has been added to the index.
    */
   protected function addIndexField(Document $doc, $key, array $values, $type) {
     // Don't index empty values (i.e., when field is missing).
     if (!isset($values)) {
       return;
     }
+
+    if (strpos($type, 'solr_text_custom') === 0) {
+      $type = 'text';
+    }
+
+    $first_value = '';
 
     // All fields.
     foreach ($values as $value) {
@@ -1359,7 +1375,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
 
       $doc->addField($key, $value);
+      if (!$first_value) {
+        $first_value = $value;
+      }
     }
+
+    return $first_value;
   }
 
   /**

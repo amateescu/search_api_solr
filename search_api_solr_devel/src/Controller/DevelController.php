@@ -137,7 +137,7 @@ class DevelController extends ControllerBase {
         $servers = $this->getStorage()->loadByProperties(['backend' => $backend_id, 'status' => true]);
         foreach ($servers as $server) {
           /** @var \Drupal\search_api\ServerInterface $server */
-          /** @var SolrBackendInterface $backend */
+          /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
           $backend = $server->getBackend();
           /** @var \Drupal\search_api\IndexInterface[] $indexes */
           $indexes = $server->getIndexes();
