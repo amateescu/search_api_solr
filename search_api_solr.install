@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * @file
+ */
+
+use Drupal\Core\Config\StorageInterface;
+use Drupal\Core\Config\FileStorage;
+use Drupal\Core\Config\InstallStorage;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api\Entity\Server;
 use Drupal\Core\Url;
@@ -8,7 +15,7 @@ use Drupal\Core\Url;
  * Implements hook_requirements().
  */
 function search_api_solr_requirements($phase) {
-  $requirements = array();
+  $requirements = [];
 
   if ($phase == 'install') {
     if (!class_exists('\Solarium\Core\Client\Request')) {
@@ -44,19 +51,19 @@ function search_api_solr_requirements($phase) {
       ++$count;
     }
     if (!$count) {
-      return array();
+      return [];
     }
-    $requirements['search_api_solr'] = array(
+    $requirements['search_api_solr'] = [
       'title' => \Drupal::translation()->translate('Solr servers'),
       'value' => \Drupal::translation()->formatPlural($count, '1 server', '@count servers'),
-    );
+    ];
     if ($unavailable) {
       if ($unavailable == 1) {
         $requirements['search_api_solr']['description'] = \Drupal::translation()->translate('The Solr server of <a href=":url">%name</a> could not be reached.',
-          array(':url' => Url::fromRoute('entity.search_api_server.canonical', array('search_api_server' => $last->id()))->toString(), '%name' => $last->label()));
+          [':url' => Url::fromRoute('entity.search_api_server.canonical', ['search_api_server' => $last->id()])->toString(), '%name' => $last->label()]);
       }
       else {
-        $requirements['search_api_solr']['description'] = \Drupal::translation()->translate('@count Solr servers could not be reached.', array('@count' => $unavailable));
+        $requirements['search_api_solr']['description'] = \Drupal::translation()->translate('@count Solr servers could not be reached.', ['@count' => $unavailable]);
       }
       $requirements['search_api_solr']['severity'] = REQUIREMENT_ERROR;
     }
@@ -104,10 +111,10 @@ function search_api_solr_requirements($phase) {
             $requirements[$key]['severity'] = $backend->hasLanguageUndefinedFallback() ? REQUIREMENT_WARNING : REQUIREMENT_ERROR;
             $requirements[$key]['description'] = t(
               'There are some language-specific field types missing in schema of Solr server <a href=":url">@server</a>: @languages.', [
-              ':url' => $server->toUrl('canonical')->toString(),
-              '@server' => $server->label(),
-              '@languages' => implode(', ', array_keys($missing_languages)),
-            ]);
+                ':url' => $server->toUrl('canonical')->toString(),
+                '@server' => $server->label(),
+                '@languages' => implode(', ', array_keys($missing_languages)),
+              ]);
           }
         }
         else {
@@ -115,9 +122,9 @@ function search_api_solr_requirements($phase) {
           $requirements[$key]['severity'] = REQUIREMENT_ERROR;
           $requirements[$key]['description'] = t(
             'Solr server <a href=":url">@server</a> is not reachable.', [
-            ':url' => $server->toUrl('canonical')->toString(),
-            '@server' => $server->label(),
-          ]);
+              ':url' => $server->toUrl('canonical')->toString(),
+              '@server' => $server->label(),
+            ]);
         }
       }
     }
@@ -218,10 +225,10 @@ function search_api_solr_update_helper_save_field_type_config($field_type_name, 
  * Helper function to install all new optional configs.
  */
 function search_api_solr_update_helper_install_new_optional_configs() {
-  $optional_install_path = \Drupal::moduleHandler()->getModule('search_api_solr')->getPath() . '/' . \Drupal\Core\Config\InstallStorage::CONFIG_OPTIONAL_DIRECTORY;
+  $optional_install_path = \Drupal::moduleHandler()->getModule('search_api_solr')->getPath() . '/' . InstallStorage::CONFIG_OPTIONAL_DIRECTORY;
   if (is_dir($optional_install_path)) {
     // Install any optional config the module provides.
-    $storage = new \Drupal\Core\Config\FileStorage($optional_install_path, \Drupal\Core\Config\StorageInterface::DEFAULT_COLLECTION);
+    $storage = new FileStorage($optional_install_path, StorageInterface::DEFAULT_COLLECTION);
     /** @var \Drupal\Core\Config\ConfigInstallerInterface $config_installer */
     $config_installer = \Drupal::service('config.installer');
     $config_installer->installOptionalConfig($storage);
@@ -365,11 +372,11 @@ function search_api_solr_update_8200() {
 function search_api_solr_update_8201() {
   foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
     if (!empty($field_type_config['solr_configs']) && !empty($field_type_config['solr_configs']['searchComponents'])) {
-      foreach($field_type_config['solr_configs']['searchComponents'] as &$component) {
+      foreach ($field_type_config['solr_configs']['searchComponents'] as &$component) {
         if ($component['name'] == 'suggest') {
-          foreach($component['lst'] as &$lst) {
-            foreach($lst['str'] as &$str) {
-              foreach($lst['str'] as &$entry) {
+          foreach ($component['lst'] as &$lst) {
+            foreach ($lst['str'] as &$str) {
+              foreach ($lst['str'] as &$entry) {
                 if ($entry['name'] == 'field') {
                   $entry['VALUE'] = 'twm_suggest';
                   search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);

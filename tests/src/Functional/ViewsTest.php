@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\search_api_solr\Functional;
 
+use Drupal\Tests\search_api\Functional\ViewsTest;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
 use Drupal\Tests\search_api\Functional\SearchApiBrowserTestBase;
@@ -11,14 +12,14 @@ use Drupal\Tests\search_api\Functional\SearchApiBrowserTestBase;
  *
  * @group search_api_solr
  */
-class ViewsTest extends \Drupal\Tests\search_api\Functional\ViewsTest {
+class ViewsTest extends ViewsTest {
 
   /**
    * Modules to enable for this test.
    *
    * @var string[]
    */
-  public static $modules = array('search_api_solr_test');
+  public static $modules = ['search_api_solr_test'];
 
   /**
    * {@inheritdoc}

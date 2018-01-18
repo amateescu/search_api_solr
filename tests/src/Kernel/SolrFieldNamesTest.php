@@ -23,7 +23,7 @@ class SolrFieldNamesTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = array(
+  public static $modules = [
     'field',
     'node',
     'user',
@@ -31,7 +31,7 @@ class SolrFieldNamesTest extends KernelTestBase {
     'search_api',
     'search_api_solr',
     'system',
-  );
+  ];
 
   /**
    * @covers ::getSolrFieldNames

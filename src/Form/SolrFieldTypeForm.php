@@ -19,46 +19,46 @@ class SolrFieldTypeForm extends EntityForm {
     $form = parent::form($form, $form_state);
 
     $solr_field_type = $this->entity;
-    $form['label'] = array(
+    $form['label'] = [
       '#type' => 'SolrFieldType',
       '#title' => $this->t('Label'),
       '#maxlength' => 255,
       '#default_value' => $solr_field_type->label(),
       '#description' => $this->t("Label for the SolrFieldType."),
       '#required' => TRUE,
-    );
+    ];
 
-    $form['id'] = array(
+    $form['id'] = [
       '#type' => 'machine_name',
       '#default_value' => $solr_field_type->id(),
-      '#machine_name' => array(
+      '#machine_name' => [
         'exists' => '\Drupal\search_api_solr\Entity\SolrFieldType::load',
-      ),
+      ],
       '#disabled' => !$solr_field_type->isNew(),
-    );
+    ];
 
     /* You will need additional form elements for your custom properties. */
 
-    $form['field_type'] = array(
+    $form['field_type'] = [
       '#type' => 'textarea',
       '#title' => $this->t('FieldType'),
       '#description' => $this->t('FieldType.'),
       '#default_value' => $solr_field_type->getFieldTypeAsJson(),
-    );
+    ];
 
-    $form['text_files'] = array(
+    $form['text_files'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Text Files'),
       '#tree' => TRUE,
-    );
+    ];
 
     $text_files = $solr_field_type->getTextFiles();
     foreach ($text_files as $text_file_name => $text_file) {
-      $form['text_files'][$text_file_name] = array(
+      $form['text_files'][$text_file_name] = [
         '#type' => 'textarea',
         '#title' => $text_file_name,
         '#default_value' => $text_file,
-      );
+      ];
     }
     return $form;
   }
@@ -82,14 +82,14 @@ class SolrFieldTypeForm extends EntityForm {
     $status = $solr_field_type->save();
 
     if ($status) {
-      drupal_set_message($this->t('Saved the %label Solr Field Type.', array(
+      drupal_set_message($this->t('Saved the %label Solr Field Type.', [
         '%label' => $solr_field_type->label(),
-      )));
+      ]));
     }
     else {
-      drupal_set_message($this->t('The %label Solr Field Type was not saved.', array(
+      drupal_set_message($this->t('The %label Solr Field Type was not saved.', [
         '%label' => $solr_field_type->label(),
-      )));
+      ]));
     }
     $form_state->setRedirectUrl($solr_field_type->toUrl('collection'));
   }

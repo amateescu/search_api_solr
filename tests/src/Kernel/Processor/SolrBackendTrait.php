@@ -34,7 +34,7 @@ trait SolrBackendTrait {
     $index_storage = $this->container
       ->get('entity_type.manager')
       ->getStorage('search_api_index');
-    $index_storage->resetCache(array($this->index->id()));
+    $index_storage->resetCache([$this->index->id()]);
     $this->index = $index_storage->load($this->index->id());
   }
 

@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\Tests\search_api\Kernel\Processor\ContentAccessTest;
+
 namespace Drupal\Tests\search_api_solr\Kernel\Processor;
 
 /**
@@ -9,7 +11,7 @@ namespace Drupal\Tests\search_api_solr\Kernel\Processor;
  *
  * @see \Drupal\search_api\Plugin\search_api\processor\ContentAccess
  */
-class ContentAccessTest extends \Drupal\Tests\search_api\Kernel\Processor\ContentAccessTest  {
+class ContentAccessTest extends ContentAccessTest {
 
   use SolrBackendTrait;
 

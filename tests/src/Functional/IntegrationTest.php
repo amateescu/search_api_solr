@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\Tests\search_api\Functional\IntegrationTest;
+
 namespace Drupal\Tests\search_api_solr\Functional;
 
 /**
@@ -7,7 +9,7 @@ namespace Drupal\Tests\search_api_solr\Functional;
  *
  * @group search_api_solr
  */
-class IntegrationTest extends \Drupal\Tests\search_api\Functional\IntegrationTest {
+class IntegrationTest extends IntegrationTest {
 
   /**
    * The backend of the search server used for this test.
@@ -19,10 +21,10 @@ class IntegrationTest extends \Drupal\Tests\search_api\Functional\IntegrationTes
   /**
    * {@inheritdoc}
    */
-  public static $modules = array(
+  public static $modules = [
     'search_api_solr',
     'search_api_solr_test',
-  );
+  ];
 
   /**
    * {@inheritdoc}

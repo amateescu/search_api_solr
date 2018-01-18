@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @file
+ */
+
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\search_api\Entity\Server;
@@ -35,7 +39,7 @@ function search_api_solr_cron() {
   $action = \Drupal::config('search_api_solr.settings')->get('cron_action');
   // We treat all unknown action settings as "none". However, we turn a blind
   // eye for Britons and other people who can spell.
-  if (!in_array($action, array('spellcheck', 'optimize', 'optimise'))) {
+  if (!in_array($action, ['spellcheck', 'optimize', 'optimise'])) {
     return;
   }
   // 86400 seconds is one day. We use slightly less here to allow for some
@@ -72,7 +76,7 @@ function search_api_solr_cron() {
         ++$count;
       }
       catch (SearchApiException $e) {
-        watchdog_exception('search_api_solr', $e, '%type while optimizing Solr server @server: @message in %function (line %line of %file).', array('@server' => $server->label()));
+        watchdog_exception('search_api_solr', $e, '%type while optimizing Solr server @server: @message in %function (line %line of %file).', ['@server' => $server->label()]);
       }
     }
     if ($count) {

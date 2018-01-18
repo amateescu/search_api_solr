@@ -239,6 +239,9 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     return $comment . $formatted_xml_string;
   }
 
+  /**
+   *
+   */
   protected function buildXmlFromArray($root_element_name, array $attributes) {
     $root = new \SimpleXMLElement('<' . $root_element_name . '/>');
 
@@ -347,16 +350,16 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   public function getCopyFields() {
     $copy_fields = [];
-#    foreach (array('ts' => 'terms_ts', 'tm' => 'terms_tm', 'tos' => 'terms_ts', 'tom' => 'terms_tm') as $src_prefix => $dest_prefix) {
-#      $copy_fields[] = [
-#        'source' => SearchApiSolrUtility::encodeSolrName(
-#          Utility::getLanguageSpecificSolrDynamicFieldPrefix($src_prefix, $this->field_type_language_code)
-#        ) . '*',
-#        'dest' => SearchApiSolrUtility::encodeSolrName(
-#          Utility::getLanguageSpecificSolrDynamicFieldPrefix($dest_prefix, $this->field_type_language_code)
-#        ) . '*',
-#      ];
-#    }
+    // Foreach (array('ts' => 'terms_ts', 'tm' => 'terms_tm', 'tos' => 'terms_ts', 'tom' => 'terms_tm') as $src_prefix => $dest_prefix) {
+    // $copy_fields[] = [
+    // 'source' => SearchApiSolrUtility::encodeSolrName(
+    // Utility::getLanguageSpecificSolrDynamicFieldPrefix($src_prefix, $this->field_type_language_code)
+    // ) . '*',
+    // 'dest' => SearchApiSolrUtility::encodeSolrName(
+    // Utility::getLanguageSpecificSolrDynamicFieldPrefix($dest_prefix, $this->field_type_language_code)
+    // ) . '*',
+    // ];
+    // }.
     return $copy_fields;
   }
 

@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\Tests\search_api_solr\Functional\IntegrationTest;
+
 namespace Drupal\Tests\search_api_solr\Functional;
 
 /**
@@ -7,7 +9,7 @@ namespace Drupal\Tests\search_api_solr\Functional;
  *
  * @group search_api_solr
  */
-class MultilingualIntegrationTest extends \Drupal\Tests\search_api_solr\Functional\IntegrationTest {
+class MultilingualIntegrationTest extends IntegrationTest {
 
   /**
    * {@inheritdoc}

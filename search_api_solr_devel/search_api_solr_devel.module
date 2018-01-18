@@ -1,6 +1,10 @@
 <?php
 
 /**
+ * @file
+ */
+
+/**
  * Implements hook_entity_type_alter().
  */
 function search_api_solr_devel_entity_type_alter(array &$entity_types) {
