@@ -319,7 +319,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public function executeRequest(Request $request, Endpoint $endpoint = NULL);
+  public function executeRequest(Request $request, Endpoint $endpoint = null);
 
   /**
    * Optimizes the Solr index.

@@ -17,62 +17,62 @@ class SolrFieldTypeExportForm extends EntityForm {
     /** @var \Drupal\search_api_solr\Entity\SolrFieldType $solr_field_type */
     $solr_field_type = $this->entity;
 
-    $form['id'] = [
+    $form['id'] = array(
       '#type' => 'machine_name',
       '#default_value' => $solr_field_type->id(),
-      '#machine_name' => [
+      '#machine_name' => array(
         'exists' => '\Drupal\search_api_solr\Entity\SolrFieldType::load',
-      ],
+      ),
       '#disabled' => TRUE,
-    ];
+    );
 
-    $form['field_type'] = [
+    $form['field_type'] = array(
       '#type' => 'fieldset',
       '#title' => $this->t('Field Type'),
-    ];
+    );
 
-    $form['field_type']['json'] = [
+    $form['field_type']['json'] = array(
       '#type' => 'textarea',
       '#title' => $this->t('JSON'),
       '#description' => $this->t('JSON representation to be used for solr REST API and managed schemas.'),
       '#default_value' => $solr_field_type->getFieldTypeAsJson(),
       '#disabled' => TRUE,
-    ];
+    );
 
-    $form['field_type']['xml'] = [
+    $form['field_type']['xml'] = array(
       '#type' => 'textarea',
       '#title' => $this->t('XML'),
       '#description' => $this->t('XML representation to be used as part of schema.xml.'),
       '#default_value' => $solr_field_type->getFieldTypeAsXml(),
       '#disabled' => FALSE,
-    ];
+    );
 
-    $form['solr_configs'] = [
+    $form['solr_configs'] = array(
       '#type' => 'fieldset',
       '#title' => $this->t('Solr configs'),
-    ];
+    );
 
-    $form['solr_configs']['xml'] = [
+    $form['solr_configs']['xml'] = array(
       '#type' => 'textarea',
       '#title' => $this->t('XML'),
       '#description' => $this->t('XML representation to be used as part of schema.xml.'),
       '#default_value' => $solr_field_type->getSolrConfigsAsXml(),
       '#disabled' => TRUE,
-    ];
+    );
 
-    $form['text_files'] = [
+    $form['text_files'] = array(
       '#type' => 'fieldset',
       '#title' => $this->t('Text Files'),
-    ];
+    );
 
     $text_files = $solr_field_type->getTextFiles();
     foreach ($text_files as $text_file_name => $text_file) {
-      $form['text_files'][$text_file_name] = [
+      $form['text_files'][$text_file_name] = array(
         '#type' => 'textarea',
         '#title' => $text_file_name,
         '#default_value' => $text_file,
         '#disabled' => TRUE,
-      ];
+      );
     }
     return $form;
   }

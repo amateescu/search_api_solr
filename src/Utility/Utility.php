@@ -60,51 +60,51 @@ class Utility {
       $types = $data_type_service->getDefinitions();
 
       // Add our extras for the default search api fields.
-      $types = NestedArray::mergeDeep($types, [
-        'text' => [
+      $types = NestedArray::mergeDeep($types, array(
+        'text' => array(
           'prefix' => 't',
-        ],
-        'string' => [
+        ),
+        'string' => array(
           'prefix' => 's',
-        ],
-        'integer' => [
+        ),
+        'integer' => array(
           // Use trie field for better sorting.
           'prefix' => 'it',
-        ],
-        'decimal' => [
+        ),
+        'decimal' => array(
           // Use trie field for better sorting.
           'prefix' => 'ft',
-        ],
-        'date' => [
+        ),
+        'date' => array(
           'prefix' => 'd',
-        ],
-        'duration' => [
+        ),
+        'duration' => array(
           // Use trie field for better sorting.
           'prefix' => 'it',
-        ],
-        'boolean' => [
+        ),
+        'boolean' => array(
           'prefix' => 'b',
-        ],
-        'uri' => [
+        ),
+        'uri' => array(
           'prefix' => 's',
-        ],
-      ]);
+        ),
+      ));
 
       // Extra data type info.
-      $extra_types_info = [
+      $extra_types_info = array(
         // Provided by Search API Location module.
-        'location' => [
+        'location' => array(
           'prefix' => 'loc',
-        ],
+        ),
         // @todo Who provides that type?
-        'geohash' => [
+        'geohash' => array(
           'prefix' => 'geo',
-        ],
+        ),
         // Provided by Search API Location module.
         'rpt' => [
           'prefix' => 'rpt',
         ],
-      ];
+      );
 
       // For the extra types, only add our extra info if it's already been
       // defined.
@@ -168,7 +168,7 @@ class Utility {
     $files_data = json_decode($response->getBody(), TRUE);
     $files_list = $files_data['files'];
     $dir_length = strlen($dir_name) + 1;
-    $result = ['' => []];
+    $result = array('' => array());
 
     foreach ($files_list as $file_name => $file_info) {
       // Annoyingly, Solr 4.7 changed the way the admin/file handler returns
@@ -188,7 +188,7 @@ class Utility {
 
     ksort($result);
     ksort($result['']);
-    return array_reduce($result, 'array_merge', []);
+    return array_reduce($result, 'array_merge', array());
   }
 
   /**

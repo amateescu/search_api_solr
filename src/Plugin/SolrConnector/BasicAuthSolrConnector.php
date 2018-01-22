@@ -34,26 +34,26 @@ class BasicAuthSolrConnector extends StandardSolrConnector {
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
-    $form['auth'] = [
+    $form['auth'] = array(
       '#type' => 'fieldset',
       '#title' => $this->t('HTTP Basic Authentication'),
       '#description' => $this->t('If your Solr server is protected by basic HTTP authentication, enter the login data here.'),
       '#collapsible' => TRUE,
       '#collapsed' => empty($this->configuration['username']),
-    ];
+    );
 
-    $form['auth']['username'] = [
+    $form['auth']['username'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Username'),
       '#default_value' => $this->configuration['username'],
       '#required' => TRUE,
-    ];
+    );
 
-    $form['auth']['password'] = [
+    $form['auth']['password'] = array(
       '#type' => 'password',
       '#title' => $this->t('Password'),
       '#description' => $this->t('If this field is left blank and the HTTP username is filled out, the current password will not be changed.'),
-    ];
+    );
 
     return $form;
   }
@@ -127,15 +127,15 @@ class BasicAuthSolrConnector extends StandardSolrConnector {
    * {@inheritdoc}
    */
   public function viewSettings() {
-    $vars = [
+    $vars = array(
       '%user' => $this->configuration['username'],
       '%pass' => str_repeat('*', strlen($this->configuration['password'])),
-    ];
+    );
 
-    $info[] = [
+    $info[] = array(
       'label' => $this->t('Basic HTTP authentication'),
       'info' => $this->t('Username: %user | Password: %pass', $vars),
-    ];
+    );
 
     return $info;
   }

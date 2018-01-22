@@ -16,9 +16,9 @@ class SearchApiSolrExtractionTest extends SolrBackendTestBase {
    *
    * @var string[]
    */
-  public static $modules = [
+  public static $modules = array(
     'search_api_solr_test',
-  ];
+  );
 
   /**
    * {@inheritdoc}

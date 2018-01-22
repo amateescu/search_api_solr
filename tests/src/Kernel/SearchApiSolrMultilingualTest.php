@@ -18,10 +18,10 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
    *
    * @var string[]
    */
-  public static $modules = [
+  public static $modules = array(
     'language',
     'search_api_solr_multilingual_test',
-  ];
+  );
 
   /**
    * A Search API server ID.
@@ -137,7 +137,7 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
     //
     // Stemming "de":
     // Gen => gen
-    // Gene => gen.
+    // Gene => gen
     $query = $this->buildSearch('Gen');
     $query->setLanguages(['en', 'de']);
     $results = $query->execute();
@@ -183,7 +183,7 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
     //
     // Stemming "de":
     // Gen => gen
-    // Gene => gen.
+    // Gene => gen
     $results = $this->buildSearch('gene', [], ['body'])->execute();
     $this->assertResults([1 => 'en', 2 => 'en', 3 => 'de', 4 => 'de', 5 => 'de-at', 6 => 'de-at'], $results, 'Search all languages for "gene".');
 
@@ -218,54 +218,54 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
    * Creates several test entities.
    */
   protected function insertMultilingualExampleContent() {
-    $this->addTestEntity(1, [
+    $this->addTestEntity(1, array(
       'name' => 'en 1',
       'body' => 'gene',
       'type' => 'item',
       'langcode' => 'en',
-    ]);
-    $this->addTestEntity(2, [
+    ));
+    $this->addTestEntity(2, array(
       'name' => 'en 2',
       'body' => 'genes',
       'type' => 'item',
       'langcode' => 'en',
-    ]);
-    $this->addTestEntity(3, [
+    ));
+    $this->addTestEntity(3, array(
       'name' => 'de 3',
       'body' => 'Gen',
       'type' => 'item',
       'langcode' => 'de',
-    ]);
-    $this->addTestEntity(4, [
+    ));
+    $this->addTestEntity(4, array(
       'name' => 'de 4',
       'body' => 'Gen',
       'type' => 'item',
       'langcode' => 'de',
-    ]);
-    $this->addTestEntity(5, [
+    ));
+    $this->addTestEntity(5, array(
       'name' => 'de-at 5',
       'body' => 'Gen',
       'type' => 'item',
       'langcode' => 'de-at',
-    ]);
-    $this->addTestEntity(6, [
+    ));
+    $this->addTestEntity(6, array(
       'name' => 'de-at 6',
       'body' => 'Gen',
       'type' => 'item',
       'langcode' => 'de-at',
-    ]);
-    $this->addTestEntity(7, [
+    ));
+    $this->addTestEntity(7, array(
       'name' => 'und 7',
       'body' => 'gene',
       'type' => 'item',
       'langcode' => LanguageInterface::LANGCODE_NOT_SPECIFIED,
-    ]);
-    $this->addTestEntity(8, [
+    ));
+    $this->addTestEntity(8, array(
       'name' => 'zxx 8',
       'body' => 'gene',
       'type' => 'item',
       'langcode' => LanguageInterface::LANGCODE_NOT_APPLICABLE,
-    ]);
+    ));
     $count = \Drupal::entityQuery('entity_test_mulrev_changed')->count()->execute();
     $this->assertEquals(8, $count, "$count items inserted.");
   }

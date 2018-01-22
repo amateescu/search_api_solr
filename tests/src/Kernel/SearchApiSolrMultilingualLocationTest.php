@@ -14,10 +14,10 @@ class SearchApiSolrMultilingualLocationTest extends SearchApiSolrLocationTest {
    *
    * @var string[]
    */
-  public static $modules = [
+  public static $modules = array(
     'language',
     'search_api_solr_multilingual_test',
-  ];
+  );
 
   /**
    * A Search API server ID.

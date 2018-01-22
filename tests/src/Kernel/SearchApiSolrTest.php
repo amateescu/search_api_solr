@@ -26,11 +26,11 @@ class SearchApiSolrTest extends SolrBackendTestBase {
    *
    * @var string[]
    */
-  public static $modules = [
+  public static $modules = array(
     'search_api_autocomplete',
     'search_api_solr_test',
     'user',
-  ];
+  );
 
   /**
    * @var \Drupal\search_api\Utility\FieldsHelperInterface
@@ -46,9 +46,6 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->installConfig(['search_api_solr_test']);
   }
 
-  /**
-   *
-   */
   protected function commonSolrBackendSetUp() {
     parent::commonSolrBackendSetUp();
 
@@ -69,13 +66,13 @@ class SearchApiSolrTest extends SolrBackendTestBase {
    */
   protected function regressionTest2469547() {
     $query = $this->buildSearch();
-    $facets = [];
-    $facets['body'] = [
+    $facets = array();
+    $facets['body'] = array(
       'field' => 'body',
       'limit' => 0,
       'min_count' => 1,
       'missing' => FALSE,
-    ];
+    );
     $query->setOption('search_api_facets', $facets);
     $query->addCondition('id', 5, '<>');
     $query->range(0, 0);
@@ -83,8 +80,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $expected = $this->getExpectedFacetsOfRegressionTest2469547();
     // We can't guarantee the order of returned facets, since "bar" and "foobar"
     // both occur once, so we have to manually sort the returned facets first.
-    $facets = $results->getExtraData('search_api_facets', [])['body'];
-    usort($facets, [$this, 'facetCompare']);
+    $facets = $results->getExtraData('search_api_facets', array())['body'];
+    usort($facets, array($this, 'facetCompare'));
     $this->assertEquals($expected, $facets, 'Correct facets were returned for a fulltext field.');
   }
 
@@ -116,7 +113,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   }
 
   /**
-   * Regression tests for #2850160.
+   *  Regression tests for #2850160.
    */
   public function regressionTest2850160() {
     // Only run the tests if we have a Solr core available.
@@ -183,7 +180,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function assertIgnored(ResultSetInterface $results, array $ignored = [], $message = 'No keys were ignored.') {
+  protected function assertIgnored(ResultSetInterface $results, array $ignored = array(), $message = 'No keys were ignored.') {
     // Nothing to do here since the Solr backend doesn't keep a list of ignored
     // fields.
   }
@@ -202,10 +199,10 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $index = Index::load($this->indexId);
     $fields = $index->getFields();
     $fields += $this->invokeMethod($backend, 'getSpecialFields', [$index]);
-    $field_info = [
+    $field_info = array(
       'type' => 'string',
       'original type' => 'string',
-    ];
+    );
     $fields['x'] = $this->fieldsHelper->createField($index, 'x', $field_info);
     $fields['y'] = $this->fieldsHelper->createField($index, 'y', $field_info);
     $fields['z'] = $this->fieldsHelper->createField($index, 'z', $field_info);
@@ -330,19 +327,19 @@ class SearchApiSolrTest extends SolrBackendTestBase {
 
     // Test tagging of a single filter query of a facet query.
     $query = $this->buildSearch();
-    $conditions = $query->createConditionGroup('OR', ['facet:' . 'tagtosearchfor']);
+    $conditions = $query->createConditionGroup('OR', array('facet:' . 'tagtosearchfor'));
     $conditions->addCondition('category', 'article_category');
     $query->addConditionGroup($conditions);
     $conditions = $query->createConditionGroup('AND');
     $conditions->addCondition('category', NULL, '<>');
     $query->addConditionGroup($conditions);
-    $facets['category'] = [
+    $facets['category'] = array(
       'field' => 'category',
       'limit' => 0,
       'min_count' => 1,
       'missing' => TRUE,
       'operator' => 'or',
-    ];
+    );
     $query->setOption('search_api_facets', $facets);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields, &$options]);
     $this->assertEquals('ss_category:"article_category"', $fq[0]['query'], 'Condition found in tagged first filter query');
@@ -352,7 +349,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
 
     // @see https://www.drupal.org/node/2753917
     $query = $this->buildSearch();
-    $conditions = $query->createConditionGroup('OR', ['facet:x']);
+    $conditions = $query->createConditionGroup('OR', array('facet:x'));
     $conditions->addCondition('x', 'A');
     $conditions->addCondition('x', 'B');
     $query->addConditionGroup($conditions);
@@ -362,7 +359,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertEquals('(solr_x:"A" solr_x:"B")', $fq[0]['query']);
 
     $query = $this->buildSearch();
-    $conditions = $query->createConditionGroup('AND', ['facet:x']);
+    $conditions = $query->createConditionGroup('AND', array('facet:x'));
     $conditions->addCondition('x', 'A');
     $conditions->addCondition('x', 'B');
     $query->addConditionGroup($conditions);

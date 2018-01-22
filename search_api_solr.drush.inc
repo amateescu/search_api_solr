@@ -1,51 +1,43 @@
 <?php
 
-/**
- * @file
- */
-
 use Drupal\search_api\Entity\Server;
 
 /**
  * Implements hook_drush_command().
  */
 function search_api_solr_drush_command() {
-  $items = [];
+  $items = array();
 
-  $items['search-api-solr-delete-and-reinstall-all-field-types'] = [
+  $items['search-api-solr-delete-and-reinstall-all-field-types'] = array(
     'description' => 'Deletes all Solr Field Type and re-installs them from their yml files.',
-    'examples' => [
+    'examples' => array(
       'drush search-api-solr-delete-and-reinstall-all-field-types' => dt('Deletes all Solr Field Type and re-installs them from their yml files.'),
       'drush solr-reinstall-ft' => dt('Alias to delete all Solr Field Type and to re-install them from their yml files.'),
-    ],
-    'aliases' => [
+    ),
+    'aliases' => array(
       'solr-reinstall-ft',
-    // Backward compatibility.
-      'sasm-reinstall-ft',
-    // Backward compatibility.
-      'search-api-solr-multilingual-delete-and-reinstall-all-field-types',
-    ],
-  ];
+      'sasm-reinstall-ft', // backward compatibility
+      'search-api-solr-multilingual-delete-and-reinstall-all-field-types', // backward compatibility
+    ),
+  );
 
-  $items['search-api-solr-get-server-config'] = [
+  $items['search-api-solr-get-server-config'] = array(
     'description' => 'Get Solr config files as zip for a search server.',
-    'examples' => [
-      'drush search-api-solr-get-server-config my_solr_server' => dt('Get the config files for @server search server.', ['@server' => 'my_solr_server']),
-      'drush solr-gsc my_solr_server' => dt('Alias to get the config files for @server search server.', ['@server' => 'my_solr_server']),
-    ],
-    'arguments' => [
+    'examples' => array(
+      'drush search-api-solr-get-server-config my_solr_server' => dt('Get the config files for @server search server.', array('@server' => 'my_solr_server')),
+      'drush solr-gsc my_solr_server' => dt('Alias to get the config files for @server search server.', array('@server' => 'my_solr_server')),
+    ),
+    'arguments' => array(
       'server_id' => dt('The numeric ID or machine name of a search server to enable.'),
       'file_name' => dt('The file name of the config zip.'),
       'solr_version' => dt('The targeted Solr version.'),
-    ],
-    'aliases' => [
+    ),
+    'aliases' => array(
       'solr-gsc',
-    // Backward compatibility.
-      'sasm-gsc',
-    // Backward compatibility.
-      'search-api-solr-multilingual-get-server-config',
-    ],
-  ];
+      'sasm-gsc', // backward compatibility
+      'search-api-solr-multilingual-get-server-config', // backward compatibility
+    ),
+  );
 
   return $items;
 }

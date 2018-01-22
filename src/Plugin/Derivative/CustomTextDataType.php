@@ -6,6 +6,7 @@ use Drupal\Component\Plugin\Derivative\DeriverBase;
 use Drupal\Core\Plugin\Discovery\ContainerDeriverInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api_solr\Entity\SolrFieldType;
+use Drupal\search_api_solr\Utility\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
