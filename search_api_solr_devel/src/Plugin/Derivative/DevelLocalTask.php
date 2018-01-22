@@ -50,17 +50,17 @@ class DevelLocalTask extends DeriverBase implements ContainerDeriverInterface {
    * {@inheritdoc}
    */
   public function getDerivativeDefinitions($base_plugin_definition) {
-    $this->derivatives = array();
+    $this->derivatives = [];
 
     foreach ($this->entityManager->getDefinitions() as $entity_type_id => $entity_type) {
 
       if ($entity_type->hasLinkTemplate('devel-solr')) {
-        $this->derivatives["$entity_type_id.devel_solr_tab"] = array(
+        $this->derivatives["$entity_type_id.devel_solr_tab"] = [
           'route_name' => "entity.$entity_type_id.devel_solr",
           'weight' => 110,
           'title' => $this->t('Solr'),
           'parent_id' => "devel.entities:$entity_type_id.devel_tab",
-        );
+        ];
       }
     }
 

@@ -8,8 +8,6 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Cache\UseCacheBackendTrait;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api\Entity\Server;
-use Drupal\search_api_solr\SearchApiSolrException;
-use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\TypedData\SolrFieldDefinition;
 
 /**

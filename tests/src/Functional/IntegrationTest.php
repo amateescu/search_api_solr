@@ -19,10 +19,10 @@ class IntegrationTest extends \Drupal\Tests\search_api\Functional\IntegrationTes
   /**
    * {@inheritdoc}
    */
-  public static $modules = array(
+  public static $modules = [
     'search_api_solr',
     'search_api_solr_test',
-  );
+  ];
 
   /**
    * {@inheritdoc}

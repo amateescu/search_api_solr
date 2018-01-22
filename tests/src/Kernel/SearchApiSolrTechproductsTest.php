@@ -43,6 +43,9 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
     ]);
   }
 
+  /**
+   *
+   */
   protected function getItemIds(array $result_ids) {
     return $result_ids;
   }

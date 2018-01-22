@@ -26,14 +26,14 @@ class FacetsTest extends SearchApiBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = array(
+  public static $modules = [
     'block',
     'views',
     'search_api_solr',
     'search_api_solr_test',
     'search_api_solr_test_facets',
     'facets',
-  );
+  ];
 
   /**
    * {@inheritdoc}
@@ -136,15 +136,15 @@ class FacetsTest extends SearchApiBrowserTestBase {
     // Cast MarkupInterface objects to string.
     $label = (string) $label;
     $url_before = $this->getUrl();
-    $urls = $this->xpath($pattern, array(':label' => $label));
+    $urls = $this->xpath($pattern, [':label' => $label]);
     if (isset($urls[$index])) {
       /** @var \Behat\Mink\Element\NodeElement $url */
       $url = $urls[$index];
       $url_target = $this->getAbsoluteUrl($url->getAttribute('href'));
-      $this->assertTrue(TRUE, new FormattableMarkup('Clicked link %label (@url_target) from @url_before', array('%label' => $label, '@url_target' => $url_target, '@url_before' => $url_before)));
+      $this->assertTrue(TRUE, new FormattableMarkup('Clicked link %label (@url_target) from @url_before', ['%label' => $label, '@url_target' => $url_target, '@url_before' => $url_before]));
       return $this->drupalGet($url_target);
     }
-    $this->assertTrue(FALSE, new FormattableMarkup('Link %label does not exist on @url_before', array('%label' => $label, '@url_before' => $url_before)));
+    $this->assertTrue(FALSE, new FormattableMarkup('Link %label does not exist on @url_before', ['%label' => $label, '@url_before' => $url_before]));
     return FALSE;
   }
 
