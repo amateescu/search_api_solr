@@ -18,7 +18,7 @@ class ViewsTest extends \Drupal\Tests\search_api\Functional\ViewsTest {
    *
    * @var string[]
    */
-  public static $modules = array('search_api_solr_test');
+  public static $modules = ['search_api_solr_test'];
 
   /**
    * {@inheritdoc}

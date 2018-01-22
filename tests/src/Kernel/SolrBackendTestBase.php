@@ -83,6 +83,9 @@ abstract class SolrBackendTestBase extends BackendTestBase {
     parent::tearDown();
   }
 
+  /**
+   *
+   */
   protected function assertLogMessage($level, $message) {
     $last_message = $this->logger->getLastMessage();
     $this->assertEquals($level, $last_message['level']);

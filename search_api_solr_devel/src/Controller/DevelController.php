@@ -104,7 +104,7 @@ class DevelController extends ControllerBase {
    *   labels.
    */
   protected function getBackends() {
-    $backends = array();
+    $backends = [];
     $plugin_definitions = $this->getBackendPluginManager()->getDefinitions();
     foreach ($plugin_definitions as $plugin_id => $plugin_definition) {
       if (is_a($plugin_definition['class'], $plugin_definitions['search_api_solr']['class'], TRUE)) {
@@ -134,7 +134,7 @@ class DevelController extends ControllerBase {
     if ($entity && $entity instanceof EntityInterface) {
       foreach ($this->getBackends() as $backend_id) {
         /** @var \Drupal\search_api\ServerInterface[] $servers */
-        $servers = $this->getStorage()->loadByProperties(['backend' => $backend_id, 'status' => true]);
+        $servers = $this->getStorage()->loadByProperties(['backend' => $backend_id, 'status' => TRUE]);
         foreach ($servers as $server) {
           /** @var \Drupal\search_api\ServerInterface $server */
           /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
@@ -176,7 +176,7 @@ class DevelController extends ControllerBase {
                       ];
 
                       $output_details[$details_id][] = [
-                        '#markup' => '<h3>' . $this->t('Locally-generated data that would be sent to Solr during indexing:') . '</h3>'
+                        '#markup' => '<h3>' . $this->t('Locally-generated data that would be sent to Solr during indexing:') . '</h3>',
                       ];
                       $output_details[$details_id][] = [
                         '#markup' => $this->develDumperManager->dumpOrExport(
@@ -190,7 +190,7 @@ class DevelController extends ControllerBase {
                       /** @var \Drupal\search_api_solr\SolrConnectorInterface $solr */
                       /** @var \Solarium\QueryType\Select\Query\Query $query */
                       $output_details[$details_id][] = [
-                        '#markup' => '<h3>' . $this->t('Current data in Solr for this item:') . '</h3>'
+                        '#markup' => '<h3>' . $this->t('Current data in Solr for this item:') . '</h3>',
                       ];
                       $summary_row['solr_id'] = $fields['id'];
                       $query = $solr->getSelectQuery();
@@ -217,7 +217,7 @@ class DevelController extends ControllerBase {
                         $output_details[$details_id][] = [
                           '#markup' => $this->t(
                             'No Solr document found with the ID %id',
-                            [ '%id' => $fields['id'] ]
+                            ['%id' => $fields['id']]
                           ),
                         ];
                       }
@@ -271,7 +271,7 @@ class DevelController extends ControllerBase {
   }
 
   /**
-   * Given a timestamp it returns both a human-readable date + "time ago"
+   * Given a timestamp it returns both a human-readable date + "time ago".
    *
    * @param $timestamp
    *

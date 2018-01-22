@@ -15,9 +15,9 @@ class UtilitiesTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = array(
+  public static $modules = [
     'search_api_solr',
-  );
+  ];
 
   /**
    * Tests encoding and decoding of Solr field names.
@@ -89,37 +89,37 @@ class UtilitiesTest extends KernelTestBase {
    */
   protected function doDynamicFieldNameConversions($prefix = 'tm', $langcode = 'de', $field = 'body') {
     $sep = ';';
-    // tm_body
+    // tm_body.
     $dynamic_field_name = $prefix . '_' . $field;
-    // tm;de_
+    // tm;de_.
     $language_specific_prefix = $prefix . $sep . $langcode . '_';
-    // tm;de_body
+    // tm;de_body.
     $language_specific_field_name = $language_specific_prefix . $field;
 
     $this->assertEquals(Utility::getLanguageSpecificSolrDynamicFieldPrefix($prefix, $langcode), $language_specific_prefix);
 
-    // tm_body => tm;de_body
+    // tm_body => tm;de_body.
     $language_specific_dynamic_field_name = Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($dynamic_field_name, $langcode);
     $this->assertEquals($language_specific_dynamic_field_name, $language_specific_field_name);
 
-    // tm;de_body => tm_body
+    // tm;de_body => tm_body.
     $language_unspecific_dynamic_field_name = Utility::getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($language_specific_dynamic_field_name);
     $this->assertEquals($language_unspecific_dynamic_field_name, $dynamic_field_name);
 
-    // tm;de_body => tm_X3b_de_body => tm_body
+    // tm;de_body => tm_X3b_de_body => tm_body.
     $encoded_language_specific_dynamic_field_name = Utility::encodeSolrName($language_specific_dynamic_field_name);
     $encoded_language_unspecific_dynamic_field_name = Utility::getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($encoded_language_specific_dynamic_field_name);
     $decoded_language_unspecific_dynamic_field_name = Utility::decodeSolrName($encoded_language_unspecific_dynamic_field_name);
     $this->assertEquals($decoded_language_unspecific_dynamic_field_name, $dynamic_field_name);
 
-    // tm_X3b_de_body => tm_X3b_de_*
+    // tm_X3b_de_body => tm_X3b_de_*.
     $field_definition = Utility::extractLanguageSpecificSolrDynamicFieldDefinition($encoded_language_specific_dynamic_field_name);
     $this->assertEquals($field_definition, Utility::encodeSolrName($language_specific_prefix) . '*');
 
-    // tm;de_body => de
+    // tm;de_body => de.
     $this->assertEquals(Utility::getLanguageIdFromLanguageSpecificSolrDynamicFieldName($language_specific_field_name), $langcode);
 
-    // tm_body => FALSE
+    // tm_body => FALSE.
     $this->assertFalse(Utility::getLanguageIdFromLanguageSpecificSolrDynamicFieldName($dynamic_field_name));
   }
 

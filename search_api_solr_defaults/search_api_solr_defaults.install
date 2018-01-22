@@ -11,45 +11,45 @@ use Drupal\node\Entity\NodeType;
  * Implements hook_requirements().
  */
 function search_api_solr_defaults_requirements($phase) {
-  $requirements = array();
+  $requirements = [];
 
   if ($phase == 'install') {
     $node_types = NodeType::loadMultiple();
-    $required_types = array(
-      'article' => array('body', 'comment', 'field_tags', 'field_image'),
-      'page' => array('body'),
-    );
+    $required_types = [
+      'article' => ['body', 'comment', 'field_tags', 'field_image'],
+      'page' => ['body'],
+    ];
 
     /** @var \Drupal\Core\Entity\EntityFieldManager $entity_field_manager */
     $entity_field_manager = \Drupal::service('entity_field.manager');
 
     foreach ($required_types as $required_type_id => $required_fields) {
       if (!isset($node_types[$required_type_id])) {
-        $requirements['search_api_solr_defaults:' . $required_type_id] = array(
+        $requirements['search_api_solr_defaults:' . $required_type_id] = [
           'severity' => REQUIREMENT_ERROR,
-          'description' => t('Content type @content_type not found. Solr Search Defaults module could not be installed.', array('@content_type' => $required_type_id)),
-        );
+          'description' => t('Content type @content_type not found. Solr Search Defaults module could not be installed.', ['@content_type' => $required_type_id]),
+        ];
       }
       else {
         // Check if all the fields are here.
         $fields = $entity_field_manager->getFieldDefinitions('node', $required_type_id);
         foreach ($required_fields as $required_field) {
           if (!isset($fields[$required_field])) {
-            $requirements['search_api_solr_defaults:' . $required_type_id . ':' . $required_field] = array(
+            $requirements['search_api_solr_defaults:' . $required_type_id . ':' . $required_field] = [
               'severity' => REQUIREMENT_ERROR,
-              'description' => t('Field @field in content type @node_type not found. Solr Search Defaults module could not be installed', array('@node_type' => $required_type_id, '@field' => $required_field)),
-            );
+              'description' => t('Field @field in content type @node_type not found. Solr Search Defaults module could not be installed', ['@node_type' => $required_type_id, '@field' => $required_field]),
+            ];
           }
         }
       }
     }
 
     if (\Drupal::moduleHandler()->moduleExists('search_api_solr')) {
-      $entities_to_check = array(
+      $entities_to_check = [
         'search_api_index' => 'default_solr_index',
         'search_api_server' => 'default_solr_server',
         'view' => 'search_content',
-      );
+      ];
 
       /** @var \Drupal\Core\Entity\EntityTypeManager $entity_type_manager */
       $entity_type_manager = \Drupal::service('entity_type.manager');
@@ -61,10 +61,10 @@ function search_api_solr_defaults_requirements($phase) {
         $entity = $entity_storage->load($entity_id);
 
         if ($entity) {
-          $requirements['search_api_solr_defaults:defaults_exist'] = array(
+          $requirements['search_api_solr_defaults:defaults_exist'] = [
             'severity' => REQUIREMENT_ERROR,
             'description' => t('It looks like the default setup provided by this module already exists on your site. Cannot re-install module.'),
-          );
+          ];
           break;
         }
       }

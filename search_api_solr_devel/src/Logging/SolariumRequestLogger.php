@@ -91,6 +91,9 @@ class SolariumRequestLogger implements EventSubscriberInterface {
     $this->showLoggerHint();
   }
 
+  /**
+   *
+   */
   protected function showLoggerHint() {
     static $hint = FALSE;
 
@@ -102,4 +105,5 @@ class SolariumRequestLogger implements EventSubscriberInterface {
         'warning');
     }
   }
+
 }

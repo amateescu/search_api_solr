@@ -104,48 +104,48 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    $form['scheme'] = array(
+    $form['scheme'] = [
       '#type' => 'select',
       '#title' => $this->t('HTTP protocol'),
       '#description' => $this->t('The HTTP protocol to use for sending queries.'),
       '#default_value' => isset($this->configuration['scheme']) ? $this->configuration['scheme'] : 'http',
-      '#options' => array(
+      '#options' => [
         'http' => 'http',
         'https' => 'https',
-      ),
-    );
+      ],
+    ];
 
-    $form['host'] = array(
+    $form['host'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Solr host'),
       '#description' => $this->t('The host name or IP of your Solr server, e.g. <code>localhost</code> or <code>www.example.com</code>.'),
       '#default_value' => isset($this->configuration['host']) ? $this->configuration['host'] : '',
       '#required' => TRUE,
-    );
+    ];
 
-    $form['port'] = array(
+    $form['port'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Solr port'),
       '#description' => $this->t('The Jetty example server is at port 8983, while Tomcat uses 8080 by default.'),
       '#default_value' => isset($this->configuration['port']) ? $this->configuration['port'] : '',
       '#required' => TRUE,
-    );
+    ];
 
-    $form['path'] = array(
+    $form['path'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Solr path'),
       '#description' => $this->t('The path that identifies the Solr instance to use on the server.'),
       '#default_value' => isset($this->configuration['path']) ? $this->configuration['path'] : '',
-    );
+    ];
 
-    $form['core'] = array(
+    $form['core'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Solr core'),
       '#description' => $this->t('The name that identifies the Solr core to use on the server.'),
       '#default_value' => isset($this->configuration['core']) ? $this->configuration['core'] : '',
-    );
+    ];
 
-    $form['timeout'] = array(
+    $form['timeout'] = [
       '#type' => 'number',
       '#min' => 1,
       '#max' => 180,
@@ -153,9 +153,9 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       '#description' => $this->t('The timeout in seconds for search queries sent to the Solr server.'),
       '#default_value' => isset($this->configuration['timeout']) ? $this->configuration['timeout'] : 5,
       '#required' => TRUE,
-    );
+    ];
 
-    $form['index_timeout'] = array(
+    $form['index_timeout'] = [
       '#type' => 'number',
       '#min' => 1,
       '#max' => 180,
@@ -163,9 +163,9 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       '#description' => $this->t('The timeout in seconds for indexing requests to the Solr server.'),
       '#default_value' => isset($this->configuration['index_timeout']) ? $this->configuration['index_timeout'] : 5,
       '#required' => TRUE,
-    );
+    ];
 
-    $form['optimize_timeout'] = array(
+    $form['optimize_timeout'] = [
       '#type' => 'number',
       '#min' => 1,
       '#max' => 180,
@@ -173,48 +173,48 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       '#description' => $this->t('The timeout in seconds for background index optimization queries on a Solr server.'),
       '#default_value' => isset($this->configuration['optimize_timeout']) ? $this->configuration['optimize_timeout'] : 10,
       '#required' => TRUE,
-    );
+    ];
 
-    $form['commit_within'] = array(
+    $form['commit_within'] = [
       '#type' => 'number',
       '#min' => 0,
       '#title' => $this->t('Commit within'),
       '#description' => $this->t('The limit in milliseconds within a (soft) commit on Solr is forced after any updating the index in any way. Setting the value to "0" turns off this dynamic enforcement and lets Solr behave like configured solrconf.xml.'),
       '#default_value' => isset($this->configuration['commit_within']) ? $this->configuration['commit_within'] : 1000,
       '#required' => TRUE,
-    );
+    ];
 
-    $form['workarounds'] = array(
+    $form['workarounds'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Connector Workarounds'),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
-    );
+    ];
 
-    $form['workarounds']['solr_version'] = array(
+    $form['workarounds']['solr_version'] = [
       '#type' => 'select',
       '#title' => $this->t('Solr version override'),
       '#description' => $this->t('Specify the Solr version manually in case it cannot be retrived automatically. The version can be found in the Solr admin interface under "Solr Specification Version" or "solr-spec"'),
-      '#options' => array(
+      '#options' => [
         '' => $this->t('Determine automatically'),
         '4' => '4.x',
         '5' => '5.x',
         '6' => '6.x',
-      ),
+      ],
       '#default_value' => isset($this->configuration['solr_version']) ? $this->configuration['solr_version'] : '',
-    );
+    ];
 
-    $form['workarounds']['http_method'] = array(
+    $form['workarounds']['http_method'] = [
       '#type' => 'select',
       '#title' => $this->t('HTTP method'),
       '#description' => $this->t('The HTTP method to use for sending queries. GET will often fail with larger queries, while POST should not be cached. AUTO will use GET when possible, and POST for queries that are too large.'),
       '#default_value' => isset($this->configuration['http_method']) ? $this->configuration['http_method'] : 'AUTO',
-      '#options' => array(
+      '#options' => [
         'AUTO' => $this->t('AUTO'),
         'POST' => 'POST',
         'GET' => 'GET',
-      ),
-    );
+      ],
+    ];
 
     return $form;
   }
@@ -452,7 +452,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       if (!is_array($endpoint_data) || !isset($endpoint_data[$endpoint_uri][$handler]) || $reset) {
         // @todo Finish https://github.com/solariumphp/solarium/pull/155 and stop
         // abusing the ping query for this.
-        $query = $this->solr->createPing(array('handler' => $handler));
+        $query = $this->solr->createPing(['handler' => $handler]);
         $endpoint_data[$endpoint_uri][$handler] = $this->execute($query, $endpoint)->getData();
         $state->set($state_key, $endpoint_data);
       }
@@ -511,7 +511,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   public function getStatsSummary() {
     $this->connect();
 
-    $summary = array(
+    $summary = [
       '@pending_docs' => '',
       '@autocommit_time_seconds' => '',
       '@autocommit_time' => '',
@@ -521,7 +521,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       '@schema_version' => '',
       '@core_name' => '',
       '@index_size' => '',
-    );
+    ];
 
     $query = $this->solr->createPing();
     $query->setResponseWriter(Query::WT_PHPS);
@@ -873,7 +873,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function getContentFromExtractResult(ExtractResult $result, $filepath){
+  public function getContentFromExtractResult(ExtractResult $result, $filepath) {
     $response = $result->getResponse();
     $json_data = $response->getBody();
     $array_data = Json::decode($json_data);

@@ -19,7 +19,7 @@ define('DATETIME_STORAGE_TIMEZONE', 'UTC');
  *
  * @group search_api_solr
  */
-class SearchApiBackendUnitTest extends UnitTestCase  {
+class SearchApiBackendUnitTest extends UnitTestCase {
 
   use InvokeMethodTrait;
 
@@ -54,7 +54,7 @@ class SearchApiBackendUnitTest extends UnitTestCase  {
       $document->reveal(),
       $field,
       [$input],
-      $type
+      $type,
     ];
 
     $backend_instance = $backend->reveal();

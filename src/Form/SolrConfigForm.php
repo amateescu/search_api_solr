@@ -38,23 +38,23 @@ class SolrConfigForm extends FormBase {
         return $form;
       }
 
-      $form['files_tabs'] = array(
+      $form['files_tabs'] = [
         '#type' => 'vertical_tabs',
-      );
+      ];
 
       // Generate a fieldset for each file.
       foreach ($files_list as $file_name => $file_info) {
         $file_date = \Drupal::service('date.formatter')->format(strtotime($file_info['modified']));
         $escaped_file_name = Html::escape($file_name);
 
-        $form['files'][$file_name] = array(
+        $form['files'][$file_name] = [
           '#type'  => 'details',
           '#title' => $escaped_file_name,
           '#group' => 'files_tabs',
-        );
+        ];
 
         $data = '<h3>' . $escaped_file_name . '</h3>';
-        $data .= '<p><em>' . $this->t('Last modified: @time.', array('@time' => $file_date)) . '</em></p>';
+        $data .= '<p><em>' . $this->t('Last modified: @time.', ['@time' => $file_date]) . '</em></p>';
 
         if ($file_info['size'] > 0) {
           /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
@@ -70,7 +70,7 @@ class SolrConfigForm extends FormBase {
       }
     }
     catch (SearchApiException $e) {
-      watchdog_exception('search_api_solr', $e, '%type while retrieving config files of Solr server @server: @message in %function (line %line of %file).', array('@server' => $search_api_server->label()));
+      watchdog_exception('search_api_solr', $e, '%type while retrieving config files of Solr server @server: @message in %function (line %line of %file).', ['@server' => $search_api_server->label()]);
       $form['info']['#markup'] = $this->t('An error occured while trying to load the list of files.');
     }
 

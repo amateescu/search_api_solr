@@ -48,7 +48,7 @@ class IntegrationTest extends WebTestBase {
     // Create user with content access permission to see if the view is
     // accessible, and an admin to do the setup.
     $this->authenticatedUser = $this->drupalCreateUser();
-    $this->adminUser = $this->drupalCreateUser(array(), NULL, TRUE);
+    $this->adminUser = $this->drupalCreateUser([], NULL, TRUE);
   }
 
   /**
@@ -58,18 +58,18 @@ class IntegrationTest extends WebTestBase {
     $this->drupalLogin($this->adminUser);
 
     // Install the search_api_solr_defaults module.
-    $edit_enable = array(
+    $edit_enable = [
       'modules[Search][search_api_solr_defaults][enable]' => TRUE,
-    );
+    ];
     $this->drupalPostForm('admin/modules', $edit_enable, t('Install'));
 
     $this->assertText(t('Some required modules must be enabled'), 'Dependencies required.');
 
     $this->drupalPostForm(NULL, NULL, t('Continue'));
-    $args = array(
+    $args = [
       '@count' => 3,
       '%names' => 'Solr Search Defaults, Solr search, Search API',
-    );
+    ];
     $success_text = strip_tags(t('@count modules have been enabled: %names.', $args));
     $this->assertText($success_text, 'Modules have been installed.');
 
@@ -87,11 +87,11 @@ class IntegrationTest extends WebTestBase {
     $this->drupalLogin($this->adminUser);
 
     // Uninstall the module.
-    $edit_disable = array(
+    $edit_disable = [
       'uninstall[search_api_solr_defaults]' => TRUE,
-    );
+    ];
     $this->drupalPostForm('admin/modules/uninstall', $edit_disable, t('Uninstall'));
-    $this->drupalPostForm(NULL, array(), t('Uninstall'));
+    $this->drupalPostForm(NULL, [], t('Uninstall'));
     $this->rebuildContainer();
     $this->assertFalse($this->container->get('module_handler')->moduleExists('search_api_solr_defaults'), 'Search API DB Defaults module uninstalled.');
 
@@ -114,18 +114,18 @@ class IntegrationTest extends WebTestBase {
     $this->assertText(t('It looks like the default setup provided by this module already exists on your site. Cannot re-install module.'));
 
     // Delete all the entities that we would fail on if they exist.
-    $entities_to_remove = array(
+    $entities_to_remove = [
       'search_api_index' => 'default_solr_index',
       'search_api_server' => 'default_solr_server',
       'view' => 'search_content',
-    );
+    ];
     /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
     $entity_type_manager = \Drupal::service('entity_type.manager');
     foreach ($entities_to_remove as $entity_type => $entity_id) {
       /** @var \Drupal\Core\Entity\EntityStorageInterface $entity_storage */
       $entity_storage = $entity_type_manager->getStorage($entity_type);
       $entity_storage->resetCache();
-      $entities = $entity_storage->loadByProperties(array('id' => $entity_id));
+      $entities = $entity_storage->loadByProperties(['id' => $entity_id]);
 
       if (!empty($entities[$entity_id])) {
         $entities[$entity_id]->delete();
@@ -136,12 +136,12 @@ class IntegrationTest extends WebTestBase {
     $this->drupalGet('admin/structure/types/manage/article');
     $this->clickLink(t('Delete'));
     $this->assertResponse(200);
-    $this->drupalPostForm(NULL, array(), t('Delete'));
+    $this->drupalPostForm(NULL, [], t('Delete'));
 
     // Try to install search_api_solr_defaults module and test if it failed
     // because there was no content type "article".
     $this->drupalPostForm('admin/modules', $edit_enable, t('Install'));
-    $success_text = t('Content type @content_type not found. Database Search Defaults module could not be installed.', array('@content_type' => 'article'));
+    $success_text = t('Content type @content_type not found. Database Search Defaults module could not be installed.', ['@content_type' => 'article']);
     $this->assertText($success_text);
   }
 

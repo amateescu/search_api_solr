@@ -168,7 +168,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
       // Sort the entities using the entity class's sort() method.
       // See \Drupal\Core\Config\Entity\ConfigEntityBase::sort().
-      uasort($entities, array($this->entityType->getClass(), 'sort'));
+      uasort($entities, [$this->entityType->getClass(), 'sort']);
     }
 
     return $entities;
@@ -182,11 +182,11 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     $operations = parent::getDefaultOperations($solr_field_type);
 
     if ($solr_field_type->access('view') && $solr_field_type->hasLinkTemplate('export-form')) {
-      $operations['export'] = array(
+      $operations['export'] = [
         'title' => $this->t('Export'),
         'weight' => 10,
         'url' => $solr_field_type->toUrl('export-form'),
-      );
+      ];
     }
 
     return $operations;
@@ -290,7 +290,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       $text_files = $solr_field_type->getTextFiles();
       foreach ($text_files as $text_file_name => $text_file) {
         if ($custom_code = $solr_field_type->getCustomCode()) {
-          $text_file_name .= '_' .$custom_code;
+          $text_file_name .= '_' . $custom_code;
         }
         $text_file_name .= '_' . $solr_field_type->getFieldTypeLanguageCode() . '.txt';
         $zip->addFile($text_file_name, $text_file);
