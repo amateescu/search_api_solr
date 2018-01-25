@@ -13,7 +13,7 @@ use Drupal\search_api_solr\SolrMultilingualBackendInterface;
 use Drupal\search_api_solr\Utility\Utility;
 use Solarium\Core\Query\QueryInterface as SolariumQueryInterface;
 use Solarium\QueryType\Select\Query\Query;
-use Solarium\QueryType\Select\ResponseParser\Component\FacetSet;
+use Solarium\Component\ResponseParser\FacetSet;
 
 /**
  * The name of the language field might be change in future releases of
