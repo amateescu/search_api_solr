@@ -40,8 +40,8 @@ use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginManager;
 use Drupal\search_api_solr\Utility\Utility;
-use Solarium\Component\Spellcheck;
 use Solarium\Core\Client\Response;
+use Solarium\Core\Query\Helper;
 use Solarium\Core\Query\QueryInterface as SolariumQueryInterface;
 use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\Exception\ExceptionInterface;
@@ -128,9 +128,16 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected $dataTypeHelper;
 
   /**
+   * The Solarium query helper.
+   *
+   * @var Helper
+   */
+  protected $queryHelper;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, ModuleHandlerInterface $module_handler, Config $search_api_solr_settings, LanguageManagerInterface $language_manager, SolrConnectorPluginManager $solr_connector_plugin_manager, FieldsHelperInterface $fields_helper, DataTypeHelperInterface $dataTypeHelper) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, ModuleHandlerInterface $module_handler, Config $search_api_solr_settings, LanguageManagerInterface $language_manager, SolrConnectorPluginManager $solr_connector_plugin_manager, FieldsHelperInterface $fields_helper, DataTypeHelperInterface $dataTypeHelper, Helper $query_helper) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->moduleHandler = $module_handler;
@@ -139,6 +146,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $this->solrConnectorPluginManager = $solr_connector_plugin_manager;
     $this->fieldsHelper = $fields_helper;
     $this->dataTypeHelper = $dataTypeHelper;
+    $this->queryHelper = $query_helper;
   }
 
   /**
@@ -154,7 +162,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $container->get('language_manager'),
       $container->get('plugin.manager.search_api_solr.connector'),
       $container->get('search_api.fields_helper'),
-      $container->get('search_api.data_type_helper')
+      $container->get('search_api.data_type_helper'),
+      $container->get('solarium.query_helper')
     );
   }
 
@@ -890,11 +899,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Since the index ID we use for indexing can contain arbitrary
     // prefixes, we have to escape it for use in the query.
     $connector = $this->getSolrConnector();
-    $query_helper = $connector->getQueryHelper();
-    $query = '+index_id:' . $this->getIndexId($query_helper->escapePhrase($index->id()));
-    $query .= ' +hash:' . $query_helper->escapePhrase(Utility::getSiteHash());
+    $query = '+index_id:' . $this->getIndexId($this->queryHelper->escapePhrase($index->id()));
+    $query .= ' +hash:' . $this->queryHelper->escapePhrase(Utility::getSiteHash());
     if ($datasource_id) {
-      $query .= ' +' . $this->getSolrFieldNames($index)['search_api_datasource'] . ':' . $query_helper->escapePhrase($datasource_id);
+      $query .= ' +' . $this->getSolrFieldNames($index)['search_api_datasource'] . ':' . $this->queryHelper->escapePhrase($datasource_id);
     }
     $update_query = $connector->getUpdateQuery();
     $update_query->addDeleteQuery($query);
@@ -976,13 +984,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         ->addTags($filter_query['tags']);
     }
 
-    $query_helper = $connector->getQueryHelper($solarium_query);
     // Set the Index filter.
-    $solarium_query->createFilterQuery('index_id')->setQuery('index_id:' . $query_helper->escapePhrase($index_id));
+    $solarium_query->createFilterQuery('index_id')->setQuery('index_id:' . $this->queryHelper->escapePhrase($index_id));
 
     // Set the site hash filter, if enabled.
     if ($this->configuration['site_hash']) {
-      $site_hash = $query_helper->escapePhrase(Utility::getSiteHash());
+      $site_hash = $this->queryHelper->escapePhrase(Utility::getSiteHash());
       $solarium_query->createFilterQuery('site_hash')->setQuery('hash:' . $site_hash);
     }
 
@@ -1322,7 +1329,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected function addIndexField(Document $doc, $key, array $values, $type) {
     // Don't index empty values (i.e., when field is missing).
     if (!isset($values)) {
-      return;
+      return '';
     }
 
     if (strpos($type, 'solr_text_custom') === 0) {
@@ -1341,7 +1348,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         case 'date':
           $value = $this->formatDate($value);
           if ($value === FALSE) {
-            return;
+            continue(2);
           }
           break;
 
@@ -1798,7 +1805,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     foreach ($value as &$v) {
       if (!is_null($v) || !in_array($operator, ['=', '<>', 'IN', 'NOT IN'])) {
-        $v = trim($v);
         $v = $this->formatFilterValue($v, $index_field->getType());
         // Remaining NULL values are now converted to empty strings.
       }
@@ -1839,29 +1845,29 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     switch ($operator) {
       case '<>':
         if (is_null($value)) {
-          return "$field:[* TO *]";
+          return $this->queryHelper->rangeQuery($field, NULL, NULL);
         }
         else {
-          return "(*:* -$field:$value)";
+          return '(*:* -' . $field . ':'. $this->queryHelper->escapePhrase($value) . ')';
         }
 
       case '<':
-        return "$field:{* TO $value}";
+        return $this->queryHelper->rangeQuery($field, NULL, $value, FALSE);
 
       case '<=':
-        return "$field:[* TO $value]";
+        return $this->queryHelper->rangeQuery($field, NULL, $value);
 
       case '>=':
-        return "$field:[$value TO *]";
+        return $this->queryHelper->rangeQuery($field, $value, NULL);
 
       case '>':
-        return "$field:{{$value} TO *}";
+        return $this->queryHelper->rangeQuery($field, $value, NULL, FALSE);
 
       case 'BETWEEN':
-        return "$field:[" . array_shift($value) . ' TO ' . array_shift($value) . ']';
+        return $this->queryHelper->rangeQuery($field, array_shift($value), array_shift($value));
 
       case 'NOT BETWEEN':
-        return "(*:* -$field:[" . array_shift($value) . ' TO ' . array_shift($value) . '])';
+        return '(*:* -' . $this->queryHelper->rangeQuery($field, array_shift($value), array_shift($value)) . ')';
 
       case 'IN':
         $parts = [];
@@ -1871,12 +1877,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $null = TRUE;
           }
           else {
-            $parts[] = "$field:$v";
+            $parts[] = $field . ':' . $this->queryHelper->escapePhrase($v);
           }
         }
         if ($null) {
           // @see https://stackoverflow.com/questions/4238609/how-to-query-solr-for-empty-fields/28859224#28859224
-          return "(*:* -$field:[* TO *])";
+          return '(*:* -' . $this->queryHelper->rangeQuery($field, NULL, NULL) . ')';
         }
         return '(' . implode(" ", $parts) . ')';
 
@@ -1888,19 +1894,19 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $null = TRUE;
           }
           else {
-            $parts[] = "-$field:$v";
+            $parts[] = '-' . $field . ':' . $this->queryHelper->escapePhrase($v);
           }
         }
-        return '(' . ($null ? "$field:[* TO *]" : '*:*') . ' ' . implode(" ", $parts) . ')';
+        return '(' . ($null ? $this->queryHelper->rangeQuery($field, NULL, NULL) : '*:*') . ' ' . implode(" ", $parts) . ')';
 
       case '=':
       default:
         if (is_null($value)) {
           // @see https://stackoverflow.com/questions/4238609/how-to-query-solr-for-empty-fields/28859224#28859224
-          return "(*:* -$field:[* TO *])";
+          return '(*:* -' . $this->queryHelper->rangeQuery($field, NULL, NULL) . ')';
         }
         else {
-          return "$field:$value";
+          return $field . ':' . $this->queryHelper->escapePhrase($value);
         }
     }
   }
@@ -1942,6 +1948,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * Format a value for filtering on a field of a specific type.
    */
   protected function formatFilterValue($value, $type) {
+    $value = trim($value);
     switch ($type) {
       case 'boolean':
         $value = $value ? 'true' : 'false';
@@ -1958,7 +1965,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         // Do not escape.
         return (float) $value;
     }
-    return $this->getSolrConnector()->getQueryHelper()->escapePhrase($value);
+    return is_null($value) ? '' : $value;
   }
 
   /**
@@ -1970,7 +1977,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected function formatDate($input) {
     $input = is_numeric($input) ? (int) $input : new \DateTime($input, timezone_open(DATETIME_STORAGE_TIMEZONE));
-    return $this->getSolrConnector()->getQueryHelper()->formatDate($input);
+    return $this->queryHelper->formatDate($input);
   }
 
   /**
@@ -2378,7 +2385,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
       }
       else {
-        $k[] = $this->getSolrConnector()->getQueryHelper()->escapePhrase(trim($key));
+        $k[] = $this->queryHelper->escapePhrase(trim($key));
       }
     }
     if (!$k) {
@@ -2492,7 +2499,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected function getMoreLikeThisQuery(QueryInterface $query, $index_id, $index_fields = [], $fields = []) {
     $connector = $this->getSolrConnector();
     $solarium_query = $connector->getMoreLikeThisQuery();
-    $query_helper = $connector->getQueryHelper($solarium_query);
     $mlt_options = $query->getOption('search_api_mlt');
     $language_ids = $query->getLanguages();
     if (empty($language_ids)) {
@@ -2543,9 +2549,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     if (!empty($ids)) {
-      array_walk($ids, function (&$id, $key) use ($index_id, $query_helper) {
+      array_walk($ids, function (&$id, $key) use ($index_id) {
         $id = $this->createId($index_id, $id);
-        $id = $query_helper->escapePhrase($id);
+        $id = $this->queryHelper->escapePhrase($id);
       });
 
       $solarium_query->setQuery('id:' . implode(' id:', $ids));

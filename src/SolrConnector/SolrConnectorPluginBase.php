@@ -15,7 +15,6 @@ use Solarium\Client;
 use Solarium\Core\Client\Endpoint;
 use Solarium\Core\Client\Request;
 use Solarium\Core\Client\Response;
-use Solarium\Core\Query\Helper;
 use Solarium\Core\Query\QueryInterface;
 use Solarium\Exception\HttpException;
 use Solarium\QueryType\Extract\Result as ExtractResult;
@@ -690,7 +689,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       return $query->getHelper();
     }
 
-    return new Helper();
+    return \Drupal::service('solarium.query_helper');
   }
 
   /**

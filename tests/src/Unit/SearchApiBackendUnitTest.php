@@ -38,17 +38,11 @@ class SearchApiBackendUnitTest extends UnitTestCase {
    *   Expected result.
    */
   public function testIndexField($input, $type, $expected) {
-    $connector = $this->prophesize(SolrConnectorInterface::class);
-    $connector->getQueryHelper()->willReturn(new Helper());
-
     $field = 'testField';
     $document = $this->prophesize(Document::class);
     $document
       ->addField($field, $expected)
       ->shouldBeCalled();
-
-    $backend = $this->prophesize(SearchApiSolrBackend::class);
-    $backend->getSolrConnector()->willReturn($connector->reveal());
 
     $args = [
       $document->reveal(),
@@ -57,11 +51,17 @@ class SearchApiBackendUnitTest extends UnitTestCase {
       $type,
     ];
 
+    $backend = $this->prophesize(SearchApiSolrBackend::class);
     $backend_instance = $backend->reveal();
 
     // addIndexField() should convert the $input according to $type and call
     // Document::addField() with the correctly converted $input.
-    $this->invokeMethod($backend_instance, 'addIndexField', $args);
+    $this->invokeMethod(
+      $backend_instance,
+      'addIndexField',
+      $args,
+      ['queryHelper' => new Helper()]
+    );
   }
 
   /**
