@@ -11,12 +11,13 @@ cache:
 
 php:
   - 7.0
-  - 5.6
+  - 7.1
+  - 7.2
 
 # This creates a build with each php environment. 4 builds in total.
 env:
-  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=7.2.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/7.x"
-  - PATH=$PATH:/home/travis/.composer/vendor/bin SOLR_VERSION=6.6.2 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/6.x"
+  - SOLR_VERSION=7.2.1 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/7.x"
+  - SOLR_VERSION=6.6.2 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/6.x"
 
 notifications:
   irc:
@@ -94,3 +95,12 @@ script:
   # Exit the build
   - echo $TEST_PHPUNIT
   - if [ $TEST_PHPUNIT -eq 0 ]; then exit 0; else exit 1; fi
+
+matrix:
+  exclude:
+      - php: 7.1
+        env: SOLR_VERSION=6.6.2 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/6.x"
+      - php: 7.2
+        env: SOLR_VERSION=6.6.2 SOLR_CORE=d8 SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/6.x"
+  allow_failures:
+      - php: 7.2
