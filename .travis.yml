@@ -1,26 +1,12 @@
 language: php
 
-cache:
-  bundler: true
-  directories:
-    - $HOME/tmp/drush
-    - $HOME/.bundle
-    - $HOME/.composer
-    - $HOME/downloads
-  apt: true
-
-git:
-  # The depth needs to be increased. The default of 50 leads to fatal: reference
-  # repository '/home/travis/.cache/composer/vcs/-home-travis-build-mkalkbrenner
-  # -search-api-solr/' is shallow.
-  depth: 10000
+dist: trusty
 
 php:
   - 7.0
   - 7.1
   - 7.2
 
-# This creates a build with each php environment. 4 builds in total.
 env:
   - SOLR_VERSION=7.2.1 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.5.x DRUSH_VERSION=~9.0.0
   - SOLR_VERSION=7.2.1 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.4.x DRUSH_VERSION=8.1.15
@@ -30,28 +16,39 @@ notifications:
   irc:
     - "chat.freenode.net#drupal-search-api"
 
-# This will create the database
+git:
+  # The depth needs to be increased. The default of 50 leads to fatal: reference
+  # repository '/home/travis/.cache/composer/vcs/-home-travis-build-mkalkbrenner
+  # -search-api-solr/' is shallow.
+  depth: 10000
+
+cache:
+  directories:
+    - $HOME/.composer/cache
+    - solr_downloads
+
 mysql:
   database: drupal
   username: root
   encoding: utf8
 
 before_install:
-  - phpenv config-rm xdebug.ini
   - composer global require "hirak/prestissimo:^0.3"
-  - sudo apt-get update -qq > /dev/null
+  - ls solr_downloads/
+  - wget -nc --continue -v --tries=3 --directory-prefix=solr_downloads "http://ftp.halifax.rwth-aachen.de/apache/lucene/solr/${SOLR_VERSION}/solr-${SOLR_VERSION}.tgz"
+  - tar -xzf solr_downloads/solr-${SOLR_VERSION}.tgz
   - export SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/$SEARCH_API_SOLR_CONF"
 
 install:
   - git tag 999.0.0
-  # Make sure we don't fail when checking out projects
+  # Make sure we don't fail when checking out projects.
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
   - echo -e "Host git.drupal.org\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
   # Set sendmail so drush doesn't throw an error during site install.
   - echo "sendmail_path='true'" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
   # Forward the errors to the syslog so we can print them
   - echo "error_log=syslog" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
-  # Get latest Drupal 8 core
+  # Get the Drupal core.
   - cd $TRAVIS_BUILD_DIR/..
   - git clone --depth=1 --branch $DRUPAL_BRANCH https://git.drupal.org/project/drupal.git
   - cd $TRAVIS_BUILD_DIR/../drupal
@@ -67,37 +64,35 @@ install:
   #########################################
 
 before_script:
-  # Start the built-in php web server (mysql is already started) and
-  # suppress web-server access logs output.
+  - export SIMPLETEST_DB=mysql://root:@localhost/drupal
+  - export SIMPLETEST_BASE_URL=http://localhost:8888
+  # Start the built-in php web server (mysql is already started) and suppress
+  # web server access logs output.
   - php -S localhost:8888 >& /dev/null &
-  # Install the site
+  # Install the site.
   - ./vendor/bin/drush -v site-install minimal --db-url=mysql://root:@localhost/drupal --yes
   # Let dev versions fullfill module version dependencies.
   - ./vendor/bin/drush en composer_deploy --yes
-  # Generate a multilingual Solr configuration.
-  # Therefore we have to install the test modules before the tests.
+  # Generate a multilingual Solr configuration. Therefore we have to install the
+  # test modules before the tests.
   - cp -a core/modules/system/tests/modules/entity_test core/modules/system/entity_test
   - cp -a modules/contrib/search_api/tests/search_api_test_example_content modules/contrib/search_api/search_api_test_example_content
   - cp -a modules/contrib/search_api_solr/tests/modules/search_api_solr_multilingual_test modules/contrib/search_api_solr/search_api_solr_multilingual_test
   - ./vendor/bin/drush en --yes search_api_solr_multilingual_test
   - ./vendor/bin/drush solr-gsc solr_multilingual_search_server conf.zip $SOLR_VERSION
   - rm -rf core/modules/system/entity_test modules/contrib/search_api/search_api_test_example_content modules/contrib/search_api_solr/search_api_solr_multilingual_test
-  - unzip -o conf.zip -d $SOLR_CONFS
-  - ls -lh $SOLR_CONFS
-  # Install Solr
-  - cat modules/contrib/search_api_solr/travis-solr.sh | bash
+  - mkdir $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8
+  - mkdir $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf
+  - unzip -o conf.zip -d $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf
+  - echo "name=d8" > $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/core.properties
+  - ls -lh $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf
+  - $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr start -p 8983
+  - $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr start -e techproducts -p 8993
 
 script:
-  # Run the tests
+  # Run the tests within the drupal directory.
   - cd $TRAVIS_BUILD_DIR/../drupal
-  - export SIMPLETEST_DB=mysql://root:@localhost/drupal
-  - export SIMPLETEST_BASE_URL=http://localhost:8888
-  - ./vendor/bin/phpunit -c core --group search_api_solr --verbose --debug | tee ; export TEST_PHPUNIT=${PIPESTATUS[0]} ; echo $TEST_PHPUNIT
-  # Re-enable when trying to get CodeSniffer doesn't return a 403 anymore.
-  #- /home/travis/.composer/vendor/bin/phpcs --standard=/home/travis/.composer/vendor/drupal/coder/coder_sniffer/Drupal --extensions=php,inc,test,module,install --ignore=css/ $TRAVIS_BUILD_DIR/../drupal/modules/search_api
-  # Exit the build
-  - echo $TEST_PHPUNIT
-  - if [ $TEST_PHPUNIT -eq 0 ]; then exit 0; else exit 1; fi
+  - ./vendor/bin/phpunit -c core --group search_api_solr --verbose --debug
 
 matrix:
   exclude:
