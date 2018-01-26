@@ -20,9 +20,10 @@
         "source": "http://git.drupal.org/project/search_api_solr.git"
     },
     "require": {
+        "php": "^7.0",
         "maennchen/zipstream-php": "0.4.*",
-        "solarium/solarium": "4.x-dev",
-        "drupal/search_api": "~1.5"
+        "solarium/solarium": "~4.0.0-alpha",
+        "drupal/search_api": "~1.6"
     },
     "require-dev": {
         "phayes/geophp": "dev-master",

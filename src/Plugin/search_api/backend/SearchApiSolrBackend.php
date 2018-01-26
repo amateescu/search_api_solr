@@ -40,6 +40,7 @@ use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginManager;
 use Drupal\search_api_solr\Utility\Utility;
+use Solarium\Component\Spellcheck;
 use Solarium\Core\Client\Response;
 use Solarium\Core\Query\QueryInterface as SolariumQueryInterface;
 use Solarium\Core\Query\Result\ResultInterface;
@@ -47,8 +48,8 @@ use Solarium\Exception\ExceptionInterface;
 use Solarium\QueryType\Update\Query\Query as UpdateQuery;
 use Solarium\QueryType\Select\Query\Query;
 use Solarium\QueryType\Select\Result\Result;
-use Solarium\QueryType\Suggester\Query as SuggesterQuery;
-use Solarium\QueryType\Suggester\Result\Result as SuggesterResult;
+use Solarium\QueryType\Spellcheck\Query as SpellcheckQuery;
+use Solarium\QueryType\Spellcheck\Result\Result as SpellcheckResult;
 use Solarium\QueryType\Update\Query\Document\Document;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -2157,8 +2158,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
         if ($this->configuration['suggest_corrections']) {
           $suggestion = $user_input;
-          $suggester_result = new SuggesterResult(NULL, new SuggesterQuery(), $terms_result->getResponse());
-          foreach ($suggester_result as $term => $termResult) {
+          $spellcheck_result = new SpellcheckResult(NULL, new SpellcheckQuery(), $terms_result->getResponse());
+          foreach ($spellcheck_result as $term => $termResult) {
             foreach ($termResult as $result) {
               if ($result == $term) {
                 continue;
