@@ -9,6 +9,12 @@ cache:
     - $HOME/downloads
   apt: true
 
+git:
+  # The depth needs to be increased. The default of 50 leads to fatal: reference
+  # repository '/home/travis/.cache/composer/vcs/-home-travis-build-mkalkbrenner
+  # -search-api-solr/' is shallow.
+  depth: 10000
+
 php:
   - 7.0
   - 7.1
