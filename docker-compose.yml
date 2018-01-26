@@ -14,7 +14,7 @@ services:
       - d8
       - /solr-conf
   solr7:
-    image: solr:7.1
+    image: solr:7.2
     ports:
      - "8993:8983"
     volumes:
