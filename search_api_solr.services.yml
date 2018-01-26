@@ -28,3 +28,6 @@ services:
   solr_field.manager:
     class: Drupal\search_api_solr\SolrFieldManager
     arguments: ['@cache.discovery']
+
+  solarium.query_helper:
+    class: Solarium\Core\Query\Helper
