@@ -27,14 +27,13 @@ cache:
     - $HOME/.composer/cache
     - solr_downloads
 
-mysql:
-  database: drupal
-  username: root
-  encoding: utf8
+services:
+  - mysql
 
 before_install:
   - phpenv config-rm xdebug.ini
   - composer global require "hirak/prestissimo:^0.3"
+  - mysql -e 'CREATE DATABASE drupal;'
   - ls solr_downloads/
   - wget -nc --continue -v --tries=3 --directory-prefix=solr_downloads "http://archive.apache.org/dist/lucene/solr/${SOLR_VERSION}/solr-${SOLR_VERSION}.tgz"
   - tar -xzf solr_downloads/solr-${SOLR_VERSION}.tgz
