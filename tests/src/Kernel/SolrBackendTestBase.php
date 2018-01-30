@@ -6,6 +6,8 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api_solr_test\Logger\InMemoryLogger;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
 
+defined('SOLR_INDEX_WAIT') || define('SOLR_INDEX_WAIT', getenv('SOLR_INDEX_WAIT') ?: 2);
+
 /**
  * Tests location searches and distance facets using the Solr search backend.
  *
@@ -35,13 +37,6 @@ abstract class SolrBackendTestBase extends BackendTestBase {
    * @var string
    */
   protected $indexId = 'solr_search_index';
-
-  /**
-   * Seconds to wait for a soft commit on Solr.
-   *
-   * @var int
-   */
-  protected $waitForCommit = 2;
 
   /**
    * @var \Drupal\search_api_solr_test\Logger\InMemoryLogger
@@ -97,7 +92,7 @@ abstract class SolrBackendTestBase extends BackendTestBase {
    */
   protected function indexItems($index_id) {
     $index_status = parent::indexItems($index_id);
-    sleep($this->waitForCommit);
+    sleep(SOLR_INDEX_WAIT);
     return $index_status;
   }
 
@@ -110,7 +105,7 @@ abstract class SolrBackendTestBase extends BackendTestBase {
     // Deleting items take at least 1 second for Solr to parse it so that
     // drupal doesn't get timeouts while waiting for Solr. Lets give it some
     // seconds to make sure we are in bounds.
-    sleep($this->waitForCommit);
+    sleep(SOLR_INDEX_WAIT);
   }
 
   /**
@@ -140,7 +135,7 @@ abstract class SolrBackendTestBase extends BackendTestBase {
   protected function checkIndexWithoutFields() {
     $index = parent::checkIndexWithoutFields();
     $index->clear();
-    sleep($this->waitForCommit);
+    sleep(SOLR_INDEX_WAIT);
   }
 
   /**
