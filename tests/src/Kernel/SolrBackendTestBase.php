@@ -6,7 +6,7 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api_solr_test\Logger\InMemoryLogger;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
 
-define('SOLR_INDEX_WAIT', getenv('SOLR_INDEX_WAIT') ?: 2);
+defined('SOLR_INDEX_WAIT') || define('SOLR_INDEX_WAIT', getenv('SOLR_INDEX_WAIT') ?: 2);
 
 /**
  * Tests location searches and distance facets using the Solr search backend.

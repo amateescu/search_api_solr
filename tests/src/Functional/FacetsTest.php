@@ -10,7 +10,7 @@ use Drupal\search_api\Entity\Index;
 use Drupal\Tests\search_api\Functional\SearchApiBrowserTestBase;
 use Drupal\views\Entity\View;
 
-define('SOLR_INDEX_WAIT', getenv('SOLR_INDEX_WAIT') ?: 2);
+defined('SOLR_INDEX_WAIT') || define('SOLR_INDEX_WAIT', getenv('SOLR_INDEX_WAIT') ?: 2);
 
 /**
  * Tests the facets functionality using the Solr backend.

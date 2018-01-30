@@ -5,7 +5,7 @@ namespace Drupal\Tests\search_api_solr\Kernel\Processor;
 use Drupal\search_api\Entity\Server;
 use Symfony\Component\Yaml\Yaml;
 
-define('SOLR_INDEX_WAIT', getenv('SOLR_INDEX_WAIT') ?: 2);
+defined('SOLR_INDEX_WAIT') || define('SOLR_INDEX_WAIT', getenv('SOLR_INDEX_WAIT') ?: 2);
 
 /**
  * Helper to exchange the DB backend for a Solr backend in processor tests.

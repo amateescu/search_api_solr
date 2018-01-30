@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\search_api_solr\Functional;
 
-define('SOLR_INDEX_WAIT', getenv('SOLR_INDEX_WAIT') ?: 2);
+defined('SOLR_INDEX_WAIT') || define('SOLR_INDEX_WAIT', getenv('SOLR_INDEX_WAIT') ?: 2);
 
 /**
  * Tests the overall functionality of the Search API framework and admin UI.
