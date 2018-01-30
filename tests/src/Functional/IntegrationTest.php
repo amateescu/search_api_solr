@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\search_api_solr\Functional;
 
+define('SOLR_INDEX_WAIT', getenv('SOLR_INDEX_WAIT') ?: 2);
+
 /**
  * Tests the overall functionality of the Search API framework and admin UI.
  *
@@ -31,7 +33,7 @@ class IntegrationTest extends \Drupal\Tests\search_api\Functional\IntegrationTes
     if ($this->indexId) {
       if ($index = $this->getIndex()) {
         $index->clear();
-        sleep(2);
+        sleep(SOLR_INDEX_WAIT);
       }
     }
     parent::tearDown();
@@ -132,7 +134,7 @@ class IntegrationTest extends \Drupal\Tests\search_api\Functional\IntegrationTes
    */
   protected function indexItems() {
     $index_status = parent::indexItems();
-    sleep(2);
+    sleep(SOLR_INDEX_WAIT);
     return $index_status;
   }
 

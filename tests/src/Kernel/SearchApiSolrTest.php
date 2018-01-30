@@ -174,7 +174,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     // Deleting items take at least 1 second for Solr to parse it so that drupal
     // doesn't get timeouts while waiting for Solr. Lets give it 2 seconds to
     // make sure we are in bounds.
-    sleep($this->waitForCommit);
+    sleep(SOLR_INDEX_WAIT);
     $query = $this->buildSearch();
     $results = $query->execute();
     $this->assertEquals(0, $results->getResultCount(), 'Clearing the server worked correctly.');
@@ -520,7 +520,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       $this->getIndex()->removeDatasource('entity:user')->save();
 
       // Wait for the commitWithin 1 second to complete the deletion.
-      sleep(2);
+      sleep(SOLR_INDEX_WAIT);
 
       $results = $this->buildSearch()->execute();
       $this->assertEquals(5, $results->getResultCount(), 'Number of indexed entities is correct.');
