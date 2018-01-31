@@ -50,7 +50,8 @@ function search_api_solr_drush_command() {
  * Deletes all Solr Field Type and re-installs them from their yml files.
  */
 function drush_search_api_solr_delete_and_reinstall_all_field_types() {
-  search_api_solr_delete_and_reinstall_all_field_types();
+  $command_helper = _search_api_solr_drush_command_helper();
+  $command_helper->reinstallFieldtypesCommand();
 }
 
 /**
@@ -64,18 +65,18 @@ function drush_search_api_solr_delete_and_reinstall_all_field_types() {
  *   The targeted Solr version.
  */
 function drush_search_api_solr_get_server_config($server_id, $file_name, $solr_version = NULL) {
-  /** @var Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
-  $list_builder = Drupal::entityTypeManager()->getListBuilder('solr_field_type');
-  $server = Server::load($server_id);
-  if ($solr_version) {
-    $config = $server->getBackendConfig();
-    $config['connector_config']['solr_version'] = $solr_version;
-    $server->setBackendConfig($config);
-  }
-  $list_builder->setServer($server);
-  ob_end_clean();
-  ob_start();
-  $zip = $list_builder->getConfigZip();
-  $zip->finish();
-  file_put_contents($file_name, ob_get_clean());
+  $command_helper = _search_api_solr_drush_command_helper();
+  $command_helper->getServerConfigCommand($server_id, $file_name, $solr_version);
+}
+
+/**
+ * Returns an instance of the command helper.
+ *
+ * @return \Drupal\search_api_solr\Utility\CommandHelper
+ *   An instance of the command helper class.
+ */
+function _search_api_solr_drush_command_helper() {
+  $command_helper = new \Drupal\search_api_solr\Utility\CommandHelper(\Drupal::entityTypeManager());
+  $command_helper->setLogger(\Drupal::logger('search_api'));
+  return $command_helper;
 }
