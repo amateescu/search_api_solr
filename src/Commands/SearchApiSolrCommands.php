@@ -10,7 +10,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Defines Drush commands for the Search API Solr.
  */
-class SearchApiCommands extends DrushCommands {
+class SearchApiSolrCommands extends DrushCommands {
 
   /**
    * The command helper.

@@ -1,7 +1,5 @@
 <?php
 
-use Drupal\search_api\Entity\Server;
-
 /**
  * Implements hook_drush_command().
  */
