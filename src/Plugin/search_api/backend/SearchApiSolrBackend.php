@@ -40,6 +40,7 @@ use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginManager;
 use Drupal\search_api_solr\Utility\Utility;
+use Solarium\Component\ComponentAwareQueryInterface;
 use Solarium\Core\Client\Response;
 use Solarium\Core\Query\Helper;
 use Solarium\Core\Query\QueryInterface as SolariumQueryInterface;
@@ -656,6 +657,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     if ($this->moduleHandler->moduleExists('search_api_autocomplete')) {
       $autocomplete_modes = [];
+      if ($this->configuration['suggest_phrases']) {
+        $autocomplete_modes[] = $this->t('Suggest phrases');
+      }
       if ($this->configuration['suggest_suffix']) {
         $autocomplete_modes[] = $this->t('Suggest word endings');
       }
@@ -2123,8 +2127,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         \Drupal::logger('search_api_solr')->error('Solr 6.5.x contains a bug that breaks the autocomplete feature. Downgrade to 6.4.x or upgrade to 6.6.x at least.');
         return [];
       }
-      $solarium_query = $connector->getTermsQuery();
-      $solarium_query->setHandler('autocomplete');
+      $solarium_query = $connector->getAutocompleteQuery();
 
       try {
         $fl = $this->getAutocompleteFields($query, $search);
@@ -2134,22 +2137,23 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $incomplete_key = Unicode::strtolower($incomplete_key);
         $user_input = Unicode::strtolower($user_input);
 
-        $solarium_query->setFields($fl);
-        $solarium_query->setPrefix($incomplete_key);
-        $solarium_query->setLimit(10);
+        $terms_component = $solarium_query->getTerms();
+        $terms_component->setFields($fl);
+        $terms_component->setPrefix($incomplete_key);
+        $terms_component->setLimit(10);
 
         if ($this->configuration['suggest_corrections']) {
-          $solarium_query->addParam('q', $user_input);
-          $solarium_query->addParam('spellcheck', 'true');
-          $solarium_query->addParam('spellcheck.count', 1);
+          $spellcheck_component = $solarium_query->getSpellcheck();
+          $spellcheck_component->setQuery($user_input);
+          $spellcheck_component->setCount(1);
         }
 
-        /** @var \Solarium\QueryType\Terms\Result $terms_result */
-        $terms_result = $connector->execute($solarium_query);
+        $result = $connector->execute($solarium_query);
+        $terms_result = $result->getComponent(ComponentAwareQueryInterface::COMPONENT_TERMS);
 
         $autocomplete_terms = [];
-        foreach ($terms_result as $terms) {
-          foreach ($terms as $term => $count) {
+        foreach ($terms_result as $fields) {
+          foreach ($fields as $term => $count) {
             if ($term != $incomplete_key) {
               $autocomplete_terms[$term] = $count;
             }
@@ -2165,7 +2169,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
         if ($this->configuration['suggest_corrections']) {
           $suggestion = $user_input;
-          $spellcheck_result = new SpellcheckResult(NULL, new SpellcheckQuery(), $terms_result->getResponse());
+          $spellcheck_result = $result->getComponent(ComponentAwareQueryInterface::COMPONENT_SPELLCHECK);
           foreach ($spellcheck_result as $term => $termResult) {
             foreach ($termResult as $result) {
               if ($result == $term) {

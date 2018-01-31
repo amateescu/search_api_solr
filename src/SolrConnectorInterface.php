@@ -236,7 +236,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    * Creates a new Solarium terms query.
    *
    * @return \Solarium\QueryType\Terms\Query
-   *   The Select query.
+   *   The Terms query.
    */
   public function getTermsQuery();
 
@@ -244,7 +244,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    * Creates a new Solarium suggester query.
    *
    * @return \Solarium\QueryType\Spellcheck\Query
-   *   The Select query.
+   *   The Spellcheck query.
    */
   public function getSpellcheckQuery();
 
@@ -252,9 +252,17 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    * Creates a new Solarium suggester query.
    *
    * @return \Solarium\QueryType\Suggester\Query
-   *   The Select query.
+   *   The Suggester query.
    */
   public function getSuggesterQuery();
+
+  /**
+   * Creates a new Solarium autocomplete query.
+   *
+   * @return \Drupal\search_api_solr\Solarium\AutocompleteQuery
+   *   The Autocomplete query.
+   */
+  public function getAutocompleteQuery();
 
   /**
    * Creates a new Solarium extract query.

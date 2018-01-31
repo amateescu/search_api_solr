@@ -684,6 +684,15 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
+  public function getAutocompleteQuery() {
+    $this->connect();
+    $this->client->registerQueryType('autocomplete', '\Drupal\search_api_solr\Solarium\AutocompleteQuery');
+    return $this->solr->createQuery('autocomplete');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getQueryHelper(QueryInterface $query = NULL) {
     if ($query) {
       return $query->getHelper();

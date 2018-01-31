@@ -418,3 +418,15 @@ function search_api_solr_update_8202() {
 function search_api_solr_update_8203() {
   search_api_solr_update_helper_install_new_configs();
 }
+
+/**
+ * Enable phrase suggestions.
+ */
+function search_api_solr_update_8204() {
+  foreach (search_api_solr_update_helper_get_backend_configs() as $server_name => $backend_config) {
+    if (!isset($backend_config['suggest_phrases'])) {
+      $backend_config['suggest_phrases'] = FALSE;
+    }
+    search_api_solr_update_helper_save_backend_config($server_name, $backend_config);
+  }
+}
