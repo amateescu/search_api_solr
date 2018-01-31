@@ -17,6 +17,9 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
     site_hash:
       type: boolean
       label: 'Restrict searches to current site'
+    suggest_phrases:
+      type: boolean
+      label: 'Suggest complete phrases'
     suggest_suffix:
       type: boolean
       label: 'Suggest endings for the currently entered word'

@@ -65,6 +65,7 @@ install:
 
 before_script:
   - export SOLR_INDEX_WAIT=4
+  - export SYMFONY_DEPRECATIONS_HELPER=disabled
   - export SIMPLETEST_DB=mysql://root:@localhost/drupal
   - export SIMPLETEST_BASE_URL=http://localhost:8888
   # Start the built-in php web server (mysql is already started) and suppress
