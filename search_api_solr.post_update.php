@@ -4,6 +4,7 @@
  * Installs the standard highlighter config.
  */
 function search_api_solr_post_update_install_standard_highlighter_config() {
+  module_load_install('search_api_solr');
   search_api_solr_update_helper_install_new_configs();
 }
 
@@ -53,5 +54,6 @@ function search_api_solr_post_update_8201_delete_multilingual_migration_left_ove
  * Installs new optional Solr field types.
  */
 function search_api_solr_post_update_8203_install_new_optional_field_types() {
+  module_load_install('search_api_solr');
   search_api_solr_update_helper_install_new_optional_configs();
 }
