@@ -403,4 +403,17 @@ class Utility {
     return FALSE;
   }
 
+  /**
+   * @param array $tags
+   *
+   * @return string
+   */
+  public static function buildSuggesterContextFilterQuery(array $tags) {
+    $cfq = [];
+    foreach ($tags as $tag) {
+      $cfg[] = '+' . self::encodeSolrName($tag);
+    }
+    return implode(' ', $cfg);
+  }
+
 }

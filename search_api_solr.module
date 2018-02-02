@@ -57,13 +57,14 @@ function search_api_solr_cron() {
           $connector->optimize();
         }
         else {
-          $solarium_query = $connector->getSelectQuery();
-          $solarium_query->setRows(0);
+          $autocomplete_query = $connector->getAutocompleteQuery();
 
-          $spellcheck = $solarium_query->getSpellcheck();
-          $spellcheck->setBuild(TRUE);
+          $spellcheck_component = $autocomplete_query->getSpellcheck();
+          $spellcheck_component->setBuild(TRUE);
 
-          $connector->execute($solarium_query);
+          // Terms don't need to be build. Suggesters are configured to be
+          // buildOnCommit.
+          $connector->execute($autocomplete_query);
         }
         ++$count;
       }
@@ -84,16 +85,6 @@ function search_api_solr_cron() {
     // Delete cached endpoint data once a day.
     \Drupal::state()->delete('search_api_solr.endpoint.data');
   }
-}
-
-/**
- * Implements hook_search_api_server_update().
- */
-function search_api_solr_search_api_server_update(ServerInterface $server) {
-  // @todo Do we still need to keep static and persistent caches?
-  //   if ($server->getBackendId() == 'search_api_solr') {
-  //    $server->getSolrConnection()->clearCache();
-  //  }
 }
 
 /**

@@ -396,12 +396,24 @@ function search_api_solr_update_8203() {
 }
 
 /**
- * Enable phrase suggestions.
+ * Enable phrase suggestions support.
  */
 function search_api_solr_update_8204() {
   foreach (search_api_solr_update_helper_get_backend_configs() as $server_name => $backend_config) {
     if (!isset($backend_config['suggest_phrases'])) {
       $backend_config['suggest_phrases'] = FALSE;
+    }
+    search_api_solr_update_helper_save_backend_config($server_name, $backend_config);
+  }
+}
+
+/**
+ * Drop never implemented word suggestions support.
+ */
+function search_api_solr_update_8205() {
+  foreach (search_api_solr_update_helper_get_backend_configs() as $server_name => $backend_config) {
+    if (isset($backend_config['suggest_words'])) {
+      unset($backend_config['suggest_words']);
     }
     search_api_solr_update_helper_save_backend_config($server_name, $backend_config);
   }

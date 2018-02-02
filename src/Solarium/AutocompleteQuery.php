@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api_solr\Solarium;
 
+use Solarium\Component\ComponentAwareQueryInterface;
 use Solarium\Component\QueryTraits\TermsTrait;
 use Solarium\QueryType\Select\Query\Query;
 
