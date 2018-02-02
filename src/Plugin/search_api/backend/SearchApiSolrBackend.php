@@ -37,6 +37,7 @@ use Drupal\search_api_autocomplete\SearchInterface;
 use Drupal\search_api_autocomplete\Suggestion\SuggestionFactory;
 use Drupal\search_api_solr\Entity\SolrFieldType;
 use Drupal\search_api_solr\SearchApiSolrException;
+use Drupal\search_api_solr\Solarium\AutocompleteQuery;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginManager;
 use Drupal\search_api_solr\Utility\Utility;
@@ -49,8 +50,6 @@ use Solarium\Exception\ExceptionInterface;
 use Solarium\QueryType\Update\Query\Query as UpdateQuery;
 use Solarium\QueryType\Select\Query\Query;
 use Solarium\QueryType\Select\Result\Result;
-use Solarium\QueryType\Spellcheck\Query as SpellcheckQuery;
-use Solarium\QueryType\Spellcheck\Result\Result as SpellcheckResult;
 use Solarium\QueryType\Update\Query\Document\Document;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -178,9 +177,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'highlight_data' => FALSE,
       'skip_schema_check' => FALSE,
       'site_hash' => FALSE,
+      'suggest_phrases' => FALSE,
       'suggest_suffix' => TRUE,
       'suggest_corrections' => TRUE,
-      'suggest_words' => FALSE,
       'domain' => 'generic',
       // Set the default for new servers to NULL to force "safe" un-selected
       // radios. @see https://www.drupal.org/node/2820244
@@ -270,25 +269,23 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         '#title' => $this->t('Autocomplete settings'),
         '#description' => $this->t('These settings allow you to configure how suggestions are computed when autocompletion is used. If you are seeing many inappropriate suggestions you might want to deactivate the corresponding suggestion type. You can also deactivate one method to speed up the generation of suggestions.'),
       ];
-      $form['autocomplete']['suggest_suffix'] = [
-        '#type' => 'checkbox',
-        '#title' => $this->t('Suggest word endings'),
-        '#description' => $this->t('Suggest endings for the currently entered word.'),
-        '#default_value' => $this->configuration['suggest_suffix'],
-      ];
       $form['autocomplete']['suggest_corrections'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('Suggest corrected words'),
-        '#description' => $this->t('Suggest corrections for the currently entered words.'),
+        '#description' => $this->t("Suggest corrections for the entered words based on Solr's spellcheck component. Note: Be careful when activating this feature if you run multiple indexes in one Solr core! The spellcheck component is not able to distinguish between the different indexes and returns suggestions for the complete core. If you run multiple indexes in one core you might get suggestions that lead to zero results on a specific index!"),
         '#default_value' => $this->configuration['suggest_corrections'],
       ];
-      $form['autocomplete']['suggest_words'] = [
+      $form['autocomplete']['suggest_suffix'] = [
         '#type' => 'checkbox',
-        '#title' => $this->t('Suggest additional words'),
-        '#description' => $this->t('Suggest additional words the user might want to search for.'),
-        '#default_value' => $this->configuration['suggest_words'],
-        // @todo
-        '#disabled' => TRUE,
+        '#title' => $this->t('Suggest word endings'),
+        '#description' => $this->t("Suggest endings for the entered string to gets words based on Solr's terms component. Note: Be careful when activating this feature if you run multiple indexes in one Solr core! The terms component is not able to distinguish between the different indexes and returns matching terms for the complete core. If you run multiple indexes in one core the term counts are not correct and you might get suggestions that lead to zero results on a specific index! You can mitigate that effect if you ensure that the fulltext field names are completely different in the indexes."),
+        '#default_value' => $this->configuration['suggest_suffix'],
+      ];
+      $form['autocomplete']['suggest_phrases'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Suggest phrases'),
+        '#description' => $this->t("Suggest complete phrases for the entered string based on Solr's suggest component."),
+        '#default_value' => $this->configuration['suggest_phrases'],
       ];
     }
 
@@ -422,9 +419,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
     else {
       $defaults = $this->defaultConfiguration();
+      $values['suggest_phrases'] = $defaults['suggest_phrases'];
       $values['suggest_suffix'] = $defaults['suggest_suffix'];
       $values['suggest_corrections'] = $defaults['suggest_corrections'];
-      $values['suggest_words'] = $defaults['suggest_words'];
     }
 
     // Highlighting retrieved data only makes sense when we retrieve data from
@@ -481,7 +478,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'search_api_random_sort',
       'search_api_data_type_location',
       // 'search_api_grouping',
-      // 'search_api_spellcheck',
       // 'search_api_data_type_geohash',.
     ];
   }
@@ -665,9 +661,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
       if ($this->configuration['suggest_corrections']) {
         $autocomplete_modes[] = $this->t('Suggest corrected words');
-      }
-      if ($this->configuration['suggest_words']) {
-        $autocomplete_modes[] = $this->t('Suggest additional words');
       }
 
       $info[] = [
@@ -1039,10 +1032,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
     $rows = isset($options['limit']) ? $options['limit'] : 1000000;
     $solarium_query->setRows($rows);
-
-    if (!empty($options['search_api_spellcheck'])) {
-      $solarium_query->getSpellcheck();
-    }
 
     foreach ($options as $option => $value) {
       if (strpos($option, 'solr_param_') === 0) {
@@ -1530,11 +1519,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       $result_set->addResultItem($result_item);
     }
-
-    // Check for spellcheck suggestions.
-    /*if (module_exists('search_api_spellcheck') && $query->getOption('search_api_spellcheck')) {
-    $result_set->setExtraData('search_api_spellcheck', new SearchApiSpellcheckSolr($result));
-    }*/
 
     return $result_set;
   }
@@ -2117,89 +2101,67 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @see \Drupal\search_api_autocomplete\AutocompleteBackendInterface
    */
   public function getAutocompleteSuggestions(QueryInterface $query, SearchInterface $search, $incomplete_key, $user_input) {
+    if (!$this->configuration['suggest_corrections'] && !$this->configuration['suggest_suffix'] && !$this->configuration['suggest_phrases']) {
+      return [];
+    }
+
     $suggestions = [];
-    $factory = new SuggestionFactory($user_input);
+    $suggestion_factory = new SuggestionFactory($user_input);
 
-    if ($this->configuration['suggest_suffix'] || $this->configuration['suggest_corrections'] || $this->configuration['suggest_words']) {
-      $connector = $this->getSolrConnector();
-      $solr_version = $connector->getSolrVersion();
-      if (version_compare($solr_version, '6.5', '=')) {
-        \Drupal::logger('search_api_solr')->error('Solr 6.5.x contains a bug that breaks the autocomplete feature. Downgrade to 6.4.x or upgrade to 6.6.x at least.');
-        return [];
+    // Make the input lowercase as the indexed data is (usually) also all
+    // lowercase.
+    $incomplete_key = Unicode::strtolower($incomplete_key);
+    $user_input = Unicode::strtolower($user_input);
+
+    $this->alterSearchApiQuery($query);
+
+    $connector = $this->getSolrConnector();
+    $solr_version = $connector->getSolrVersion();
+    if (version_compare($solr_version, '6.5', '=')) {
+      \Drupal::logger('search_api_solr')->error('Solr 6.5.x contains a bug that breaks the autocomplete feature. Downgrade to 6.4.x or upgrade to 6.6.x at least.');
+      return [];
+    }
+
+    $solarium_query = $connector->getAutocompleteQuery();
+
+    try {
+
+      if ($this->configuration['suggest_corrections']) {
+        $this->setAutocompleteSpellCheckQuery($query, $search, $solarium_query, $user_input);
       }
-      $solarium_query = $connector->getAutocompleteQuery();
-
-      try {
-        $fl = $this->getAutocompleteFields($query, $search);
-
-        // Make the input lowercase as the indexed data is (usually) also all
-        // lowercase.
-        $incomplete_key = Unicode::strtolower($incomplete_key);
-        $user_input = Unicode::strtolower($user_input);
-
-        $terms_component = $solarium_query->getTerms();
-        $terms_component->setFields($fl);
-        $terms_component->setPrefix($incomplete_key);
-        $terms_component->setLimit(10);
-
-        if ($this->configuration['suggest_corrections']) {
-          $spellcheck_component = $solarium_query->getSpellcheck();
-          $spellcheck_component->setQuery($user_input);
-          $spellcheck_component->setCount(1);
-        }
-
-        $result = $connector->execute($solarium_query);
-        $terms_result = $result->getComponent(ComponentAwareQueryInterface::COMPONENT_TERMS);
-
-        $autocomplete_terms = [];
-        foreach ($terms_result as $fields) {
-          foreach ($fields as $term => $count) {
-            if ($term != $incomplete_key) {
-              $autocomplete_terms[$term] = $count;
-            }
-          }
-        }
-
-        if ($this->configuration['suggest_suffix']) {
-          foreach ($autocomplete_terms as $term => $count) {
-            $suggestion_suffix = mb_substr($term, mb_strlen($incomplete_key));
-            $suggestions[] = $factory->createFromSuggestionSuffix($suggestion_suffix, $count);
-          }
-        }
-
-        if ($this->configuration['suggest_corrections']) {
-          $suggestion = $user_input;
-          $spellcheck_result = $result->getComponent(ComponentAwareQueryInterface::COMPONENT_SPELLCHECK);
-          foreach ($spellcheck_result as $term => $termResult) {
-            foreach ($termResult as $result) {
-              if ($result == $term) {
-                continue;
-              }
-              $correction = preg_replace('@(\b)' . preg_quote($term, '@') . '(\b)@', '$1' . $result . '$2', $suggestion);
-              if ($correction != $suggestion) {
-                $suggestion = $correction;
-                // Swapped one term. Try to correct the next term.
-                break;
-              }
-            }
-          }
-
-          if ($suggestion != $user_input && !array_key_exists($suggestion, $autocomplete_terms)) {
-            $suggestions[] = $factory->createFromSuggestedKeys($suggestion);
-            foreach (array_keys($autocomplete_terms) as $term) {
-              $completion = preg_replace('@(\b)' . preg_quote($incomplete_key, '@') . '$@', '$1' . $term . '$2', $suggestion);
-              if ($completion != $suggestion) {
-                $suggestions[] = $factory->createFromSuggestedKeys($completion);
-              }
-            }
-          }
-        }
+      if ($this->configuration['suggest_suffix']) {
+        $this->setAutocompleteTermQuery($query, $search, $solarium_query, $user_input);
       }
-      catch (SearchApiException $e) {
-        watchdog_exception('search_api_solr', $e);
-        return [];
+      if ($this->configuration['suggest_phrases']) {
+        $this->setAutocompleteSuggesterQuery($query, $search, $solarium_query, $user_input);
       }
 
+      $result = $connector->execute($solarium_query);
+
+      if ($this->configuration['suggest_corrections']) {
+        $suggestions = array_merge($suggestions, $this->getAutocompleteSpellCheckSuggestions($result, $suggestion_factory));
+      }
+      if ($this->configuration['suggest_suffix']) {
+        $suggestions = array_merge($suggestions, $this->getAutocompleteTermSuggestions($result, $suggestion_factory));
+      }
+      if ($this->configuration['suggest_phrases']) {
+        $suggestions = array_merge($suggestions, $this->getAutocompleteSuggesterSuggestions($result, $suggestion_factory));
+      }
+
+      // Filter out duplicate suggestions.
+      $added_suggestions = [];
+      foreach ($suggestions as $key => $suggestion) {
+        if (!in_array($suggestion->getSuggestedKeys(), $added_suggestions, TRUE)) {
+          $added_terms[] = $suggestion->getSuggestedKeys();
+        }
+        else {
+          unset($suggestions[$key]);
+        }
+      }
+    }
+    catch (SearchApiException $e) {
+      watchdog_exception('search_api_solr', $e);
+      return [];
     }
 
     return $suggestions;
@@ -2226,6 +2188,148 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $fl[] = $solr_field_names[$fulltext_field];
     }
     return $fl;
+  }
+
+  /**
+   * Set the spellcheck parameters for the solarium autocomplete query.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   A query representing the completed user input so far.
+   * @param \Drupal\search_api_autocomplete\SearchInterface $search
+   *   An object containing details about the search the user is on.
+   * @param \Drupal\search_api_solr\Solarium\AutocompleteQuery $solarium_query
+   *   An autocomplete solarium query.
+   * @param string $user_input
+   *   The user input.
+   */
+  protected function setAutocompleteSpellCheckQuery(QueryInterface $query, SearchInterface $search, AutocompleteQuery $solarium_query, $user_input) {
+    $spellcheck_component = $solarium_query->getSpellcheck();
+    $spellcheck_component->setQuery($user_input);
+    $spellcheck_component->setCount(1);
+  }
+
+  /**
+   * Set the term parameters for the solarium autocomplete query.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   A query representing the completed user input so far.
+   * @param \Drupal\search_api_autocomplete\SearchInterface $search
+   *   An object containing details about the search the user is on.
+   * @param \Drupal\search_api_solr\Solarium\AutocompleteQuery $solarium_query
+   *   An autocomplete solarium query.
+   * @param string $user_input
+   *   The user input.
+   */
+  protected function setAutocompleteTermQuery(QueryInterface $query, SearchInterface $search, AutocompleteQuery $solarium_query, $user_input) {
+    $fl = $this->getAutocompleteFields($query, $search);
+    $terms_component = $solarium_query->getTerms();
+    $terms_component->setFields($fl);
+    $terms_component->setPrefix($user_input);
+    $terms_component->setLimit(10);
+  }
+
+  /**
+   * Set the suggester parameters for the solarium autocomplete query.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   A query representing the completed user input so far.
+   * @param \Drupal\search_api_autocomplete\SearchInterface $search
+   *   An object containing details about the search the user is on.
+   * @param \Drupal\search_api_solr\Solarium\AutocompleteQuery $solarium_query
+   *   An autocomplete solarium query.
+   * @param string $user_input
+   *   The user input.
+   */
+  protected function setAutocompleteSuggesterQuery(QueryInterface $query, SearchInterface $search, AutocompleteQuery $solarium_query, $user_input) {
+    $index_id = $search->getIndexId();
+    $suggester_component = $solarium_query->getSuggester();
+    $suggester_component->setQuery($user_input);
+    // @todo multilingual language dictionary
+    $suggester_component->setDictionary(/* language undefined suggestions */ 'und');
+    $suggester_component->setContextFilterQuery(
+      Utility::buildSuggesterContextFilterQuery([
+        'search_api_solr/site_hash:' . Utility::getSiteHash(),
+        'search_api/index:' . $index_id,
+        // @todo multilingual language tag
+      ])
+    );
+    $suggester_component->setCount(10);
+  }
+
+  /**
+   * Get the spellcheck suggestions from the autocomplete query result.
+   *
+   * @param \Solarium\Core\Query\Result\ResultInterface $result
+   *  A autocomplete query result.
+   * @param \Drupal\search_api_autocomplete\Suggestion\SuggestionFactory $suggestion_factory
+   *   The suggestion factory.
+   *
+   * @return \Drupal\search_api_autocomplete\Suggestion\SuggestionInterface[]
+   *   An array of suggestions.
+   */
+  protected function getAutocompleteSpellCheckSuggestions(ResultInterface $result, SuggestionFactory $suggestion_factory) {
+    $suggestions = [];
+    $spellcheck_results = $result->getComponent(ComponentAwareQueryInterface::COMPONENT_SPELLCHECK);
+    foreach ($spellcheck_results as $term_result) {
+      /** @var \Solarium\Component\Result\Spellcheck\Suggestion $term_result */
+      foreach ($term_result->getWords() as $correction) {
+        $suggestions[] = $suggestion_factory->createFromSuggestedKeys($correction['word']);
+      }
+    }
+    return $suggestions;
+  }
+
+  /**
+   * Get the term suggestions from the autocomplete query result.
+   *
+   * @param \Solarium\Core\Query\Result\ResultInterface $result
+   *  A autocomplete query result.
+   * @param \Drupal\search_api_autocomplete\Suggestion\SuggestionFactory $suggestion_factory
+   *   The suggestion factory.
+   *
+   * @return \Drupal\search_api_autocomplete\Suggestion\SuggestionInterface[]
+   *   An array of suggestions.
+   */
+  protected function getAutocompleteTermSuggestions(ResultInterface $result, SuggestionFactory $suggestion_factory) {
+    $suggestions = [];
+    $terms_results = $result->getComponent(ComponentAwareQueryInterface::COMPONENT_TERMS);
+    $autocomplete_terms = [];
+    foreach ($terms_results as $fields) {
+      foreach ($fields as $term => $count) {
+        if ($term != $suggestion_factory->getUserInput()) {
+          $autocomplete_terms[$term] = $count;
+        }
+      }
+    }
+
+    foreach ($autocomplete_terms as $term => $count) {
+      $suggestion_suffix = mb_substr($term, mb_strlen($suggestion_factory->getUserInput()));
+      $suggestions[] = $suggestion_factory->createFromSuggestionSuffix($suggestion_suffix, $count);
+    }
+    return $suggestions;
+  }
+
+  /**
+   * Get the term suggestions from the autocomplete query result.
+   *
+   * @param \Solarium\Core\Query\Result\ResultInterface $result
+   *  A autocomplete query result.
+   * @param \Drupal\search_api_autocomplete\Suggestion\SuggestionFactory $suggestion_factory
+   *   The suggestion factory.
+   *
+   * @return \Drupal\search_api_autocomplete\Suggestion\SuggestionInterface[]
+   *   An array of suggestions.
+   */
+  protected function getAutocompleteSuggesterSuggestions(ResultInterface $result, SuggestionFactory $suggestion_factory) {
+    $suggestions = [];
+    $phrases_result = $result->getComponent(ComponentAwareQueryInterface::COMPONENT_SUGGESTER);
+    foreach ($phrases_result->getAll() as $phrases) {
+      /** @var \Solarium\QueryType\Suggester\Result\Term $phrases */
+      foreach ($phrases->getSuggestions() as $phrase) {
+        $suggestions[] = $suggestion_factory->createFromSuggestedKeys($phrase['term']);
+      }
+    }
+    return $suggestions;
   }
 
   /**

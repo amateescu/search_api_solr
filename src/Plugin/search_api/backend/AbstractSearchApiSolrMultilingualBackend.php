@@ -525,7 +525,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
       $fulltext_fields = $search->getOption('fields') ? $search->getOption('fields') : $this->getQueryFulltextFields($query);
       $language_specific_fulltext_fields = $this->getLanguageSpecificSolrFieldNames($langcode, $solr_field_names, $query->getIndex());
       foreach ($fulltext_fields as $fulltext_field) {
-        $fl[] = 'terms_' . $language_specific_fulltext_fields[$fulltext_field];
+        $fl[] = $language_specific_fulltext_fields[$fulltext_field];
       }
     }
     return $fl;
