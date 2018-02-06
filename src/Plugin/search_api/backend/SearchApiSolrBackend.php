@@ -2130,7 +2130,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $this->setAutocompleteSpellCheckQuery($query, $search, $solarium_query, $user_input);
       }
       if ($this->configuration['suggest_suffix']) {
-        $this->setAutocompleteTermQuery($query, $search, $solarium_query, $user_input);
+        $this->setAutocompleteTermQuery($query, $search, $solarium_query, $incomplete_key);
       }
       if ($this->configuration['suggest_phrases']) {
         $this->setAutocompleteSuggesterQuery($query, $search, $solarium_query, $user_input);
@@ -2142,7 +2142,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $suggestions = array_merge($suggestions, $this->getAutocompleteSpellCheckSuggestions($result, $suggestion_factory));
       }
       if ($this->configuration['suggest_suffix']) {
-        $suggestions = array_merge($suggestions, $this->getAutocompleteTermSuggestions($result, $suggestion_factory));
+        $suggestions = array_merge($suggestions, $this->getAutocompleteTermSuggestions($result, $suggestion_factory, $incomplete_key));
       }
       if ($this->configuration['suggest_phrases']) {
         $suggestions = array_merge($suggestions, $this->getAutocompleteSuggesterSuggestions($result, $suggestion_factory));
@@ -2150,9 +2150,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       // Filter out duplicate suggestions.
       $added_suggestions = [];
+      $added_urls = [];
+      /** @var \Drupal\search_api_autocomplete\Suggestion\SuggestionInterface $suggestion */
       foreach ($suggestions as $key => $suggestion) {
         if (!in_array($suggestion->getSuggestedKeys(), $added_suggestions, TRUE)) {
-          $added_terms[] = $suggestion->getSuggestedKeys();
+          $added_suggestions[] = $suggestion->getSuggestedKeys();
+        }
+        elseif (!in_array($suggestion->getUrl(), $added_urls, TRUE)) {
+          $added_urls[] = $suggestion->getUrl();
         }
         else {
           unset($suggestions[$key]);
@@ -2217,14 +2222,15 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   An object containing details about the search the user is on.
    * @param \Drupal\search_api_solr\Solarium\AutocompleteQuery $solarium_query
    *   An autocomplete solarium query.
-   * @param string $user_input
-   *   The user input.
+   * @param string $incomplete_key
+   *   The start of another fulltext keyword for the search, which should be
+   *   completed.
    */
-  protected function setAutocompleteTermQuery(QueryInterface $query, SearchInterface $search, AutocompleteQuery $solarium_query, $user_input) {
+  protected function setAutocompleteTermQuery(QueryInterface $query, SearchInterface $search, AutocompleteQuery $solarium_query, $incomplete_key) {
     $fl = $this->getAutocompleteFields($query, $search);
     $terms_component = $solarium_query->getTerms();
     $terms_component->setFields($fl);
-    $terms_component->setPrefix($user_input);
+    $terms_component->setPrefix($incomplete_key);
     $terms_component->setLimit(10);
   }
 
@@ -2269,11 +2275,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected function getAutocompleteSpellCheckSuggestions(ResultInterface $result, SuggestionFactory $suggestion_factory) {
     $suggestions = [];
-    $spellcheck_results = $result->getComponent(ComponentAwareQueryInterface::COMPONENT_SPELLCHECK);
-    foreach ($spellcheck_results as $term_result) {
-      /** @var \Solarium\Component\Result\Spellcheck\Suggestion $term_result */
-      foreach ($term_result->getWords() as $correction) {
-        $suggestions[] = $suggestion_factory->createFromSuggestedKeys($correction['word']);
+    if ($spellcheck_results = $result->getComponent(ComponentAwareQueryInterface::COMPONENT_SPELLCHECK)) {
+      foreach ($spellcheck_results as $term_result) {
+        /** @var \Solarium\Component\Result\Spellcheck\Suggestion $term_result */
+        foreach ($term_result->getWords() as $correction) {
+          $suggestions[] = $suggestion_factory->createFromSuggestedKeys($correction['word']);
+        }
       }
     }
     return $suggestions;
@@ -2286,25 +2293,29 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *  A autocomplete query result.
    * @param \Drupal\search_api_autocomplete\Suggestion\SuggestionFactory $suggestion_factory
    *   The suggestion factory.
+   * @param string $incomplete_key
+   *   The start of another fulltext keyword for the search, which should be
+   *   completed.
    *
    * @return \Drupal\search_api_autocomplete\Suggestion\SuggestionInterface[]
    *   An array of suggestions.
    */
-  protected function getAutocompleteTermSuggestions(ResultInterface $result, SuggestionFactory $suggestion_factory) {
+  protected function getAutocompleteTermSuggestions(ResultInterface $result, SuggestionFactory $suggestion_factory, $incomplete_key) {
     $suggestions = [];
-    $terms_results = $result->getComponent(ComponentAwareQueryInterface::COMPONENT_TERMS);
-    $autocomplete_terms = [];
-    foreach ($terms_results as $fields) {
-      foreach ($fields as $term => $count) {
-        if ($term != $suggestion_factory->getUserInput()) {
-          $autocomplete_terms[$term] = $count;
+    if ($terms_results = $result->getComponent(ComponentAwareQueryInterface::COMPONENT_TERMS)) {
+      $autocomplete_terms = [];
+      foreach ($terms_results as $fields) {
+        foreach ($fields as $term => $count) {
+          if ($term != $incomplete_key) {
+            $autocomplete_terms[$term] = $count;
+          }
         }
       }
-    }
 
-    foreach ($autocomplete_terms as $term => $count) {
-      $suggestion_suffix = mb_substr($term, mb_strlen($suggestion_factory->getUserInput()));
-      $suggestions[] = $suggestion_factory->createFromSuggestionSuffix($suggestion_suffix, $count);
+      foreach ($autocomplete_terms as $term => $count) {
+        $suggestion_suffix = mb_substr($term, mb_strlen($incomplete_key));
+        $suggestions[] = $suggestion_factory->createFromSuggestionSuffix($suggestion_suffix, $count);
+      }
     }
     return $suggestions;
   }
@@ -2322,11 +2333,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected function getAutocompleteSuggesterSuggestions(ResultInterface $result, SuggestionFactory $suggestion_factory) {
     $suggestions = [];
-    $phrases_result = $result->getComponent(ComponentAwareQueryInterface::COMPONENT_SUGGESTER);
-    foreach ($phrases_result->getAll() as $phrases) {
-      /** @var \Solarium\QueryType\Suggester\Result\Term $phrases */
-      foreach ($phrases->getSuggestions() as $phrase) {
-        $suggestions[] = $suggestion_factory->createFromSuggestedKeys($phrase['term']);
+    if ($phrases_result = $result->getComponent(ComponentAwareQueryInterface::COMPONENT_SUGGESTER)) {
+      foreach ($phrases_result->getAll() as $phrases) {
+        /** @var \Solarium\QueryType\Suggester\Result\Term $phrases */
+        foreach ($phrases->getSuggestions() as $phrase) {
+          $suggestions[] = $suggestion_factory->createFromSuggestedKeys($phrase['term']);
+        }
       }
     }
     return $suggestions;
