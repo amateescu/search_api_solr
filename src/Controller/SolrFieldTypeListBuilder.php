@@ -91,6 +91,8 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
         $operator = '<=';
         $warning = TRUE;
       }
+      // We need the whole list to work on
+      $this->limit = FALSE;
       $entity_ids = $this->getEntityIds();
       /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $storage */
       $storage = $this->getStorage();
