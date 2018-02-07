@@ -1,13 +1,13 @@
 version: '2'
 
 services:
-  solr6:
-    image: solr:6.6
+  solr7phpunit:
+    image: solr:7.2
     ports:
      - "8983:8983"
     volumes:
       - data:/opt/solr/server/solr/d8
-      - ./solr-conf/6.x:/solr-conf/conf
+      - ./tests/solr-conf/7.x:/solr-conf/conf
     entrypoint:
       - docker-entrypoint.sh
       - solr-precreate
