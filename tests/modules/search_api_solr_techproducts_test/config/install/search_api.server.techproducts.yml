@@ -26,7 +26,4 @@ backend_config:
   excerpt: false
   skip_schema_check: true
   site_hash: false
-  suggest_phrases: false
-  suggest_suffix: true
-  suggest_corrections: true
   domain: generic

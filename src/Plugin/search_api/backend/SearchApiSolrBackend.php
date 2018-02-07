@@ -35,9 +35,11 @@ use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility as SearchApiUtility;
 use Drupal\search_api_autocomplete\SearchInterface;
 use Drupal\search_api_autocomplete\Suggestion\SuggestionFactory;
+use Drupal\search_api_autocomplete\Suggestion\SuggestionInterface;
 use Drupal\search_api_solr\Entity\SolrFieldType;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\Solarium\AutocompleteQuery;
+use Drupal\search_api_solr\SolrAutocompleteInterface;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginManager;
 use Drupal\search_api_solr\Utility\Utility;
@@ -69,7 +71,7 @@ define('SEARCH_API_ID_FIELD_NAME', 'ss_search_api_id');
  *   description = @Translation("Index items using an Apache Solr search server.")
  * )
  */
-class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInterface, PluginFormInterface {
+class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInterface, SolrAutocompleteInterface, PluginFormInterface {
 
   use PluginFormTrait {
     submitConfigurationForm as traitSubmitConfigurationForm;
@@ -177,9 +179,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'highlight_data' => FALSE,
       'skip_schema_check' => FALSE,
       'site_hash' => FALSE,
-      'suggest_phrases' => FALSE,
-      'suggest_suffix' => TRUE,
-      'suggest_corrections' => TRUE,
       'domain' => 'generic',
       // Set the default for new servers to NULL to force "safe" un-selected
       // radios. @see https://www.drupal.org/node/2820244
@@ -262,32 +261,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#description' => $this->t('For example "UltraBot3000" would be indexed as "Ultra" "Bot" "3000" in a generic domain, "CYP2D6" has to stay like it is in a scientific domain.'),
       '#default_value' => isset($this->configuration['domain']) ? $this->configuration['domain'] : 'generic',
     ];
-
-    if ($this->moduleHandler->moduleExists('search_api_autocomplete')) {
-      $form['autocomplete'] = [
-        '#type' => 'details',
-        '#title' => $this->t('Autocomplete settings'),
-        '#description' => $this->t('These settings allow you to configure how suggestions are computed when autocompletion is used. If you are seeing many inappropriate suggestions you might want to deactivate the corresponding suggestion type. You can also deactivate one method to speed up the generation of suggestions.'),
-      ];
-      $form['autocomplete']['suggest_corrections'] = [
-        '#type' => 'checkbox',
-        '#title' => $this->t('Suggest corrected words'),
-        '#description' => $this->t("Suggest corrections for the entered words based on Solr's spellcheck component. Note: Be careful when activating this feature if you run multiple indexes in one Solr core! The spellcheck component is not able to distinguish between the different indexes and returns suggestions for the complete core. If you run multiple indexes in one core you might get suggestions that lead to zero results on a specific index!"),
-        '#default_value' => $this->configuration['suggest_corrections'],
-      ];
-      $form['autocomplete']['suggest_suffix'] = [
-        '#type' => 'checkbox',
-        '#title' => $this->t('Suggest word endings'),
-        '#description' => $this->t("Suggest endings for the entered string to gets words based on Solr's terms component. Note: Be careful when activating this feature if you run multiple indexes in one Solr core! The terms component is not able to distinguish between the different indexes and returns matching terms for the complete core. If you run multiple indexes in one core the term counts are not correct and you might get suggestions that lead to zero results on a specific index! You can mitigate that effect if you ensure that the fulltext field names are completely different in the indexes."),
-        '#default_value' => $this->configuration['suggest_suffix'],
-      ];
-      $form['autocomplete']['suggest_phrases'] = [
-        '#type' => 'checkbox',
-        '#title' => $this->t('Suggest phrases'),
-        '#description' => $this->t("Suggest complete phrases for the entered string based on Solr's suggest component."),
-        '#default_value' => $this->configuration['suggest_phrases'],
-      ];
-    }
 
     $form['multisite'] = [
       '#type' => 'fieldset',
@@ -414,15 +387,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // unnecessary dependency on internal implementation.)
     $values += $values['advanced'];
     $values += $values['multisite'];
-    if (!empty($values['autocomplete'])) {
-      $values += $values['autocomplete'];
-    }
-    else {
-      $defaults = $this->defaultConfiguration();
-      $values['suggest_phrases'] = $defaults['suggest_phrases'];
-      $values['suggest_suffix'] = $defaults['suggest_suffix'];
-      $values['suggest_corrections'] = $defaults['suggest_corrections'];
-    }
 
     // Highlighting retrieved data only makes sense when we retrieve data from
     // the Solr backend.
@@ -435,7 +399,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Clean-up the form to avoid redundant entries in the stored configuration.
     $form_state->unsetValue('advanced');
     $form_state->unsetValue('multisite');
-    $form_state->unsetValue('autocomplete');
     // The server description is a #type item element, which means it has a
     // value, do not save it.
     $form_state->unsetValue('server_description');
@@ -650,24 +613,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'label' => $this->t('Targeted content domain'),
       'info' => $this->getDomain(),
     ];
-
-    if ($this->moduleHandler->moduleExists('search_api_autocomplete')) {
-      $autocomplete_modes = [];
-      if ($this->configuration['suggest_phrases']) {
-        $autocomplete_modes[] = $this->t('Suggest phrases');
-      }
-      if ($this->configuration['suggest_suffix']) {
-        $autocomplete_modes[] = $this->t('Suggest word endings');
-      }
-      if ($this->configuration['suggest_corrections']) {
-        $autocomplete_modes[] = $this->t('Suggest corrected words');
-      }
-
-      $info[] = [
-        'label' => $this->t('Autocomplete suggestions'),
-        'info' => !empty($autocomplete_modes) ? implode('; ', $autocomplete_modes) : $this->t('none'),
-      ];
-    }
 
     return $info;
   }
@@ -2077,99 +2022,54 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected function alterSolrResponseBody(&$body, QueryInterface $query) {
   }
 
+
   /**
    * Implements autocomplete compatible to AutocompleteBackendInterface.
    *
-   * @param \Drupal\search_api\Query\QueryInterface $query
-   *   A query representing the completed user input so far.
-   * @param \Drupal\search_api_autocomplete\SearchInterface $search
-   *   An object containing details about the search the user is on, and
-   *   settings for the autocompletion. See the class documentation for details.
-   *   Especially $search->options should be checked for settings, like whether
-   *   to try and estimate result counts for returned suggestions.
-   * @param string $incomplete_key
-   *   The start of another fulltext keyword for the search, which should be
-   *   completed. Might be empty, in which case all user input up to now was
-   *   considered completed. Then, additional keywords for the search could be
-   *   suggested.
-   * @param string $user_input
-   *   The complete user input for the fulltext search keywords so far.
-   *
-   * @return \Drupal\search_api_autocomplete\Suggestion\SuggestionInterface[]
-   *   An array of suggestions.
-   *
    * @see \Drupal\search_api_autocomplete\AutocompleteBackendInterface
    */
-  public function getAutocompleteSuggestions(QueryInterface $query, SearchInterface $search, $incomplete_key, $user_input) {
-    if (!$this->configuration['suggest_corrections'] && !$this->configuration['suggest_suffix'] && !$this->configuration['suggest_phrases']) {
-      return [];
-    }
+  public function getAutocompleteSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input) {
+    // For example, let the multilingual backend set the correct fields.
+    $this->alterSearchApiQuery($query);
 
     $suggestions = [];
-    $suggestion_factory = new SuggestionFactory($user_input);
+    if ($solarium_query = $this->getAutocompleteQuery($incomplete_key, $user_input)) {
+      try {
+        $suggestion_factory = new SuggestionFactory($user_input);
+        $this->setAutocompleteTermQuery($query, $solarium_query, $incomplete_key);
+        $result = $this->getSolrConnector()->execute($solarium_query);
+        $suggestions = $this->getAutocompleteTermSuggestions($result, $suggestion_factory, $incomplete_key);
+        // Filter out duplicate suggestions.
+        $this->filterDuplicateAutocompleteSuggestions($suggestions);
+      } catch (SearchApiException $e) {
+        watchdog_exception('search_api_solr', $e);
+      }
+    }
 
+    return $suggestions;
+  }
+
+  /**
+   * @param $incomplete_key
+   * @param $user_input
+   *
+   * @return \Drupal\search_api_solr\Solarium\AutocompleteQuery|null
+   * @throws \Drupal\search_api\SearchApiException
+   */
+  protected function getAutocompleteQuery(&$incomplete_key, &$user_input) {
     // Make the input lowercase as the indexed data is (usually) also all
     // lowercase.
     $incomplete_key = Unicode::strtolower($incomplete_key);
     $user_input = Unicode::strtolower($user_input);
-
-    $this->alterSearchApiQuery($query);
-
     $connector = $this->getSolrConnector();
     $solr_version = $connector->getSolrVersion();
     if (version_compare($solr_version, '6.5', '=')) {
-      \Drupal::logger('search_api_solr')->error('Solr 6.5.x contains a bug that breaks the autocomplete feature. Downgrade to 6.4.x or upgrade to 6.6.x at least.');
-      return [];
+      \Drupal::logger('search_api_solr')
+        ->error('Solr 6.5.x contains a bug that breaks the autocomplete feature. Downgrade to 6.4.x or upgrade to 6.6.x at least.');
+      return NULL;
     }
 
-    $solarium_query = $connector->getAutocompleteQuery();
-
-    try {
-
-      if ($this->configuration['suggest_corrections']) {
-        $this->setAutocompleteSpellCheckQuery($query, $search, $solarium_query, $user_input);
-      }
-      if ($this->configuration['suggest_suffix']) {
-        $this->setAutocompleteTermQuery($query, $search, $solarium_query, $incomplete_key);
-      }
-      if ($this->configuration['suggest_phrases']) {
-        $this->setAutocompleteSuggesterQuery($query, $search, $solarium_query, $user_input);
-      }
-
-      $result = $connector->execute($solarium_query);
-
-      if ($this->configuration['suggest_corrections']) {
-        $suggestions = array_merge($suggestions, $this->getAutocompleteSpellCheckSuggestions($result, $suggestion_factory));
-      }
-      if ($this->configuration['suggest_suffix']) {
-        $suggestions = array_merge($suggestions, $this->getAutocompleteTermSuggestions($result, $suggestion_factory, $incomplete_key));
-      }
-      if ($this->configuration['suggest_phrases']) {
-        $suggestions = array_merge($suggestions, $this->getAutocompleteSuggesterSuggestions($result, $suggestion_factory));
-      }
-
-      // Filter out duplicate suggestions.
-      $added_suggestions = [];
-      $added_urls = [];
-      /** @var \Drupal\search_api_autocomplete\Suggestion\SuggestionInterface $suggestion */
-      foreach ($suggestions as $key => $suggestion) {
-        if (!in_array($suggestion->getSuggestedKeys(), $added_suggestions, TRUE)) {
-          $added_suggestions[] = $suggestion->getSuggestedKeys();
-        }
-        elseif (!in_array($suggestion->getUrl(), $added_urls, TRUE)) {
-          $added_urls[] = $suggestion->getUrl();
-        }
-        else {
-          unset($suggestions[$key]);
-        }
-      }
-    }
-    catch (SearchApiException $e) {
-      watchdog_exception('search_api_solr', $e);
-      return [];
-    }
-
-    return $suggestions;
+    return $connector->getAutocompleteQuery();
   }
 
   /**
@@ -2177,18 +2077,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   A query representing the completed user input so far.
-   * @param \Drupal\search_api_autocomplete\SearchInterface $search
-   *   An object containing details about the search the user is on, and
-   *   settings for the autocompletion. See the class documentation for details.
-   *   Especially $search->options should be checked for settings, like whether
-   *   to try and estimate result counts for returned suggestions.
    *
    * @return array
    */
-  protected function getAutocompleteFields(QueryInterface $query, SearchInterface $search) {
+  protected function getAutocompleteFields(QueryInterface $query) {
     $fl = [];
     $solr_field_names = $this->getSolrFieldNames($query->getIndex());
-    $fulltext_fields = $search->getOption('fields') ? $search->getOption('fields') : $this->getQueryFulltextFields($query);
+    $fulltext_fields = $this->getQueryFulltextFields($query);
     foreach ($fulltext_fields as $fulltext_field) {
       $fl[] = $solr_field_names[$fulltext_field];
     }
@@ -2196,21 +2091,90 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
+   * @param $suggestions
+   */
+  protected function filterDuplicateAutocompleteSuggestions(&$suggestions) {
+    $added_suggestions = [];
+    $added_urls = [];
+    /** @var \Drupal\search_api_autocomplete\Suggestion\SuggestionInterface $suggestion */
+    foreach ($suggestions as $key => $suggestion) {
+      if (!in_array($suggestion->getSuggestedKeys(), $added_suggestions, TRUE)) {
+        $added_suggestions[] = $suggestion->getSuggestedKeys();
+      }
+      elseif (!in_array($suggestion->getUrl(), $added_urls, TRUE)) {
+        $added_urls[] = $suggestion->getUrl();
+      }
+      else {
+        unset($suggestions[$key]);
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTermsSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input) {
+    return $this->getAutocompleteSuggestions();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSpellcheckSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input) {
+    $suggestions = [];
+    if ($solarium_query = $this->getAutocompleteQuery($incomplete_key, $user_input)) {
+      try {
+        $suggestion_factory = new SuggestionFactory($user_input);
+        $this->setAutocompleteSpellCheckQuery($query, $solarium_query, $user_input);
+        $result = $this->getSolrConnector()->execute($solarium_query);
+        $suggestions = $this->getAutocompleteSpellCheckSuggestions($result, $suggestion_factory);
+        // Filter out duplicate suggestions.
+        $this->filterDuplicateAutocompleteSuggestions($suggestions);
+      } catch (SearchApiException $e) {
+        watchdog_exception('search_api_solr', $e);
+      }
+    }
+
+    return $suggestions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSuggesterSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input) {
+    $suggestions = [];
+    if ($solarium_query = $this->getAutocompleteQuery($incomplete_key, $user_input)) {
+      try {
+        $suggestion_factory = new SuggestionFactory($user_input);
+        $this->setAutocompleteSuggesterQuery($query, $solarium_query, $user_input);
+        $result = $this->getSolrConnector()->execute($solarium_query);
+        $suggestions = $this->getAutocompleteSuggesterSuggestions($result, $suggestion_factory);
+        // Filter out duplicate suggestions.
+        $this->filterDuplicateAutocompleteSuggestions($suggestions);
+      } catch (SearchApiException $e) {
+        watchdog_exception('search_api_solr', $e);
+      }
+    }
+
+    return $suggestions;
+  }
+
+  /**
    * Set the spellcheck parameters for the solarium autocomplete query.
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   A query representing the completed user input so far.
-   * @param \Drupal\search_api_autocomplete\SearchInterface $search
-   *   An object containing details about the search the user is on.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   A query representing the completed user input so far.
    * @param \Drupal\search_api_solr\Solarium\AutocompleteQuery $solarium_query
    *   An autocomplete solarium query.
    * @param string $user_input
    *   The user input.
    */
-  protected function setAutocompleteSpellCheckQuery(QueryInterface $query, SearchInterface $search, AutocompleteQuery $solarium_query, $user_input) {
+  protected function setAutocompleteSpellCheckQuery(QueryInterface $query, AutocompleteQuery $solarium_query, $user_input) {
     $spellcheck_component = $solarium_query->getSpellcheck();
     $spellcheck_component->setQuery($user_input);
-    $spellcheck_component->setCount(1);
+    $spellcheck_component->setCount($query->getOption('limit', 1));
   }
 
   /**
@@ -2218,20 +2182,18 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   A query representing the completed user input so far.
-   * @param \Drupal\search_api_autocomplete\SearchInterface $search
-   *   An object containing details about the search the user is on.
    * @param \Drupal\search_api_solr\Solarium\AutocompleteQuery $solarium_query
    *   An autocomplete solarium query.
    * @param string $incomplete_key
    *   The start of another fulltext keyword for the search, which should be
    *   completed.
    */
-  protected function setAutocompleteTermQuery(QueryInterface $query, SearchInterface $search, AutocompleteQuery $solarium_query, $incomplete_key) {
-    $fl = $this->getAutocompleteFields($query, $search);
+  protected function setAutocompleteTermQuery(QueryInterface $query, AutocompleteQuery $solarium_query, $incomplete_key) {
+    $fl = $this->getAutocompleteFields($query);
     $terms_component = $solarium_query->getTerms();
     $terms_component->setFields($fl);
     $terms_component->setPrefix($incomplete_key);
-    $terms_component->setLimit(10);
+    $terms_component->setLimit($query->getOption('limit',10));
   }
 
   /**
@@ -2239,15 +2201,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   A query representing the completed user input so far.
-   * @param \Drupal\search_api_autocomplete\SearchInterface $search
-   *   An object containing details about the search the user is on.
    * @param \Drupal\search_api_solr\Solarium\AutocompleteQuery $solarium_query
    *   An autocomplete solarium query.
    * @param string $user_input
    *   The user input.
    */
-  protected function setAutocompleteSuggesterQuery(QueryInterface $query, SearchInterface $search, AutocompleteQuery $solarium_query, $user_input) {
-    $index_id = $search->getIndexId();
+  protected function setAutocompleteSuggesterQuery(QueryInterface $query, AutocompleteQuery $solarium_query, $user_input) {
+    $index_id = $query->getIndex()->id();
     $suggester_component = $solarium_query->getSuggester();
     $suggester_component->setQuery($user_input);
     // @todo multilingual language dictionary
@@ -2259,7 +2219,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         // @todo multilingual language tag
       ])
     );
-    $suggester_component->setCount(10);
+    $suggester_component->setCount($query->getOption('limit',10));
   }
 
   /**

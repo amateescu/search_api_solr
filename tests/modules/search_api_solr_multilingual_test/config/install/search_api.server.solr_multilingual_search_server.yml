@@ -8,9 +8,6 @@ backend_config:
   retrieve_data: false
   highlight_data: false
   skip_schema_check: false
-  suggest_phrases: false
-  suggest_suffix: true
-  suggest_corrections: true
   connector: basic_auth
   connector_config:
     scheme: http
