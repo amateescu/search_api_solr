@@ -9,9 +9,6 @@ backend_config:
   retrieve_data: false
   highlight_data: true
   skip_schema_check: false
-  suggest_phrases: false
-  suggest_suffix: true
-  suggest_corrections: true
   connector: standard
   connector_config:
     scheme: http

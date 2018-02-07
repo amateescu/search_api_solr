@@ -518,11 +518,11 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
   /**
    * {@inheritdoc}
    */
-  protected function getAutocompleteFields(QueryInterface $query, SearchInterface $search) {
+  protected function getAutocompleteFields(QueryInterface $query) {
     $fl = [];
     $solr_field_names = $this->getSolrFieldNames($query->getIndex());
     foreach ($query->getLanguages() as $langcode) {
-      $fulltext_fields = $search->getOption('fields') ? $search->getOption('fields') : $this->getQueryFulltextFields($query);
+      $fulltext_fields = $this->getQueryFulltextFields($query);
       $language_specific_fulltext_fields = $this->getLanguageSpecificSolrFieldNames($langcode, $solr_field_names, $query->getIndex());
       foreach ($fulltext_fields as $fulltext_field) {
         $fl[] = $language_specific_fulltext_fields[$fulltext_field];
