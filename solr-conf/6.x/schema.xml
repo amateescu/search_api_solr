@@ -156,17 +156,6 @@
   <copyField source="ts_*" dest="spell"/>
   <copyField source="tm_*" dest="spell"/>
 
-  <copyField source="ts_*" dest="twm_suggest"/>
-  <copyField source="tm_*" dest="twm_suggest"/>
-  <copyField source="tos_*" dest="twm_suggest"/>
-  <copyField source="tom_*" dest="twm_suggest"/>
-  <copyField source="tus_*" dest="twm_suggest"/>
-  <copyField source="tum_*" dest="twm_suggest"/>
-  <copyField source="tes_*" dest="twm_suggest"/>
-  <copyField source="tem_*" dest="twm_suggest"/>
-  <copyField source="tws_*" dest="twm_suggest"/>
-  <copyField source="twm_*" dest="twm_suggest"/>
-
   <!-- Dynamic field definitions.  If a field name is not found, dynamicFields
        will be used if the name matches any of the patterns.
        RESTRICTION: the glob-like pattern in the name attribute must have

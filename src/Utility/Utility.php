@@ -301,6 +301,10 @@ class Utility {
    *   The language-specific name.
    */
   public static function getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id) {
+    if ('twm_suggest' == $field_name) {
+      return 'twm_suggest';
+    }
+
     return Utility::modifySolrDynamicFieldName($field_name, '@^([a-z]+)_@', '$1' . SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $language_id . '_');
   }
 

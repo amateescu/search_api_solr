@@ -33,9 +33,7 @@ use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\DataTypeHelperInterface;
 use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility as SearchApiUtility;
-use Drupal\search_api_autocomplete\SearchInterface;
 use Drupal\search_api_autocomplete\Suggestion\SuggestionFactory;
-use Drupal\search_api_autocomplete\Suggestion\SuggestionInterface;
 use Drupal\search_api_solr\Entity\SolrFieldType;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\Solarium\AutocompleteQuery;
@@ -467,6 +465,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'solr_text_ngram',
       'solr_text_omit_norms',
       'solr_text_phonetic',
+      'solr_text_suggester',
       'solr_text_unstemmed',
       'solr_text_wstoken',
     ]);
@@ -1095,6 +1094,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           // Generate a field name; this corresponds with naming conventions in
           // our schema.xml.
           $type = $field->getType();
+          if ('solr_text_suggester' == $type) {
+            // Any field of this type will be indexed in the same Solr field.
+            // The 'twm_suggest' is the backend for the suggester component.
+            $ret[$key] = 'twm_suggest';
+            continue;
+          }
           $type_info = Utility::getDataTypeInfo($type);
           $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
           if ($this->fieldsHelper->isFieldIdReserved($key)) {
@@ -1270,7 +1275,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       return '';
     }
 
-    if (strpos($type, 'solr_text_custom') === 0) {
+    if (strpos($type, 'solr_text_') === 0) {
       $type = 'text';
     }
 
@@ -1300,19 +1305,22 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
         case 'text':
           /** @var \Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface $value */
-          /*
           $tokens = $value->getTokens();
-          if (is_array($tokens)) {
-          foreach ($tokens as $token) {
-          // @todo handle token boosts
-          // @see https://www.drupal.org/node/2746263
-          #$doc->addField($boost_key, $tokenized_value['value'], $tokenized_value['score']);
-          $token->getText();
-          $token->getBoost();
+          if (is_array($tokens) && !empty($tokens)) {
+            foreach ($tokens as $token) {
+              // @todo handle token boosts broken?
+              // @see https://www.drupal.org/node/2746263
+              $value = $token->getText();
+              $doc->addField($key, $value, $token->getBoost());
+              if (!$first_value) {
+                $first_value = $value;
+              }
+            }
+            $value = NULL;
           }
+          else {
+            $value = $value->getText();
           }
-           */
-          $value = $value->toText();
           break;
 
         case 'string':
@@ -1320,9 +1328,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           // Keep $value as it is.
       }
 
-      $doc->addField($key, $value);
-      if (!$first_value) {
-        $first_value = $value;
+      if ($value) {
+        $doc->addField($key, $value);
+        if (!$first_value) {
+          $first_value = $value;
+        }
       }
     }
 
