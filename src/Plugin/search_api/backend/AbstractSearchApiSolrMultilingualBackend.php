@@ -544,6 +544,14 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
         $options['context_filter_tags'] = str_replace('drupal/langcode:multilingual', 'drupal/langcode:' . $langcode, $options['context_filter_tags']);
         $options['dictionary'] = $langcode;
       }
+      else {
+        foreach ($options['context_filter_tags'] as $key => $tag) {
+          if ('drupal/langcode:multilingual' == $tag) {
+            unset($options['context_filter_tags'][$key]);
+            break;
+          }
+        }
+      }
     }
 
     parent::setAutocompleteSuggesterQuery($query, $solarium_query, $user_input, $options);

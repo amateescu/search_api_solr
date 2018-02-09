@@ -123,7 +123,7 @@ class Suggester extends SuggesterPluginBase implements PluginFormInterface {
       $options['context_filter_tags'][] = 'drupal/langcode:' . $config['drupal/langcode'];
     }
 
-    return $backend->getSuggesterSuggestions($query, $this->getSearch(), $incomplete_key, $user_input);
+    return $backend->getSuggesterSuggestions($query, $this->getSearch(), $incomplete_key, $user_input, $options);
   }
 
   /**

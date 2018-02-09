@@ -1102,27 +1102,35 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           }
           $type_info = Utility::getDataTypeInfo($type);
           $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
-          if ($this->fieldsHelper->isFieldIdReserved($key)) {
-            $pref .= 's';
+          if (strpos($pref, 't') === 0) {
+            // All text types need to be treated as multiple because some Search
+            // API processors produce boosted string tokens for a single valued
+            // drupal field. We need to store such tokens and their boost, too.
+            $pref .= 'm';
           }
           else {
-            if ($field->getDataDefinition()->isList() || $this->isHierarchicalField($field)) {
-              $pref .= 'm';
+            if ($this->fieldsHelper->isFieldIdReserved($key)) {
+              $pref .= 's';
             }
             else {
-              try {
-                $datasource = $field->getDatasource();
-                if (!$datasource) {
-                  throw new SearchApiException();
-                }
-                else {
-                  $pref .= $this->getPropertyPathCardinality($field->getPropertyPath(), $datasource->getPropertyDefinitions()) != 1 ? 'm' : 's';
-                }
-              }
-              catch (SearchApiException $e) {
-                // Thrown by $field->getDatasource(). Assume multi value to be
-                // safe.
+              if ($field->getDataDefinition()
+                  ->isList() || $this->isHierarchicalField($field)) {
                 $pref .= 'm';
+              }
+              else {
+                try {
+                  $datasource = $field->getDatasource();
+                  if (!$datasource) {
+                    throw new SearchApiException();
+                  }
+                  else {
+                    $pref .= $this->getPropertyPathCardinality($field->getPropertyPath(), $datasource->getPropertyDefinitions()) != 1 ? 'm' : 's';
+                  }
+                } catch (SearchApiException $e) {
+                  // Thrown by $field->getDatasource(). Assume multi value to be
+                  // safe.
+                  $pref .= 'm';
+                }
               }
             }
           }
@@ -2224,9 +2232,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $suggester_component->setDictionary(!empty($options['dictionary']) ? $options['dictionary'] : /* language undefined suggestions */ 'und');
     if (!empty($options['context_filter_tags'])) {
       $suggester_component->setContextFilterQuery(
-        Utility::buildSuggesterContextFilterQuery([$options['context_filter_tags']]));
+        Utility::buildSuggesterContextFilterQuery($options['context_filter_tags']));
     }
     $suggester_component->setCount($query->getOption('limit',10));
+    // The search_api_autocomplete module highlights by itself.
+    $solarium_query->addParam('suggest.highlight', FALSE);
   }
 
   /**
