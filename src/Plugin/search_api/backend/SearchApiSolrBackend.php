@@ -2151,12 +2151,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
-  public function getSuggesterSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input) {
+  public function getSuggesterSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input, $options = []) {
     $suggestions = [];
     if ($solarium_query = $this->getAutocompleteQuery($incomplete_key, $user_input)) {
       try {
         $suggestion_factory = new SuggestionFactory($user_input);
-        $this->setAutocompleteSuggesterQuery($query, $solarium_query, $user_input);
+        $this->setAutocompleteSuggesterQuery($query, $solarium_query, $user_input, $options);
         $result = $this->getSolrConnector()->execute($solarium_query);
         $suggestions = $this->getAutocompleteSuggesterSuggestions($result, $suggestion_factory);
         // Filter out duplicate suggestions.
@@ -2215,20 +2215,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   An autocomplete solarium query.
    * @param string $user_input
    *   The user input.
+   * @param array $options
+   *   'dictionary' as string, 'context_filter_tags' as array of strings.
    */
-  protected function setAutocompleteSuggesterQuery(QueryInterface $query, AutocompleteQuery $solarium_query, $user_input) {
-    $index_id = $query->getIndex()->id();
+  protected function setAutocompleteSuggesterQuery(QueryInterface $query, AutocompleteQuery $solarium_query, $user_input, $options = []) {
     $suggester_component = $solarium_query->getSuggester();
     $suggester_component->setQuery($user_input);
-    // @todo multilingual language dictionary
-    $suggester_component->setDictionary(/* language undefined suggestions */ 'und');
-    $suggester_component->setContextFilterQuery(
-      Utility::buildSuggesterContextFilterQuery([
-        'search_api_solr/site_hash:' . Utility::getSiteHash(),
-        'search_api/index:' . $index_id,
-        // @todo multilingual language tag
-      ])
-    );
+    $suggester_component->setDictionary(!empty($options['dictionary']) ? $options['dictionary'] : /* language undefined suggestions */ 'und');
+    if (!empty($options['context_filter_tags'])) {
+      $suggester_component->setContextFilterQuery(
+        Utility::buildSuggesterContextFilterQuery([$options['context_filter_tags']]));
+    }
     $suggester_component->setCount($query->getOption('limit',10));
   }
 

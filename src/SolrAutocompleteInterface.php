@@ -75,10 +75,12 @@ interface SolrAutocompleteInterface {
    *   suggested.
    * @param string $user_input
    *   The complete user input for the fulltext search keywords so far.
+   * @param array $options
+   *   'dictionary' as string, 'context_filter_tags' as array of strings.
    *
    * @return \Drupal\search_api_autocomplete\Suggestion\SuggestionInterface[]
    *   An array of autocomplete suggestions.
    */
-  public function getSuggesterSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input);
+  public function getSuggesterSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input, $options = []);
 
 }

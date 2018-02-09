@@ -11,6 +11,8 @@ use Drupal\search_api_autocomplete\AutocompleteBackendInterface;
 use Drupal\search_api_autocomplete\SearchInterface;
 use Drupal\search_api_autocomplete\Suggester\SuggesterPluginBase;
 use Drupal\search_api_solr\SolrAutocompleteInterface;
+use Drupal\search_api_solr\SolrMultilingualBackendInterface;
+use Drupal\search_api_solr\Utility\Utility;
 
 /**
  * Provides a suggester plugin that retrieves suggestions from the server.
@@ -39,14 +41,66 @@ class Suggester extends SuggesterPluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    return [];
+    return [
+      'search_api_solr/site_hash' => TRUE,
+      'search_api/index' => '',
+      'drupal/langcode' => 'any',
+    ];
   }
 
   /**
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    return [];
+    $search = $this->getSearch();
+    $server = $search->getIndex()->getServerInstance();
+
+    $form['search_api_solr/site_hash'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('From this site only'),
+      '#description' => $this->t('Limit the suggestion dictionary to entries created by this site in case of a multisite setup.'),
+      '#default_value' => $this->getConfiguration()['search_api_solr/site_hash'],
+    ];
+
+    $index_options['any'] = $this->t('Any index');
+    foreach ($server->getIndexes() as $index) {
+      $index_options[$index->id()] = $this->t('Index @index', ['@index' => $index->label()]);
+    }
+
+    $form['search_api/index'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Index'),
+      '#description' => $this->t('Limit the suggestion dictionary to entries to those created by a specific index.'),
+      '#options' => $index_options,
+      '#default_value' => $this->getConfiguration()['search_api/index'] ?: $search->getIndex()->id(),
+    ];
+
+    $langcode_options['any'] = $this->t('Any language');
+    if ($server->getBackend()  instanceof SolrMultilingualBackendInterface) {
+      $langcode_options['multilingual'] = $this->t('Let the multilingual Solr server handle it dynamically.');
+    }
+    foreach (\Drupal::languageManager()->getLanguages() as $language) {
+      $langcode_options[$language->getId()] = $language->getName();
+    }
+    $langcode_options['und'] = $this->t('Undefined');
+
+    $form['drupal/langcode'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Language'),
+      '#description' => $this->t('Limit the suggestion dictionary to entries that belong to a specific language.'),
+      '#options' => $langcode_options,
+      '#default_value' => $this->getConfiguration()['drupal/langcode'],
+    ];
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+    $values = $form_state->getValues();
+    $this->setConfiguration($values);
   }
 
   /**
@@ -55,6 +109,18 @@ class Suggester extends SuggesterPluginBase implements PluginFormInterface {
   public function getAutocompleteSuggestions(QueryInterface $query, $incomplete_key, $user_input) {
     if (!($backend = static::getBackend($this->getSearch()->getIndex()))) {
       return [];
+    }
+
+    $config = $this->getConfiguration();
+    $options['context_filter_tags'] = [];
+    if ($config['search_api_solr/site_hash']) {
+      $options['context_filter_tags'][] = 'search_api_solr/site_hash:' . Utility::getSiteHash();
+    }
+    if (!empty($config['search_api/index']) && 'any' != $config['search_api/index']) {
+      $options['context_filter_tags'][] = 'search_api/index:' . $config['search_api/index'];
+    }
+    if ('any' != $config['drupal/langcode']) {
+      $options['context_filter_tags'][] = 'drupal/langcode:' . $config['drupal/langcode'];
     }
 
     return $backend->getSuggesterSuggestions($query, $this->getSearch(), $incomplete_key, $user_input);
