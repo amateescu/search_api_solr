@@ -33,9 +33,7 @@ use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\DataTypeHelperInterface;
 use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility as SearchApiUtility;
-use Drupal\search_api_autocomplete\SearchInterface;
 use Drupal\search_api_autocomplete\Suggestion\SuggestionFactory;
-use Drupal\search_api_autocomplete\Suggestion\SuggestionInterface;
 use Drupal\search_api_solr\Entity\SolrFieldType;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\Solarium\AutocompleteQuery;
@@ -467,6 +465,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'solr_text_ngram',
       'solr_text_omit_norms',
       'solr_text_phonetic',
+      'solr_text_suggester',
       'solr_text_unstemmed',
       'solr_text_wstoken',
     ]);
@@ -1095,29 +1094,43 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           // Generate a field name; this corresponds with naming conventions in
           // our schema.xml.
           $type = $field->getType();
+          if ('solr_text_suggester' == $type) {
+            // Any field of this type will be indexed in the same Solr field.
+            // The 'twm_suggest' is the backend for the suggester component.
+            $ret[$key] = 'twm_suggest';
+            continue;
+          }
           $type_info = Utility::getDataTypeInfo($type);
           $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
-          if ($this->fieldsHelper->isFieldIdReserved($key)) {
-            $pref .= 's';
+          if (strpos($pref, 't') === 0) {
+            // All text types need to be treated as multiple because some Search
+            // API processors produce boosted string tokens for a single valued
+            // drupal field. We need to store such tokens and their boost, too.
+            $pref .= 'm';
           }
           else {
-            if ($field->getDataDefinition()->isList() || $this->isHierarchicalField($field)) {
-              $pref .= 'm';
+            if ($this->fieldsHelper->isFieldIdReserved($key)) {
+              $pref .= 's';
             }
             else {
-              try {
-                $datasource = $field->getDatasource();
-                if (!$datasource) {
-                  throw new SearchApiException();
-                }
-                else {
-                  $pref .= $this->getPropertyPathCardinality($field->getPropertyPath(), $datasource->getPropertyDefinitions()) != 1 ? 'm' : 's';
-                }
-              }
-              catch (SearchApiException $e) {
-                // Thrown by $field->getDatasource(). Assume multi value to be
-                // safe.
+              if ($field->getDataDefinition()
+                  ->isList() || $this->isHierarchicalField($field)) {
                 $pref .= 'm';
+              }
+              else {
+                try {
+                  $datasource = $field->getDatasource();
+                  if (!$datasource) {
+                    throw new SearchApiException();
+                  }
+                  else {
+                    $pref .= $this->getPropertyPathCardinality($field->getPropertyPath(), $datasource->getPropertyDefinitions()) != 1 ? 'm' : 's';
+                  }
+                } catch (SearchApiException $e) {
+                  // Thrown by $field->getDatasource(). Assume multi value to be
+                  // safe.
+                  $pref .= 'm';
+                }
               }
             }
           }
@@ -1270,7 +1283,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       return '';
     }
 
-    if (strpos($type, 'solr_text_custom') === 0) {
+    if (strpos($type, 'solr_text_') === 0) {
       $type = 'text';
     }
 
@@ -1300,19 +1313,22 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
         case 'text':
           /** @var \Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface $value */
-          /*
           $tokens = $value->getTokens();
-          if (is_array($tokens)) {
-          foreach ($tokens as $token) {
-          // @todo handle token boosts
-          // @see https://www.drupal.org/node/2746263
-          #$doc->addField($boost_key, $tokenized_value['value'], $tokenized_value['score']);
-          $token->getText();
-          $token->getBoost();
+          if (is_array($tokens) && !empty($tokens)) {
+            foreach ($tokens as $token) {
+              // @todo handle token boosts broken?
+              // @see https://www.drupal.org/node/2746263
+              $value = $token->getText();
+              $doc->addField($key, $value, $token->getBoost());
+              if (!$first_value) {
+                $first_value = $value;
+              }
+            }
+            $value = NULL;
           }
+          else {
+            $value = $value->getText();
           }
-           */
-          $value = $value->toText();
           break;
 
         case 'string':
@@ -1320,9 +1336,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           // Keep $value as it is.
       }
 
-      $doc->addField($key, $value);
-      if (!$first_value) {
-        $first_value = $value;
+      if ($value) {
+        $doc->addField($key, $value);
+        if (!$first_value) {
+          $first_value = $value;
+        }
       }
     }
 
@@ -2141,12 +2159,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
-  public function getSuggesterSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input) {
+  public function getSuggesterSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input, $options = []) {
     $suggestions = [];
     if ($solarium_query = $this->getAutocompleteQuery($incomplete_key, $user_input)) {
       try {
         $suggestion_factory = new SuggestionFactory($user_input);
-        $this->setAutocompleteSuggesterQuery($query, $solarium_query, $user_input);
+        $this->setAutocompleteSuggesterQuery($query, $solarium_query, $user_input, $options);
         $result = $this->getSolrConnector()->execute($solarium_query);
         $suggestions = $this->getAutocompleteSuggesterSuggestions($result, $suggestion_factory);
         // Filter out duplicate suggestions.
@@ -2205,21 +2223,20 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   An autocomplete solarium query.
    * @param string $user_input
    *   The user input.
+   * @param array $options
+   *   'dictionary' as string, 'context_filter_tags' as array of strings.
    */
-  protected function setAutocompleteSuggesterQuery(QueryInterface $query, AutocompleteQuery $solarium_query, $user_input) {
-    $index_id = $query->getIndex()->id();
+  protected function setAutocompleteSuggesterQuery(QueryInterface $query, AutocompleteQuery $solarium_query, $user_input, $options = []) {
     $suggester_component = $solarium_query->getSuggester();
     $suggester_component->setQuery($user_input);
-    // @todo multilingual language dictionary
-    $suggester_component->setDictionary(/* language undefined suggestions */ 'und');
-    $suggester_component->setContextFilterQuery(
-      Utility::buildSuggesterContextFilterQuery([
-        'search_api_solr/site_hash:' . Utility::getSiteHash(),
-        'search_api/index:' . $index_id,
-        // @todo multilingual language tag
-      ])
-    );
+    $suggester_component->setDictionary(!empty($options['dictionary']) ? $options['dictionary'] : /* language undefined suggestions */ 'und');
+    if (!empty($options['context_filter_tags'])) {
+      $suggester_component->setContextFilterQuery(
+        Utility::buildSuggesterContextFilterQuery($options['context_filter_tags']));
+    }
     $suggester_component->setCount($query->getOption('limit',10));
+    // The search_api_autocomplete module highlights by itself.
+    $solarium_query->addParam('suggest.highlight', FALSE);
   }
 
   /**

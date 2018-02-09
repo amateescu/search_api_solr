@@ -9,6 +9,7 @@ use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
+use Drupal\search_api_solr\Solarium\AutocompleteQuery;
 use Drupal\search_api_solr\SolrMultilingualBackendInterface;
 use Drupal\search_api_solr\Utility\Utility;
 use Solarium\Core\Query\QueryInterface as SolariumQueryInterface;
@@ -427,9 +428,10 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
         ) {
           foreach ($fields as $monolingual_solr_field_name => $value) {
             if (isset($map[$monolingual_solr_field_name])) {
-              $document->addField($map[$monolingual_solr_field_name], $value, $document->getFieldBoost($monolingual_solr_field_name));
-              // @todo removal should be configurable
-              $document->removeField($monolingual_solr_field_name);
+              if ('twm_suggest' != $monolingual_solr_field_name) {
+                $document->addField($map[$monolingual_solr_field_name], $value, $document->getFieldBoost($monolingual_solr_field_name));
+                $document->removeField($monolingual_solr_field_name);
+              }
             }
           }
         }
@@ -529,6 +531,30 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
       }
     }
     return $fl;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setAutocompleteSuggesterQuery(QueryInterface $query, AutocompleteQuery $solarium_query, $user_input, $options = []) {
+    if (isset($options['context_filter_tags']) && in_array('drupal/langcode:multilingual', $options['context_filter_tags'])) {
+      $langcodes = $query->getLanguages();
+      if (count($langcodes) == 1) {
+        $langcode = reset($langcodes);
+        $options['context_filter_tags'] = str_replace('drupal/langcode:multilingual', 'drupal/langcode:' . $langcode, $options['context_filter_tags']);
+        $options['dictionary'] = $langcode;
+      }
+      else {
+        foreach ($options['context_filter_tags'] as $key => $tag) {
+          if ('drupal/langcode:multilingual' == $tag) {
+            unset($options['context_filter_tags'][$key]);
+            break;
+          }
+        }
+      }
+    }
+
+    parent::setAutocompleteSuggesterQuery($query, $solarium_query, $user_input, $options);
   }
 
 }

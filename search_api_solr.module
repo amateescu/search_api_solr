@@ -151,6 +151,7 @@ function search_api_solr_search_api_views_handler_mapping_alter(&$mapping) {
   $mapping['solr_text_ngram'] =
   $mapping['solr_text_omit_norms'] =
   $mapping['solr_text_phonetic'] =
+  $mapping['solr_text_suggester'] =
   $mapping['solr_text_unstemmed'] =
   $mapping['solr_text_wstoken'] = [
     'argument' => [

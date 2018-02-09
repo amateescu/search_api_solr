@@ -420,7 +420,7 @@ function search_api_solr_update_8205() {
 }
 
 /**
- * Remove obsolte autocomplete settings.
+ * Remove obsolete autocomplete settings.
  */
 function search_api_solr_update_8206() {
   foreach (search_api_solr_update_helper_get_backend_configs() as $server_name => $backend_config) {
