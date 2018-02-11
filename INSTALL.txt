@@ -25,16 +25,13 @@ A more detailed set of instructions is available at [2].
 
 As a pre-requisite for running your own Solr server, you'll need a Java JRE.
 
-Download the latest version of Solr 4.x or 5.x or 6.x from [3] and unpack the
+Download the latest version of Solr 6.x or 7.x from [3] and unpack the
 archive somewhere outside of your web server's document tree. The unpacked Solr
 directory is named $SOLR in these instructions.
 
 [3] http://www.apache.org/dyn/closer.cgi/lucene/solr/
 
-For better performance and more features, 6.x should be used!
-The support for 4.x and 5.x is deprecated and will be removed in 8.x-2.x.
-The further instructions only cover Solr 5.x and 6.x on a UNIX-like operating
-system.
+For better performance and more features, 7.x should be used!
 
 First you have to create a Solr core for Drupal. Therefore you have to create
 two directories (replace $SOLR and $CORE according to your needs):
@@ -42,17 +39,29 @@ two directories (replace $SOLR and $CORE according to your needs):
 mkdir $SOLR/server/solr/$CORE
 mkdir $SOLR/server/solr/$CORE/conf
 
-Before starting the Solr server you will have to make sure it uses the proper
-configuration files. These are located in the solr-conf/ directory in this
-module, in a sub-directory according to the Solr version you are using. Copy all
-the files from that directory into Solr core's configuration directory:
-
-cp -R $DRUPAL/modules/contrib/search_api_solr/solr_conf/$SOLR_VERSION/* $SOLR/server/solr/$CORE/conf
-
 Afterwards, you have to tell SOLR about the new core by creating a
 core.properties file:
 
 echo "name=$CORE" > $SOLR/server/solr/$CORE/core.properties
+
+Before starting the Solr server you will have to make sure it uses the proper
+configuration files. They aren't always static but vary on your Drupal setup.
+But the Search API Solr Search module will create the correct configs for you!
+
+1. Create a Search API Server according to the search_api documentation using
+   "Solr" or "Multilingual Solr" as Backend.
+2. Download the config.zip from the server's details page and deploy it on your
+   Solr server.
+3. Extract the config.zip to the conf directory of your new core.
+
+unzip config.zip -d $SOLR/server/solr/$CORE/conf
+
+NOTE: If you use the "Multilingual Solr" backend you have to repeat steps 2 and
+3 every time you add a new language to your Drupal instance!
+
+NOTE: It's important that the Solr server runs with the right config files for
+a backend. Don't switch between Solr Backends without adjusting the config
+files!
 
 Now you can start your Solr server:
 
@@ -71,58 +80,5 @@ configuration or through the use of a firewall.
 Other options include adding basic HTTP authentication or renaming the solr/
 directory to a random string of characters and using that as the path.
 
-Now you can go on and setup and configure the connection within your Drupal
-installation.
-
-
-To be merged:
-
-Setting up Solr
----------------
-
-In order for this module to work, you will first need to set up a Solr server.
-See search_api_solr/INSTALL.txt for the basics.
-
-But don't install any drupal configs or schemas right now!
-
-search_api_solr_multilingual adds some more restrictions and requires a
-different (but easier) kind of configuration.
-
-search_api_solr_multilingual requires at least solr 4.5.x.
-
-
-Installing search_api_solr_multilingual and configuring Drupal
---------------------------------------------------------------
-
-While search_api_solr itself only supports the "classic schema mode",
-search_api_solr_multilingual adds (experimental) support for the "managed
-schema mode".
-
-No matter which mode you choose, the order of the installation process changes
-with search_api_solr_multilingual:
-
-1. Install the search_api_solr_multilingual module (and its module
-   dependencies).
-
-2. Install the module's composer dependencies, there are multiple ways to do
-   this; you can read more in the documentation[1] on drupal.org.
-
-3. Create a Search API Server according to the search_api documentation using
-   "Multilingual Solr" or "Multilingual Solr Managed Schema" as Backend.
-
-4. Download the config.zip from the server's details page and deploy it on your
-   Solr server. Therefor you have to follow the instructions in
-   search_api_solr/INSTALL.txt but use the files extracted from the downloaded
-   config.zip instead of the ones from the search_api_solr/solr-conf/ folder.
-
-NOTE: If you use the "Multilingual Solr" backend you have to repeat step 4
-every time you add a new language to your Drupal instance.
-
-NOTE: It's important that the Solr server runs with the right config files for
-a backend. Don't switch between the Solr Backend and the Solr Multilingual
-Backend without adjusting the config files!
-
 For configuring indexes and searches you have to follow the documention of
 search_api.
-
-[1] https://www.drupal.org/documentation/install/composer-dependencies

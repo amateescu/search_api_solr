@@ -3,7 +3,7 @@
     <str name="name">und</str>
     <str name="lookupImpl">AnalyzingInfixLookupFactory</str>
     <str name="dictionaryImpl">DocumentDictionaryFactory</str>
-    <str name="field">spell</str>
+    <str name="field">twm_suggest</str>
     <str name="suggestAnalyzerFieldType">text</str>
     <str name="contextField">sm_context_tags</str>
     <str name="buildOnCommit">true</str>
