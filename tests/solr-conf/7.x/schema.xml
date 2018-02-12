@@ -188,8 +188,8 @@
   <dynamicField name="ts_*"  type="text"    indexed="true"  stored="true" multiValued="false" termVectors="true"/>
   <dynamicField name="tm_*"  type="text"    indexed="true"  stored="true" multiValued="true" termVectors="true"/>
   <!-- Unstemmed text fields for full text - the relevance of a match depends on the length of the text -->
-  <!-- dynamicField tus_* is moved to schema_extra_fields.xml -->
-  <!-- dynamicField tum_* is moved to schema_extra_fields.xml -->
+  <dynamicField name="tus_*" type="text_und" indexed="true"  stored="true" multiValued="false" termVectors="true"/>
+  <dynamicField name="tum_*" type="text_und" indexed="true"  stored="true" multiValued="true" termVectors="true"/>
   <!-- These text fields omit norms - useful for extracted text like taxonomy_names -->
   <dynamicField name="tos_*" type="text"    indexed="true"  stored="true" multiValued="false" termVectors="true" omitNorms="true"/>
   <dynamicField name="tom_*" type="text"    indexed="true"  stored="true" multiValued="true" termVectors="true" omitNorms="true"/>
