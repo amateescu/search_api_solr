@@ -36,7 +36,7 @@ use Drupal\search_api\Utility\Utility as SearchApiUtility;
 use Drupal\search_api_autocomplete\Suggestion\SuggestionFactory;
 use Drupal\search_api_solr\Entity\SolrFieldType;
 use Drupal\search_api_solr\SearchApiSolrException;
-use Drupal\search_api_solr\Solarium\AutocompleteQuery;
+use Drupal\search_api_solr\Solarium\Autocomplete\Query as AutocompleteQuery;
 use Drupal\search_api_solr\SolrAutocompleteInterface;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginManager;
@@ -2071,7 +2071,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @param $incomplete_key
    * @param $user_input
    *
-   * @return \Drupal\search_api_solr\Solarium\AutocompleteQuery|null
+   * @return AutocompleteQuery|null
    * @throws \Drupal\search_api\SearchApiException
    */
   protected function getAutocompleteQuery(&$incomplete_key, &$user_input) {
@@ -2132,7 +2132,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getTermsSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input) {
-    return $this->getAutocompleteSuggestions();
+    return $this->getAutocompleteSuggestions($query, $search, $incomplete_key, $user_input);
   }
 
   /**
@@ -2184,7 +2184,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   A query representing the completed user input so far.
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   A query representing the completed user input so far.
-   * @param \Drupal\search_api_solr\Solarium\AutocompleteQuery $solarium_query
+   * @param AutocompleteQuery $solarium_query
    *   An autocomplete solarium query.
    * @param string $user_input
    *   The user input.
@@ -2200,7 +2200,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   A query representing the completed user input so far.
-   * @param \Drupal\search_api_solr\Solarium\AutocompleteQuery $solarium_query
+   * @param AutocompleteQuery $solarium_query
    *   An autocomplete solarium query.
    * @param string $incomplete_key
    *   The start of another fulltext keyword for the search, which should be
@@ -2219,7 +2219,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   A query representing the completed user input so far.
-   * @param \Drupal\search_api_solr\Solarium\AutocompleteQuery $solarium_query
+   * @param AutocompleteQuery $solarium_query
    *   An autocomplete solarium query.
    * @param string $user_input
    *   The user input.
