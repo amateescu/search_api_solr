@@ -45,10 +45,6 @@ field_type:
         -
           class: solr.LowerCaseFilterFactory
         -
-          class: solr.SnowballPorterFilterFactory
-          language: English
-          protected: protwords.txt
-        -
           class: solr.RemoveDuplicatesTokenFilterFactory
     -
       type: query
@@ -84,10 +80,6 @@ field_type:
           max: 100
         -
           class: solr.LowerCaseFilterFactory
-        -
-          class: solr.SnowballPorterFilterFactory
-          language: English
-          protected: protwords.txt
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
 solr_configs:

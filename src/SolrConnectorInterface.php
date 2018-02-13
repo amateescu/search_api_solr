@@ -259,7 +259,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
   /**
    * Creates a new Solarium autocomplete query.
    *
-   * @return \Drupal\search_api_solr\Solarium\AutocompleteQuery
+   * @return \Drupal\search_api_solr\Solarium\Autocomplete\Query
    *   The Autocomplete query.
    */
   public function getAutocompleteQuery();

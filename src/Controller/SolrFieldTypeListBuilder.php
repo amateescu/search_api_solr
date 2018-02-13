@@ -277,7 +277,6 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
     $schema = file_get_contents($search_api_solr_conf_path . '/schema.xml');
     $schema = preg_replace('@<fieldType name="text_und".*?</fieldType>@ms', '<!-- fieldType text_und is moved to schema_extra_types.xml -->', $schema);
-    $schema = preg_replace('@<dynamicField name="([^"]*)".*?type="text_und".*?/>@', "<!-- dynamicField $1 is moved to schema_extra_fields.xml -->", $schema);
 
     $zip = new ZipStream('solr_' . $solr_branch . '_config.zip');
     $zip->addFile('schema.xml', $schema);

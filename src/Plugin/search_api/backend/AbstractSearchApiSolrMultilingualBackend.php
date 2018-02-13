@@ -9,7 +9,7 @@ use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
-use Drupal\search_api_solr\Solarium\AutocompleteQuery;
+use Drupal\search_api_solr\Solarium\Autocomplete\Query as AutocompleteQuery;
 use Drupal\search_api_solr\SolrMultilingualBackendInterface;
 use Drupal\search_api_solr\Utility\Utility;
 use Solarium\Core\Query\QueryInterface as SolariumQueryInterface;
