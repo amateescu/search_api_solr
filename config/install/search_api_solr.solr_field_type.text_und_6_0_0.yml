@@ -3,17 +3,15 @@ status: true
 dependencies:
   module:
     - search_api_solr
-    - language
-  config:
-    - language.entity.el
-id: text_el_4_5_0
-label: 'Greek Text Field'
+id: text_und_6_0_0
+label: 'Language Undefined Text Field'
 managed_schema: false
-minimum_solr_version: 4.5.0
-field_type_language_code: el
+minimum_solr_version: 6.0.0
+custom_code: ''
+field_type_language_code: und
 domains: {}
 field_type:
-  name: text_el
+  name: text_und
   class: solr.TextField
   positionIncrementGap: 100
   analyzers:
@@ -22,28 +20,30 @@ field_type:
       charFilters:
         -
           class: solr.MappingCharFilterFactory
-          mapping: accents_el.txt
+          mapping: mapping-ISOLatin1Accent.txt
       tokenizer:
         class: solr.WhitespaceTokenizerFactory
       filters:
         -
+          class: solr.StopFilterFactory
+          ignoreCase: true
+          words: stopwords.txt
+        -
           class: solr.WordDelimiterFilterFactory
           catenateNumbers: 1
           generateNumberParts: 1
-          protected: protwords_el.txt
-          splitOnCaseChange: 1
+          protected: protwords.txt
+          splitOnCaseChange: 0
           generateWordParts: 1
           preserveOriginal: 1
           catenateAll: 0
           catenateWords: 1
         -
-          class: solr.GreekLowerCaseFilterFactory
+          class: solr.LengthFilterFactory
+          min: 2
+          max: 100
         -
-          class: solr.StopFilterFactory
-          ignoreCase: true
-          words: stopwords_el.txt
-        -
-          class: solr.GreekStemFilterFactory
+          class: solr.LowerCaseFilterFactory
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
     -
@@ -51,116 +51,109 @@ field_type:
       charFilters:
         -
           class: solr.MappingCharFilterFactory
-          mapping: accents_el.txt
+          mapping: mapping-ISOLatin1Accent.txt
       tokenizer:
         class: solr.WhitespaceTokenizerFactory
       filters:
         -
-          class: solr.WordDelimiterFilterFactory
-          catenateNumbers: 0
-          generateNumberParts: 0
-          protected: protwords_el.txt
-          splitOnCaseChange: 1
-          generateWordParts: 1
-          preserveOriginal: 1
-          catenateAll: 0
-          catenateWords: 0
-        -
-          class: solr.GreekLowerCaseFilterFactory
-        -
           class: solr.SynonymFilterFactory
-          synonyms: synonyms_el.txt
+          synonyms: synonyms.txt
           expand: true
           ignoreCase: true
         -
           class: solr.StopFilterFactory
           ignoreCase: true
-          words: stopwords_el.txt
+          words: stopwords.txt
         -
-          class: solr.GreekStemFilterFactory
+          class: solr.WordDelimiterFilterFactory
+          catenateNumbers: 0
+          generateNumberParts: 1
+          protected: protwords.txt
+          splitOnCaseChange: 0
+          generateWordParts: 1
+          preserveOriginal: 1
+          catenateAll: 0
+          catenateWords: 0
+        -
+          class: solr.LengthFilterFactory
+          min: 2
+          max: 100
+        -
+          class: solr.LowerCaseFilterFactory
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
-solr_configs: {}
+solr_configs:
+  searchComponents:
+    -
+      name: suggest
+      class: solr.SuggestComponent
+      lst:
+        -
+          name: suggester
+          str:
+            -
+              name: name
+              VALUE: und
+            -
+              name: lookupImpl
+              VALUE: AnalyzingInfixLookupFactory
+            -
+              name: dictionaryImpl
+              VALUE: DocumentDictionaryFactory
+            -
+              name: field
+              VALUE: twm_suggest
+            -
+              name: suggestAnalyzerFieldType
+              VALUE: text_und
+            -
+              name: contextField
+              VALUE: sm_context_tags
+            -
+              name: buildOnCommit
+              VALUE: 'true'
+            -
+              name: buildOnStartup
+              VALUE: 'false'
 text_files:
   stopwords: |
-    ο
-    η
-    το
-    οι
-    τα
-    του
-    τησ
-    των
-    τον
-    την
-    και
-    κι
-    κ
-    ειμαι
-    εισαι
-    ειναι
-    ειμαστε
-    ειστε
-    στο
-    στον
-    στη
-    στην
-    μα
-    αλλα
-    απο
-    για
-    προσ
-    με
-    σε
-    ωσ
-    παρα
-    αντι
-    κατα
-    μετα
-    θα
-    να
-    δε
-    δεν
-    μη
-    μην
-    επι
-    ενω
-    εαν
-    αν
-    τοτε
-    που
-    πωσ
-    ποιοσ
-    ποια
-    ποιο
-    ποιοι
-    ποιεσ
-    ποιων
-    ποιουσ
-    αυτοσ
-    αυτη
-    αυτο
-    αυτοι
-    αυτων
-    αυτουσ
-    αυτεσ
-    αυτα
-    εκεινοσ
-    εκεινη
-    εκεινο
-    εκεινοι
-    εκεινεσ
-    εκεινα
-    εκεινων
-    εκεινουσ
-    οπωσ
-    ομωσ
-    ισωσ
-    οσο
-    οτι
+    a
+    an
+    and
+    are
+    as
+    at
+    be
+    but
+    by
+    for
+    if
+    in
+    into
+    is
+    it
+    no
+    not
+    of
+    on
+    or
+    s
+    such
+    t
+    that
+    the
+    their
+    then
+    there
+    these
+    they
+    this
+    to
+    was
+    will
+    with
   synonyms: |
     drupal, durpal
-  nouns: |
   protwords: |
   accents: |
     # À => A

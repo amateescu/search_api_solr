@@ -6,10 +6,10 @@ dependencies:
     - language
   config:
     - language.entity.fi
-id: text_fi_4_5_0
+id: text_fi_6_0_0
 label: 'Finnish Text Field'
 managed_schema: false
-minimum_solr_version: 4.5.0
+minimum_solr_version: 6.0.0
 custom_code: ''
 field_type_language_code: fi
 domains: {}
@@ -104,7 +104,39 @@ field_type:
           protected: protwords_fi.txt
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
-solr_configs: {}
+solr_configs:
+  searchComponents:
+    -
+      name: suggest
+      class: solr.SuggestComponent
+      lst:
+        -
+          name: suggester
+          str:
+            -
+              name: name
+              VALUE: fi
+            -
+              name: lookupImpl
+              VALUE: AnalyzingInfixLookupFactory
+            -
+              name: dictionaryImpl
+              VALUE: DocumentDictionaryFactory
+            -
+              name: field
+              VALUE: twm_suggest
+            -
+              name: suggestAnalyzerFieldType
+              VALUE: text_fi
+            -
+              name: contextField
+              VALUE: sm_context_tags
+            -
+              name: buildOnCommit
+              VALUE: 'true'
+            -
+              name: buildOnStartup
+              VALUE: 'false'
 text_files:
   stopwords: |
     olla

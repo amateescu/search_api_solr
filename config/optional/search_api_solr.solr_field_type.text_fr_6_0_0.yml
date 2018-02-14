@@ -5,16 +5,16 @@ dependencies:
     - search_api_solr
     - language
   config:
-    - language.entity.cs
-id: text_cs_6_0_0
-label: 'Czech Text Field'
+    - language.entity.fr
+id: text_fr_6_0_0
+label: 'French Text Field'
 managed_schema: false
 minimum_solr_version: 6.0.0
 custom_code: ''
-field_type_language_code: cs
+field_type_language_code: fr
 domains: {}
 field_type:
-  name: text_cs
+  name: text_fr
   class: solr.TextField
   positionIncrementGap: 100
   analyzers:
@@ -23,36 +23,32 @@ field_type:
       charFilters:
         -
           class: solr.MappingCharFilterFactory
-          mapping: accents_cs.txt
+          mapping: accents_fr.txt
       tokenizer:
         class: solr.WhitespaceTokenizerFactory
       filters:
         -
-          class: solr.WordDelimiterFilterFactory
-          protected: protwords_cs.txt
-          # If non-zero, splits words at delimiters. For example:"CamelCase", "hot-spot" -> "Camel", "Case", "hot", "spot"
-          generateWordParts: 1
-          # If non-zero, splits numeric strings at delimiters:"1947-32" -> "1947", "32"
-          generateNumberParts: 1
-          splitOnCaseChange: 0
-          splitOnNumerics:
-          catenateWords: 1
-          catenateNumbers: 1
-          catenateAll: 0
-          stemEnglishPossessive: 0
-          preserveOriginal: 1
+          class: solr.ElisionFilterFactory
         -
-          class: solr.LengthFilterFactory
-          min: 2
-          max: 100
+          class: solr.WordDelimiterFilterFactory
+          catenateNumbers: 1
+          generateNumberParts: 1
+          protected: protwords_fr.txt
+          splitOnCaseChange: 1
+          generateWordParts: 1
+          preserveOriginal: 1
+          catenateAll: 0
+          catenateWords: 1
         -
           class: solr.LowerCaseFilterFactory
         -
           class: solr.StopFilterFactory
           ignoreCase: true
-          words: stopwords_cs.txt
+          words: stopwords_fr.txt
         -
-          class: solr.CzechStemFilterFactory
+          class: solr.SnowballPorterFilterFactory
+          language: French
+          protected: protwords_fr.txt
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
     -
@@ -60,37 +56,35 @@ field_type:
       charFilters:
         -
           class: solr.MappingCharFilterFactory
-          mapping: accents_cs.txt
+          mapping: accents_fr.txt
       tokenizer:
         class: solr.WhitespaceTokenizerFactory
       filters:
         -
           class: solr.WordDelimiterFilterFactory
           catenateNumbers: 0
-          generateNumberParts: 1
-          protected: protwords_cs.txt
-          splitOnCaseChange: 0
+          generateNumberParts: 0
+          protected: protwords_fr.txt
+          splitOnCaseChange: 1
           generateWordParts: 1
           preserveOriginal: 1
           catenateAll: 0
           catenateWords: 0
         -
-          class: solr.LengthFilterFactory
-          min: 2
-          max: 100
-        -
           class: solr.LowerCaseFilterFactory
         -
           class: solr.SynonymFilterFactory
-          synonyms: synonyms_cs.txt
+          synonyms: synonyms_fr.txt
           expand: true
           ignoreCase: true
         -
           class: solr.StopFilterFactory
           ignoreCase: true
-          words: stopwords_cs.txt
+          words: stopwords_fr.txt
         -
-          class: solr.CzechStemFilterFactory
+          class: solr.SnowballPorterFilterFactory
+          language: French
+          protected: protwords_fr.txt
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
 solr_configs:
@@ -104,7 +98,7 @@ solr_configs:
           str:
             -
               name: name
-              VALUE: cs
+              VALUE: fr
             -
               name: lookupImpl
               VALUE: AnalyzingInfixLookupFactory
@@ -116,7 +110,7 @@ solr_configs:
               VALUE: twm_suggest
             -
               name: suggestAnalyzerFieldType
-              VALUE: text_cs
+              VALUE: text_fr
             -
               name: contextField
               VALUE: sm_context_tags
@@ -128,154 +122,180 @@ solr_configs:
               VALUE: 'false'
 text_files:
   stopwords: |
-    dnes
-    cz
-    timto
-    budes
-    budem
-    byli
-    jses
-    muj
-    svym
-    ta
-    tomto
-    tohle
-    tuto
-    tyto
-    jej
-    zda
-    proc
-    mate
-    tato
-    kam
-    tohoto
-    kdo
-    kteri
-    mi
-    nam
-    tom
-    tomuto
-    mit
-    nic
-    proto
-    kterou
-    byla
-    toho
-    protoze
-    asi
-    ho
-    nasi
-    napiste
-    re
-    coz
-    tim
-    takze
-    svych
-    jeji
-    svymi
-    jste
-    aj
-    tu
-    tedy
-    teto
-    bylo
-    kde
-    ke
-    prave
-    ji
-    nad
-    nejsou
-    ci
-    pod
-    tema
-    mezi
-    pres
-    ty
-    pak
-    vam
-    ani
-    kdyz
-    vsak
-    ne
-    jsem
-    tento
-    clanku
-    clanky
-    aby
-    jsme
-    pred
-    pta
-    jejich
-    byl
-    jeste
-    az
-    bez
-    take
-    pouze
-    prvni
-    vase
-    ktera
-    nas
-    novy
-    tipy
-    pokud
-    muze
-    design
-    strana
-    jeho
-    sve
-    jine
-    zpravy
-    nove
-    neni
-    vas
-    jen
-    podle
-    zde
-    clanek
-    uz
-    email
-    byt
-    vice
-    bude
-    jiz
-    nez
-    ktery
-    by
-    ktere
-    co
-    nebo
-    ten
-    tak
-    ma
-    pri
-    od
-    po
-    jsou
-    jak
-    dalsi
-    ale
-    si
-    ve
-    to
-    jako
-    za
-    zpet
-    ze
-    do
-    pro
+    au
+    aux
+    avec
+    ce
+    ces
+    dans
+    de
+    des
+    du
+    elle
+    en
+    et
+    eux
+    il
     je
-    na
+    la
+    le
+    leur
+    lui
+    ma
+    mais
+    me
+    même
+    mes
+    moi
+    mon
+    ne
+    nos
+    notre
+    nous
+    on
+    ou
+    par
+    pas
+    pour
+    qu
+    que
+    qui
+    sa
+    se
+    ses
+    son
+    sur
+    ta
+    te
+    tes
+    toi
+    ton
+    tu
+    un
+    une
+    vos
+    votre
+    vous
+    c
+    d
+    j
+    l
+    à
+    m
+    n
+    s
+    t
+    y
+    été
+    étée
+    étées
+    étés
+    étant
+    suis
+    es
+    est
+    sommes
+    êtes
+    sont
+    serai
+    seras
+    sera
+    serons
+    serez
+    seront
+    serais
+    serait
+    serions
+    seriez
+    seraient
+    étais
+    était
+    étions
+    étiez
+    étaient
+    fus
+    fut
+    fûmes
+    fûtes
+    furent
+    sois
+    soit
+    soyons
+    soyez
+    soient
+    fusse
+    fusses
+    fût
+    fussions
+    fussiez
+    fussent
+    ayant
+    eu
+    eue
+    eues
+    eus
+    ai
+    as
+    avons
+    avez
+    ont
+    aurai
+    auras
+    aura
+    aurons
+    aurez
+    auront
+    aurais
+    aurait
+    aurions
+    auriez
+    auraient
+    avais
+    avait
+    avions
+    aviez
+    avaient
+    eut
+    eûmes
+    eûtes
+    eurent
+    aie
+    aies
+    ait
+    ayons
+    ayez
+    aient
+    eusse
+    eusses
+    eût
+    eussions
+    eussiez
+    eussent
+    ceci
+    celà
+    cet
+    cette
+    ici
+    ils
+    les
+    leurs
+    quel
+    quels
+    quelle
+    quelles
+    sans
+    soi
   synonyms: |
     drupal, durpal
+  nouns: |
   protwords: |
   accents: |
     # À => A
-    "\u00C0" => "A"
+    #"\u00C0" => "A"
     # Á => A
-    "\u00C1" => "A"
+    #"\u00C1" => "A"
     # Â => A
-    "\u00C2" => "A"
+    #"\u00C2" => "A"
     # Ã => A
     "\u00C3" => "A"
     # Ä => A
@@ -285,21 +305,21 @@ text_files:
     # Æ => AE
     "\u00C6" => "AE"
     # Ç => C
-    "\u00C7" => "C"
+    #"\u00C7" => "C"
     # È => E
-    "\u00C8" => "E"
+    #"\u00C8" => "E"
     # É => E
-    "\u00C9" => "E"
+    #"\u00C9" => "E"
     # Ê => E
-    "\u00CA" => "E"
+    #"\u00CA" => "E"
     # Ë => E
     "\u00CB" => "E"
     # Ì => I
-    "\u00CC" => "I"
+    #"\u00CC" => "I"
     # Í => I
-    "\u00CD" => "I"
+    #"\u00CD" => "I"
     # Î => I
-    "\u00CE" => "I"
+    #"\u00CE" => "I"
     # Ï => I
     "\u00CF" => "I"
     # Ĳ => IJ
@@ -309,11 +329,11 @@ text_files:
     # Ñ => N
     "\u00D1" => "N"
     # Ò => O
-    "\u00D2" => "O"
+    #"\u00D2" => "O"
     # Ó => O
-    "\u00D3" => "O"
+    #"\u00D3" => "O"
     # Ô => O
-    "\u00D4" => "O"
+    #"\u00D4" => "O"
     # Õ => O
     "\u00D5" => "O"
     # Ö => O
@@ -325,23 +345,23 @@ text_files:
     # Þ
     "\u00DE" => "TH"
     # Ù => U
-    "\u00D9" => "U"
+    #"\u00D9" => "U"
     # Ú => U
-    "\u00DA" => "U"
+    #"\u00DA" => "U"
     # Û => U
-    "\u00DB" => "U"
+    #"\u00DB" => "U"
     # Ü => U
     "\u00DC" => "U"
     # Ý => Y
-    "\u00DD" => "Y"
+    #"\u00DD" => "Y"
     # Ÿ => Y
     "\u0178" => "Y"
     # à => a
-    "\u00E0" => "a"
+    #"\u00E0" => "a"
     # á => a
-    "\u00E1" => "a"
+    #"\u00E1" => "a"
     # â => a
-    "\u00E2" => "a"
+    #"\u00E2" => "a"
     # ã => a
     "\u00E3" => "a"
     # ä => a
@@ -351,21 +371,21 @@ text_files:
     # æ => ae
     "\u00E6" => "ae"
     # ç => c
-    "\u00E7" => "c"
+    #"\u00E7" => "c"
     # è => e
-    "\u00E8" => "e"
+    #"\u00E8" => "e"
     # é => e
-    "\u00E9" => "e"
+    #"\u00E9" => "e"
     # ê => e
-    "\u00EA" => "e"
+    #"\u00EA" => "e"
     # ë => e
     "\u00EB" => "e"
     # ì => i
-    "\u00EC" => "i"
+    #"\u00EC" => "i"
     # í => i
-    "\u00ED" => "i"
+    #"\u00ED" => "i"
     # î => i
-    "\u00EE" => "i"
+    #"\u00EE" => "i"
     # ï => i
     "\u00EF" => "i"
     # ĳ => ij
@@ -375,11 +395,11 @@ text_files:
     # ñ => n
     "\u00F1" => "n"
     # ò => o
-    "\u00F2" => "o"
+    #"\u00F2" => "o"
     # ó => o
-    "\u00F3" => "o"
+    #"\u00F3" => "o"
     # ô => o
-    "\u00F4" => "o"
+    #"\u00F4" => "o"
     # õ => o
     "\u00F5" => "o"
     # ö => o
@@ -393,15 +413,15 @@ text_files:
     # þ => th
     "\u00FE" => "th"
     # ù => u
-    "\u00F9" => "u"
+    #"\u00F9" => "u"
     # ú => u
-    "\u00FA" => "u"
+    #"\u00FA" => "u"
     # û => u
-    "\u00FB" => "u"
+    #"\u00FB" => "u"
     # ü => u
     "\u00FC" => "u"
     # ý => y
-    "\u00FD" => "y"
+    #"\u00FD" => "y"
     # ÿ => y
     "\u00FF" => "y"
     # ﬀ => ff
@@ -418,17 +438,3 @@ text_files:
     "\uFB05" => "st"
     # ﬆ => st
     "\uFB06" => "st"
-    # š => s
-    "\u0161" => "s"
-    # ě => e
-    "\u011B" => "e"
-    # č => c
-    "\u010D" => "c"
-    # ř => r
-    "\u0159" => "r"
-    # ž => z
-    "\u017E" => "z"
-    # ť => t
-    "\u0165" => "t"
-    # ď => d
-    "\u010F" => "d"

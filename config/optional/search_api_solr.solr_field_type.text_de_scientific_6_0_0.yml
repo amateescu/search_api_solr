@@ -6,13 +6,14 @@ dependencies:
     - language
   config:
     - language.entity.de
-id: text_de_5_0_0
-label: 'German Text Field'
+id: text_de_scientific_6_0_0
+label: 'German Scientific Text Field'
 managed_schema: false
-minimum_solr_version: 5.0.0
+minimum_solr_version: 6.0.0
 custom_code: ''
 field_type_language_code: de
-domains: {}
+domains:
+  - scientific
 field_type:
   name: text_de
   class: solr.TextField
@@ -27,20 +28,6 @@ field_type:
       tokenizer:
         class: solr.WhitespaceTokenizerFactory
       filters:
-        -
-          class: solr.WordDelimiterFilterFactory
-          protected: protwords_de.txt
-          # If non-zero, splits words at delimiters. For example:"CamelCase", "hot-spot" -> "Camel", "Case", "hot", "spot"
-          generateWordParts: 1
-          # If non-zero, splits numeric strings at delimiters:"1947-32" -> "1947", "32"
-          generateNumberParts: 1
-          splitOnCaseChange: 0
-          splitOnNumerics:
-          catenateWords: 1
-          catenateNumbers: 1
-          catenateAll: 0
-          stemEnglishPossessive: 0
-          preserveOriginal: 1
         -
           class: solr.LengthFilterFactory
           min: 2
