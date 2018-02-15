@@ -6,10 +6,10 @@ dependencies:
     - language
   config:
     - language.entity.en
-id: m_text_en_5_2_0
+id: m_text_en_6_0_0
 label: 'English Text Field'
 managed_schema: true
-minimum_solr_version: 5.2.0
+minimum_solr_version: 6.0.0
 custom_code: ''
 field_type_language_code: en
 domains: {}
@@ -93,7 +93,39 @@ field_type:
           protected: protwords.txt
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
-solr_configs: {}
+solr_configs:
+  searchComponents:
+    -
+      name: suggest
+      class: solr.SuggestComponent
+      lst:
+        -
+          name: suggester
+          str:
+            -
+              name: name
+              VALUE: en
+            -
+              name: lookupImpl
+              VALUE: AnalyzingInfixLookupFactory
+            -
+              name: dictionaryImpl
+              VALUE: DocumentDictionaryFactory
+            -
+              name: field
+              VALUE: twm_suggest
+            -
+              name: suggestAnalyzerFieldType
+              VALUE: text_en
+            -
+              name: contextField
+              VALUE: sm_context_tags
+            -
+              name: buildOnCommit
+              VALUE: 'true'
+            -
+              name: buildOnStartup
+              VALUE: 'false'
 text_files:
   stopwords: |
     a

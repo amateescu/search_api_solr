@@ -5,16 +5,15 @@ dependencies:
     - search_api_solr
     - language
   config:
-    - language.entity.it
-id: text_it_4_5_0
-label: 'Italian Text Field'
+    - language.entity.el
+id: text_el_6_0_0
+label: 'Greek Text Field'
 managed_schema: false
-minimum_solr_version: 4.5.0
-custom_code: ''
-field_type_language_code: it
+minimum_solr_version: 6.0.0
+field_type_language_code: el
 domains: {}
 field_type:
-  name: text_it
+  name: text_el
   class: solr.TextField
   positionIncrementGap: 100
   analyzers:
@@ -23,7 +22,7 @@ field_type:
       charFilters:
         -
           class: solr.MappingCharFilterFactory
-          mapping: accents_it.txt
+          mapping: accents_el.txt
       tokenizer:
         class: solr.WhitespaceTokenizerFactory
       filters:
@@ -31,22 +30,20 @@ field_type:
           class: solr.WordDelimiterFilterFactory
           catenateNumbers: 1
           generateNumberParts: 1
-          protected: protwords_it.txt
+          protected: protwords_el.txt
           splitOnCaseChange: 1
           generateWordParts: 1
           preserveOriginal: 1
           catenateAll: 0
           catenateWords: 1
         -
-          class: solr.LowerCaseFilterFactory
+          class: solr.GreekLowerCaseFilterFactory
         -
           class: solr.StopFilterFactory
           ignoreCase: true
-          words: stopwords_it.txt
+          words: stopwords_el.txt
         -
-          class: solr.SnowballPorterFilterFactory
-          language: Italian
-          protected: protwords_it.txt
+          class: solr.GreekStemFilterFactory
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
     -
@@ -54,7 +51,7 @@ field_type:
       charFilters:
         -
           class: solr.MappingCharFilterFactory
-          mapping: accents_it.txt
+          mapping: accents_el.txt
       tokenizer:
         class: solr.WhitespaceTokenizerFactory
       filters:
@@ -62,311 +59,137 @@ field_type:
           class: solr.WordDelimiterFilterFactory
           catenateNumbers: 0
           generateNumberParts: 0
-          protected: protwords_it.txt
+          protected: protwords_el.txt
           splitOnCaseChange: 1
           generateWordParts: 1
           preserveOriginal: 1
           catenateAll: 0
           catenateWords: 0
         -
-          class: solr.LowerCaseFilterFactory
+          class: solr.GreekLowerCaseFilterFactory
         -
           class: solr.SynonymFilterFactory
-          synonyms: synonyms_it.txt
+          synonyms: synonyms_el.txt
           expand: true
           ignoreCase: true
         -
           class: solr.StopFilterFactory
           ignoreCase: true
-          words: stopwords_it.txt
+          words: stopwords_el.txt
         -
-          class: solr.SnowballPorterFilterFactory
-          language: Italian
-          protected: protwords_it.txt
+          class: solr.GreekStemFilterFactory
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
-solr_configs: {}
+solr_configs:
+  searchComponents:
+    -
+      name: suggest
+      class: solr.SuggestComponent
+      lst:
+        -
+          name: suggester
+          str:
+            -
+              name: name
+              VALUE: el
+            -
+              name: lookupImpl
+              VALUE: AnalyzingInfixLookupFactory
+            -
+              name: dictionaryImpl
+              VALUE: DocumentDictionaryFactory
+            -
+              name: field
+              VALUE: twm_suggest
+            -
+              name: suggestAnalyzerFieldType
+              VALUE: text_el
+            -
+              name: contextField
+              VALUE: sm_context_tags
+            -
+              name: buildOnCommit
+              VALUE: 'true'
+            -
+              name: buildOnStartup
+              VALUE: 'false'
 text_files:
   stopwords: |
-    ad
-    al
-    allo
-    ai
-    agli
-    all
-    agl
-    alla
-    alle
-    con
-    col
-    coi
-    da
-    dal
-    dallo
-    dai
-    dagli
-    dall
-    dagl
-    dalla
-    dalle
-    di
-    del
-    dello
-    dei
-    degli
-    dell
-    degl
-    della
-    delle
-    in
-    nel
-    nello
-    nei
-    negli
-    nell
-    negl
-    nella
-    nelle
-    su
-    sul
-    sullo
-    sui
-    sugli
-    sull
-    sugl
-    sulla
-    sulle
-    per
-    tra
-    contro
-    io
-    tu
-    lui
-    lei
-    noi
-    voi
-    loro
-    mio
-    mia
-    miei
-    mie
-    tuo
-    tua
-    tuoi
-    tue
-    suo
-    sua
-    suoi
-    sue
-    nostro
-    nostra
-    nostri
-    nostre
-    vostro
-    vostra
-    vostri
-    vostre
-    mi
-    ti
-    ci
-    vi
-    lo
-    la
-    li
-    le
-    gli
-    ne
-    il
-    un
-    uno
-    una
-    ma
-    ed
-    se
-    perché
-    anche
-    come
-    dov
-    dove
-    che
-    chi
-    cui
-    non
-    più
-    quale
-    quanto
-    quanti
-    quanta
-    quante
-    quello
-    quelli
-    quella
-    quelle
-    questo
-    questi
-    questa
-    queste
-    si
-    tutto
-    tutti
-    a
-    c
-    e
-    i
-    l
-    o
-    ho
-    hai
-    ha
-    abbiamo
-    avete
-    hanno
-    abbia
-    abbiate
-    abbiano
-    avrò
-    avrai
-    avrà
-    avremo
-    avrete
-    avranno
-    avrei
-    avresti
-    avrebbe
-    avremmo
-    avreste
-    avrebbero
-    avevo
-    avevi
-    aveva
-    avevamo
-    avevate
-    avevano
-    ebbi
-    avesti
-    ebbe
-    avemmo
-    aveste
-    ebbero
-    avessi
-    avesse
-    avessimo
-    avessero
-    avendo
-    avuto
-    avuta
-    avuti
-    avute
-    sono
-    sei
-    è
-    siamo
-    siete
-    sia
-    siate
-    siano
-    sarò
-    sarai
-    sarà
-    saremo
-    sarete
-    saranno
-    sarei
-    saresti
-    sarebbe
-    saremmo
-    sareste
-    sarebbero
-    ero
-    eri
-    era
-    eravamo
-    eravate
-    erano
-    fui
-    fosti
-    fu
-    fummo
-    foste
-    furono
-    fossi
-    fosse
-    fossimo
-    fossero
-    essendo
-    faccio
-    fai
-    facciamo
-    fanno
-    faccia
-    facciate
-    facciano
-    farò
-    farai
-    farà
-    faremo
-    farete
-    faranno
-    farei
-    faresti
-    farebbe
-    faremmo
-    fareste
-    farebbero
-    facevo
-    facevi
-    faceva
-    facevamo
-    facevate
-    facevano
-    feci
-    facesti
-    fece
-    facemmo
-    faceste
-    fecero
-    facessi
-    facesse
-    facessimo
-    facessero
-    facendo
-    sto
-    stai
-    sta
-    stiamo
-    stanno
-    stia
-    stiate
-    stiano
-    starò
-    starai
-    starà
-    staremo
-    starete
-    staranno
-    starei
-    staresti
-    starebbe
-    staremmo
-    stareste
-    starebbero
-    stavo
-    stavi
-    stava
-    stavamo
-    stavate
-    stavano
-    stetti
-    stesti
-    stette
-    stemmo
-    steste
-    stettero
-    stessi
-    stesse
-    stessimo
-    stessero
-    stando
+    ο
+    η
+    το
+    οι
+    τα
+    του
+    τησ
+    των
+    τον
+    την
+    και
+    κι
+    κ
+    ειμαι
+    εισαι
+    ειναι
+    ειμαστε
+    ειστε
+    στο
+    στον
+    στη
+    στην
+    μα
+    αλλα
+    απο
+    για
+    προσ
+    με
+    σε
+    ωσ
+    παρα
+    αντι
+    κατα
+    μετα
+    θα
+    να
+    δε
+    δεν
+    μη
+    μην
+    επι
+    ενω
+    εαν
+    αν
+    τοτε
+    που
+    πωσ
+    ποιοσ
+    ποια
+    ποιο
+    ποιοι
+    ποιεσ
+    ποιων
+    ποιουσ
+    αυτοσ
+    αυτη
+    αυτο
+    αυτοι
+    αυτων
+    αυτουσ
+    αυτεσ
+    αυτα
+    εκεινοσ
+    εκεινη
+    εκεινο
+    εκεινοι
+    εκεινεσ
+    εκεινα
+    εκεινων
+    εκεινουσ
+    οπωσ
+    ομωσ
+    ισωσ
+    οσο
+    οτι
   synonyms: |
     drupal, durpal
   nouns: |
