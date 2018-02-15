@@ -275,11 +275,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     $search_api_solr_conf_path = drupal_get_path('module', 'search_api_solr') . '/solr-conf/' . $solr_branch;
     $solrcore_properties = parse_ini_file($search_api_solr_conf_path . '/solrcore.properties', FALSE, INI_SCANNER_RAW);
 
-    $schema = file_get_contents($search_api_solr_conf_path . '/schema.xml');
-    $schema = preg_replace('@<fieldType name="text_und".*?</fieldType>@ms', '<!-- fieldType text_und is moved to schema_extra_types.xml -->', $schema);
-
     $zip = new ZipStream('solr_' . $solr_branch . '_config.zip');
-    $zip->addFile('schema.xml', $schema);
     $zip->addFile('schema_extra_types.xml', $this->getSchemaExtraTypesXml());
     $zip->addFile('schema_extra_fields.xml', $this->getSchemaExtraFieldsXml());
     $zip->addFile('solrconfig_extra.xml', $this->getSolrconfigExtraXml());
