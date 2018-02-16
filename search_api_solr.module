@@ -121,16 +121,8 @@ function search_api_solr_form_search_api_index_form_validate_server(&$element, F
         }
       }
       if ($index_count > 0 && $form_state->getValue('status')) {
-        $msg = t('The concept of storing multiple "virtual" Search API indexes in one Solr index (aka core) is bad practice and randomly breaks a lot of advanced features like spell checking, suggestions, automplete and others. Create a second core within your Solr server and assign this "index" to that core.');
-        if ($this_index->isNew()) {
-          // Avoid creating multiple indexes on one server.
-          $form_state->setError($element, $msg);
-        }
-        else {
-          // Allow editing existing multiple indexes on one server for backward
-          // compatibility.
-          drupal_set_message($msg, 'error');
-        }
+        $msg = t("You're storing multiple indexes on the same Solr index (aka core). Take care if you use advanced Solr features like spell checking, suggesters, terms, autocomplete and others directly, because they aren't aware of these multiple indexes by default. Use Search API family modules like Autocomplete module instead which will help you to avoid issues.");
+        drupal_set_message($msg, 'warning');
       }
     }
   }

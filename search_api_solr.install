@@ -72,12 +72,10 @@ function search_api_solr_requirements($phase) {
       'value' => \Drupal::translation()->formatPlural($count, '1 server', '@count servers'),
     ];
     if ($multiple_indexes) {
-      $requirements['search_api_solr_multiple_indexes']['description'] = \Drupal::translation()->formatPlural($multiple_indexes, 'One Solr server contains more than one enabled index.', '@count Solr servers contain more than one enabled index.');
-      $requirements['search_api_solr_multiple_indexes']['severity'] = REQUIREMENT_ERROR;
-    }
-    else {
-      $requirements['search_api_solr_multiple_indexes']['description'] = \Drupal::translation()->formatPlural($count, 'The Solr server does not contain more than one enabled index.', 'All @count Solr servers do not contain more than one enabled index.');
-      $requirements['search_api_solr_multiple_indexes']['severity'] = REQUIREMENT_OK;
+      // @todo Warn if autocomplete uses an implementation that is not suitable
+      // for multiple indexes per core. But we need the possibility to turn that
+      // off if the user acknowledged it because he might really want to have
+      // it like this as a feature.
     }
 
     foreach ($servers as $server) {
