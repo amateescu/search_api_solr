@@ -691,7 +691,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertEquals('article trees.', $suggestions[3]->getSuggestedKeys());
     $this->assertEquals(1, $suggestions[3]->getResultsCount());
 
-    // @todo spellcheck
+    // @todo spellcheck tests
     #$query = $this->buildSearch(['articel doks'], [], ['body'], FALSE);
     #$suggestions = $backend->getSpellcheckSuggestions($query, $autocompleteSearch, 'doks', 'articel doks');
     #$this->assertEquals(1, count($suggestions));
@@ -704,7 +704,15 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     #$this->assertEquals(1, $suggestions[0]->getResultsCount());
     #$this->assertEquals('es', $suggestions[1]->getSuggestionSuffix());
 
-    // @todo suggester
+    $query = $this->buildSearch(['artic'], [], ['body'], FALSE);
+    $suggestions = $backend->getSuggesterSuggestions($query, $autocompleteSearch, 'artic', 'artic');
+    $this->assertEquals(1, count($suggestions));
+    $this->assertEquals('artic', $suggestions[0]->getUserInput());
+    $this->assertEquals('<b>', $suggestions[0]->getSuggestionPrefix());
+    $this->assertEquals('</b>le', $suggestions[0]->getSuggestionSuffix());
+    $this->assertEquals('<b>artic</b>le', $suggestions[0]->getSuggestedKeys());
+
+    // @todo more suggester tests
   }
 
   /**

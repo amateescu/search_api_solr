@@ -34,6 +34,11 @@ field_settings:
     type: solr_text_unstemmed
     datasource_id: 'entity:entity_test_mulrev_changed'
     property_path: body
+  body_suggest:
+    label: Body
+    type: solr_text_suggester
+    datasource_id: 'entity:entity_test_mulrev_changed'
+    property_path: body
   type:
     label: Type
     type: string
@@ -75,6 +80,16 @@ processor_settings:
     weights:
       add_properties: 0
       pre_index_save: -10
+  tokenizer:
+    all_fields: false
+    fields:
+      - body_suggest
+    spaces: '\.,;!?_'
+    overlap_cjk: 1
+    minimum_word_size: '3'
+    weights:
+      preprocess_index: -6
+      preprocess_query: -6
 options:
   cron_limit: -1
   index_directly: false
