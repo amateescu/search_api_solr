@@ -4,7 +4,6 @@ description: 'A server used for testing.'
 backend: search_api_solr_multilingual
 backend_config:
   site_hash: true
-  excerpt: false
   retrieve_data: false
   highlight_data: false
   skip_schema_check: false

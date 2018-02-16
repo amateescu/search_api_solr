@@ -5,7 +5,6 @@ status: true
 backend: search_api_solr
 backend_config:
   site_hash: true
-  excerpt: false
   retrieve_data: false
   highlight_data: true
   skip_schema_check: false

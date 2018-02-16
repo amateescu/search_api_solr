@@ -450,3 +450,24 @@ function search_api_solr_update_8207() {
     }
   }
 }
+
+/**
+ * Enable new highlighter.
+ */
+function search_api_solr_update_8208() {
+  foreach (search_api_solr_update_helper_get_backend_configs() as $server_name => $backend_config) {
+    if (isset($backend_config['excerpt'])) {
+      unset($backend_config['excerpt']);
+    }
+    search_api_solr_update_helper_save_backend_config($server_name, $backend_config);
+  }
+
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('search_api_solr.standard_highlighter');
+  $data = $config->getRawData();
+  unset($data['excerpt']);
+  $data['highlight']['snippets'] = 3;
+  $data['highlight']['fragsize'] = 0;
+  $config->setData($data);
+  $config->save(TRUE);
+}

@@ -399,9 +399,9 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   }
 
   /**
-   * Tests highlight and excerpt options.
+   * Tests highlight options.
    */
-  public function testHighlightAndExcerpt() {
+  public function testHighlight() {
     $config = $this->getIndex()->getServerInstance()->getBackendConfig();
 
     $this->insertExampleContent();
@@ -409,39 +409,23 @@ class SearchApiSolrTest extends SolrBackendTestBase {
 
     $config['retrieve_data'] = TRUE;
     $config['highlight_data'] = TRUE;
-    $config['excerpt'] = FALSE;
     $query = $this->buildSearch('foobar');
     $query->getIndex()->getServerInstance()->setBackendConfig($config);
     $results = $query->execute();
     $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
     /** @var \Drupal\search_api\Item\ItemInterface $result */
     foreach ($results as $result) {
-      $this->assertContains('<strong>foobar</strong>', (string) $result->getField('body')->getValues()[0]);
-      $this->assertNull($result->getExcerpt());
+      $this->assertContains('<strong>foobar</strong>', (string) $result->getExtraData('highlighted_fields', ['body' => ['']])['body'][0]);
     }
 
     $config['highlight_data'] = FALSE;
-    $config['excerpt'] = TRUE;
     $query = $this->buildSearch('foobar');
     $query->getIndex()->getServerInstance()->setBackendConfig($config);
     $results = $query->execute();
     $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
     /** @var \Drupal\search_api\Item\ItemInterface $result */
     foreach ($results as $result) {
-      $this->assertNotContains('<strong>foobar</strong>', (string) $result->getField('body')->getValues()[0]);
-      $this->assertContains('<strong>foobar</strong>', $result->getExcerpt());
-    }
-
-    $config['highlight_data'] = TRUE;
-    $config['excerpt'] = TRUE;
-    $query = $this->buildSearch('foobar');
-    $query->getIndex()->getServerInstance()->setBackendConfig($config);
-    $results = $query->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
-    /** @var \Drupal\search_api\Item\ItemInterface $result */
-    foreach ($results as $result) {
-      $this->assertContains('<strong>foobar</strong>', (string) $result->getField('body')->getValues()[0]);
-      $this->assertContains('<strong>foobar</strong>', $result->getExcerpt());
+      $this->assertEmpty($result->getExtraData('highlighted_fields', []));
     }
   }
 
