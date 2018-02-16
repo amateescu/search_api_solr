@@ -22,7 +22,7 @@
     "require": {
         "php": "^7.0",
         "maennchen/zipstream-php": "0.4.*",
-        "solarium/solarium": "dev-master",
+        "solarium/solarium": "~4.0.0-beta.1",
         "drupal/search_api": "~1.6"
     },
     "require-dev": {
@@ -36,6 +36,8 @@
         "drupal/search_api_solr_multilingual": "*"
     },
     "suggest": {
-        "drupal/facets": "Provides facetted search."
+        "drupal/facets": "Provides facetted search.",
+        "drupal/search_api_autocomplete": "Provides auto complete for search boxes.",
+        "drupal/search_api_location": "Provides location searches."
     }
 }
