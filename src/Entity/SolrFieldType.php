@@ -322,23 +322,25 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     $prefixes = $this->custom_code ? ['tc' . $this->custom_code] : ['t', 'to'];
     foreach ($prefixes as $prefix_without_cardinality) {
       foreach (['s', 'm'] as $cardinality) {
-        $prefix = $prefix_without_cardinality . $cardinality;
-        $name = $multilingual ?
-          Utility::getLanguageSpecificSolrDynamicFieldPrefix($prefix, $this->field_type_language_code) :
-          $prefix . '_';
-        $dynamic_fields[] = $dynamic_field = [
-          'name' => SearchApiSolrUtility::encodeSolrName($name) . '*',
-          'type' => $this->field_type['name'],
-          'stored' => TRUE,
-          'indexed' => TRUE,
-          'multiValued' => strpos($prefix, 'm') === (strlen($prefix) - 1),
-          'termVectors' => strpos($prefix, 't') === 0,
-          'omitNorms' => strpos($prefix, 'o') === (strlen($prefix) - 2),
-        ];
-        if ($multilingual && $this->custom_code && 'und' == $this->field_type_language_code) {
-          // Add a language-unspecific default dynamic field for that custom code.
-          $dynamic_field['name'] = SearchApiSolrUtility::encodeSolrName($prefix) . '_*';
-          $dynamic_fields[] = $dynamic_field;
+        if ($multilingual || $this->custom_code) {
+          $prefix = $prefix_without_cardinality . $cardinality;
+          $name = $multilingual ?
+            Utility::getLanguageSpecificSolrDynamicFieldPrefix($prefix, $this->field_type_language_code) :
+            $prefix . '_';
+          $dynamic_fields[] = $dynamic_field = [
+            'name' => SearchApiSolrUtility::encodeSolrName($name) . '*',
+            'type' => $this->field_type['name'],
+            'stored' => TRUE,
+            'indexed' => TRUE,
+            'multiValued' => strpos($prefix, 'm') === (strlen($prefix) - 1),
+            'termVectors' => strpos($prefix, 't') === 0,
+            'omitNorms' => strpos($prefix, 'o') === (strlen($prefix) - 2),
+          ];
+          if ($multilingual && $this->custom_code && 'und' == $this->field_type_language_code) {
+            // Add a language-unspecific default dynamic field for that custom code.
+            $dynamic_field['name'] = SearchApiSolrUtility::encodeSolrName($prefix) . '_*';
+            $dynamic_fields[] = $dynamic_field;
+          }
         }
       }
     }
