@@ -2116,10 +2116,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $added_urls = [];
     /** @var \Drupal\search_api_autocomplete\Suggestion\SuggestionInterface $suggestion */
     foreach ($suggestions as $key => $suggestion) {
-      if (!in_array($suggestion->getSuggestedKeys(), $added_suggestions, TRUE)) {
+      if (
+        !in_array($suggestion->getSuggestedKeys(), $added_suggestions, TRUE) ||
+        !in_array($suggestion->getUrl(), $added_urls, TRUE)
+      ) {
         $added_suggestions[] = $suggestion->getSuggestedKeys();
-      }
-      elseif (!in_array($suggestion->getUrl(), $added_urls, TRUE)) {
         $added_urls[] = $suggestion->getUrl();
       }
       else {
