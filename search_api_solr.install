@@ -432,7 +432,7 @@ function search_api_solr_update_8206() {
 }
 
 /**
- * Fix langauge undefined field types.
+ * Fix language undefined field types.
  */
 function search_api_solr_update_8207() {
   foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
