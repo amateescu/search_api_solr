@@ -172,7 +172,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function defaultConfiguration() {
     return [
-      'excerpt' => FALSE,
       'retrieve_data' => FALSE,
       'highlight_data' => FALSE,
       'skip_schema_check' => FALSE,
@@ -233,12 +232,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#title' => $this->t('Highlight retrieved data'),
       '#description' => $this->t('When retrieving result data from the Solr server, try to highlight the search terms in the returned fulltext fields.'),
       '#default_value' => $this->configuration['highlight_data'],
-    ];
-    $form['advanced']['excerpt'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Return an excerpt for all results'),
-      '#description' => $this->t("If search keywords are given, use Solr's capabilities to create a highlighted search excerpt for each result. Whether the excerpts will actually be displayed depends on the settings of the search, though."),
-      '#default_value' => $this->configuration['excerpt'],
     ];
     $form['advanced']['skip_schema_check'] = [
       '#type' => 'checkbox',
@@ -911,7 +904,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $solarium_query->getEDisMax()
         ->setQueryFields(implode(' ', $query_fields_boosted));
 
-      // Set highlighting and excerpt.
       $this->setHighlighting($solarium_query, $query, $query_fields);
     }
 
@@ -1476,9 +1468,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
 
       $solr_id = $this->createId($index->id(), $result_item->getId());
-      if ($excerpt = $this->getExcerpt($result->getData(), $solr_id, $result_item, $field_names)) {
-        $result_item->setExcerpt($excerpt);
-      }
+      $this->getHighlighting($result->getData(), $solr_id, $result_item, $field_names);
 
       $result_set->addResultItem($result_item);
     }
@@ -2388,65 +2378,23 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   The fields of the result item.
    * @param array $field_mapping
    *   Mapping from search_api field names to Solr field names.
-   *
-   * @return bool|string
-   *   FALSE if no excerpt is returned from Solr, the excerpt string otherwise.
    */
-  protected function getExcerpt($data, $solr_id, ItemInterface $item, array $field_mapping) {
-    if (!isset($data['highlighting'][$solr_id])) {
-      return FALSE;
-    }
-    $output = '';
-    // @todo using the spell field is not the optimal solution.
-    // @see https://www.drupal.org/node/2735881
-    if (!empty($this->configuration['excerpt']) && !empty($data['highlighting'][$solr_id]['spell'])) {
-      foreach ($data['highlighting'][$solr_id]['spell'] as $snippet) {
-        $snippet = strip_tags($snippet);
-        $snippet = preg_replace('/^.*>|<.*$/', '', $snippet);
-        $snippet = Utility::formatHighlighting($snippet);
-        // The created fragments sometimes have leading or trailing punctuation.
-        // We remove that here for all common cases, but take care not to remove
-        // < or > (so HTML tags stay valid).
-        $snippet = trim($snippet, "\00..\x2F:;=\x3F..\x40\x5B..\x60");
-        $output .= $snippet . ' … ';
-      }
-    }
-    if (!empty($this->configuration['highlight_data'])) {
-      $item_fields = $item->getFields();
+  protected function getHighlighting($data, $solr_id, ItemInterface $item, array $field_mapping) {
+    if (isset($data['highlighting'][$solr_id]) && !empty($this->configuration['highlight_data'])) {
+      $snippets = [];
       foreach ($field_mapping as $search_api_property => $solr_property) {
         if (!empty($data['highlighting'][$solr_id][$solr_property])) {
-          $snippets = [];
           foreach ($data['highlighting'][$solr_id][$solr_property] as $value) {
             // Contrary to above, we here want to preserve HTML, so we just
             // replace the [HIGHLIGHT] tags with the appropriate format.
-            $snippets[] = [
-              'raw' => preg_replace('#\[(/?)HIGHLIGHT\]#', '', $value),
-              'replace' => Utility::formatHighlighting($value),
-            ];
-          }
-          if ($snippets) {
-            $values = $item_fields[$search_api_property]->getValues();
-            foreach ($values as $value) {
-              foreach ($snippets as $snippet) {
-                if ($value instanceof TextValue) {
-                  if ($value->getText() === $snippet['raw']) {
-                    $value->setText($snippet['replace']);
-                  }
-                }
-                else {
-                  if ($value == $snippet['raw']) {
-                    $value = $snippet['replace'];
-                  }
-                }
-              }
-            }
-            $item_fields[$search_api_property]->setValues($values);
+            $snippets[$search_api_property][] = Utility::formatHighlighting($value);
           }
         }
       }
+      if ($snippets) {
+        $item->setExtraData('highlighted_fields', $snippets);
+      }
     }
-
-    return $output;
   }
 
   /**
@@ -2523,15 +2471,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   The solr fields to be highlighted.
    */
   protected function setHighlighting(Query $solarium_query, QueryInterface $query, $highlighted_fields = []) {
-    $excerpt = !empty($this->configuration['excerpt']);
-    $highlight = !empty($this->configuration['highlight_data']);
-
-    if ($highlight || $excerpt) {
+    if (!empty($this->configuration['highlight_data'])) {
       $highlighter = \Drupal::config('search_api_solr.standard_highlighter');
 
       $hl = $solarium_query->getHighlighting();
       $hl->setSimplePrefix('[HIGHLIGHT]');
       $hl->setSimplePostfix('[/HIGHLIGHT]');
+      $hl->setSnippets($highlighter->get('highlight.snippets'));
+      $hl->setFragSize($highlighter->get('highlight.fragsize'));
+      $hl->setMergeContiguous($highlighter->get('highlight.mergeContiguous'));
+      $hl->setRequireFieldMatch($highlighter->get('highlight.requireFieldMatch'));
+
       if ($highlighter->get('maxAnalyzedChars') != $highlighter->getOriginal('maxAnalyzedChars')) {
         $hl->setMaxAnalyzedChars($highlighter->get('maxAnalyzedChars'));
       }
@@ -2556,26 +2506,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       if ($highlighter->get('regex.maxAnalyzedChars') != $highlighter->getOriginal('regex.maxAnalyzedChars')) {
         $hl->setRegexMaxAnalyzedChars($highlighter->get('regex.maxAnalyzedChars'));
       }
-      if ($excerpt) {
-        // If the field doesn't exist yet getField() will add it.
-        $excerpt_field = $hl->getField('spell');
-        $excerpt_field->setSnippets($highlighter->get('excerpt.snippets'));
-        $excerpt_field->setFragSize($highlighter->get('excerpt.fragsize'));
-        $excerpt_field->setMergeContiguous($highlighter->get('excerpt.mergeContiguous'));
-      }
-      if ($highlight && !empty($highlighted_fields)) {
-        foreach ($highlighted_fields as $highlighted_field) {
-          // We must not set the fields at once using setFields() to not break
-          // the excerpt feature above.
-          $hl->addField($highlighted_field);
-        }
-        // @todo the amount of snippets need to be increased to get highlighting
-        //   of multi value fields to work.
-        // @see https://drupal.org/node/2753635
-        $hl->setSnippets(1);
-        $hl->setFragSize(0);
-        $hl->setMergeContiguous($highlighter->get('highlight.mergeContiguous'));
-        $hl->setRequireFieldMatch($highlighter->get('highlight.requireFieldMatch'));
+
+      foreach ($highlighted_fields as $highlighted_field) {
+        // We must not set the fields at once using setFields() to not break
+        // the altered queries.
+        $hl->addField($highlighted_field);
       }
     }
   }

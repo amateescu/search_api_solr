@@ -23,7 +23,6 @@ backend_config:
     http_method: AUTO
   retrieve_data: true
   highlight_data: false
-  excerpt: false
   skip_schema_check: true
   site_hash: false
   domain: generic

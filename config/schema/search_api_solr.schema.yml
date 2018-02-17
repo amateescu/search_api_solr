@@ -48,18 +48,6 @@ search_api_solr.standard_highlighter:
         maxAnalyzedChars:
           type: integer
           label: 'Instructs Solr to analyze only this many characters from a field when using the regex fragmenter (after which, the fragmenter produces fixed-sized fragments).'
-    excerpt:
-      type: mapping
-      mapping:
-        snippets:
-          type: integer
-          label: 'Specifies maximum number of highlighted snippets to generate per field.'
-        fragsize:
-          type: integer
-          label: 'Specifies the size, in characters, of fragments to consider for highlighting.'
-        mergeContiguous:
-          type: boolean
-          label: 'Instructs Solr to collapse contiguous fragments into a single fragment.'
     highlight:
       type: mapping
       mapping:
@@ -69,3 +57,9 @@ search_api_solr.standard_highlighter:
         requireFieldMatch:
           type: boolean
           label: 'If set to true, highlights terms only if they appear in the specified field.'
+        snippets:
+          type: integer
+          label: 'Specifies maximum number of highlighted snippets to generate per field.'
+        fragsize:
+          type: integer
+          label: 'Specifies the size, in characters, of fragments to consider for highlighting.'

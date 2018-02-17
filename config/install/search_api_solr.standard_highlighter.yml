@@ -34,20 +34,6 @@ regex:
   # fragments). Applying a complicated regex to a huge field is computationally
   # expensive.
   maxAnalyzedChars: 10000
-excerpt:
-  # Specifies maximum number of highlighted snippets to generate per field. It is
-  # possible for any number of snippets from zero to this value to be generated.
-  # This parameter accepts per-field overrides.
-  snippets: 3
-  # Specifies the size, in characters, of fragments to consider for highlighting.
-  # 0 indicates that no fragmenting should be considered and the whole field value
-  # should be used. This parameter accepts per-field overrides.
-  fragsize: 70
-  # Instructs Solr to collapse contiguous fragments into a single fragment. A
-  # value of true indicates contiguous fragments will be collapsed into single
-  # fragment. This parameter accepts per-field overrides. The default value,
-  # false, is also the backward-compatible setting.
-  mergeContiguous: false
 highlight:
   # Instructs Solr to collapse contiguous fragments into a single fragment. A
   # value of true indicates contiguous fragments will be collapsed into single
@@ -58,3 +44,11 @@ highlight:
   # If false, terms are highlighted in all requested fields regardless of which
   # field matched the query.
   requireFieldMatch: false
+  # Specifies maximum number of highlighted snippets to generate per field. It is
+  # possible for any number of snippets from zero to this value to be generated.
+  # This parameter accepts per-field overrides.
+  snippets: 3
+  # Specifies the size, in characters, of fragments to consider for highlighting.
+  # 0 indicates that no fragmenting should be considered and the whole field value
+  # should be used. This parameter accepts per-field overrides.
+  fragsize: 0
