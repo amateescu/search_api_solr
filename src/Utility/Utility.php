@@ -200,10 +200,8 @@ class Utility {
    * @return string|array
    *   The snippet(s), properly formatted as HTML.
    */
-  public static function formatHighlighting($snippet) {
-    // @todo the prefix and suffix should be the same as configured on the
-    // highlighting processor.
-    return preg_replace('#\[(/?)HIGHLIGHT\]#', '<$1strong>', $snippet);
+  public static function formatHighlighting($snippet, $prefix = '<strong>', $suffix = '</strong>') {
+    return str_replace(['[HIGHLIGHT]', '[/HIGHLIGHT]'], [$prefix, $suffix], $snippet);
   }
 
   /**

@@ -904,7 +904,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $solarium_query->getEDisMax()
         ->setQueryFields(implode(' ', $query_fields_boosted));
 
-      $this->setHighlighting($solarium_query, $query, $query_fields);
+      try {
+        $highlight_config = $index->getProcessor('highlight')->getConfiguration();
+        if ($highlight_config['highlight'] != 'never') {
+          $this->setHighlighting($solarium_query, $query, $query_fields);
+        }
+      }
+      catch (SearchApiException $exception) {
+        // Highlighting processor is not enabled for this index. Just use the
+        // the backend configuration.
+        $this->setHighlighting($solarium_query, $query, $query_fields);
+      }
     }
 
     $options = $query->getOptions();
@@ -2381,13 +2391,27 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected function getHighlighting($data, $solr_id, ItemInterface $item, array $field_mapping) {
     if (isset($data['highlighting'][$solr_id]) && !empty($this->configuration['highlight_data'])) {
+      $prefix = '<strong>';
+      $suffix = '</strong>';
+      try {
+        $highlight_config = $item->getIndex()->getProcessor('highlight')->getConfiguration();
+        if ($highlight_config['highlight'] == 'never') {
+          return;
+        }
+        $prefix = $highlight_config['highlight']['prefix'];
+        $suffix = $highlight_config['highlight']['suffix'];
+      }
+      catch (SearchApiException $exception) {
+        // Highlighting processor is not enabled for this index.
+      }
+
       $snippets = [];
       foreach ($field_mapping as $search_api_property => $solr_property) {
         if (!empty($data['highlighting'][$solr_id][$solr_property])) {
           foreach ($data['highlighting'][$solr_id][$solr_property] as $value) {
             // Contrary to above, we here want to preserve HTML, so we just
             // replace the [HIGHLIGHT] tags with the appropriate format.
-            $snippets[$search_api_property][] = Utility::formatHighlighting($value);
+            $snippets[$search_api_property][] = Utility::formatHighlighting($value, $prefix, $suffix);
           }
         }
       }
