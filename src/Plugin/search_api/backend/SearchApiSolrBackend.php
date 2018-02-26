@@ -2398,8 +2398,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         if ($highlight_config['highlight'] == 'never') {
           return;
         }
-        $prefix = $highlight_config['highlight']['prefix'];
-        $suffix = $highlight_config['highlight']['suffix'];
+        $prefix = $highlight_config['prefix'];
+        $suffix = $highlight_config['suffix'];
       }
       catch (SearchApiException $exception) {
         // Highlighting processor is not enabled for this index.
