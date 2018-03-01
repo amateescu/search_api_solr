@@ -38,7 +38,6 @@ before_install:
   - wget -nc --continue -v --tries=3 --directory-prefix=solr_downloads "http://archive.apache.org/dist/lucene/solr/${SOLR_VERSION}/solr-${SOLR_VERSION}.tgz"
   - tar -xzf solr_downloads/solr-${SOLR_VERSION}.tgz
   - export SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/$SEARCH_API_SOLR_CONF"
-  - composer config repositories.phayes vcs https://github.com/phayes/geophp
 
 install:
   - git tag 999.0.0
@@ -55,6 +54,8 @@ install:
   - cd $TRAVIS_BUILD_DIR/../drupal
   - composer install
   - if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.2" ]]; then composer run-script drupal-phpunit-upgrade; fi
+  - composer config repositories.geophp vcs https://github.com/phayes/geophp
+  - composer require phayes/geophp:dev-master
   - composer config repositories.search_api_solr vcs $TRAVIS_BUILD_DIR
   - composer require drupal/search_api:1.x-dev drupal/search_api_autocomplete:1.x-dev drupal/search_api_solr:999.0.0 drupal/search_api_location:1.x-dev drupal/facets:1.x-dev drupal/geofield:1.x-dev drupal/composer_deploy drush/drush:$DRUSH_VERSION
   # Patch template.
