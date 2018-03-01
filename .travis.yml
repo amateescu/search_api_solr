@@ -54,8 +54,11 @@ install:
   - cd $TRAVIS_BUILD_DIR/../drupal
   - composer install
   - if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.2" ]]; then composer run-script drupal-phpunit-upgrade; fi
-  - composer config repositories.geophp github https://github.com/phayes/geoPHP
+  #########################################
+  - git clone https://github.com/phayes/geoPHP.git
+  - composer config repositories.geophp vcs geoPHP
   - composer require phayes/geophp:dev-master
+  #########################################
   - composer config repositories.search_api_solr vcs $TRAVIS_BUILD_DIR
   - composer require drupal/search_api:1.x-dev drupal/search_api_autocomplete:1.x-dev drupal/search_api_solr:999.0.0 drupal/search_api_location:1.x-dev drupal/facets:1.x-dev drupal/geofield:1.x-dev drupal/composer_deploy drush/drush:$DRUSH_VERSION
   # Patch template.
