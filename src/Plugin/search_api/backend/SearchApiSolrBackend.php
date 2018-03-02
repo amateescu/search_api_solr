@@ -988,14 +988,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       // back into a lucene query. flattenKeys() was adjusted accordingly, but
       // in a backward compatible way.
       // @see https://lucene.apache.org/solr/guide/7_2/solr-upgrade-notes.html#solr-7-2
-      // @todo add a switch to force edismax for queries that don't use params.
       if ($edismax) {
+        $params = $solarium_query->getParams();
         // Extract keys.
         $keys = $query->getKeys();
         if (is_array($keys)) {
-          $keys = $this->flattenKeys($keys, explode(' ', $edismax->getQueryFields()));
-          // @todo the variant for edismax would be:
-          // $keys = $this->flattenKeys($keys);
+          if (isset($params['defType']) && 'edismax' == $params['defType']) {
+            $keys = $this->flattenKeys($keys);
+          }
+          else {
+            $keys = $this->flattenKeys($keys, explode(' ', $edismax->getQueryFields()));
+          }
         }
 
         if (!empty($keys)) {
@@ -1003,8 +1006,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $solarium_query->setQuery($keys);
         }
 
-        // @todo this line needs to be turned off if edismax is forced.
-        $solarium_query->removeComponent(ComponentAwareQueryInterface::COMPONENT_EDISMAX);
+        if (!isset($params['defType']) || 'edismax' != $params['defType']) {
+          $solarium_query->removeComponent(ComponentAwareQueryInterface::COMPONENT_EDISMAX);
+        }
       }
 
       // Send search request.
