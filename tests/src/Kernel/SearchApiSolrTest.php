@@ -412,6 +412,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query = $this->buildSearch('foobar');
     $query->getIndex()->getServerInstance()->setBackendConfig($config);
     $results = $query->execute();
+
     $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
     /** @var \Drupal\search_api\Item\ItemInterface $result */
     foreach ($results as $result) {
