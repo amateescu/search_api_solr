@@ -870,6 +870,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     $connector = $this->getSolrConnector();
     $solarium_query = NULL;
+    $edismax = NULL;
     $index_fields = $index->getFields();
     $index_fields += $this->getSpecialFields($index);
     if ($query->hasTag('mlt')) {
@@ -878,17 +879,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     else {
       // Instantiate a Solarium select query.
       $solarium_query = $connector->getSelectQuery();
-
-      // Extract keys.
-      $keys = $query->getKeys();
-      if (is_array($keys)) {
-        $keys = $this->flattenKeys($keys);
-      }
-
-      if (!empty($keys)) {
-        // Set them.
-        $solarium_query->setQuery($keys);
-      }
+      $edismax = $solarium_query->getEDisMax();
 
       // Set searched fields.
       $search_fields = $this->getQueryFulltextFields($query);
@@ -901,8 +892,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $boost = $field->getBoost() ? '^' . $field->getBoost() : '';
         $query_fields_boosted[] = $field_names[$search_field] . $boost;
       }
-      $solarium_query->getEDisMax()
-        ->setQueryFields(implode(' ', $query_fields_boosted));
+      $edismax->setQueryFields(implode(' ', $query_fields_boosted));
 
       try {
         $highlight_config = $index->getProcessor('highlight')->getConfiguration();
@@ -991,6 +981,31 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       // Allow modules to alter the solarium query.
       $this->moduleHandler->alter('search_api_solr_query', $solarium_query, $query);
       $this->preQuery($solarium_query, $query);
+
+      // Since Solr 7.2 the edsimax query parser doesn't allow local
+      // parameters anymore. But since we don't want to force all modules that
+      // implemented our hooks to re-write their code, we transform the query
+      // back into a lucene query. flattenKeys() was adjusted accordingly, but
+      // in a backward compatible way.
+      // @see https://lucene.apache.org/solr/guide/7_2/solr-upgrade-notes.html#solr-7-2
+      // @todo add a switch to force edismax for queries that don't use params.
+      if ($edismax) {
+        // Extract keys.
+        $keys = $query->getKeys();
+        if (is_array($keys)) {
+          $keys = $this->flattenKeys($keys, explode(' ', $edismax->getQueryFields()));
+          // @todo the variant for edismax would be:
+          // $keys = $this->flattenKeys($keys);
+        }
+
+        if (!empty($keys)) {
+          // Set them.
+          $solarium_query->setQuery($keys);
+        }
+
+        // @todo this line needs to be turned off if edismax is forced.
+        $solarium_query->removeComponent(ComponentAwareQueryInterface::COMPONENT_EDISMAX);
+      }
 
       // Send search request.
       $response = $connector->search($solarium_query);
@@ -2431,7 +2446,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @return string
    *   A Solr query string representing the same keys.
    */
-  protected function flattenKeys(array $keys) {
+  protected function flattenKeys(array $keys, $fields = []) {
     $k = [];
     $pre = '+';
 
@@ -2448,10 +2463,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         continue;
       }
       if (is_array($key)) {
-        $subkeys = $this->flattenKeys($key);
-        if ($subkeys) {
-          $nested_expressions = TRUE;
-          $k[] = "($subkeys)";
+        if ($subkeys = $this->flattenKeys($key, $fields)) {
+          $k[] = $subkeys;
         }
       }
       else {
@@ -2466,19 +2479,54 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // that the default operator is OR. The following code will produce filters
     // that look like this:
     //
-    // #conjunction | #negation | return value
+    // #conjunction | #negation | fields | return value
     // ----------------------------------------------------------------
-    // AND          | FALSE     | (+A +B +C)
-    // AND          | TRUE      | -(+A +B +C)
-    // OR           | FALSE     | (A B C)
-    // OR           | TRUE      | -(A B C)
-    //
-    // If there was just a single, unnested key, we can ignore all this.
-    if (count($k) == 1 && empty($nested_expressions)) {
+    // AND          | FALSE     | []     | (+A +B)
+    // AND          | TRUE      | []     | -(+A +B)
+    // OR           | FALSE     | []     | (A B)
+    // OR           | TRUE      | []     | -(A B)
+    // AND          | FALSE     | [x]    | (+x:A +x:B)
+    // AND          | TRUE      | [x]    | -(+x:A +x:B)
+    // OR           | FALSE     | [x]    | (x:A x:B)
+    // OR           | TRUE      | [x]    | -(x:A x:B)
+    // AND          | FALSE     | [x,y]  | (+(x:A y:A) +(x:B y:B))
+    // AND          | TRUE      | [x,y]  | -(+(x:A y:A) +(x:B y:B))
+    // OR           | FALSE     | [x,y]  | ((x:A y:A) (x:B y:B))
+    // OR           | TRUE      | [x,y]  | -((x:A y:A) (x:B y:B))
+
+    if ($fields) {
+      foreach($k as &$l) {
+        if (
+          strpos($l, '(') !== 0 &&
+          strpos($l, '+') !== 0 &&
+          strpos($l, '-') !== 0
+        ) {
+          $v = [];
+          foreach ($fields as $f) {
+            list($field, $boost) = explode('^', $f);
+            $v[] = $field . ':' . $l . ($boost ? '^' . $boost : '');
+          }
+          if (count($v) > 1) {
+            $l = '(' . implode(' ', $v) . ')';
+          }
+          else {
+            $l = reset($v);
+          }
+        }
+      }
+    }
+
+    if (count($k) == 1) {
       return $neg . reset($k);
     }
 
-    return $neg . '(' . $pre . implode(' ' . $pre, $k) . ')';
+    foreach ($k as &$j) {
+      if (strpos($j, '-') !== 0) {
+        $j = $pre . $j;
+      }
+    }
+
+    return $neg . '(' . implode(' ', $k) . ')';
   }
 
   /**

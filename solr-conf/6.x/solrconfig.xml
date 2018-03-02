@@ -9,7 +9,7 @@
      For more details about configurations options that may appear in
      this file, see http://wiki.apache.org/solr/SolrConfigXml.
 -->
-<config name="drupal-6.0-solr-6.x" >
+<config name="drupal-6.1-solr-6.x" >
   <!-- In all configuration below, a prefix of "solr." for class names
        is an alias that causes solr to search appropriate packages,
        including org.apache.solr.(search|update|request|core|analysis)
@@ -777,14 +777,12 @@
          will be overridden by parameters in the request
       -->
     <lst name="defaults">
-      <str name="defType">edismax</str>
-      <str name="df">content</str>
+      <str name="defType">lucene</str>
+      <str name="df">id</str>
       <str name="echoParams">explicit</str>
       <bool name="omitHeader">true</bool>
-      <float name="tie">0.01</float>
       <!-- Don't abort searches for the /select request handler (set in solrcore.properties) -->
       <int name="timeAllowed">${solr.selectSearchHandler.timeAllowed:-1}</int>
-      <str name="q.alt">*:*</str>
 
       <!-- By default, don't spell check -->
       <str name="spellcheck">false</str>
