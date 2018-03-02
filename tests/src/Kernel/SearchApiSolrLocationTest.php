@@ -10,7 +10,7 @@ use Drupal\search_api\Entity\Server;
 /**
  * Tests location searches and distance facets using the Solr search backend.
  *
- * @group search_api_solr
+ * @group search_api_location
  */
 class SearchApiSolrLocationTest extends SolrBackendTestBase {
 
