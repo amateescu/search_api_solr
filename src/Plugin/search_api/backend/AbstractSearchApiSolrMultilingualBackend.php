@@ -249,7 +249,11 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
                 return;
               }
               $flat_keys = $this->flattenKeys($keys, explode(' ', $new_solr_fields));
-              if (strpos($flat_keys, '(') !== 0) {
+              if (
+                strpos($flat_keys, '(') !== 0 &&
+                strpos($flat_keys, '+(') !== 0 &&
+                strpos($flat_keys, '-(') !== 0
+              ) {
                 $flat_keys = '(' . $flat_keys . ')';
               }
               $new_keys[] = $flat_keys;
