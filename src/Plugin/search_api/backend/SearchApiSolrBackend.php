@@ -992,12 +992,18 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $params = $solarium_query->getParams();
         // Extract keys.
         $keys = $query->getKeys();
+        $query_fields = $edismax->getQueryFields();
         if (is_array($keys)) {
-          if (isset($params['defType']) && 'edismax' == $params['defType']) {
+          if (
+            (isset($params['defType']) && 'edismax' == $params['defType']) ||
+            !$query_fields
+          ) {
+            // Edismax was forced via API or if the query fields were removed
+            // via API (like the multilingual backend does).
             $keys = $this->flattenKeys($keys);
           }
           else {
-            $keys = $this->flattenKeys($keys, explode(' ', $edismax->getQueryFields()));
+            $keys = $this->flattenKeys($keys, explode(' ', $query_fields));
           }
         }
 
@@ -2459,6 +2465,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     $neg = empty($keys['#negation']) ? '' : '-';
+    $escaped = isset($keys['#escaped']) ? $keys['#escaped'] : FALSE;
 
     foreach ($keys as $key_nr => $key) {
       // We cannot use \Drupal\Core\Render\Element::children() anymore because
@@ -2472,7 +2479,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
       }
       else {
-        $k[] = $this->queryHelper->escapePhrase(trim($key));
+        $k[] = $escaped ? trim($key) : $this->queryHelper->escapePhrase(trim($key));
       }
     }
     if (!$k) {
@@ -2756,7 +2763,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // facets.
     $facet_set = $solarium_query->getFacetSet();
     if (!empty($facet_set)) {
-      /** @var \Solarium\QueryType\Select\Query\Component\Facet\Field[] $facets */
+      /** @var \Solarium\Component\Facet\Field[] $facets */
       $facets = $facet_set->getFacets();
       foreach ($facets as $delta => $facet) {
         $facet_options = $facet->getOptions();

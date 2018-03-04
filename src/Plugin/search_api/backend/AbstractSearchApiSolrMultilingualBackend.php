@@ -12,6 +12,7 @@ use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api_solr\Solarium\Autocomplete\Query as AutocompleteQuery;
 use Drupal\search_api_solr\SolrMultilingualBackendInterface;
 use Drupal\search_api_solr\Utility\Utility;
+use Solarium\Component\ComponentAwareQueryInterface;
 use Solarium\Core\Query\QueryInterface as SolariumQueryInterface;
 use Solarium\QueryType\Select\Query\Query;
 use Solarium\Component\ResponseParser\FacetSet;
@@ -27,6 +28,13 @@ define('SEARCH_API_LANGUAGE_FIELD_NAME', 'search_api_language');
  * A abstract base class for all multilingual Solr Search API backends.
  */
 abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBackend implements SolrMultilingualBackendInterface {
+
+  /**
+   * The unprocessed search keys.
+   *
+   * @var mixed
+   */
+  protected $origKeys = FALSE;
 
   /**
    * Creates and deploys a missing dynamic Solr field if the server supports it.
@@ -174,69 +182,101 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
     $language_ids = $query->getLanguages();
 
     if (!empty($language_ids)) {
-      $mlt = $query->hasTag('mlt');
-      $edismax = NULL;
-      $hl = NULL;
-      $solr_fields = NULL;
-      $highlighted_fields = [];
-      if ($mlt) {
-        /** @var \Solarium\QueryType\MoreLikeThis\Query $solarium_query */
-        $solr_fields = implode(' ', $solarium_query->getMltFields());
-      }
-      else {
-        /** @var \Solarium\QueryType\Select\Query\Query $solarium_query */
-        $edismax = $solarium_query->getEDisMax();
-        $solr_fields = $edismax->getQueryFields();
-        $hl = $solarium_query->getHighlighting();
-        $highlighted_fields = $hl->getFields();
-      }
       $index = $query->getIndex();
       $fulltext_fields = $this->getQueryFulltextFields($query);
       $field_names = $this->getSolrFieldNames($index);
 
-      foreach ($fulltext_fields as $fulltext_field) {
-        $field_name = $field_names[$fulltext_field];
-        $boost = '';
-        if (preg_match('@' . $field_name . '(\^[\d.]+)@', $solr_fields, $matches)) {
-          $boost = $matches[1];
+      $language_specific_fields = [];
+      foreach ($language_ids as $language_id) {
+        foreach ($fulltext_fields as $fulltext_field) {
+          $field_name = $field_names[$fulltext_field];
+          $language_specific_fields[$language_id][$field_name] = Utility::encodeSolrName(Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id));
         }
+      }
 
-        $language_specific_fields = [];
-        $language_specific_fields_boosted = [];
-        foreach ($language_ids as $language_id) {
-          $language_specific_field = Utility::encodeSolrName(Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id));
-          $language_specific_fields[] = $language_specific_field;
-          $language_specific_fields_boosted[] = $language_specific_field . $boost;
-        }
+      $components = $solarium_query->getComponents();
+      if (isset($components[ComponentAwareQueryInterface::COMPONENT_HIGHLIGHTING])) {
+        $hl = $solarium_query->getHighlighting();
+        $highlighted_fields = $hl->getFields();
 
-        $solr_fields = str_replace(
-          $field_name . $boost,
-          implode(' ', array_unique($language_specific_fields_boosted)),
-          $solr_fields
-        );
-
-        if (isset($highlighted_fields[$field_name])) {
-          foreach ($language_specific_fields as $language_specific_field) {
-            // Copy the already set highlighting options over to the langauge
-            // specific fields.
-            $highlighted_field = $hl->getField($language_specific_field);
-            $highlighted_field->setOptions($highlighted_fields[$field_name]->getOptions());
-            $highlighted_field->setName($language_specific_field);
+        foreach ($field_names as $field_name) {
+          if (isset($highlighted_fields[$field_name])) {
+            foreach ($language_ids as $language_id) {
+              $language_specific_field = $language_specific_fields[$language_id][$field_name];
+              // Copy the already set highlighting options over to the language
+              // specific fields. getField() creates a new one first.
+              $highlighted_field = $hl->getField($language_specific_field);
+              $highlighted_field->setOptions($highlighted_fields[$field_name]->getOptions());
+              $highlighted_field->setName($language_specific_field);
+            }
+            $hl->removeField($field_name);
           }
-          $hl->removeField($field_name);
         }
-      }
-      if ($mlt) {
-        $solarium_query->setMltFields(explode(' ', $solr_fields));
-      }
-      else {
-        $edismax->setQueryFields($solr_fields);
       }
 
       if (empty($this->configuration['retrieve_data'])) {
         // We need the language to be part of the result to modify the result
         // accordingly in extractResults().
         $solarium_query->addField($field_names[SEARCH_API_LANGUAGE_FIELD_NAME]);
+      }
+
+      if ($query->hasTag('mlt')) {
+        $mlt_fields = [];
+        foreach ($language_ids as $language_id) {
+          /** @var \Solarium\QueryType\MoreLikeThis\Query $solarium_query */
+          foreach ($solarium_query->getMltFields() as $mlt_field) {
+            $mlt_fields[] = $language_specific_fields[$language_id][$mlt_field];
+          }
+        }
+        $solarium_query->setMltFields(explode(' ', $mlt_fields));
+      }
+      elseif ($keys = $query->getKeys()) {
+        if (is_array($keys)) {
+          /** @var \Solarium\QueryType\Select\Query\Query $solarium_query */
+          $edismax = $solarium_query->getEDisMax();
+          if ($solr_fields = $edismax->getQueryFields()) {
+            $new_keys = [];
+
+            foreach ($language_ids as $language_id) {
+              $new_solr_fields = $solr_fields;
+              foreach ($fulltext_fields as $fulltext_field) {
+                $field_name = $field_names[$fulltext_field];
+                $new_solr_fields = str_replace($field_name, $language_specific_fields[$language_id][$field_name], $new_solr_fields);
+              }
+              if ($new_solr_fields == $solr_fields) {
+                // If there's no change for the first language, there won't be
+                // any change for the other languages, too.
+                return;
+              }
+              $flat_keys = $this->flattenKeys($keys, explode(' ', $new_solr_fields));
+              if (
+                strpos($flat_keys, '(') !== 0 &&
+                strpos($flat_keys, '+(') !== 0 &&
+                strpos($flat_keys, '-(') !== 0
+              ) {
+                $flat_keys = '(' . $flat_keys . ')';
+              }
+              $new_keys[] = $flat_keys;
+            }
+
+            if (count($new_keys) > 1) {
+              $new_keys['#conjunction'] = 'OR';
+            }
+            $new_keys['#escaped'] = TRUE;
+
+            // Preserve the original keys to be set again in postQuery().
+            $this->origKeys = $query->getOriginalKeys();
+
+            // The orginal keys array is now already flatten once per language.
+            // that means that we already build Solr query strings containing
+            // fields and keys. Now we set these query strings again as keys
+            // using an OR conjunction but remove all query fields. That will
+            // cause the parent class to just concatenate the language specific
+            // query strings using OR as they are.
+            $query->keys($new_keys);
+            $edismax->setQueryFields([]);
+          }
+        }
       }
     }
   }
@@ -360,6 +400,10 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
    * {@inheritdoc}
    */
   protected function postQuery(ResultSetInterface $results, QueryInterface $query, $response) {
+    if ($this->origKeys) {
+      $query->keys($this->origKeys);
+    }
+
     parent::postQuery($results, $query, $response);
   }
 
