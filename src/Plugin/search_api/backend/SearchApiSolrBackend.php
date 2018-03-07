@@ -452,6 +452,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     return in_array($type, [
+      'graph_node_uuid',
+      'graph_edge_uuid',
       'location',
       'rpt',
       'solr_string_ngram',
@@ -1152,12 +1154,16 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $pref .= 'm';
           }
           else {
-            if ($this->fieldsHelper->isFieldIdReserved($key)) {
+            if (
+              $this->fieldsHelper->isFieldIdReserved($key) ||
+              // At the moment Solr's stream expressions for graphs only support
+              // single value fields because they need to be sorted internally.
+              strpos($type, 'graph_') === 0
+            ) {
               $pref .= 's';
             }
             else {
-              if ($field->getDataDefinition()
-                  ->isList() || $this->isHierarchicalField($field)) {
+              if ($field->getDataDefinition()->isList() || $this->isHierarchicalField($field)) {
                 $pref .= 'm';
               }
               else {

@@ -49,7 +49,7 @@
     that avoids logging every request
 -->
 
-<schema name="drupal-6.0-solr-6.x" version="1.6">
+<schema name="drupal-6.2-solr-6.x" version="1.6">
   <!-- attribute "name" is the name of this schema and is only used for display purposes.
        version="x.y" is Solr's version number for the schema syntax and
        semantics.  It should not normally be changed by applications.
@@ -184,6 +184,8 @@
   <dynamicField name="sm_*"  type="string"  indexed="true"  stored="true" multiValued="true"/>
   <dynamicField name="ses_*" type="edge_n2_kw_string"  indexed="true"  stored="true" multiValued="false"/>
   <dynamicField name="sem_*" type="edge_n2_kw_string"  indexed="true"  stored="true" multiValued="true"/>
+  <dynamicField name="sges_*"  type="string"  indexed="true"  stored="true" multiValued="false" docValues="true"/>
+  <dynamicField name="sgns_*"  type="string"  indexed="true"  stored="true" multiValued="false" docValues="true"/>
   <!-- Normal text fields are for full text - the relevance of a match depends on the length of the text -->
   <dynamicField name="ts_*"  type="text"    indexed="true"  stored="true" multiValued="false" termVectors="true"/>
   <dynamicField name="tm_*"  type="text"    indexed="true"  stored="true" multiValued="true" termVectors="true"/>
