@@ -461,5 +461,11 @@ function search_api_solr_update_8208() {
  */
 function search_api_solr_update_8209() {
   search_api_solr_update_helper_install_configs(InstallStorage::CONFIG_INSTALL_DIRECTORY);
+}
+
+/**
+ * Install Graph data types.
+ */
+function search_api_solr_update_8210() {
   search_api_solr_update_helper_install_configs(InstallStorage::CONFIG_OPTIONAL_DIRECTORY);
 }

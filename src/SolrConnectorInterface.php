@@ -348,10 +348,11 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    * Executes an extract query.
    *
    * @param \Solarium\Core\Query\QueryInterface|\Solarium\QueryType\Extract\Query $query
+   * @param \Solarium\Core\Client\Endpoint|null $endpoint
    *
    * @return \Solarium\QueryType\Extract\Result
    */
-  public function extract(QueryInterface $query);
+  public function extract(QueryInterface $query, Endpoint $endpoint = NULL);
 
   /**
    * Gets the content from an extract query result.

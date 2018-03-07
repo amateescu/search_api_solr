@@ -230,7 +230,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       $form_state->setError($form['path'], $this->t('If provided the path has to start with "/".'));
     }
     if (!empty($values['core']) && strpos($values['core'], '/') === 0) {
-      $form_state->setError($form['core'], $this->t('The core must not start with "/".'));
+      $form_state->setError($form['core'], $this->t('Core or collection must not start with "/".'));
     }
 
     if (!$form_state->hasAnyErrors()) {
@@ -882,8 +882,8 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function extract(QueryInterface $query) {
-    return $this->execute($query);
+  public function extract(QueryInterface $query, Endpoint $endpoint = NULL) {
+    return $this->execute($query, $endpoint);
   }
 
   /**
