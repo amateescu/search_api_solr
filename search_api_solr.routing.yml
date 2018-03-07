@@ -91,6 +91,7 @@ entity.solr_field_type.config_zip_collection:
     parameters:
       search_api_server:
         type: entity:search_api_server
+        with_config_overrides: TRUE
   requirements:
     _permission: 'administer search_api'
     _search_api_solr_local_action_access_check: 'TRUE'
