@@ -39,6 +39,7 @@ use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\Solarium\Autocomplete\Query as AutocompleteQuery;
 use Drupal\search_api_solr\SolrAutocompleteInterface;
 use Drupal\search_api_solr\SolrBackendInterface;
+use Drupal\search_api_solr\SolrCloudConnectorInterface;
 use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginManager;
 use Drupal\search_api_solr\Utility\Utility;
 use Solarium\Component\ComponentAwareQueryInterface;
@@ -468,7 +469,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function viewSettings() {
+    /** @var \Drupal\search_api_solr\Plugin\SolrConnector\StandardSolrCloudConnector $connector */
     $connector = $this->getSolrConnector();
+    $cloud = $connector instanceof SolrCloudConnectorInterface;
 
     $info[] = [
       'label' => $this->t('Solr connector plugin'),
@@ -480,10 +483,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'info' => $connector->getServerLink(),
     ];
 
-    $info[] = [
-      'label' => $this->t('Solr core URI'),
-      'info' => $connector->getCoreLink(),
-    ];
+    if ($cloud) {
+      $info[] = [
+        'label' => $this->t('Solr collection URI'),
+        'info' => $connector->getCollectionLink(),
+      ];
+    } else {
+      $info[] = [
+        'label' => $this->t('Solr core URI'),
+        'info' => $connector->getCoreLink(),
+      ];
+    }
 
     // Add connector-specific information.
     $info = array_merge($info, $connector->viewSettings());
@@ -505,13 +515,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       $ping = $connector->pingCore();
       if ($ping) {
-        $msg = $this->t('The Solr core could be accessed (latency: @millisecs ms).', ['@millisecs' => $ping * 1000]);
+        $msg = $this->t('The Solr @core could be accessed (latency: @millisecs ms).', ['@core' => $cloud ? 'collection' : 'core', '@millisecs' => $ping * 1000]);
       }
       else {
-        $msg = $this->t('The Solr core could not be accessed. Further data is therefore unavailable.');
+        $msg = $this->t('The Solr @core could not be accessed. Further data is therefore unavailable.', ['@core' => $cloud ? 'collection' : 'core']);
       }
       $info[] = [
-        'label' => $this->t('Core Connection'),
+        'label' => $cloud ? $this->t('Collection Connection') : $this->t('Core Connection'),
         'info' => $msg,
         'status' => $ping ? 'ok' : 'error',
       ];
@@ -583,7 +593,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
               'status' => $status,
             ];
 
-            if (!empty($stats_summary['@core_name'])) {
+            if (!empty($stats_summary['@collection_name'])) {
+              $info[] = [
+                'label' => $this->t('Solr Collection Name'),
+                'info' => $stats_summary['@collection_name'],
+              ];
+            }
+            elseif (!empty($stats_summary['@core_name'])) {
               $info[] = [
                 'label' => $this->t('Solr Core Name'),
                 'info' => $stats_summary['@core_name'],
