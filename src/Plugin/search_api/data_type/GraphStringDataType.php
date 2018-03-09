@@ -1,21 +1,19 @@
 <?php
 
-namespace Drupal\search_api\Plugin\search_api\data_type;
-
 namespace Drupal\search_api_solr\Plugin\search_api\data_type;
 
 use Drupal\search_api\Plugin\search_api\data_type\StringDataType;
 
 /**
- * Provides a graph node uuid data type.
+ * Provides a graph string data type.
  *
  * @SearchApiDataType(
- *   id = "graph_node_uuid",
- *   label = @Translation("Graph Node UUID"),
- *   description = @Translation("String field to store a graph node's UUID."),
+ *   id = "graph_string",
+ *   label = @Translation("Graph String"),
+ *   description = @Translation("String field to store graph nodes and edges."),
  *   fallback_type = "string",
- *   prefix = "sgn"
+ *   prefix = "sg"
  * )
  */
-class GraphNodeUuidDataType extends StringDataType {
+class GraphStringDataType extends StringDataType {
 }
