@@ -452,8 +452,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     return in_array($type, [
-      'graph_node_uuid',
-      'graph_edge_uuid',
+      'graph_string',
       'location',
       'rpt',
       'solr_string_ngram',
