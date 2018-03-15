@@ -612,7 +612,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     $request->setMethod($method);
     $request->addHeader('Accept: application/json');
     if (Request::METHOD_POST == $method) {
-      $request->addHeader('Content-type: application/json');
+      $request->addHeader('Content-Type: application/json');
       $request->setRawData($command_json);
     }
     $request->setHandler($path);
