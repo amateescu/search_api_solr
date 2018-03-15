@@ -862,6 +862,22 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
   /**
    * {@inheritdoc}
+   */
+  public function getIndexFilterQueryString(IndexInterface $index) {
+    $index_id = $this->getIndexId($index->id());
+
+    $fq = '+index_id:' . $this->queryHelper->escapeTerm($index_id);
+
+    // Set the site hash filter, if enabled.
+    if ($this->configuration['site_hash']) {
+      $fq .= ' +hash:' . $this->queryHelper->escapeTerm(Utility::getSiteHash());
+    }
+
+    return $fq;
+  }
+
+  /**
+   * {@inheritdoc}
    *
    * Options on $query prefixed by 'solr_param_' will be passed natively to Solr
    * as query parameter without the prefix. For example you can set the "Minimum
@@ -934,14 +950,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         ->addTags($filter_query['tags']);
     }
 
-    // Set the Index filter.
-    $solarium_query->createFilterQuery('index_id')->setQuery('index_id:' . $this->queryHelper->escapePhrase($index_id));
-
-    // Set the site hash filter, if enabled.
-    if ($this->configuration['site_hash']) {
-      $site_hash = $this->queryHelper->escapePhrase(Utility::getSiteHash());
-      $solarium_query->createFilterQuery('site_hash')->setQuery('hash:' . $site_hash);
-    }
+    // Set the Index (and site) filter.
+    $solarium_query->createFilterQuery('index_filter')->setQuery(
+      $this->getIndexFilterQueryString($index)
+    );
 
     // @todo Make this more configurable so that Search API can choose which
     //   fields it wants to fetch. But don't skip the minimum required fields as
@@ -1102,6 +1114,51 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
     }
      */
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function executeStreamingExpression(QueryInterface $query) {
+    $stream_expression = $query->getOption('solr_streaming_expression', FALSE);
+    if (!$stream_expression) {
+      throw new SearchApiSolrException('Streaming expression missing.');
+    }
+
+    $connector = $this->getSolrConnector();
+    if (!($connector instanceof SolrCloudConnectorInterface)) {
+      throw new SearchApiSolrException('Streaming expression are only supported by a Solr Cloud connector.');
+    }
+
+    $stream = $connector->getStreamQuery();
+    $stream->setExpression($stream_expression);
+    $this->applySearchWorkarounds($stream, $query);
+
+    try {
+      // Send search request.
+      $response = $connector->execute($stream);
+      $body = $response->getBody();
+      if (200 != $response->getStatusCode()) {
+        throw new SearchApiSolrException(strip_tags($body), $response->getStatusCode());
+      }
+      $decoded_body = json_decode($body);
+      if (isset($decoded_body->{'result-set'})) {
+        $last_doc = array_pop($decoded_body->{'result-set'}->docs);
+        if (isset($last_doc->EXCEPTION)) {
+          throw new SearchApiSolrException($last_doc->EXCEPTION);
+        }
+        if (!isset($last_doc->EOF)) {
+          throw new SearchApiSolrException('Streaming expression returned an incomplete result-set.');
+        }
+      }
+      else {
+        throw new SearchApiSolrException('Streaming expression did not return a result-set.');
+      }
+      return $body;
+    }
+    catch (\Exception $e) {
+      throw new SearchApiSolrException($this->t('An error occurred while trying execute a streaming expression on Solr: @msg.', ['@msg' => $e->getMessage()]), $e->getCode(), $e);
+    }
   }
 
   /**

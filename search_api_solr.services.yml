@@ -31,3 +31,7 @@ services:
 
   solarium.query_helper:
     class: Solarium\Core\Query\Helper
+
+  search_api_solr.streaming_expression_query_helper:
+    class: Drupal\search_api_solr\Utility\StreamingExpressionQueryHelper
+    arguments: ['@request_stack', '@module_handler', '@plugin.manager.search_api.parse_mode']

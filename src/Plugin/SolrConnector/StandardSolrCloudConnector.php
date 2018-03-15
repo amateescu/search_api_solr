@@ -65,6 +65,13 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
   /**
    * {@inheritdoc}
    */
+  public function getCollectionName() {
+    return $this->configuration['core'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCollectionLink() {
     return $this->getCoreLink();
   }

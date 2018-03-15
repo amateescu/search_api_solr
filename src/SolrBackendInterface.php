@@ -5,6 +5,7 @@ namespace Drupal\search_api_solr;
 use Drupal\search_api\Backend\BackendInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\ItemInterface;
+use Drupal\search_api\Query\QueryInterface;
 use Solarium\QueryType\Update\Query\Query as UpdateQuery;
 
 /**
@@ -95,4 +96,23 @@ interface SolrBackendInterface extends BackendInterface {
    */
   public function isManagedSchema();
 
+  /**
+   * Returns a ready to use query string to filter results by index and site.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *
+   * @return string
+   */
+  public function getIndexFilterQueryString(IndexInterface $index);
+
+  /**
+   * Executes a streaming expression.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *
+   * @return string A JSON encoded stream expression result.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   */
+  public function executeStreamingExpression(QueryInterface $query);
 }
