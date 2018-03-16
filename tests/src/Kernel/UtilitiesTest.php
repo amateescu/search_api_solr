@@ -18,6 +18,7 @@ class UtilitiesTest extends KernelTestBase {
   public static $modules = [
     'search_api',
     'search_api_solr',
+    'user',
   ];
 
   /**

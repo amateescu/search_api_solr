@@ -39,6 +39,7 @@ class SolrFieldTypeTest extends KernelTestBase {
     'language',
     'search_api',
     'search_api_solr',
+    'user',
   ];
 
   /**
