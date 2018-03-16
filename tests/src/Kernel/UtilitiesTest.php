@@ -16,7 +16,9 @@ class UtilitiesTest extends KernelTestBase {
    * {@inheritdoc}
    */
   public static $modules = [
+    'search_api',
     'search_api_solr',
+    'user',
   ];
 
   /**

@@ -11,6 +11,13 @@ use Solarium\QueryType\Stream\Query;
 interface SolrCloudConnectorInterface extends SolrConnectorInterface {
 
   /**
+   * Returns the Solr collection name.
+   *
+   * @return string
+   */
+  public function getCollectionName();
+
+  /**
    * Returns a link to the Solr collection, if the necessary options are set.
    *
    * @return \Drupal\Core\Link

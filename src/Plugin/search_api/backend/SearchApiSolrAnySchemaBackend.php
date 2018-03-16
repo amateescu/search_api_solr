@@ -61,8 +61,7 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
     }
 
     // Remove the filter queries that limit the results based on site and index.
-    $solarium_query->removeFilterQuery('site_hash');
-    $solarium_query->removeFilterQuery('index_id');
+    $solarium_query->removeFilterQuery('index_filter');
 
     // Set requestHandler for the query type.
     $config = $index->getDatasource('solr_document')->getConfiguration();
