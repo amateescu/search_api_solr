@@ -8,9 +8,8 @@ use Drupal\Tests\facets\Functional\ExampleContentTrait;
 use Drupal\Tests\facets\Functional\TestHelperTrait;
 use Drupal\search_api\Entity\Index;
 use Drupal\Tests\search_api\Functional\SearchApiBrowserTestBase;
+use Drupal\Tests\search_api_solr\Traits\SolrCommitTrait;
 use Drupal\views\Entity\View;
-
-defined('SOLR_INDEX_WAIT') || define('SOLR_INDEX_WAIT', getenv('SOLR_INDEX_WAIT') ?: 2);
 
 /**
  * Tests the facets functionality using the Solr backend.
@@ -19,6 +18,7 @@ defined('SOLR_INDEX_WAIT') || define('SOLR_INDEX_WAIT', getenv('SOLR_INDEX_WAIT'
  */
 class FacetsTest extends SearchApiBrowserTestBase {
 
+  use SolrCommitTrait;
   use BlockTestTrait;
   use ExampleContentTrait {
     indexItems as doIndexItems;
@@ -42,8 +42,9 @@ class FacetsTest extends SearchApiBrowserTestBase {
    */
   protected function tearDown() {
     if ($this->indexId) {
-      Index::load($this->indexId)->clear();
-      sleep(SOLR_INDEX_WAIT);
+      $index = Index::load($this->indexId);
+      $index->clear();
+      $this->ensureCommit($index->getServerInstance());
     }
     parent::tearDown();
   }
@@ -95,10 +96,13 @@ class FacetsTest extends SearchApiBrowserTestBase {
    *
    * @return int
    *   The number of successfully indexed items.
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   protected function indexItems($index_id) {
     $index_status = $this->doindexItems($index_id);
-    sleep(SOLR_INDEX_WAIT);
+    $index = Index::load($this->indexId);
+    $this->ensureCommit($index->getServerInstance());
     return $index_status;
   }
 

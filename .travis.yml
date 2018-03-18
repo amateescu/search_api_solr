@@ -86,10 +86,11 @@ before_script:
   - mkdir $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8
   - mkdir $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf
   - unzip -o conf.zip -d $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf
-  - echo "name=d8" > $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/core.properties
+  - echo "solr.install.dir=$TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}" >> $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf/solrcore.properties
   - ls -lh $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf
-  - $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr start -p 8983
-  - $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr start -e techproducts -p 8993
+  - $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr start -e techproducts -p 8983
+  # Add the preconfigured d8 core to the running techproducts example.
+  - $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr create -c d8 -d $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf
 
 script:
   # Run the tests within the drupal directory.

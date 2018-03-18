@@ -12,7 +12,7 @@ backend_config:
   connector_config:
     scheme: http
     host: localhost
-    port: '8993'
+    port: '8983'
     path: /solr
     core: techproducts
     timeout: 5

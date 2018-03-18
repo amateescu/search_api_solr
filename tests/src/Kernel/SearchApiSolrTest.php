@@ -10,6 +10,7 @@ use Drupal\search_api\Utility\Utility;
 use Drupal\search_api_autocomplete\Entity\Search;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\Tests\search_api_solr\Traits\InvokeMethodTrait;
+use Drupal\Tests\search_api_solr\Traits\SolrCommitTrait;
 use Drupal\user\Entity\User;
 
 /**
@@ -19,6 +20,7 @@ use Drupal\user\Entity\User;
  */
 class SearchApiSolrTest extends SolrBackendTestBase {
 
+  use SolrCommitTrait;
   use InvokeMethodTrait;
 
   /**
@@ -168,10 +170,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = Index::load($this->indexId);
     $server->deleteAllIndexItems($index);
-    // Deleting items take at least 1 second for Solr to parse it so that drupal
-    // doesn't get timeouts while waiting for Solr. Lets give it 2 seconds to
-    // make sure we are in bounds.
-    sleep(SOLR_INDEX_WAIT);
+    $this->ensureCommit($server);
     $query = $this->buildSearch();
     $results = $query->execute();
     $this->assertEquals(0, $results->getResultCount(), 'Clearing the server worked correctly.');
@@ -490,10 +489,10 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $results = $this->buildSearch()->addCondition('uid', 0, '>')->execute();
     $this->assertEquals(1, $results->getResultCount(), 'Search for users returned correct number of results.');
 
-    $this->getIndex()->removeDatasource('entity:user')->save();
+    $index = $this->getIndex();
+    $index->removeDatasource('entity:user')->save();
 
-    // Wait for the commitWithin 1 second to complete the deletion.
-    sleep(SOLR_INDEX_WAIT);
+    $this->ensureCommit($index->getServerInstance());
 
     $results = $this->buildSearch()->execute();
     $this->assertEquals(5, $results->getResultCount(), 'Number of indexed entities is correct.');
