@@ -3,14 +3,15 @@
 namespace Drupal\Tests\search_api_solr\Kernel\Processor;
 
 use Drupal\search_api\Entity\Server;
+use Drupal\Tests\search_api_solr\Traits\SolrCommitTrait;
 use Symfony\Component\Yaml\Yaml;
-
-defined('SOLR_INDEX_WAIT') || define('SOLR_INDEX_WAIT', getenv('SOLR_INDEX_WAIT') ?: 2);
 
 /**
  * Helper to exchange the DB backend for a Solr backend in processor tests.
  */
 trait SolrBackendTrait {
+
+  use SolrCommitTrait;
 
   /**
    * Swap the DB backend for a Solr backend.
@@ -45,7 +46,7 @@ trait SolrBackendTrait {
    */
   protected function indexItems() {
     $index_status = parent::indexItems();
-    sleep(SOLR_INDEX_WAIT);
+    $this->ensureCommit($this->server);
     return $index_status;
   }
 
@@ -54,8 +55,7 @@ trait SolrBackendTrait {
    */
   protected function tearDown() {
     $this->index->clear();
-    sleep(SOLR_INDEX_WAIT);
+    $this->ensureCommit($this->server);
     parent::tearDown();
   }
-
 }

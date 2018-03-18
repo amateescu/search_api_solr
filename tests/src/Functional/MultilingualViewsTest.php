@@ -6,8 +6,7 @@ use Drupal\Tests\search_api\Functional\ViewsTest;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
 use Drupal\Tests\search_api\Functional\SearchApiBrowserTestBase;
-
-defined('SOLR_INDEX_WAIT') || define('SOLR_INDEX_WAIT', getenv('SOLR_INDEX_WAIT') ?: 2);
+use Drupal\Tests\search_api_solr\Traits\SolrCommitTrait;
 
 /**
  * Tests the Views integration of the Search API.
@@ -15,6 +14,8 @@ defined('SOLR_INDEX_WAIT') || define('SOLR_INDEX_WAIT', getenv('SOLR_INDEX_WAIT'
  * @group search_api_solr
  */
 class MultilingualViewsTest extends ViewsTest {
+
+  use SolrCommitTrait;
 
   /**
    * Modules to enable for this test.
@@ -56,7 +57,7 @@ class MultilingualViewsTest extends ViewsTest {
   protected function tearDown() {
     $index = Index::load($this->indexId);
     $index->clear();
-    sleep(SOLR_INDEX_WAIT);
+    $this->ensureCommit($index->getServerInstance());
     parent::tearDown();
   }
 
@@ -79,10 +80,13 @@ class MultilingualViewsTest extends ViewsTest {
    *
    * @return int
    *   The number of successfully indexed items.
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   protected function indexItems($index_id) {
     $index_status = parent::indexItems($index_id);
-    sleep(SOLR_INDEX_WAIT);
+    $index = Index::load($index_id);
+    $this->ensureCommit($index->getServerInstance());
     return $index_status;
   }
 

@@ -15,7 +15,7 @@ backend_config:
     path: /solr
     core: d8
     timeout: 5
-    index_timeout: 5
+    index_timeout: 20
     optimize_timeout: 5
     solr_version: ''
     http_method: AUTO
