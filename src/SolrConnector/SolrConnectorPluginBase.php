@@ -752,7 +752,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function createSearchResult(Query $query, Response $response) {
+  public function createSearchResult(QueryInterface $query, Response $response) {
     return $this->solr->createResult($query, $response);
   }
 
