@@ -1136,25 +1136,36 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     try {
       // Send search request.
-      $response = $connector->execute($stream);
-      $body = $response->getBody();
-      if (200 != $response->getStatusCode()) {
-        throw new SearchApiSolrException(strip_tags($body), $response->getStatusCode());
-      }
-      $decoded_body = json_decode($body);
-      if (isset($decoded_body->{'result-set'})) {
-        $last_doc = array_pop($decoded_body->{'result-set'}->docs);
-        if (isset($last_doc->EXCEPTION)) {
-          throw new SearchApiSolrException($last_doc->EXCEPTION);
-        }
-        if (!isset($last_doc->EOF)) {
-          throw new SearchApiSolrException('Streaming expression returned an incomplete result-set.');
-        }
-      }
-      else {
-        throw new SearchApiSolrException('Streaming expression did not return a result-set.');
-      }
-      return $body;
+      $response = $connector->stream($stream);
+      return $response;
+    }
+    catch (\Exception $e) {
+      throw new SearchApiSolrException($this->t('An error occurred while trying execute a streaming expression on Solr: @msg.', ['@msg' => $e->getMessage()]), $e->getCode(), $e);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function executeGraphStreamingExpression(QueryInterface $query) {
+    $stream_expression = $query->getOption('solr_streaming_expression', FALSE);
+    if (!$stream_expression) {
+      throw new SearchApiSolrException('Streaming expression missing.');
+    }
+
+    $connector = $this->getSolrConnector();
+    if (!($connector instanceof SolrCloudConnectorInterface)) {
+      throw new SearchApiSolrException('Streaming expression are only supported by a Solr Cloud connector.');
+    }
+
+    $graph = $connector->getGraphQuery();
+    $graph->setExpression($stream_expression);
+    $this->applySearchWorkarounds($graph, $query);
+
+    try {
+      // Send search request.
+      $response = $connector->graph($graph);
+      return $response;
     }
     catch (\Exception $e) {
       throw new SearchApiSolrException($this->t('An error occurred while trying execute a streaming expression on Solr: @msg.', ['@msg' => $e->getMessage()]), $e->getCode(), $e);
@@ -1484,7 +1495,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected function extractResults(QueryInterface $query, ResultInterface $result) {
     $index = $query->getIndex();
-    $backend_config = $index->getServerInstance()->getBackendConfig();
     $field_names = $this->getSolrFieldNames($index);
     $fields = $index->getFields(TRUE);
     $site_hash = Utility::getSiteHash();
