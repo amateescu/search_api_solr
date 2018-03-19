@@ -887,6 +887,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @endcode
    */
   public function search(QueryInterface $query) {
+   if ($query->getOption('solr_streaming_expression', FALSE)) {
+     $result = $this->executeStreamingExpression($query);
+     // Extract results.
+     $results = $this->extractResults($query, $result);
+
+     $this->moduleHandler->alter('search_api_solr_search_results', $results, $query, $result);
+     $this->postQuery($results, $query, $result);
+
+     return $results;
+   }
+
     $mlt_options = $query->getOption('search_api_mlt');
     if (!empty($mlt_options)) {
       $query->addTag('mlt');
@@ -1135,9 +1146,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $this->applySearchWorkarounds($stream, $query);
 
     try {
-      // Send search request.
-      $response = $connector->stream($stream);
-      return $response;
+      return $connector->stream($stream);
     }
     catch (\Exception $e) {
       throw new SearchApiSolrException($this->t('An error occurred while trying execute a streaming expression on Solr: @msg.', ['@msg' => $e->getMessage()]), $e->getCode(), $e);
@@ -1163,9 +1172,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $this->applySearchWorkarounds($graph, $query);
 
     try {
-      // Send search request.
-      $response = $connector->graph($graph);
-      return $response;
+      return $connector->graph($graph);
     }
     catch (\Exception $e) {
       throw new SearchApiSolrException($this->t('An error occurred while trying execute a streaming expression on Solr: @msg.', ['@msg' => $e->getMessage()]), $e->getCode(), $e);

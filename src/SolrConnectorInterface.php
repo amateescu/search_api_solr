@@ -296,12 +296,12 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
   /**
    * Creates a result from a response.
    *
-   * @param \Solarium\QueryType\Select\Query\Query $query
+   * @param QueryInterface $query
    * @param \Solarium\Core\Client\Response $response
    *
    * @return \Solarium\Core\Query\Result\ResultInterface
    */
-  public function createSearchResult(Query $query, Response $response);
+  public function createSearchResult(QueryInterface $query, Response $response);
 
   /**
    * Executes an update query and applies some tweaks.
