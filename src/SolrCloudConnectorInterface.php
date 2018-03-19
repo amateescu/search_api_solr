@@ -3,7 +3,8 @@
 namespace Drupal\search_api_solr;
 
 use Solarium\Core\Client\Endpoint;
-use Solarium\QueryType\Stream\Query;
+use Solarium\QueryType\Graph\Query as GraphQuery;
+use Solarium\QueryType\Stream\Query as StreamQuery;
 
 /**
  *
@@ -55,13 +56,31 @@ interface SolrCloudConnectorInterface extends SolrConnectorInterface {
   public function getStreamQuery();
 
   /**
+   * Creates a new Solarium graph query.
+   *
+   * @return \Solarium\QueryType\Graph\Query
+   *   The Graph query.
+   */
+  public function getGraphQuery();
+
+  /**
    * Executes a stream query.
    *
    * @param \Solarium\QueryType\Stream\Query $query
    * @param \Solarium\Core\Client\Endpoint|null $endpoint
    *
-   * @return \Solarium\Core\Query\Result\ResultInterface
+   * @return \Solarium\QueryType\Stream\Result
    */
-  public function stream(Query $query, Endpoint $endpoint = NULL);
+  public function stream(StreamQuery $query, Endpoint $endpoint = NULL);
+
+  /**
+   * Executes a stream query.
+   *
+   * @param \Solarium\QueryType\Graph\Query $query
+   * @param \Solarium\Core\Client\Endpoint|null $endpoint
+   *
+   * @return \Solarium\QueryType\Graph\Result
+   */
+  public function graph(GraphQuery $query, Endpoint $endpoint = NULL);
 
 }

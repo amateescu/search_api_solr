@@ -5,7 +5,9 @@ namespace Drupal\search_api_solr\Plugin\SolrConnector;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api_solr\SolrCloudConnectorInterface;
 use Solarium\Core\Client\Endpoint;
-use Solarium\QueryType\Stream\Query;
+use Solarium\QueryType\Graph\Query as GraphQuery;
+use Solarium\QueryType\Ping\Query as PingQuery;
+use Solarium\QueryType\Stream\Query as StreamQuery;
 
 /**
  * Standard Solr Cloud connector.
@@ -46,7 +48,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
     $summary['@collection_name'] = '';
 
     $query = $this->solr->createPing();
-    $query->setResponseWriter(Query::WT_PHPS);
+    $query->setResponseWriter(PingQuery::WT_PHPS);
     $query->setHandler('admin/mbeans?stats=true');
     $stats = $this->execute($query)->getData();
     if (!empty($stats)) {
@@ -96,13 +98,27 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
   public function getStreamQuery() {
     $this->connect();
     return $this->solr->createStream();
-
   }
 
   /**
    * {@inheritdoc}
    */
-  public function stream(Query $query, Endpoint $endpoint = NULL) {
+  public function stream(StreamQuery $query, Endpoint $endpoint = NULL) {
+    return $this->execute($query, $endpoint);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getGraphQuery() {
+    $this->connect();
+    return $this->solr->createGraph();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function graph(GraphQuery $query, Endpoint $endpoint = NULL) {
     return $this->execute($query, $endpoint);
   }
 

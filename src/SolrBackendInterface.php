@@ -110,9 +110,20 @@ interface SolrBackendInterface extends BackendInterface {
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
    *
-   * @return string A JSON encoded stream expression result.
+   * @return \Solarium\QueryType\Stream\Result
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function executeStreamingExpression(QueryInterface $query);
+
+  /**
+   * Executes a graph streaming expression.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *
+   * @return \Solarium\QueryType\Graph\Result
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   */
+  public function executeGraphStreamingExpression(QueryInterface $query);
 }
