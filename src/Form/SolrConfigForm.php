@@ -44,7 +44,6 @@ class SolrConfigForm extends FormBase {
 
       // Generate a fieldset for each file.
       foreach ($files_list as $file_name => $file_info) {
-        $file_date = \Drupal::service('date.formatter')->format(strtotime($file_info['modified']));
         $escaped_file_name = Html::escape($file_name);
 
         $form['files'][$file_name] = [
@@ -54,7 +53,9 @@ class SolrConfigForm extends FormBase {
         ];
 
         $data = '<h3>' . $escaped_file_name . '</h3>';
-        $data .= '<p><em>' . $this->t('Last modified: @time.', ['@time' => $file_date]) . '</em></p>';
+        if (isset($file_info['modified'])) {
+          $data .= '<p><em>' . $this->t('Last modified: @time.', ['@time' => \Drupal::service('date.formatter')->format(strtotime($file_info['modified']))]) . '</em></p>';
+        }
 
         if ($file_info['size'] > 0) {
           /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
