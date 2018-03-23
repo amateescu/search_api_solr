@@ -8,7 +8,7 @@ use Drupal\Tests\facets\Functional\ExampleContentTrait;
 use Drupal\Tests\facets\Functional\TestHelperTrait;
 use Drupal\search_api\Entity\Index;
 use Drupal\Tests\search_api\Functional\SearchApiBrowserTestBase;
-use Drupal\Tests\search_api_solr\Traits\SolrCommitTrait;
+use Drupal\search_api_solr\Utility\SolrCommitTrait;
 use Drupal\views\Entity\View;
 
 /**

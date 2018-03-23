@@ -1,10 +1,10 @@
 <?php
 
-namespace Drupal\Tests\search_api_solr\Traits;
+namespace Drupal\search_api_solr\Utility;
 
 use Drupal\search_api\ServerInterface;
 
-defined('SOLR_INDEX_WAIT') || define('SOLR_INDEX_WAIT', getenv('SOLR_INDEX_WAIT') ?: 2);
+defined('SOLR_INDEX_WAIT') || define('SOLR_INDEX_WAIT', getenv('SOLR_INDEX_WAIT') ?: 0);
 
 /**
  * Helper to ensure that solr index is up to date.
@@ -12,7 +12,11 @@ defined('SOLR_INDEX_WAIT') || define('SOLR_INDEX_WAIT', getenv('SOLR_INDEX_WAIT'
 trait SolrCommitTrait {
 
   /**
-   * Avoid random test failures due to race conditions.
+   * Explicitly sent a commit command to a Solr server.
+   *
+   * @param \Drupal\search_api\ServerInterface $server
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   protected function ensureCommit(ServerInterface $server) {
     $backend = $server->getBackend();
@@ -21,6 +25,8 @@ trait SolrCommitTrait {
     $update = $connector->getUpdateQuery();
     $update->addCommit(TRUE, TRUE, TRUE);
     $connector->update($update);
-    sleep(SOLR_INDEX_WAIT);
+    if (SOLR_INDEX_WAIT) {
+      sleep(SOLR_INDEX_WAIT);
+    }
   }
 }

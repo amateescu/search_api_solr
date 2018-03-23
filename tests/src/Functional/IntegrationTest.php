@@ -3,7 +3,7 @@
 namespace Drupal\Tests\search_api_solr\Functional;
 
 use Drupal\search_api\Entity\Index;
-use Drupal\Tests\search_api_solr\Traits\SolrCommitTrait;
+use Drupal\search_api_solr\Utility\SolrCommitTrait;
 
 /**
  * Tests the overall functionality of the Search API framework and admin UI.

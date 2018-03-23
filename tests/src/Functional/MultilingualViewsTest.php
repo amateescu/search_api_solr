@@ -6,7 +6,7 @@ use Drupal\Tests\search_api\Functional\ViewsTest;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
 use Drupal\Tests\search_api\Functional\SearchApiBrowserTestBase;
-use Drupal\Tests\search_api_solr\Traits\SolrCommitTrait;
+use Drupal\search_api_solr\Utility\SolrCommitTrait;
 
 /**
  * Tests the Views integration of the Search API.
