@@ -887,209 +887,208 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @endcode
    */
   public function search(QueryInterface $query) {
-   if ($query->getOption('solr_streaming_expression', FALSE)) {
-     $result = $this->executeStreamingExpression($query);
-     // Extract results.
-     $results = $this->extractResults($query, $result);
-
-     $this->moduleHandler->alter('search_api_solr_search_results', $results, $query, $result);
-     $this->postQuery($results, $query, $result);
-
-     return $results;
-   }
-
-    $mlt_options = $query->getOption('search_api_mlt');
-    if (!empty($mlt_options)) {
-      $query->addTag('mlt');
-    }
-
-    // Call an object oriented equivalent to hook_search_api_query_alter().
-    $this->alterSearchApiQuery($query);
-
-    // Get field information.
-    /** @var \Drupal\search_api\Entity\Index $index */
-    $index = $query->getIndex();
-    $index_id = $this->getIndexId($index->id());
-    $field_names = $this->getSolrFieldNames($index);
-
-    $connector = $this->getSolrConnector();
-    $solarium_query = NULL;
-    $edismax = NULL;
-    $index_fields = $index->getFields();
-    $index_fields += $this->getSpecialFields($index);
-    if ($query->hasTag('mlt')) {
-      $solarium_query = $this->getMoreLikeThisQuery($query, $index_id, $index_fields, $field_names);
-    }
-    else {
-      // Instantiate a Solarium select query.
-      $solarium_query = $connector->getSelectQuery();
-      $edismax = $solarium_query->getEDisMax();
-
-      // Set searched fields.
-      $search_fields = $this->getQueryFulltextFields($query);
-      $query_fields = [];
-      $query_fields_boosted = [];
-      foreach ($search_fields as $search_field) {
-        $query_fields[] = $field_names[$search_field];
-        /** @var \Drupal\search_api\Item\FieldInterface $field */
-        $field = $index_fields[$search_field];
-        $boost = $field->getBoost() ? '^' . $field->getBoost() : '';
-        $query_fields_boosted[] = $field_names[$search_field] . $boost;
-      }
-      $edismax->setQueryFields(implode(' ', $query_fields_boosted));
-
-      try {
-        $highlight_config = $index->getProcessor('highlight')->getConfiguration();
-        if ($highlight_config['highlight'] != 'never') {
-          $this->setHighlighting($solarium_query, $query, $query_fields);
-        }
-      }
-      catch (SearchApiException $exception) {
-        // Highlighting processor is not enabled for this index. Just use the
-        // the backend configuration.
-        $this->setHighlighting($solarium_query, $query, $query_fields);
-      }
-    }
-
-    $options = $query->getOptions();
-
-    // Set basic filters.
-    $filter_queries = $this->getFilterQueries($query, $field_names, $index_fields, $options);
-    foreach ($filter_queries as $id => $filter_query) {
-      $solarium_query->createFilterQuery('filters_' . $id)
-        ->setQuery($filter_query['query'])
-        ->addTags($filter_query['tags']);
-    }
-
-    // Set the Index (and site) filter.
-    $solarium_query->createFilterQuery('index_filter')->setQuery(
-      $this->getIndexFilterQueryString($index)
-    );
-
-    // @todo Make this more configurable so that Search API can choose which
-    //   fields it wants to fetch. But don't skip the minimum required fields as
-    //   currently set in the "else" path.
-    //   @see https://www.drupal.org/node/2880674
-    if (!empty($this->configuration['retrieve_data'])) {
-      $solarium_query->setFields(['*', 'score']);
-    }
-    else {
-      $returned_fields = [$field_names['search_api_id'], $field_names['search_api_language'], $field_names['search_api_relevance']];
-      if (!$this->configuration['site_hash']) {
-        $returned_fields[] = 'hash';
-      }
-      $solarium_query->setFields($returned_fields);
-    }
-
-    // Set sorts.
-    $this->setSorts($solarium_query, $query, $field_names);
-
-    // Set facet fields. setSpatial() might add more facets.
-    $this->setFacets($query, $solarium_query, $field_names);
-
-    // Handle spatial filters.
-    if (isset($options['search_api_location'])) {
-      $this->setSpatial($solarium_query, $options['search_api_location'], $field_names);
-    }
-
-    // Handle spatial filters.
-    if (isset($options['search_api_rpt'])) {
-      $this->setRpt($solarium_query, $options['search_api_rpt'], $field_names);
-    }
-
-    // Handle field collapsing / grouping.
-    $grouping_options = $query->getOption('search_api_grouping');
-    if (!empty($grouping_options['use_grouping'])) {
-      $this->setGrouping($solarium_query, $query, $grouping_options, $index_fields, $field_names);
-    }
-
-    if (isset($options['offset'])) {
-      $solarium_query->setStart($options['offset']);
-    }
-    $rows = isset($options['limit']) ? $options['limit'] : 1000000;
-    $solarium_query->setRows($rows);
-
-    foreach ($options as $option => $value) {
-      if (strpos($option, 'solr_param_') === 0) {
-        $solarium_query->addParam(substr($option, 11), $value);
-      }
-    }
-
-    $this->applySearchWorkarounds($solarium_query, $query);
-
-    try {
-      // Allow modules to alter the solarium query.
-      $this->moduleHandler->alter('search_api_solr_query', $solarium_query, $query);
-      $this->preQuery($solarium_query, $query);
-
-      // Since Solr 7.2 the edsimax query parser doesn't allow local
-      // parameters anymore. But since we don't want to force all modules that
-      // implemented our hooks to re-write their code, we transform the query
-      // back into a lucene query. flattenKeys() was adjusted accordingly, but
-      // in a backward compatible way.
-      // @see https://lucene.apache.org/solr/guide/7_2/solr-upgrade-notes.html#solr-7-2
-      if ($edismax) {
-        $params = $solarium_query->getParams();
-        // Extract keys.
-        $keys = $query->getKeys();
-        $query_fields = $edismax->getQueryFields();
-        if (is_array($keys)) {
-          if (
-            (isset($params['defType']) && 'edismax' == $params['defType']) ||
-            !$query_fields
-          ) {
-            // Edismax was forced via API or if the query fields were removed
-            // via API (like the multilingual backend does).
-            $keys = $this->flattenKeys($keys);
-          }
-          else {
-            $keys = $this->flattenKeys($keys, explode(' ', $query_fields));
-          }
-        }
-
-        if (!empty($keys)) {
-          // Set them.
-          $solarium_query->setQuery($keys);
-        }
-
-        if (!isset($params['defType']) || 'edismax' != $params['defType']) {
-          $solarium_query->removeComponent(ComponentAwareQueryInterface::COMPONENT_EDISMAX);
-        }
-      }
-
-      // Send search request.
-      $response = $connector->search($solarium_query);
-      $body = $response->getBody();
-      if (200 != $response->getStatusCode()) {
-        throw new SearchApiSolrException(strip_tags($body), $response->getStatusCode());
-      }
-      $this->alterSolrResponseBody($body, $query);
-      $response = new Response($body, $response->getHeaders());
-
-      $result = $connector->createSearchResult($solarium_query, $response);
-
+    if ($query->getOption('solr_streaming_expression', FALSE)) {
+      $result = $this->executeStreamingExpression($query);
       // Extract results.
       $results = $this->extractResults($query, $result);
-
-      // Add warnings, if present.
-      if (!empty($warnings)) {
-        foreach ($warnings as $warning) {
-          $results->addWarning($warning);
-        }
-      }
-
-      // Extract facets.
-      if ($result instanceof Result) {
-        if ($facets = $this->extractFacets($query, $result, $field_names)) {
-          $results->setExtraData('search_api_facets', $facets);
-        }
-      }
 
       $this->moduleHandler->alter('search_api_solr_search_results', $results, $query, $result);
       $this->postQuery($results, $query, $result);
     }
-    catch (\Exception $e) {
-      throw new SearchApiSolrException($this->t('An error occurred while trying to search with Solr: @msg.', ['@msg' => $e->getMessage()]), $e->getCode(), $e);
+    else {
+      $mlt_options = $query->getOption('search_api_mlt');
+      if (!empty($mlt_options)) {
+        $query->addTag('mlt');
+      }
+
+      // Call an object oriented equivalent to hook_search_api_query_alter().
+      $this->alterSearchApiQuery($query);
+
+      // Get field information.
+      /** @var \Drupal\search_api\Entity\Index $index */
+      $index = $query->getIndex();
+      $index_id = $this->getIndexId($index->id());
+      $field_names = $this->getSolrFieldNames($index);
+
+      $connector = $this->getSolrConnector();
+      $solarium_query = NULL;
+      $edismax = NULL;
+      $index_fields = $index->getFields();
+      $index_fields += $this->getSpecialFields($index);
+      if ($query->hasTag('mlt')) {
+        $solarium_query = $this->getMoreLikeThisQuery($query, $index_id, $index_fields, $field_names);
+      }
+      else {
+        // Instantiate a Solarium select query.
+        $solarium_query = $connector->getSelectQuery();
+        $edismax = $solarium_query->getEDisMax();
+
+        // Set searched fields.
+        $search_fields = $this->getQueryFulltextFields($query);
+        $query_fields = [];
+        $query_fields_boosted = [];
+        foreach ($search_fields as $search_field) {
+          $query_fields[] = $field_names[$search_field];
+          /** @var \Drupal\search_api\Item\FieldInterface $field */
+          $field = $index_fields[$search_field];
+          $boost = $field->getBoost() ? '^' . $field->getBoost() : '';
+          $query_fields_boosted[] = $field_names[$search_field] . $boost;
+        }
+        $edismax->setQueryFields(implode(' ', $query_fields_boosted));
+
+        try {
+          $highlight_config = $index->getProcessor('highlight')->getConfiguration();
+          if ($highlight_config['highlight'] != 'never') {
+            $this->setHighlighting($solarium_query, $query, $query_fields);
+          }
+        }
+        catch (SearchApiException $exception) {
+          // Highlighting processor is not enabled for this index. Just use the
+          // the backend configuration.
+          $this->setHighlighting($solarium_query, $query, $query_fields);
+        }
+      }
+
+      $options = $query->getOptions();
+
+      // Set basic filters.
+      $filter_queries = $this->getFilterQueries($query, $field_names, $index_fields, $options);
+      foreach ($filter_queries as $id => $filter_query) {
+        $solarium_query->createFilterQuery('filters_' . $id)
+          ->setQuery($filter_query['query'])
+          ->addTags($filter_query['tags']);
+      }
+
+      // Set the Index (and site) filter.
+      $solarium_query->createFilterQuery('index_filter')->setQuery(
+        $this->getIndexFilterQueryString($index)
+      );
+
+      // @todo Make this more configurable so that Search API can choose which
+      //   fields it wants to fetch. But don't skip the minimum required fields as
+      //   currently set in the "else" path.
+      //   @see https://www.drupal.org/node/2880674
+      if (!empty($this->configuration['retrieve_data'])) {
+        $solarium_query->setFields(['*', 'score']);
+      }
+      else {
+        $returned_fields = [$field_names['search_api_id'], $field_names['search_api_language'], $field_names['search_api_relevance']];
+        if (!$this->configuration['site_hash']) {
+          $returned_fields[] = 'hash';
+        }
+        $solarium_query->setFields($returned_fields);
+      }
+
+      // Set sorts.
+      $this->setSorts($solarium_query, $query, $field_names);
+
+      // Set facet fields. setSpatial() might add more facets.
+      $this->setFacets($query, $solarium_query, $field_names);
+
+      // Handle spatial filters.
+      if (isset($options['search_api_location'])) {
+        $this->setSpatial($solarium_query, $options['search_api_location'], $field_names);
+      }
+
+      // Handle spatial filters.
+      if (isset($options['search_api_rpt'])) {
+        $this->setRpt($solarium_query, $options['search_api_rpt'], $field_names);
+      }
+
+      // Handle field collapsing / grouping.
+      $grouping_options = $query->getOption('search_api_grouping');
+      if (!empty($grouping_options['use_grouping'])) {
+        $this->setGrouping($solarium_query, $query, $grouping_options, $index_fields, $field_names);
+      }
+
+      if (isset($options['offset'])) {
+        $solarium_query->setStart($options['offset']);
+      }
+      $rows = isset($options['limit']) ? $options['limit'] : 1000000;
+      $solarium_query->setRows($rows);
+
+      foreach ($options as $option => $value) {
+        if (strpos($option, 'solr_param_') === 0) {
+          $solarium_query->addParam(substr($option, 11), $value);
+        }
+      }
+
+      $this->applySearchWorkarounds($solarium_query, $query);
+
+      try {
+        // Allow modules to alter the solarium query.
+        $this->moduleHandler->alter('search_api_solr_query', $solarium_query, $query);
+        $this->preQuery($solarium_query, $query);
+
+        // Since Solr 7.2 the edsimax query parser doesn't allow local
+        // parameters anymore. But since we don't want to force all modules that
+        // implemented our hooks to re-write their code, we transform the query
+        // back into a lucene query. flattenKeys() was adjusted accordingly, but
+        // in a backward compatible way.
+        // @see https://lucene.apache.org/solr/guide/7_2/solr-upgrade-notes.html#solr-7-2
+        if ($edismax) {
+          $params = $solarium_query->getParams();
+          // Extract keys.
+          $keys = $query->getKeys();
+          $query_fields = $edismax->getQueryFields();
+          if (is_array($keys)) {
+            if (
+              (isset($params['defType']) && 'edismax' == $params['defType']) ||
+              !$query_fields
+            ) {
+              // Edismax was forced via API or if the query fields were removed
+              // via API (like the multilingual backend does).
+              $keys = $this->flattenKeys($keys);
+            }
+            else {
+              $keys = $this->flattenKeys($keys, explode(' ', $query_fields));
+            }
+          }
+
+          if (!empty($keys)) {
+            // Set them.
+            $solarium_query->setQuery($keys);
+          }
+
+          if (!isset($params['defType']) || 'edismax' != $params['defType']) {
+            $solarium_query->removeComponent(ComponentAwareQueryInterface::COMPONENT_EDISMAX);
+          }
+        }
+
+        // Send search request.
+        $response = $connector->search($solarium_query);
+        $body = $response->getBody();
+        if (200 != $response->getStatusCode()) {
+          throw new SearchApiSolrException(strip_tags($body), $response->getStatusCode());
+        }
+        $this->alterSolrResponseBody($body, $query);
+        $response = new Response($body, $response->getHeaders());
+
+        $result = $connector->createSearchResult($solarium_query, $response);
+
+        // Extract results.
+        $results = $this->extractResults($query, $result);
+
+        // Add warnings, if present.
+        if (!empty($warnings)) {
+          foreach ($warnings as $warning) {
+            $results->addWarning($warning);
+          }
+        }
+
+        // Extract facets.
+        if ($result instanceof Result) {
+          if ($facets = $this->extractFacets($query, $result, $field_names)) {
+            $results->setExtraData('search_api_facets', $facets);
+          }
+        }
+
+        $this->moduleHandler->alter('search_api_solr_search_results', $results, $query, $result);
+        $this->postQuery($results, $query, $result);
+      }
+      catch (\Exception $e) {
+        throw new SearchApiSolrException($this->t('An error occurred while trying to search with Solr: @msg.', ['@msg' => $e->getMessage()]), $e->getCode(), $e);
+      }
     }
   }
 
