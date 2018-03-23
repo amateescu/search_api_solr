@@ -10,7 +10,7 @@ use Drupal\search_api\Utility\Utility;
 use Drupal\search_api_autocomplete\Entity\Search;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\Tests\search_api_solr\Traits\InvokeMethodTrait;
-use Drupal\Tests\search_api_solr\Traits\SolrCommitTrait;
+use Drupal\search_api_solr\Utility\SolrCommitTrait;
 use Drupal\user\Entity\User;
 
 /**

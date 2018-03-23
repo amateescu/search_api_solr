@@ -3,7 +3,7 @@
 namespace Drupal\Tests\search_api_solr\Kernel\Processor;
 
 use Drupal\search_api\Entity\Server;
-use Drupal\Tests\search_api_solr\Traits\SolrCommitTrait;
+use Drupal\search_api_solr\Utility\SolrCommitTrait;
 use Symfony\Component\Yaml\Yaml;
 
 /**
