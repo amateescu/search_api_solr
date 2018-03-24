@@ -781,25 +781,24 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $first_value = $this->addIndexField($doc, $field_names[$name], $field->getValues(), $field->getType());
         // Enable sorts in some special cases.
         if ($first_value && !array_key_exists($name, $special_fields)) {
-          // Truncate the string to avoid Solr string field limitation.
-          // @see https://www.drupal.org/node/2809429
-          // @see https://www.drupal.org/node/2852606
-          // 32 characters should be enough for sorting and it makes no sense
-          // to heavily increase the index size. The DB backend limits the
-          // sort strings to 32 characters, too.
-          if (Unicode::strlen($first_value) > 32) {
-            $first_value = Unicode::truncate($first_value, 32);
-          }
-
           if (strpos($field_names[$name], 't') === 0 || strpos($field_names[$name], 's') === 0) {
             $key = 'sort_' . $name;
             if (!$doc->{$key}) {
+              // Truncate the string to avoid Solr string field limitation.
+              // @see https://www.drupal.org/node/2809429
+              // @see https://www.drupal.org/node/2852606
+              // 32 characters should be enough for sorting and it makes no sense
+              // to heavily increase the index size. The DB backend limits the
+              // sort strings to 32 characters, too.
+              if (Unicode::strlen($first_value) > 32) {
+                $first_value = Unicode::truncate($first_value, 32);
+              }
               // Always copy fulltext fields to a dedicated field for faster
               // alpha sorts. Copy strings as well to normalize them.
               $doc->addField($key, $first_value);
             }
           }
-          elseif (preg_match('/^([a-z]+)m(_.*)/', $field_names[$name], $matches)) {
+          elseif (preg_match('/^([a-z]+)m(_.*)/', $field_names[$name], $matches) && strpos($field_names[$name], 'random_') !== 0) {
             $key = $matches[1] . 's' . $matches[2];
             if (!$doc->{$key}) {
               // For other multi-valued fields (which aren't sortable by nature)
