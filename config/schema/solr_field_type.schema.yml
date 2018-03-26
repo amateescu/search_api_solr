@@ -152,6 +152,10 @@ search_api_solr.solr_field_type.*:
                       type: string
                       label: 'StopFilter::words'
                       nullable: true
+                    enablePositionIncrements:
+                      type: boolean
+                      label: 'StopFilter::enablePositionIncrements'
+                      nullable: true
                     language:
                       type: string
                       label: 'SnowballPorterFilter::language'
