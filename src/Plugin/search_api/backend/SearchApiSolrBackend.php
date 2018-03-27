@@ -59,8 +59,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 define('SEARCH_API_SOLR_MIN_SCHEMA_VERSION', 6);
 
-define('SEARCH_API_ID_FIELD_NAME', 'ss_search_api_id');
-
 /**
  * Apache Solr backend for search api.
  *
@@ -682,6 +680,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function indexItems(IndexInterface $index, array $items) {
+    $field_names = $this->getSolrFieldNames($index);
     $connector = $this->getSolrConnector();
     $update_query = $connector->getUpdateQuery();
     $documents = $this->getDocuments($index, $items, $update_query);
@@ -694,7 +693,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       $ret = [];
       foreach ($documents as $document) {
-        $ret[] = $document->getFields()[SEARCH_API_ID_FIELD_NAME];
+        $ret[] = $document->getFields()[$field_names['search_api_id']];
       }
       return $ret;
     }

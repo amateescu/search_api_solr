@@ -344,7 +344,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
 
     if (isset($data->response)) {
       foreach ($data->response->docs as $doc) {
-        $language_id = $doc_languages[$this->createId($index->id(), $doc->{SEARCH_API_ID_FIELD_NAME})] = $doc->{$field_names[SEARCH_API_LANGUAGE_FIELD_NAME]};
+        $language_id = $doc_languages[$this->createId($index->id(), $doc->{$field_names['search_api_id']})] = $doc->{$field_names[SEARCH_API_LANGUAGE_FIELD_NAME]};
         foreach (array_keys(get_object_vars($doc)) as $language_specific_field_name) {
           $field_name = Utility::getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($language_specific_field_name);
           if ($field_name != $language_specific_field_name) {
