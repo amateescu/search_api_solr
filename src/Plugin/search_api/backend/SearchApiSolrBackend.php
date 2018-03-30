@@ -1496,15 +1496,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *
    * @return \Drupal\search_api\Query\ResultSetInterface
    *   A result set object.
+   *
+   * @throws SearchApiSolrException
    */
   protected function extractResults(QueryInterface $query, ResultInterface $result) {
     $index = $query->getIndex();
-    $field_names = $this->getSolrFieldNames($index);
     $fields = $index->getFields(TRUE);
     $site_hash = Utility::getSiteHash();
     // We can find the item ID and the score in the special 'search_api_*'
     // properties. Mappings are provided for these properties in
-    // SearchApiSolrBackend::getFieldNames().
+    // SearchApiSolrBackend::getSolrFieldNames().
+    $field_names = $this->getSolrFieldNames($index);
     $id_field = $field_names['search_api_id'];
     $score_field = $field_names['search_api_relevance'];
     $language_field = $field_names['search_api_language'];
@@ -1548,6 +1550,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     /** @var \Solarium\QueryType\Select\Result\Document $doc */
     foreach ($docs as $doc) {
       $doc_fields = $doc->getFields();
+      if (empty($doc_fields[$id_field])) {
+        throw new SearchApiSolrException(sprintf('The result does not contain the essential ID field "%s".', $id_field));
+      }
       $item_id = $doc_fields[$id_field];
       // For items coming from a different site, we need to adapt the item ID.
       if (isset($doc_fields['hash']) && !$this->configuration['site_hash'] && $doc_fields['hash'] != $site_hash) {
@@ -1569,7 +1574,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       // Extract properties from the Solr document, translating from Solr to
       // Search API property names. This reverses the mapping in
-      // SearchApiSolrBackend::getFieldNames().
+      // SearchApiSolrBackend::getSolrFieldNames().
       foreach ($field_names as $search_api_property => $solr_property) {
         if (isset($doc_fields[$solr_property]) && isset($fields[$search_api_property])) {
           $doc_field = is_array($doc_fields[$solr_property]) ? $doc_fields[$solr_property] : [$doc_fields[$solr_property]];
