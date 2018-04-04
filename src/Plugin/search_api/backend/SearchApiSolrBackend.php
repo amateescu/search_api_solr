@@ -468,6 +468,19 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
+  public function getDiscouragedProcessors() {
+    return [
+      'ignorecase',
+      'stemmer',
+      'stopwords',
+      'tokenizer',
+      'transliteration',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function viewSettings() {
     /** @var \Drupal\search_api_solr\Plugin\SolrConnector\StandardSolrCloudConnector $connector */
     $connector = $this->getSolrConnector();
