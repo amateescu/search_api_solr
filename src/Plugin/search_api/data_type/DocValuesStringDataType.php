@@ -5,7 +5,7 @@ namespace Drupal\search_api_solr\Plugin\search_api\data_type;
 use Drupal\search_api\Plugin\search_api\data_type\StringDataType;
 
 /**
- * Provides a graph string data type.
+ * Provides a string data type that uses docValues.
  *
  * @SearchApiDataType(
  *   id = "solr_string_doc_values",
