@@ -450,9 +450,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     return in_array($type, [
-      'graph_string',
       'location',
       'rpt',
+      'solr_string_doc_values',
       'solr_string_ngram',
       'solr_string_storage',
       'solr_text_ngram',
