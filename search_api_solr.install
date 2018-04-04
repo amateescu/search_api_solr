@@ -68,7 +68,7 @@ function search_api_solr_requirements($phase) {
     }
 
     $requirements['search_api_solr_multiple_indexes'] = [
-      'title' => \Drupal::translation()->translate('Solr server indexes'),
+      'title' => \Drupal::translation()->translate('Solr servers with multiple indexes'),
       'value' => \Drupal::translation()->formatPlural($count, '1 server', '@count servers'),
     ];
     if ($multiple_indexes) {
