@@ -461,7 +461,21 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'solr_text_suggester',
       'solr_text_unstemmed',
       'solr_text_wstoken',
+      'solr_date_range',
     ]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDiscouragedProcessors() {
+    return [
+      'ignorecase',
+      'stemmer',
+      'stopwords',
+      'tokenizer',
+      'transliteration',
+    ];
   }
 
   /**
@@ -1421,6 +1435,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           if ($value === FALSE) {
             continue(2);
           }
+          break;
+
+        case 'solr_date_range':
+          $start = $this->formatDate($value->getStart());
+          $end = $this->formatDate($value->getEnd());
+          $value = '[' . $start . ' TO ' . $end . ']';
           break;
 
         case 'integer':
