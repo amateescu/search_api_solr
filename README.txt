@@ -17,10 +17,8 @@ This module provides an implementation of the Search API which uses an Apache
 Solr search server for indexing and searching. Before enabling or using this
 module, you'll have to follow the instructions given in INSTALL.txt first.
 
-The minimum support version for Search API Solr Search 8.x is Solr 4.5.1.
+The minimum support version for Search API Solr Search 8.x-2.x is Solr 6.6.
 Any version below might work if you use your own Solr config.
-For better performance and more features, 6.x should be used!
-The support for 4.x and 5.x is deprecated and will be removed in 8.x-2.x.
 
 For more detailed documentation, see the handbook [2].
 
@@ -133,8 +131,9 @@ add additional features or modify behaviour, e.g., for adding a language-
 specific stemmer or a stopword list.
 But whenever you run a site that uses any language different than English or a
 multi-lingual setup, we suggest that you don't modify the configurations by
-yourself. Instead you should use the Search API Multilingual Solr Search
-backend [10].
+yourself. Instead you should try the default configs this module generates for
+you.
+Further adjustments should be done using drupal's config management.
 If you are interested in further customizing your Solr server to your needs,
 see the Solr wiki at [11] for documentation. When editing the schema.xml and
 solrconfig.xml files, please only edit the copies in the Solr configuration
@@ -173,7 +172,7 @@ Developers
 Whenever you need to enhance the functionality you should do it using the API
 instead of extending the SearchApiSolrBackend class!
 To customize connection-specific things you should provide your own
-implementation of the \Drupal\search_api_solr\SolrBackendInterface.
+implementation of the \Drupal\search_api_solr\SolrConnectorInterface.
 
 Running the test suite
 ----------------------
