@@ -36,6 +36,7 @@ function search_api_solr_help($route_name, RouteMatchInterface $route_match) {
  * @throws \Drupal\search_api\SearchApiException
  */
 function search_api_solr_cron() {
+  $request_time = \Drupal::time()->getRequestTime();
   $action = \Drupal::config('search_api_solr.settings')->get('cron_action');
   // We treat all unknown action settings as "none". However, we turn a blind
   // eye for Britons and other people who can spell.
@@ -45,8 +46,8 @@ function search_api_solr_cron() {
   // 86400 seconds is one day. We use slightly less here to allow for some
   // variation in the request time of the cron run, so that the time of day will
   // (more or less) stay the same.
-  if (REQUEST_TIME - \Drupal::state()->get('search_api_solr.last_optimize') > 86340) {
-    \Drupal::state()->set('search_api_solr.last_optimize', REQUEST_TIME);
+  if ($request_time - \Drupal::state()->get('search_api_solr.last_optimize') > 86340) {
+    \Drupal::state()->set('search_api_solr.last_optimize', $request_time);
 
     $count = 0;
     foreach (search_api_solr_get_servers() as $server) {
@@ -54,6 +55,15 @@ function search_api_solr_cron() {
         /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
         $backend = $server->getBackend();
         $connector = $backend->getSolrConnector();
+        $indexes = $server->getIndexes();
+        if (!$indexes) {
+          continue;
+        }
+
+        foreach ($indexes as $index) {
+          $backend->finalizeIndex($index);
+        }
+
         if ($action != 'spellcheck') {
           $connector->optimize();
         }
@@ -95,9 +105,63 @@ function search_api_solr_form_search_api_index_form_alter(&$form, FormStateInter
   // We need to restrict by form ID here because this function is also called
   // via hook_form_BASE_FORM_ID_alter (which is wrong, e.g. in the case of the
   // form ID search_api_field_config).
-  if (in_array($form_id, ['search_api_index_form', 'search_api_index_edit_form']) &&
-    isset($form['server'])) {
-    $form['server']['#element_validate'][] = 'search_api_solr_form_search_api_index_form_validate_server';
+  if (in_array($form_id, ['search_api_index_form', 'search_api_index_edit_form'])) {
+    if (isset($form['server'])) {
+      $form['server']['#element_validate'][] = 'search_api_solr_form_search_api_index_form_validate_server';
+    }
+
+    $settings = [
+      'finalize' => FALSE,
+      'commit_before_finalize' => FALSE,
+      'commit_after_finalize' => FALSE,
+    ];
+    /** @var \Drupal\search_api\IndexInterface $index */
+    $index = $form_state->getFormObject()->getEntity();
+    if (!$index->isNew()) {
+      $settings = $index->getThirdPartySettings('search_api_solr') + $settings;
+    }
+
+    $form['third_party_settings']['search_api_solr'] = [
+      '#tree' => TRUE,
+      '#type' => 'details',
+      '#title' => t('Solr specific index options'),
+      '#collapsed' => TRUE,
+    ];
+
+    $form['third_party_settings']['search_api_solr']['finalize'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Finalize index before first search'),
+      '#description' => t('If enabled, other modules could hook in to apply "finalizations" to the index after updates or deletions happend to index items.'),
+      '#default_value' => $settings['finalize'],
+    ];
+
+    $form['third_party_settings']['search_api_solr']['commit_before_finalize'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Wait for commit before first finalization'),
+      '#description' => t('If enabled, Solr will be be forced to flush all commits before any "finalizations" will be applied.'),
+      '#default_value' => $settings['commit_before_finalize'],
+      '#states' => [
+        'invisible' => [
+          ':input[name="third_party_settings[search_api_solr][finalize]"]' => [
+            'checked' => FALSE,
+          ],
+        ],
+      ],
+    ];
+
+    $form['third_party_settings']['search_api_solr']['commit_after_finalize'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Wait for commit after last finalization'),
+      '#description' => t('If enabled, Solr will be be forced to flush all commits after the last "finalizations" have been applied.'),
+      '#default_value' => $settings['commit_after_finalize'],
+      '#states' => [
+        'invisible' => [
+          ':input[name="third_party_settings[search_api_solr][finalize]"]' => [
+            'checked' => FALSE,
+          ],
+        ],
+      ],
+    ];
   }
 }
 
