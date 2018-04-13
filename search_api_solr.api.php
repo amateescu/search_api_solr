@@ -115,5 +115,19 @@ function search_api_solr_hook_search_api_data_type_info() {
 }
 
 /**
+ * Apply any finalization commands to a solr index before the first search.
+ *
+ * This hook will be called every time any item within the index was updated or
+ * deleted. Not on every modification but before the first search happens on an
+ * updated index. This could be useful to apply late modifications to the items
+ * themselves within Solr which is much more faster.
+ *
+ * @param \Drupal\search_api\IndexInterface $index
+ */
+function hook_search_api_solr_finalize_index(\Drupal\search_api\IndexInterface $index) {
+
+}
+
+/**
  * @} End of "addtogroup hooks".
  */

@@ -112,6 +112,7 @@ interface SolrBackendInterface extends BackendInterface {
    *
    * @return \Solarium\QueryType\Stream\Result
    *
+   * @throws \Drupal\search_api\SearchApiException
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function executeStreamingExpression(QueryInterface $query);
@@ -123,7 +124,21 @@ interface SolrBackendInterface extends BackendInterface {
    *
    * @return \Solarium\QueryType\Graph\Result
    *
+   * @throws \Drupal\search_api\SearchApiException
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function executeGraphStreamingExpression(QueryInterface $query);
+
+  /**
+   * Apply any finalization commands to a solr index.
+   *
+   * Only if globally configured to do so and only the first time after changes
+   * to the index from the drupal side.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   */
+  public function finalizeIndex(IndexInterface $index);
+
 }

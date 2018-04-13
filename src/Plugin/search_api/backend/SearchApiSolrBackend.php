@@ -41,6 +41,7 @@ use Drupal\search_api_solr\SolrAutocompleteInterface;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrCloudConnectorInterface;
 use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginManager;
+use Drupal\search_api_solr\Utility\SolrCommitTrait;
 use Drupal\search_api_solr\Utility\Utility;
 use Solarium\Component\ComponentAwareQueryInterface;
 use Solarium\Core\Client\Response;
@@ -73,6 +74,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   use PluginFormTrait {
     submitConfigurationForm as traitSubmitConfigurationForm;
   }
+
+  use SolrCommitTrait;
 
   /**
    * Metadata describing fields on the Solr/Lucene index.
@@ -709,11 +712,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       foreach ($documents as $document) {
         $ret[] = $document->getFields()[$field_names['search_api_id']];
       }
+      \Drupal::state()->set('search_api_solr.' . $index->id() . '.last_update', \Drupal::time()->getRequestTime());
       return $ret;
     }
     catch (\Exception $e) {
       watchdog_exception('search_api_solr', $e, "%type while indexing: @message in %function (line %line of %file).");
-      throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
+      throw new SearchApiSolrException($e->getMessage(), $e->getCode(), $e);
     }
   }
 
@@ -735,6 +739,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $index_id = $this->getIndexId($index->id());
     $field_names = $this->getSolrFieldNames($index);
     $languages = $this->languageManager->getLanguages();
+    $request_time = $this->formatDate(\Drupal::time()->getRequestTime());
     $base_urls = [];
 
     if (!$update_query) {
@@ -745,6 +750,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     foreach ($items as $id => $item) {
       /** @var \Solarium\QueryType\Update\Query\Document\Document $doc */
       $doc = $update_query->createDocument();
+      $doc->setField('timestamp', $request_time);
       $doc->setField('id', $this->createId($index_id, $id));
       $doc->setField('index_id', $index_id);
       // Suggester context boolean filter queries have issues with special
@@ -849,6 +855,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $update_query = $connector->getUpdateQuery();
       $update_query->addDeleteByIds($solr_ids);
       $connector->update($update_query);
+      \Drupal::state()->set('search_api_solr.' . $index->id() . '.last_update', \Drupal::time()->getRequestTime());
     }
     catch (ExceptionInterface $e) {
       throw new SearchApiSolrException($e->getMessage(), $e->getCode(), $e);
@@ -870,6 +877,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $update_query = $connector->getUpdateQuery();
     $update_query->addDeleteQuery($query);
     $connector->update($update_query);
+    \Drupal::state()->set('search_api_solr.' . $index->id() . '.last_update', \Drupal::time()->getRequestTime());
   }
 
   /**
@@ -889,6 +897,62 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
+   * @param \Drupal\search_api\IndexInterface $index
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   */
+  public function finalizeIndex(IndexInterface $index) {
+    // Avoid enless loops if finalization hooks trigger searches or streaming
+    // expressions themselves.
+    static $finalization_in_progress = FALSE;
+
+    if (!$finalization_in_progress && !$index->isReadOnly()) {
+      $settings = $index->getThirdPartySettings('search_api_solr');
+      if (
+        // Not empty reflects the default FALSE for outdated index configs, too.
+        !empty($settings['finalize']) &&
+        \Drupal::state()->get('search_api_solr.' . $index->id() . '.last_update', 0) >= \Drupal::state()->get('search_api_solr.' . $index->id() . '.last_finalization', 0)
+      ) {
+        $lock = \Drupal::lock();
+        $lock_name = 'search_api_solr.' . $index->id() . '.finalization_lock';
+        if ($lock->acquire($lock_name)) {
+          $finalization_in_progress = TRUE;
+          try {
+            if (!empty($settings['commit_before_finalize'])) {
+              $this->ensureCommit($this->getServer());
+            }
+
+            $this->moduleHandler->invokeAll('search_api_solr_finalize_index', [$index]);
+
+            if (!empty($settings['commit_after_finalize'])) {
+              $this->ensureCommit($this->getServer());
+            }
+
+            \Drupal::state()
+              ->set('search_api_solr.' . $index->id() . '.last_finalization',
+                \Drupal::time()->getRequestTime());
+            $lock->release($lock_name);
+          } catch (\Exception $e) {
+            $finalization_in_progress = FALSE;
+            $lock->release('search_api_solr.' . $index->id() . '.finalization_lock');
+            throw new SearchApiSolrException($e->getMessage(), $e->getCode(), $e);
+          }
+          $finalization_in_progress = FALSE;
+        }
+        else {
+          if ($lock->wait($lock_name)) {
+            // wait() returns TRUE if the lock isn't released within the given
+            // timeout (default 30s).
+            throw new SearchApiSolrException('The search index currently being rebuilt. Try again later.');
+          }
+
+          $this->finalizeIndex($index);
+        }
+      }
+    }
+  }
+
+  /**
    * {@inheritdoc}
    *
    * Options on $query prefixed by 'solr_param_' will be passed natively to Solr
@@ -899,6 +963,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @endcode
    */
   public function search(QueryInterface $query) {
+    $this->finalizeIndex($query->getIndex());
+
     if ($query->getOption('solr_streaming_expression', FALSE)) {
       $result = $this->executeStreamingExpression($query);
       // Extract results.
@@ -1152,6 +1218,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       throw new SearchApiSolrException('Streaming expression are only supported by a Solr Cloud connector.');
     }
 
+    $this->finalizeIndex($query->getIndex());
+
     $stream = $connector->getStreamQuery();
     $stream->setExpression($stream_expression);
     $this->applySearchWorkarounds($stream, $query);
@@ -1177,6 +1245,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     if (!($connector instanceof SolrCloudConnectorInterface)) {
       throw new SearchApiSolrException('Streaming expression are only supported by a Solr Cloud connector.');
     }
+
+    $this->finalizeIndex($query->getIndex());
 
     $graph = $connector->getGraphQuery();
     $graph->setExpression($stream_expression);
