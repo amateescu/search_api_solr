@@ -23,14 +23,24 @@ class StreamingExpressionBuilder extends Expression {
   protected $index_filter_query;
 
   /**
+   * @var IndexInterface
+   */
+  protected $index;
+
+  /**
    * @var string
    */
-  protected $index_id;
+  protected $request_time;
 
   /**
    * @var string[]
    */
   protected $field_name_mapping;
+
+  /**
+   * @var string[]
+   */
+  protected $all_fields_mapped;
 
   /**
    * @var \Solarium\Core\Query\Helper
@@ -57,20 +67,24 @@ class StreamingExpressionBuilder extends Expression {
 
     $this->collection = $connector->getCollectionName();
     $this->index_filter_query = $backend->getIndexFilterQueryString($index);
-    $this->index_id = $index->id();
-    $this->field_name_mapping = $backend->getSolrFieldNames($index) + [
-      // Search API Solr Search specific fields.
-      'index_id' => 'index_id',
-      'hash' => 'hash',
-      'timestamp' => 'timestamp',
-      // Graph traversal reserved names. We can't get a conflict here since all
-      // dynamic fields are prefixed.
-      'node' => 'node',
-      'collection' => 'collection',
-      'field' => 'field',
-      'level' => 'level',
-      'ancestors' => 'ancestors',
-    ];
+    $this->index = $index;
+    $this->request_time = $backend->formatDate(\Drupal::time()->getRequestTime());
+    $this->all_fields_mapped = $backend->getSolrFieldNames($index) + [
+        // Search API Solr Search specific fields.
+        'id' => 'id',
+        'index_id' => 'index_id',
+        'hash' => 'hash',
+        'timestamp' => 'timestamp',
+      ];
+    $this->field_name_mapping = $this->all_fields_mapped + [
+        // Graph traversal reserved names. We can't get a conflict here since all
+        // dynamic fields are prefixed.
+        'node' => 'node',
+        'collection' => 'collection',
+        'field' => 'field',
+        'level' => 'level',
+        'ancestors' => 'ancestors',
+      ];
     $this->query_helper = $connector->getQueryHelper();
   }
 
@@ -98,7 +112,7 @@ class StreamingExpressionBuilder extends Expression {
    */
   public function _field(string $search_api_field_name) {
     if (!isset($this->field_name_mapping[$search_api_field_name])) {
-      throw new \InvalidArgumentException(sprintf('Field "%s" does not exists in index "%s".', $search_api_field_name, $this->index_id));
+      throw new \InvalidArgumentException(sprintf('Field "%s" does not exists in index "%s".', $search_api_field_name, $this->index->id()));
     }
     return $this->field_name_mapping[$search_api_field_name];
   }
@@ -112,7 +126,7 @@ class StreamingExpressionBuilder extends Expression {
    * @return string
    *   A list of Solr field names.
    */
-  public function _field_list(array $search_api_field_names, $delimiter = ',') {
+  public function _field_list(array $search_api_field_names, string $delimiter = ',') {
     return trim(array_reduce(
       $search_api_field_names,
       function ($carry, $search_api_field_name) use ($delimiter) {
@@ -120,6 +134,19 @@ class StreamingExpressionBuilder extends Expression {
       },
       ''
     ), $delimiter);
+  }
+
+  /**
+   * Formats the list of all Search API fields as a string of Solr field names.
+   *
+   * @param string $delimiter
+   * @param array $blacklist
+   *
+   * @return string
+   *   A list of all Solr field names for the index.
+   */
+  public function _all_fields_list(string $delimiter = ',', array $blacklist = []) {
+    return implode($delimiter, array_diff_key($this->all_fields_mapped, array_flip($blacklist)));
   }
 
   /**
@@ -197,6 +224,90 @@ class StreamingExpressionBuilder extends Expression {
   }
 
   /**
+   * Eases search() streaming expressions if all results are required.
+   *
+   * Internally this function switches to the /export query type by default. But
+   * if you run into errors like "field XY requires DocValues" you should use
+   * _search_all().
+   *
+   * @return string
+   *  A chainable streaming expression as string.
+   */
+  public function _export_all() {
+    return
+      $this->search(
+        $this->_collection(),
+        implode(', ', func_get_args()),
+        // Compared to the default query handler, the export query handler
+        // doesn't limit the number of results.
+        'qt="/export"'
+      );
+  }
+
+  /**
+   * Eases search() streaming expressions if all results are required.
+   *
+   * Internally this function uses the default /select query type and sets the
+   * rows parameter "to be 10000000 or some other ridiculously large value that
+   * is higher than the possible number of rows that are expected".
+   * @see https://wiki.apache.org/solr/CommonQueryParameters
+   * @see https://lucene.apache.org/solr/guide/7_3/stream-source-reference.html
+   *
+   * @return string
+   *  A chainable streaming expression as string.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   */
+  public function _search_all() {
+    return
+      $this->search(
+        $this->_collection(),
+        implode(', ', func_get_args()),
+        'rows=' . ($this->index->getTrackerInstance()->getTotalItemsCount() * 10)
+      );
+  }
+
+  /**
+   * @param $stream
+   *
+   * @return string
+   *  A chainable streaming expression as string.
+   */
+  public function _update($stream) {
+    return $this->update(
+      $this->_collection(),
+      'batchSize=500',
+      $stream
+    );
+  }
+
+  /**
+   * @param $stream
+   *
+   * @return string
+   *  A chainable streaming expression as string.
+   */
+  public function _commit($stream) {
+    return $this->commit(
+      $this->_collection(),
+      'softCommit=true',
+      $stream
+    );
+  }
+
+  /**
+   * @param $stream
+   *
+   * @return string
+   *  A chainable streaming expression as string.
+   */
+  public function _commit_update($stream) {
+    return $this->_commit(
+      $this->_update($stream)
+    );
+  }
+
+  /**
    * Returns a Solr filter query to limit results to the current index.
    *
    * @return string
@@ -213,7 +324,7 @@ class StreamingExpressionBuilder extends Expression {
    *   The index ID.
    */
   public function _index_id() {
-    return $this->index_id;
+    return $this->index->id();
   }
 
   /**
@@ -226,5 +337,16 @@ class StreamingExpressionBuilder extends Expression {
    */
   public function _site_hash() {
     return Utility::getSiteHash();
+  }
+
+  /**
+   * @return string
+   */
+  public function _request_time() {
+    return $this->request_time;
+  }
+
+  public function _timestamp_value() {
+    return 'val(' . $this->request_time . ') as timestamp';
   }
 }

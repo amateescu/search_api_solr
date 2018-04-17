@@ -2138,7 +2138,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *
    * @return bool|string
    */
-  protected function formatDate($input) {
+  public function formatDate($input) {
     $input = is_numeric($input) ? (int) $input : new \DateTime($input, timezone_open(DATETIME_STORAGE_TIMEZONE));
     return $this->queryHelper->formatDate($input);
   }
