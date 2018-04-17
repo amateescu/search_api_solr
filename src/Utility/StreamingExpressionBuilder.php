@@ -70,21 +70,25 @@ class StreamingExpressionBuilder extends Expression {
     $this->index = $index;
     $this->request_time = $backend->formatDate(\Drupal::time()->getRequestTime());
     $this->all_fields_mapped = $backend->getSolrFieldNames($index) + [
-        // Search API Solr Search specific fields.
-        'id' => 'id',
-        'index_id' => 'index_id',
-        'hash' => 'hash',
-        'timestamp' => 'timestamp',
-      ];
+      // Search API Solr Search specific fields.
+      'id' => 'id',
+      'index_id' => 'index_id',
+      'hash' => 'hash',
+      'site' => 'site',
+      'timestamp' => 'timestamp',
+      'context_tags' => 'sm_context_tags',
+      // @todo to be removed
+      'spell' => 'spell',
+    ];
     $this->field_name_mapping = $this->all_fields_mapped + [
-        // Graph traversal reserved names. We can't get a conflict here since all
-        // dynamic fields are prefixed.
-        'node' => 'node',
-        'collection' => 'collection',
-        'field' => 'field',
-        'level' => 'level',
-        'ancestors' => 'ancestors',
-      ];
+      // Graph traversal reserved names. We can't get a conflict here since all
+      // dynamic fields are prefixed.
+      'node' => 'node',
+      'collection' => 'collection',
+      'field' => 'field',
+      'level' => 'level',
+      'ancestors' => 'ancestors',
+    ];
     $this->query_helper = $connector->getQueryHelper();
   }
 
