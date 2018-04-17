@@ -902,11 +902,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function finalizeIndex(IndexInterface $index) {
-    // Avoid enless loops if finalization hooks trigger searches or streaming
+    // Avoid endless loops if finalization hooks trigger searches or streaming
     // expressions themselves.
-    static $finalization_in_progress = FALSE;
+    static $finalization_in_progress = [];
 
-    if (!$finalization_in_progress && !$index->isReadOnly()) {
+    if (!isset($finalization_in_progress[$index->id()]) && !$index->isReadOnly()) {
       $settings = $index->getThirdPartySettings('search_api_solr');
       if (
         // Not empty reflects the default FALSE for outdated index configs, too.
@@ -916,7 +916,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $lock = \Drupal::lock();
         $lock_name = 'search_api_solr.' . $index->id() . '.finalization_lock';
         if ($lock->acquire($lock_name)) {
-          $finalization_in_progress = TRUE;
+          $finalization_in_progress[$index->id()] = TRUE;
           try {
             if (!empty($settings['commit_before_finalize'])) {
               $this->ensureCommit($this->getServer());
@@ -933,11 +933,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                 \Drupal::time()->getRequestTime());
             $lock->release($lock_name);
           } catch (\Exception $e) {
-            $finalization_in_progress = FALSE;
+            unset($finalization_in_progress[$index->id()]);
             $lock->release('search_api_solr.' . $index->id() . '.finalization_lock');
             throw new SearchApiSolrException($e->getMessage(), $e->getCode(), $e);
           }
-          $finalization_in_progress = FALSE;
+          unset($finalization_in_progress[$index->id()]);
         }
         else {
           if ($lock->wait($lock_name)) {
