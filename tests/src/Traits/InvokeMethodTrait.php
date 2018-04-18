@@ -17,7 +17,7 @@ trait InvokeMethodTrait {
    * @param array $parameters
    *   Array of parameters to pass into method.
    * @param array $protectedProperties
-   *   Array of vlues that should be set on protected properties.
+   *   Array of values that should be set on protected properties.
    *
    * @return mixed
    *   Method return.

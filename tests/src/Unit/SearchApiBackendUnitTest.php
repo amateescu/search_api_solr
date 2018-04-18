@@ -2,7 +2,13 @@
 
 namespace Drupal\Tests\search_api_solr\Unit;
 
+use Drupal\Core\Config\Config;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\search_api\Utility\DataTypeHelperInterface;
+use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
+use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginManager;
 use Drupal\search_api_solr\SolrConnectorInterface;
 use Drupal\Tests\search_api_solr\Traits\InvokeMethodTrait;
 use Drupal\Tests\UnitTestCase;
@@ -51,16 +57,26 @@ class SearchApiBackendUnitTest extends UnitTestCase {
       $type,
     ];
 
-    $backend = $this->prophesize(SearchApiSolrBackend::class);
-    $backend_instance = $backend->reveal();
+    // Get dummies for most constructor args of SearchApiSolrBackend.
+    $module_handler = $this->prophesize(ModuleHandlerInterface::class)->reveal();
+    $config = $this->prophesize(Config::class)->reveal();
+    $language_manager = $this->prophesize(LanguageManagerInterface::class)->reveal();
+    $solr_connector_plugin_manager = $this->prophesize(SolrConnectorPluginManager::class)->reveal();
+    $fields_helper = $this->prophesize(FieldsHelperInterface::class)->reveal();
+    $data_type_helper = $this->prophesize(DataTypeHelperInterface::class)->reveal();
+
+    // This helper is actually used.
+    $query_helper = new Helper();
+
+    $backend = new SearchApiSolrBackend([], NULL, [], $module_handler, $config, $language_manager, $solr_connector_plugin_manager, $fields_helper, $data_type_helper, $query_helper);
 
     // addIndexField() should convert the $input according to $type and call
     // Document::addField() with the correctly converted $input.
     $this->invokeMethod(
-      $backend_instance,
+      $backend,
       'addIndexField',
       $args,
-      ['queryHelper' => new Helper()]
+      []
     );
   }
 
