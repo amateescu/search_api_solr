@@ -63,3 +63,17 @@ search_api_solr.standard_highlighter:
         fragsize:
           type: integer
           label: 'Specifies the size, in characters, of fragments to consider for highlighting.'
+
+search_api.index.*.third_party.search_api_solr:
+  type: mapping
+  label: 'Search API Solr index settings'
+  mapping:
+    finalize:
+      type: boolean
+      label: 'Finalize index before first search'
+    commit_before_finalize:
+      type: boolean
+      label: 'Wait for commit before first finalization'
+    commit_after_finalize:
+      type: boolean
+      label: 'Wait for commit after last finalization'
