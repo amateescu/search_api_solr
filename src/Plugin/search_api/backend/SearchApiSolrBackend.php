@@ -474,6 +474,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   public function getDiscouragedProcessors() {
     return [
       'ignorecase',
+      // https://www.drupal.org/project/snowball_stemmer
+      'snowball_stemmer',
       'stemmer',
       'stopwords',
       'tokenizer',
