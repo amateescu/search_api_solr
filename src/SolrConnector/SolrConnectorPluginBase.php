@@ -196,9 +196,9 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       '#description' => $this->t('Specify the Solr version manually in case it cannot be retrived automatically. The version can be found in the Solr admin interface under "Solr Specification Version" or "solr-spec"'),
       '#options' => [
         '' => $this->t('Determine automatically'),
-        '4' => '4.x',
-        '5' => '5.x',
         '6' => '6.x',
+        '7' => '7.x',
+        '8' => '8.x',
       ],
       '#default_value' => isset($this->configuration['solr_version']) ? $this->configuration['solr_version'] : '',
     ];
