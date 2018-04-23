@@ -319,7 +319,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   public function getDynamicFields($multilingual = FALSE) {
     $dynamic_fields = [];
-    $prefixes = $this->custom_code ? ['tc' . $this->custom_code] : ['t', 'to'];
+    $prefixes = $this->custom_code ? ['tc' . $this->custom_code, 'toc' . $this->custom_code] : ['t', 'to'];
     foreach ($prefixes as $prefix_without_cardinality) {
       foreach (['s', 'm'] as $cardinality) {
         if ($multilingual || $this->custom_code) {
@@ -332,9 +332,9 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
             'type' => $this->field_type['name'],
             'stored' => TRUE,
             'indexed' => TRUE,
-            'multiValued' => strpos($prefix, 'm') === (strlen($prefix) - 1),
-            'termVectors' => strpos($prefix, 't') === 0,
-            'omitNorms' => strpos($prefix, 'o') === (strlen($prefix) - 2),
+            'multiValued' => ('m' === $cardinality),
+            'termVectors' => TRUE,
+            'omitNorms' => strpos($prefix, 'to') === 0,
           ];
           if ($multilingual && $this->custom_code && 'und' == $this->field_type_language_code) {
             // Add a language-unspecific default dynamic field for that custom code.
