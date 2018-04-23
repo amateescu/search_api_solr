@@ -97,10 +97,10 @@ class StreamingExpressionBuilder extends Expression {
     $this->sort_fields = [];
     foreach ($this->all_fields_mapped as $search_api_field => $solr_field) {
       if (strpos($solr_field, 't') === 0 || strpos($solr_field, 's') === 0) {
-        $this->sort_fields[] = 'sort_' . $search_api_field;
+        $this->sort_fields['sort_' . $search_api_field] = 'sort_' . $search_api_field;
       }
       elseif (preg_match('/^([a-z]+)m(_.*)/', $solr_field, $matches) && strpos($solr_field, 'random_') !== 0) {
-        $this->sort_fields[] = $matches[1] . 's' . $matches[2];
+        $this->sort_fields[$matches[1] . 's' . $matches[2]] = $matches[1] . 's' . $matches[2];
       }
     }
 
@@ -131,7 +131,12 @@ class StreamingExpressionBuilder extends Expression {
    */
   public function _field(string $search_api_field_name) {
     if (!isset($this->field_name_mapping[$search_api_field_name])) {
-      throw new \InvalidArgumentException(sprintf('Field "%s" does not exists in index "%s".', $search_api_field_name, $this->index->id()));
+      if (isset($this->sort_fields[$search_api_field_name])) {
+        return $this->sort_fields[$search_api_field_name];
+      }
+      else {
+        throw new \InvalidArgumentException(sprintf('Field %s does not exists in index %s.', $search_api_field_name, $this->index->id()));
+      }
     }
     return $this->field_name_mapping[$search_api_field_name];
   }
@@ -217,6 +222,37 @@ class StreamingExpressionBuilder extends Expression {
   }
 
   /**
+   * Rename a field within select().
+   *
+   * @param string $search_api_field_name_source
+   * @param string $search_api_field_name_target
+   *
+   * @return string
+   */
+  public function _select_renamed_field(string $search_api_field_name_source, string $search_api_field_name_target) {
+    return
+      $this->_field($search_api_field_name_source) . ' as ' . $this->_field($search_api_field_name_target);
+  }
+
+  /**
+   * Copy a field's value to a different field within select().
+   *
+   * @param string $search_api_field_name_source
+   * @param string $search_api_field_name_target
+   *
+   * @return string
+   */
+  public function _select_copied_field(string $search_api_field_name_source, string $search_api_field_name_target) {
+    return
+      $this->concat(
+        'fields="' . $this->_field($search_api_field_name_source) . '"',
+        // Delimiter must be set but is ignored if just one field is provided.
+        'delim=","',
+        'as="'. $this->_field($search_api_field_name_target) .'"'
+      );
+  }
+
+  /**
    * Eases intersect() streaming expressions by applying required sorts.
    *
    * @param string $stream1
@@ -243,6 +279,36 @@ class StreamingExpressionBuilder extends Expression {
           'by="' . $solr_field . ' ASC"'
         ),
         'on=' . $solr_field
+      );
+  }
+
+  /**
+   * Eases merge() streaming expressions by applying required sorts.
+   *
+   * @param string $stream1
+   *  A streaming expression as string.
+   * @param string $stream2
+   *  A streaming expression as string.
+   * @param string $field
+   *  The Search API field name or Solr reserved field name to use for the
+   *  intersection.
+   *
+   * @return string
+   *  A chainable streaming expression as string.
+   */
+  public function _merge(string $stream1, string $stream2, string $field) {
+    $solr_field = $this->_field($field);
+    return
+      $this->merge(
+        $this->sort(
+          $stream1,
+          'by="' . $solr_field . ' ASC"'
+        ),
+        $this->sort(
+          $stream2,
+          'by="' . $solr_field . ' ASC"'
+        ),
+        'on="' . $solr_field . ' ASC"'
       );
   }
 
