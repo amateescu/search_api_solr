@@ -35,7 +35,7 @@ field_type:
           # If non-zero, splits numeric strings at delimiters:"1947-32" -> "1947", "32"
           generateNumberParts: 1
           splitOnCaseChange: 0
-          splitOnNumerics:
+          splitOnNumerics: 0
           catenateWords: 1
           catenateNumbers: 1
           catenateAll: 0
