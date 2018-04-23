@@ -808,11 +808,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
               // Truncate the string to avoid Solr string field limitation.
               // @see https://www.drupal.org/node/2809429
               // @see https://www.drupal.org/node/2852606
-              // 32 characters should be enough for sorting and it makes no sense
-              // to heavily increase the index size. The DB backend limits the
-              // sort strings to 32 characters, too.
-              if (Unicode::strlen($first_value) > 32) {
-                $first_value = Unicode::truncate($first_value, 32);
+              // 128 characters should be enough for sorting and it makes no
+              // sense to heavily increase the index size. The DB backend limits
+              // the sort strings to 32 characters. But for example a
+              // search_api_id quickly exceeds 32 characters and the interesting
+              // ID is at the end of the string:
+              // 'entity:entity_test_mulrev_changed/2:en'
+              if (Unicode::strlen($first_value) > 128) {
+                $first_value = Unicode::truncate($first_value, 128);
               }
               // Always copy fulltext fields to a dedicated field for faster
               // alpha sorts. Copy strings as well to normalize them.
