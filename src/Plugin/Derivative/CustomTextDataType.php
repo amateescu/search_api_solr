@@ -9,7 +9,7 @@ use Drupal\search_api_solr\Entity\SolrFieldType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides block plugin definitions for custom full text data types.
+ * Provides plugin definitions for custom full text data types.
  *
  * @see \Drupal\search_api_solr\Plugin\search_api\data_type\CustomTextDataType
  */
