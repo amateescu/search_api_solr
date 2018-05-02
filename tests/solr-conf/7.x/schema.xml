@@ -196,8 +196,8 @@
   <dynamicField name="tos_*" type="text"    indexed="true"  stored="true" multiValued="false" termVectors="true" omitNorms="true"/>
   <dynamicField name="tom_*" type="text"    indexed="true"  stored="true" multiValued="true" termVectors="true" omitNorms="true"/>
   <!-- Special-purpose text fields -->
-  <dynamicField name="tes_*" type="edge_n2_kw_text" indexed="true" stored="true" multiValued="false" omitTermFreqAndPositions="true" />
-  <dynamicField name="tem_*" type="edge_n2_kw_text" indexed="true" stored="true" multiValued="true" omitTermFreqAndPositions="true" />
+  <dynamicField name="tes_*" type="edge_n2_kw_text" indexed="true" stored="true" multiValued="false"/>
+  <dynamicField name="tem_*" type="edge_n2_kw_text" indexed="true" stored="true" multiValued="true"/>
   <dynamicField name="tws_*" type="text_ws" indexed="true" stored="true" multiValued="false"/>
   <dynamicField name="twm_*" type="text_ws" indexed="true" stored="true" multiValued="true"/>
 

@@ -2816,6 +2816,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $language_ids[] = \Drupal::languageManager()
         ->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)
         ->getId();
+      // For non-translatable entity types, add the "not specified" language to
+      // the query so they also appear in the results.
+      $language_ids[] = LanguageInterface::LANGCODE_NOT_SPECIFIED;
       $query->setLanguages($language_ids);
     }
 
@@ -2868,15 +2871,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $mlt_fl = [];
     foreach ($mlt_options['fields'] as $mlt_field) {
       // Date fields don't seem to be supported at all in MLT queries.
-      $version = $this->getSolrConnector()->getSolrVersion();
-      if ($fields[$mlt_field][0] === 'd') {
-        continue;
-      }
-
-      $mlt_fl[] = $fields[$mlt_field];
-      // For non-text fields, set minimum word length to 0.
-      if (isset($index_fields[$mlt_field]) && !$this->dataTypeHelper->isTextType($index_fields[$mlt_field]->getType())) {
-        $solarium_query->addParam('f.' . $fields[$mlt_field] . '.mlt.minwl', 0);
+      if (strpos($mlt_field, 'd') !== 0) {
+        $mlt_fl[] = $fields[$mlt_field];
+        // For non-text fields, set minimum word length to 0.
+        if (isset($index_fields[$mlt_field]) && !$this->dataTypeHelper->isTextType($index_fields[$mlt_field]->getType())) {
+          $solarium_query->addParam('f.' . $fields[$mlt_field] . '.mlt.minwl', 0);
+        }
       }
     }
 
