@@ -714,7 +714,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       foreach ($documents as $document) {
         $ret[] = $document->getFields()[$field_names['search_api_id']];
       }
-      \Drupal::state()->set('search_api_solr.' . $index->id() . '.last_update', \Drupal::time()->getRequestTime());
+      \Drupal::state()->set('search_api_solr.' . $index->id() . '.last_update', \Drupal::time()->getCurrentTime());
       return $ret;
     }
     catch (\Exception $e) {
@@ -860,7 +860,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $update_query = $connector->getUpdateQuery();
       $update_query->addDeleteByIds($solr_ids);
       $connector->update($update_query);
-      \Drupal::state()->set('search_api_solr.' . $index->id() . '.last_update', \Drupal::time()->getRequestTime());
+      \Drupal::state()->set('search_api_solr.' . $index->id() . '.last_update', \Drupal::time()->getCurrentTime());
     }
     catch (ExceptionInterface $e) {
       throw new SearchApiSolrException($e->getMessage(), $e->getCode(), $e);
@@ -882,7 +882,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $update_query = $connector->getUpdateQuery();
     $update_query->addDeleteQuery($query);
     $connector->update($update_query);
-    \Drupal::state()->set('search_api_solr.' . $index->id() . '.last_update', \Drupal::time()->getRequestTime());
+    \Drupal::state()->set('search_api_solr.' . $index->id() . '.last_update', \Drupal::time()->getCurrentTime());
   }
 
   /**
