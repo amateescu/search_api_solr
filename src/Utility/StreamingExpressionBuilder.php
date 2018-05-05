@@ -357,42 +357,69 @@ class StreamingExpressionBuilder extends Expression {
   }
 
   /**
-   * @param $stream
+   * Applies the update decorator to the incoming stream.
+   *
+   * @param string $stream
+   * @param array $options
+   *   The option keys are the ones from the Solr documentation, prefixed with
+   *   "update.".
+   * @see https://lucene.apache.org/solr/guide/7_3/stream-decorator-reference.html#update
    *
    * @return string
    *  A chainable streaming expression as string.
    */
-  public function _update($stream) {
+  public function _update(string $stream, array $options = []) {
+    $options += [
+      'update.batchSize' => 500,
+    ];
     return $this->update(
       $this->_collection(),
-      'batchSize=500',
+      'batchSize=' . $options['update.batchSize'],
       $stream
     );
   }
 
   /**
-   * @param $stream
+   * Applies the commit decorator to the incoming stream.
+   *
+   * @param string $stream
+   * @param array $options
+   *   The option keys are the ones from the Solr documentation, prefixed with
+   *   "commit.".
+   * @see https://lucene.apache.org/solr/guide/7_3/stream-decorator-reference.html#commit
    *
    * @return string
    *  A chainable streaming expression as string.
    */
-  public function _commit($stream) {
+  public function _commit(string $stream, array $options = []) {
+    $options += [
+      'commit.batchSize'    => 0,
+      'commit.waitFlush'    => FALSE,
+      'commit.waitSearcher' => FALSE,
+      'commit.softCommit'   => FALSE,
+    ];
     return $this->commit(
       $this->_collection(),
-      'softCommit=true',
+      'batchSize=' .  $options['commit.batchSize'],
+      'waitFlush=' . ($options['commit.waitFlush'] ? 'true' : 'false'),
+      'waitSearcher=' . ($options['commit.waitSearcher'] ? 'true' : 'false'),
+      'softCommit=' . ($options['commit.softCommit'] ? 'true' : 'false'),
       $stream
     );
   }
 
   /**
-   * @param $stream
+   * A shorthand for _update() and _commit().
+   * @param string $stream
+   * @param array $options
    *
    * @return string
    *  A chainable streaming expression as string.
    */
-  public function _commit_update($stream) {
+  public function _commit_update(string $stream, array $options = []) {
     return $this->_commit(
-      $this->_update($stream)
+      $this->_update($stream, $options),
+      $options
     );
   }
 
