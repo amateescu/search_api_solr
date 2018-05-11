@@ -135,7 +135,7 @@ class StreamingExpressionBuilder extends Expression {
         return $this->sort_fields[$search_api_field_name];
       }
       else {
-        throw new \InvalidArgumentException(sprintf('Field %s does not exists in index %s.', $search_api_field_name, $this->index->id()));
+        throw new \InvalidArgumentException(sprintf('Field %s does not exist in index %s.', $search_api_field_name, $this->index->id()));
       }
     }
     return $this->field_name_mapping[$search_api_field_name];
