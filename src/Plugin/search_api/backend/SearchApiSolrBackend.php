@@ -971,12 +971,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $this->finalizeIndex($query->getIndex());
 
     if ($query->getOption('solr_streaming_expression', FALSE)) {
-      $result = $this->executeStreamingExpression($query);
+      $solarium_result = $this->executeStreamingExpression($query);
       // Extract results.
-      $results = $this->extractResults($query, $result);
+      $search_api_result_set = $this->extractResults($query, $solarium_result);
 
-      $this->moduleHandler->alter('search_api_solr_search_results', $results, $query, $result);
-      $this->postQuery($results, $query, $result);
+      $this->moduleHandler->alter('search_api_solr_search_results', $search_api_result_set, $query, $solarium_result);
+      $this->postQuery($search_api_result_set, $query, $solarium_result);
     }
     else {
       $mlt_options = $query->getOption('search_api_mlt');
@@ -1110,21 +1110,22 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         // in a backward compatible way.
         // @see https://lucene.apache.org/solr/guide/7_2/solr-upgrade-notes.html#solr-7-2
         if ($edismax) {
+          /** @var Query $solarium_query */
           $params = $solarium_query->getParams();
           // Extract keys.
           $keys = $query->getKeys();
-          $query_fields = $edismax->getQueryFields();
           if (is_array($keys)) {
+            $query_fields_boosted = $edismax->getQueryFields();
             if (
               (isset($params['defType']) && 'edismax' == $params['defType']) ||
-              !$query_fields
+              !$query_fields_boosted
             ) {
               // Edismax was forced via API or if the query fields were removed
               // via API (like the multilingual backend does).
               $keys = $this->flattenKeys($keys);
             }
             else {
-              $keys = $this->flattenKeys($keys, explode(' ', $query_fields));
+              $keys = $this->flattenKeys($keys, explode(' ', $query_fields_boosted));
             }
           }
 
@@ -1147,27 +1148,30 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $this->alterSolrResponseBody($body, $query);
         $response = new Response($body, $response->getHeaders());
 
-        $result = $connector->createSearchResult($solarium_query, $response);
+        $solarium_result = $connector->createSearchResult($solarium_query, $response);
 
         // Extract results.
-        $results = $this->extractResults($query, $result);
+        $search_api_result_set = $this->extractResults($query, $solarium_result);
 
         // Add warnings, if present.
         if (!empty($warnings)) {
           foreach ($warnings as $warning) {
-            $results->addWarning($warning);
+            $search_api_result_set->addWarning($warning);
           }
         }
 
         // Extract facets.
-        if ($result instanceof Result) {
-          if ($facets = $this->extractFacets($query, $result, $field_names)) {
-            $results->setExtraData('search_api_facets', $facets);
+        if ($solarium_result instanceof Result) {
+          if ($solarium_facet_set = $solarium_result->getFacetSet()) {
+            $search_api_result_set->setExtraData('facet_set', $solarium_facet_set);
+            if ($search_api_facets = $this->extractFacets($query, $solarium_result, $field_names)) {
+              $search_api_result_set->setExtraData('search_api_facets', $search_api_facets);
+            }
           }
         }
 
-        $this->moduleHandler->alter('search_api_solr_search_results', $results, $query, $result);
-        $this->postQuery($results, $query, $result);
+        $this->moduleHandler->alter('search_api_solr_search_results', $search_api_result_set, $query, $solarium_result);
+        $this->postQuery($search_api_result_set, $query, $solarium_result);
       }
       catch (\Exception $e) {
         throw new SearchApiSolrException($this->t('An error occurred while trying to search with Solr: @msg.', ['@msg' => $e->getMessage()]), $e->getCode(), $e);
