@@ -53,9 +53,10 @@ configuration files. They aren't always static but vary on your Drupal setup.
 But the Search API Solr Search module will create the correct configs for you!
 
 1. Create a Search API Server according to the search_api documentation using
-   "Solr" or "Multilingual Solr" as Backend.
+   "Solr" or "Multilingual Solr" as Backend and the "Standard" or "Basic Auth"
+   Connector.
 2. Download the config.zip from the server's details page or by using
-   `drush solr-gsc
+   `drush solr-gsc`
 3. Extract the config.zip to the conf directory of your new core.
 
 ```
@@ -68,6 +69,10 @@ NOTE: If you use the "Multilingual Solr" backend you have to repeat steps 2 and
 NOTE: It's important that the Solr server runs with the right config files for
 a backend. Don't switch between Solr Backends without adjusting the config
 files!
+
+NOTE: There's file called `solrcore.properties` within the set of generated
+config files. If you need to fine tune some setting you should do it within this
+file if possible instead of modifying `solrconf.xml.
 
 Now you can start your Solr server:
 
@@ -90,3 +95,28 @@ directory to a random string of characters and using that as the path.
 For configuring indexes and searches you have to follow the documention of
 search_api.
 
+
+Setting up Solr Cloud
+---------------------
+
+Instead of a single core you have to create a collection in your Solr Cloud
+instance. To do so you have to read the Solr handbook.
+
+1. Create a Search API Server according to the search_api documentation using
+   "Solr" or "Multilingual Solr" as Backend and the "Solr Cloud" or
+   "Solr Cloud with Basic Auth" Connector.
+2. Download the config.zip from the server's details page or by using
+   `drush solr-gsc
+3. Deploy the config.zip via zookeeper.
+
+
+Using Linux specific Solr Packages
+----------------------------------
+
+There's file called `solrcore.properties` within the set of generated
+config files. In most cases you have to adjust the `solr.install.dir` property
+to match your distribution specifics path, for example
+
+```
+solr.install.dir=/opt/solr
+```
