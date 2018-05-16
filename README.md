@@ -124,7 +124,7 @@ This module includes:
   - BasicAuth Connector
   - Solr Cloud Connector
   - Solr Cloud BasicAuth Connector
-  
+
 There're service provider specific connectors available, for example from Acquia
 and platform.sh. Please contact your provider for details if you don't run your
 own Solr server.
