@@ -22,12 +22,12 @@ If you want to use a hosted solution, a number of companies are listed on the
 module's [project page](https://drupal.org/project/search_api_solr). Otherwise,
 please follow the instructions below.
 A more detailed set of instructions might be available at
-(https://drupal.org/node/1999310).
+https://drupal.org/node/1999310 .
 
 As a pre-requisite for running your own Solr server, you'll need a Java JRE.
 
 Download the latest version of Solr 6.x or 7.x from
-(http://www.apache.org/dyn/closer.cgi/lucene/solr/) and unpack the archive
+http://www.apache.org/dyn/closer.cgi/lucene/solr/ and unpack the archive
 somewhere outside of your web server's document tree. The unpacked Solr
 directory is named `$SOLR` in these instructions.
 
@@ -80,7 +80,7 @@ Now you can start your Solr server:
 $SOLR/bin/solr start
 ```
 
-Afterwards, go to (http://localhost:8983/solr/#/$CORE) in your web browser to
+Afterwards, go to `http://localhost:8983/solr/#/$CORE` in your web browser to
 ensure Solr is running correctly.
 
 CAUTION! For production sites, it is vital that you somehow prevent outside
