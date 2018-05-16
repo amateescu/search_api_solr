@@ -37,7 +37,7 @@ as the query to Solr using the
 [Standard Parse Mode](https://lucene.apache.org/solr/guide/7_2/the-standard-query-parser.html).
 If you use this parse mode in an exposed filter in views, the filed selection
 doesn't have any effect.
- 
+
 Regarding third-party features, the following are supported:
 
 - autocomplete
@@ -53,15 +53,15 @@ Regarding third-party features, the following are supported:
     a "More like this" block for node pages build with Views.
 - multisite
   - Introduced by module: search_api_solr
-  - Currently WIP for 8.x-2.x 
+  - Currently WIP for 8.x-2.x
 - spellcheck
   - Introduced by module: search_api_solr
-  - Currently WIP for 8.x-2.x 
+  - Currently WIP for 8.x-2.x
 - attachments
   - Introduced by module: search_api_attachments
 - location
   - Introduced by module: search_api_location
-  
+
 If you feel some service option is missing, or have other ideas for improving
 this implementation, please file a feature request in the project's issue queue,
 at https://drupal.org/project/issues/search_api_solr.
@@ -142,7 +142,7 @@ You can also create you own Solr field types by providing additional field
 config YAML files. Have a look at this module's config folder to see examples.
 
 Such field types can target a specific Solr version and a "domain". For example
-"Apple" means two different things in a "fruits" domain or a "computer" domain. 
+"Apple" means two different things in a "fruits" domain or a "computer" domain.
 
 Troubleshooting Views
 ---------------------
@@ -157,7 +157,7 @@ access checks" in the query options in the views advanced settings. Otherwise
 the database objects will be loaded again for this check.
 It's obvious that you have to apply required access checks during indexing in
 this setup. For example using the corresponding processor or by having different
-indexes for different user roles.  
+indexes for different user roles.
 
 In general it's recommended to *disable the Views cache*. By default the Solr
 search index is updated asynchronously from Drupal, and this interferes with the
@@ -179,7 +179,7 @@ But be aware that this will slow down the first search after any modification to
 an index. So you have to choose if no caching or tag based caching in
 combination with finalization is the better solution for your setup.
 The decision depends on how frequent index modification happen or how expensive
-your queries are. 
+your queries are.
 
 If index some drupal fields multiple times in the same index and modify the
 single values differently via our API before the values get indexed, you'll
