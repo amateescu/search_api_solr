@@ -222,7 +222,16 @@ http://localhost:8983/solr/d8
 ```
 This represents a core named "d8" in a default installation of Solr.
 
-The tests themselves could be started by running something like
+The easiest way to get it running properly configured for the tests is to use
+docker-compose. The required config is included in the module.
+Have a look at the first part of this [video](https://youtu.be/NkLBTiRiQiI).
+Simply run this command within the module folder:
+```
+docker-compose up
+```
+
+The tests themselves could be started by running something like this in your
+drupal folder:
 ```
 phpunit -c core --group search_api_solr
 ```
