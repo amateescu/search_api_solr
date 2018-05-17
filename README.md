@@ -210,6 +210,17 @@ configuration management.
 We leverage the [solarium library](http://www.solarium-project.org/). You can
 also interact with solarium's API using our hooks and callbacks or via event
 listeners.
+This way you can for example ad any solr specific parameter to a query you need.
+
+But if you create Search API Queries by yourself in code there's an easier way.
+You can simply set the required parameter as option prefixed by 'solr_param_'.
+
+So these two lines are "similar":
+```
+$search_api_query->setOption('solr_param_mm', '75%');
+
+$solarium_query->setParam('mm', '75%');
+```
 
 Running the test suite
 ----------------------
