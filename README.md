@@ -222,8 +222,24 @@ $search_api_query->setOption('solr_param_mm', '75%');
 $solarium_query->setParam('mm', '75%');
 ```
 
-Running the test suite
-----------------------
+Patches and Issues Workflow
+---------------------------
+
+Our test suite includes integration tests that require a real Solr server. This
+requirement can't be provided by the drupal.org test infrastructure.
+Therefore we leverage travis for our tests and had to establish a more complex
+workflow:
+  1. open an issue on drupal.org as usual
+  2. upload the patch for being reviewed to that issue on drupal.org as usual
+  3. fork https://github.com/mkalkbrenner/search_api_solr
+  4. apply your patch and file a PR on github
+  5. add a link to the github PR to the drupal.org issue
+
+The PR on github will automatically tested by travis and the test results will
+be reflected in the PR conversation.
+
+Running the test suite locally
+------------------------------
 
 This module comes with a suite of automated tests. To execute those, you just
 need to have a (correctly configured) Solr instance running at the following
