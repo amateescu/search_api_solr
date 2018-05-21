@@ -231,51 +231,49 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
         $solarium_query->setMltFields(explode(' ', $mlt_fields));
       }
       elseif ($keys = $query->getKeys()) {
-        if (is_array($keys)) {
-          /** @var \Solarium\QueryType\Select\Query\Query $solarium_query */
-          $edismax = $solarium_query->getEDisMax();
-          if ($solr_fields = $edismax->getQueryFields()) {
-            $new_keys = [];
+        /** @var \Solarium\QueryType\Select\Query\Query $solarium_query */
+        $edismax = $solarium_query->getEDisMax();
+        if ($solr_fields = $edismax->getQueryFields()) {
+          $new_keys = [];
 
-            foreach ($language_ids as $language_id) {
-              $new_solr_fields = $solr_fields;
-              foreach ($fulltext_fields as $fulltext_field) {
-                $field_name = $field_names[$fulltext_field];
-                $new_solr_fields = str_replace($field_name, $language_specific_fields[$language_id][$field_name], $new_solr_fields);
-              }
-              if ($new_solr_fields == $solr_fields) {
-                // If there's no change for the first language, there won't be
-                // any change for the other languages, too.
-                return;
-              }
-              $flat_keys = $this->flattenKeys($keys, explode(' ', $new_solr_fields));
-              if (
-                strpos($flat_keys, '(') !== 0 &&
-                strpos($flat_keys, '+(') !== 0 &&
-                strpos($flat_keys, '-(') !== 0
-              ) {
-                $flat_keys = '(' . $flat_keys . ')';
-              }
-              $new_keys[] = $flat_keys;
+          foreach ($language_ids as $language_id) {
+            $new_solr_fields = $solr_fields;
+            foreach ($fulltext_fields as $fulltext_field) {
+              $field_name = $field_names[$fulltext_field];
+              $new_solr_fields = str_replace($field_name, $language_specific_fields[$language_id][$field_name], $new_solr_fields);
             }
-
-            if (count($new_keys) > 1) {
-              $new_keys['#conjunction'] = 'OR';
+            if ($new_solr_fields == $solr_fields) {
+              // If there's no change for the first language, there won't be
+              // any change for the other languages, too.
+              return;
             }
-            $new_keys['#escaped'] = TRUE;
-
-            // Preserve the original keys to be set again in postQuery().
-            $this->origKeys = $query->getOriginalKeys();
-
-            // The orginal keys array is now already flatten once per language.
-            // that means that we already build Solr query strings containing
-            // fields and keys. Now we set these query strings again as keys
-            // using an OR conjunction but remove all query fields. That will
-            // cause the parent class to just concatenate the language specific
-            // query strings using OR as they are.
-            $query->keys($new_keys);
-            $edismax->setQueryFields([]);
+            $flat_keys = $this->flattenKeys($keys, explode(' ', $new_solr_fields), $query->getParseMode()->getPluginId());
+            if (
+              strpos($flat_keys, '(') !== 0 &&
+              strpos($flat_keys, '+(') !== 0 &&
+              strpos($flat_keys, '-(') !== 0
+            ) {
+              $flat_keys = '(' . $flat_keys . ')';
+            }
+            $new_keys[] = $flat_keys;
           }
+
+          if (count($new_keys) > 1) {
+            $new_keys['#conjunction'] = 'OR';
+          }
+          $new_keys['#escaped'] = TRUE;
+
+          // Preserve the original keys to be set again in postQuery().
+          $this->origKeys = $query->getOriginalKeys();
+
+          // The orginal keys array is now already flatten once per language.
+          // that means that we already build Solr query strings containing
+          // fields and keys. Now we set these query strings again as keys
+          // using an OR conjunction but remove all query fields. That will
+          // cause the parent class to just concatenate the language specific
+          // query strings using OR as they are.
+          $query->keys($new_keys);
+          $edismax->setQueryFields([]);
         }
       }
     }

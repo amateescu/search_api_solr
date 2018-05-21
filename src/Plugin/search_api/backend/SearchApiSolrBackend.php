@@ -1114,19 +1114,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $params = $solarium_query->getParams();
           // Extract keys.
           $keys = $query->getKeys();
-          if (is_array($keys)) {
-            $query_fields_boosted = $edismax->getQueryFields();
-            if (
-              (isset($params['defType']) && 'edismax' == $params['defType']) ||
-              !$query_fields_boosted
-            ) {
-              // Edismax was forced via API or if the query fields were removed
-              // via API (like the multilingual backend does).
-              $keys = $this->flattenKeys($keys);
-            }
-            else {
-              $keys = $this->flattenKeys($keys, explode(' ', $query_fields_boosted));
-            }
+          $query_fields_boosted = $edismax->getQueryFields();
+          if (
+            (isset($params['defType']) && 'edismax' == $params['defType']) ||
+            !$query_fields_boosted
+          ) {
+            // Edismax was forced via API or the query fields were removed via
+            // API (like the multilingual backend does).
+            $keys = $this->flattenKeys($keys, [], $query->getParseMode()->getPluginId());
+          }
+          else {
+            $keys = $this->flattenKeys($keys, explode(' ', $query_fields_boosted), $query->getParseMode()->getPluginId());
           }
 
           if (!empty($keys)) {
@@ -2643,41 +2641,73 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
-   * Flatten a keys array into a single search string.
+   * Flattens keys and fields into a single search string.
    *
-   * @param array $keys
+   * @param array|string $keys
    *   The keys array to flatten, formatted as specified by
-   *   \Drupal\search_api\Query\QueryInterface::getKeys().
+   *   \Drupal\search_api\Query\QueryInterface::getKeys() or a phrase string.
+   * @param array $fields
+   * @param string $parse_mode_id
    *
    * @return string
    *   A Solr query string representing the same keys.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  protected function flattenKeys(array $keys, $fields = []) {
+  protected function flattenKeys($keys, array $fields = [], string $parse_mode_id = 'phrase') {
     $k = [];
     $pre = '+';
+    $neg = '';
 
-    if (isset($keys['#conjunction']) && $keys['#conjunction'] == 'OR') {
-      $pre = '';
-    }
-
-    $neg = empty($keys['#negation']) ? '' : '-';
-    $escaped = isset($keys['#escaped']) ? $keys['#escaped'] : FALSE;
-
-    foreach ($keys as $key_nr => $key) {
-      // We cannot use \Drupal\Core\Render\Element::children() anymore because
-      // $keys is not a valid render array.
-      if ($key_nr[0] === '#' || !$key) {
-        continue;
+    if (is_array($keys)) {
+      if (isset($keys['#conjunction']) && $keys['#conjunction'] == 'OR') {
+        $pre = '';
       }
-      if (is_array($key)) {
-        if ($subkeys = $this->flattenKeys($key, $fields)) {
-          $k[] = $subkeys;
+
+      if (!empty($keys['#negation'])) {
+        $neg = '-';
+      }
+
+      $escaped = isset($keys['#escaped']) ? $keys['#escaped'] : FALSE;
+
+      foreach ($keys as $key_nr => $key) {
+        // We cannot use \Drupal\Core\Render\Element::children() anymore because
+        // $keys is not a valid render array.
+        if ($key_nr[0] === '#' || !$key) {
+          continue;
+        }
+        if (is_array($key)) {
+          if ($subkeys = $this->flattenKeys($key, $fields, $parse_mode_id)) {
+            $k[] = $subkeys;
+          }
+        }
+        elseif ($escaped) {
+          $k[] = trim($key);
+        }
+        else {
+          switch ($parse_mode_id) {
+            case 'phrase':
+              $k[] = $this->queryHelper->escapePhrase(trim($key));
+              break;
+            case 'terms':
+              $k[] = $this->queryHelper->escapeTerm(trim($key));
+              break;
+            default:
+              throw new SearchApiSolrException('Incompatible parse mode.');
+          }
         }
       }
-      else {
-        $k[] = $escaped ? trim($key) : $this->queryHelper->escapePhrase(trim($key));
+    }
+    elseif (is_string($keys)) {
+      switch ($parse_mode_id) {
+        case 'direct':
+          $k[] = '(' . trim($keys) .')';
+          break;
+        default:
+          throw new SearchApiSolrException('Incompatible parse mode.');
       }
     }
+
     if (!$k) {
       return '';
     }
@@ -2704,9 +2734,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     if ($fields) {
       foreach($k as &$l) {
         if (
-          strpos($l, '(') !== 0 &&
-          strpos($l, '+') !== 0 &&
-          strpos($l, '-') !== 0
+          'direct' == $parse_mode_id ||
+          (
+            strpos($l, '(') !== 0 &&
+            strpos($l, '+') !== 0 &&
+            strpos($l, '-') !== 0
+          )
         ) {
           $v = [];
           foreach ($fields as $f) {
