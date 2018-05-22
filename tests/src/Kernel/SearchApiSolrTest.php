@@ -143,6 +143,28 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertEquals($item->getBoost(), $document->getBoost());
   }
 
+  public function searchSuccess() {
+    parent::searchSuccess();
+
+    $parse_mode_manager = \Drupal::service('plugin.manager.search_api.parse_mode');
+    $parse_mode_direct = $parse_mode_manager->createInstance('direct');
+
+    $results = $this->buildSearch('+test +case', [], ['body'])
+      ->setParseMode($parse_mode_direct)
+      ->execute();
+    $this->assertResults([1, 2, 3], $results, 'Parse mode direct with AND');
+
+    $results = $this->buildSearch('test -case', [], ['body'])
+      ->setParseMode($parse_mode_direct)
+      ->execute();
+    $this->assertResults([4], $results, 'Parse mode direct with NOT');
+
+    $results = $this->buildSearch('"test case"', [], ['body'])
+      ->setParseMode($parse_mode_direct)
+      ->execute();
+    $this->assertResults([1, 2], $results, 'Parse mode direct with phrase');
+  }
+
   /**
    * Return the expected facets for regression test 2469547.
    *
@@ -690,11 +712,17 @@ class SearchApiSolrTest extends SolrBackendTestBase {
 
     $query = $this->buildSearch(['artic'], [], ['body'], FALSE);
     $suggestions = $backend->getSuggesterSuggestions($query, $autocompleteSearch, 'artic', 'artic');
-    $this->assertEquals(1, count($suggestions));
+    $this->assertEquals(2, count($suggestions));
+
     $this->assertEquals('artic', $suggestions[0]->getUserInput());
-    $this->assertEquals('<b>', $suggestions[0]->getSuggestionPrefix());
-    $this->assertEquals('</b>le', $suggestions[0]->getSuggestionSuffix());
-    $this->assertEquals('<b>artic</b>le', $suggestions[0]->getSuggestedKeys());
+    $this->assertEquals('The test <b>', $suggestions[0]->getSuggestionPrefix());
+    $this->assertEquals('</b>le number 1 about cats, dogs and trees.', $suggestions[0]->getSuggestionSuffix());
+    $this->assertEquals('The test <b>artic</b>le number 1 about cats, dogs and trees.', $suggestions[0]->getSuggestedKeys());
+
+    $this->assertEquals('artic', $suggestions[1]->getUserInput());
+    $this->assertEquals('The test <b>', $suggestions[1]->getSuggestionPrefix());
+    $this->assertEquals('</b>le number 2 about a tree.', $suggestions[1]->getSuggestionSuffix());
+    $this->assertEquals('The test <b>artic</b>le number 2 about a tree.', $suggestions[1]->getSuggestedKeys());
 
     // @todo more suggester tests
   }
