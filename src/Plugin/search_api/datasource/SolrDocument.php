@@ -5,7 +5,9 @@ namespace Drupal\search_api_solr\Plugin\search_api\datasource;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
+use Drupal\Core\Url;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
+use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\Plugin\PluginFormTrait;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api_solr\SolrDocumentFactoryInterface;
@@ -24,6 +26,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
 
   use PluginFormTrait;
+  use LoggerTrait;
 
   /**
    * The Solr document factory.
@@ -126,7 +129,13 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function getItemUrl(ComplexDataInterface $item) {
-    return $this->getFieldValue($item, 'url_field');
+    try {
+      return Url::fromUri($this->getFieldValue($item, 'url_field'));
+    }
+    catch (\InvalidArgumentException $e) {
+      // Log the exception and return NULL.
+      $this->logException($e);
+    }
   }
 
   /**
