@@ -49,7 +49,6 @@ function search_api_solr_cron() {
   if ($request_time - \Drupal::state()->get('search_api_solr.last_optimize') > 86340) {
     \Drupal::state()->set('search_api_solr.last_optimize', $request_time);
 
-    $count = 0;
     foreach (search_api_solr_get_servers() as $server) {
       try {
         /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
@@ -62,10 +61,12 @@ function search_api_solr_cron() {
 
         foreach ($indexes as $index) {
           $backend->finalizeIndex($index);
+          $backend->getLogger()->info('Finalized Solr server @server.', ['@server' => $server->label()]);
         }
 
         if ($action != 'spellcheck') {
           $connector->optimize();
+          $backend->getLogger()->info('Optimized Solr server @server.', ['@server' => $server->label()]);
         }
         else {
           $autocomplete_query = $connector->getAutocompleteQuery();
@@ -76,20 +77,12 @@ function search_api_solr_cron() {
           // Terms don't need to be build. Suggesters are configured to be
           // buildOnCommit.
           $connector->execute($autocomplete_query);
+          $backend->getLogger()->info('Rebuilt spellcheck dictionary on Solr server @server.', ['@server' => $server->label()]);
         }
-        ++$count;
+
       }
       catch (SearchApiException $e) {
-        watchdog_exception('search_api_solr', $e, '%type while optimizing Solr server @server: @message in %function (line %line of %file).', ['@server' => $server->label()]);
-      }
-    }
-    if ($count) {
-      $vars['@count'] = $count;
-      if ($action != 'spellcheck') {
-        \Drupal::logger('search_api_solr')->info('Optimized @count Solr server(s).', $vars);
-      }
-      else {
-        \Drupal::logger('search_api_solr')->info('Rebuilt spellcheck dictionary on @count Solr server(s).', $vars);
+        watchdog_exception('search_api', $e, '%type while optimizing Solr server @server: @message in %function (line %line of %file).', ['@server' => $server->label()]);
       }
     }
 

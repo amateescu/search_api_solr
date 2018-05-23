@@ -795,7 +795,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             '%field' => $name,
             '@id' => $id,
           ];
-          \Drupal::logger('search_api_solr')->warning('Error while indexing: Unknown field %field on the item with ID @id.', $vars);
+          $this->getLogger()->warning('Error while indexing: Unknown field %field on the item with ID @id.', $vars);
           $doc = NULL;
           break;
         }
@@ -2301,7 +2301,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $connector = $this->getSolrConnector();
     $solr_version = $connector->getSolrVersion();
     if (version_compare($solr_version, '6.5', '=')) {
-      \Drupal::logger('search_api_solr')
+      $this->getLogger()
         ->error('Solr 6.5.x contains a bug that breaks the autocomplete feature. Downgrade to 6.4.x or upgrade to 6.6.x at least.');
       return NULL;
     }
