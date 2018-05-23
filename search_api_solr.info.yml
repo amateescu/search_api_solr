@@ -4,5 +4,6 @@ description: 'Offers an implementation of the Search API that uses an Apache Sol
 core: 8.x
 package: Search
 dependencies:
- - drupal:language
- - search_api:search_api
+  - drupal:language
+  - search_api:search_api
+  - system (>=8.5)
