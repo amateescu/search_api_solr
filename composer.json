@@ -24,7 +24,7 @@
         "maennchen/zipstream-php": "0.4.*",
         "solarium/solarium": "~4.0",
         "drupal/search_api": "~1.8",
-        "drupal/system": "^8.5.0"
+        "drupal/drupal": "~8.5"
     },
     "require-dev": {
         "phayes/geophp": "^1.2",
