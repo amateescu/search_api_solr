@@ -159,13 +159,13 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
           return $version;
         }, $solr_version);
 
-        drupal_set_message(
+        \Drupal::messenger()->addWarning(
           $this->t(
             'Unable to reach the Solr server (yet). Therefore the lowest supported Solr version %version is assumed.' .
             ' Once the connection works and the real Solr version could be detected it might be necessary to deploy an adjusted config to the server to get the best search results.' .
             ' If the server does not start using the downloadable config, you should edit the server and manually set the Solr version override temporarily that fits your server best and download the config again. But it is recommended to remove this override once the server is running.',
-            ['%version' => $this->assumed_minimum_version]),
-          'warning');
+            ['%version' => $this->assumed_minimum_version])
+        );
       }
 
       // Sort the entities using the entity class's sort() method.
@@ -266,6 +266,10 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
   /**
    * @return \ZipStream\ZipStream
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   * @throws \ZipStream\Exception\FileNotFoundException
+   * @throws \ZipStream\Exception\FileNotReadableException
    */
   public function getConfigZip() {
     /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */

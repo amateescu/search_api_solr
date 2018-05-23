@@ -19,6 +19,8 @@ class SolrFieldTypeDeleteForm extends EntityConfirmFormBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\Core\Entity\EntityMalformedException
    */
   public function getCancelUrl() {
     return $this->entity->toUrl();
@@ -33,11 +35,14 @@ class SolrFieldTypeDeleteForm extends EntityConfirmFormBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\Core\Entity\EntityMalformedException
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->entity->delete();
 
-    drupal_set_message(
+    \Drupal::messenger()->addStatus(
       $this->t('content @type: deleted @label.',
         [
           '@type' => $this->entity->bundle(),

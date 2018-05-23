@@ -3,14 +3,16 @@
 namespace Drupal\search_api_solr\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\ServerInterface;
 use Symfony\Component\HttpFoundation\Response;
-use ZipStream\Exception as ZipStreamException;
 
 /**
  * Provides different listings of SolrFieldType.
  */
 class SolrFieldTypeController extends ControllerBase {
+
+  use LoggerTrait;
 
   /**
    * Provides the listing page.
@@ -19,6 +21,8 @@ class SolrFieldTypeController extends ControllerBase {
    *
    * @return array
    *   A render array as expected by drupal_render().
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function listing(ServerInterface $search_api_server) {
     return $this->getListBuilder($search_api_server)->render();
@@ -30,6 +34,8 @@ class SolrFieldTypeController extends ControllerBase {
    * @param \Drupal\search_api\ServerInterface $search_api_server
    *
    * @return \Symfony\Component\HttpFoundation\Response
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function getSchemaExtraTypesXml(ServerInterface $search_api_server) {
     return new Response(
@@ -48,6 +54,8 @@ class SolrFieldTypeController extends ControllerBase {
    * @param \Drupal\search_api\ServerInterface $search_api_server
    *
    * @return \Symfony\Component\HttpFoundation\Response
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function getSchemaExtraFieldsXml(ServerInterface $search_api_server) {
     return new Response(
@@ -79,9 +87,9 @@ class SolrFieldTypeController extends ControllerBase {
       ob_end_flush();
       exit();
     }
-    catch (ZipStreamException $e) {
-      watchdog_exception('search_api_solr', $e);
-      drupal_set_message($this->t('An error occured during the creation of the config.zip. Look at the logs for details.'), 'error');
+    catch (\Exception $e) {
+      $this->logException($e);
+      \Drupal::messenger()->addError($this->t('An error occured during the creation of the config.zip. Look at the logs for details.'));
     }
 
     return [];
@@ -95,6 +103,8 @@ class SolrFieldTypeController extends ControllerBase {
    * @param \Drupal\search_api\ServerInterface $search_api_server
    *
    * @return \Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   protected function getListBuilder(ServerInterface $search_api_server) {
     /** @var SolrFieldTypeListBuilder $list_builder */

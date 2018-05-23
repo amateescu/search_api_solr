@@ -293,6 +293,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *
    * @param \Drupal\search_api_solr\SolrConnectorInterface $connector
    *   The server that is being created or edited.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function buildConnectorConfigForm(array &$form, FormStateInterface $form_state) {
     $form['connector_config'] = [];
@@ -303,7 +305,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       if ($connector instanceof PluginFormInterface) {
         $form_state->set('connector', $connector_id);
         if ($form_state->isRebuilding()) {
-          drupal_set_message($this->t('Please configure the selected Solr connector.'), 'warning');
+          \Drupal::messenger()->addWarning($this->t('Please configure the selected Solr connector.'));
         }
         // Attach the Solr connector plugin configuration form.
         $connector_form_state = SubformState::createForSubform($form['connector_config'], $form, $form_state);
@@ -337,6 +339,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     // Check if the Solr connector plugin changed.
@@ -365,6 +370,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     $this->configuration['connector'] = $form_state->get('connector');
@@ -404,6 +411,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function getSolrConnector() {
     if (!$this->solrConnector) {
@@ -416,6 +425,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function isAvailable() {
     $conn = $this->getSolrConnector();
@@ -485,6 +496,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function viewSettings() {
     /** @var \Drupal\search_api_solr\Plugin\SolrConnector\StandardSolrCloudConnector $connector */
@@ -594,14 +607,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $status = 'ok';
             if (empty($this->configuration['skip_schema_check'])) {
               if (substr($stats_summary['@schema_version'], 0, 10) == 'search-api') {
-                drupal_set_message($this->t('Your schema.xml version is too old. Please replace all configuration files with the ones packaged with this module and re-index you data.'), 'error');
+                \Drupal::messenger()->addError($this->t('Your schema.xml version is too old. Please replace all configuration files with the ones packaged with this module and re-index you data.'));
                 $status = 'error';
               }
               elseif (!preg_match('/drupal-[' . SEARCH_API_SOLR_MIN_SCHEMA_VERSION . '-9]\./', $stats_summary['@schema_version'])) {
-                $variables['@url'] = Url::fromUri('internal:/' . drupal_get_path('module', 'search_api_solr') . '/INSTALL.txt')
+                $variables[':url'] = Url::fromUri('internal:/' . drupal_get_path('module', 'search_api_solr') . '/INSTALL.txt')
                   ->toString();
-                $message = $this->t('You are using an incompatible schema.xml configuration file. Please follow the instructions in the <a href="@url">INSTALL.txt</a> file for setting up Solr.', $variables);
-                drupal_set_message($message, 'error');
+                \Drupal::messenger()->addError($this->t('You are using an incompatible schema.xml configuration file. Please follow the instructions in the <a href=":url">INSTALL.txt</a> file for setting up Solr.', $variables));
                 $status = 'error';
               }
             }
