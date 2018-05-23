@@ -1,6 +1,7 @@
 <?php
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\SearchApiException;
@@ -19,8 +20,9 @@ function search_api_solr_help($route_name, RouteMatchInterface $route_match) {
     $reqs = search_api_solr_requirements('runtime');
     foreach ($reqs as $req) {
       if (isset($req['description'])) {
-        $type = $req['severity'] == REQUIREMENT_ERROR ? 'error' : ($req['severity'] == REQUIREMENT_WARNING ? 'warning' : 'status');
-        drupal_set_message($req['description'], $type);
+        $type = $req['severity'] == REQUIREMENT_ERROR ? MessengerInterface::TYPE_ERROR :
+          ($req['severity'] == REQUIREMENT_WARNING ? MessengerInterface::TYPE_WARNING : MessengerInterface::TYPE_STATUS);
+        \Drupal::messenger()->addMessage($req['description'], $type);
       }
     }
   }
@@ -49,7 +51,6 @@ function search_api_solr_cron() {
   if ($request_time - \Drupal::state()->get('search_api_solr.last_optimize') > 86340) {
     \Drupal::state()->set('search_api_solr.last_optimize', $request_time);
 
-    $count = 0;
     foreach (search_api_solr_get_servers() as $server) {
       try {
         /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
@@ -62,10 +63,12 @@ function search_api_solr_cron() {
 
         foreach ($indexes as $index) {
           $backend->finalizeIndex($index);
+          $backend->getLogger()->info('Finalized Solr server @server.', ['@server' => $server->label()]);
         }
 
         if ($action != 'spellcheck') {
           $connector->optimize();
+          $backend->getLogger()->info('Optimized Solr server @server.', ['@server' => $server->label()]);
         }
         else {
           $autocomplete_query = $connector->getAutocompleteQuery();
@@ -76,20 +79,12 @@ function search_api_solr_cron() {
           // Terms don't need to be build. Suggesters are configured to be
           // buildOnCommit.
           $connector->execute($autocomplete_query);
+          $backend->getLogger()->info('Rebuilt spellcheck dictionary on Solr server @server.', ['@server' => $server->label()]);
         }
-        ++$count;
+
       }
       catch (SearchApiException $e) {
-        watchdog_exception('search_api_solr', $e, '%type while optimizing Solr server @server: @message in %function (line %line of %file).', ['@server' => $server->label()]);
-      }
-    }
-    if ($count) {
-      $vars['@count'] = $count;
-      if ($action != 'spellcheck') {
-        \Drupal::logger('search_api_solr')->info('Optimized @count Solr server(s).', $vars);
-      }
-      else {
-        \Drupal::logger('search_api_solr')->info('Rebuilt spellcheck dictionary on @count Solr server(s).', $vars);
+        watchdog_exception('search_api', $e, '%type while optimizing Solr server @server: @message in %function (line %line of %file).', ['@server' => $server->label()]);
       }
     }
 
@@ -185,8 +180,9 @@ function search_api_solr_form_search_api_index_form_validate_server(&$element, F
         }
       }
       if ($index_count > 0 && $form_state->getValue('status')) {
-        $msg = t("You're storing multiple indexes on the same Solr index (aka core). Take care if you use advanced Solr features like spell checking, suggesters, terms, autocomplete and others directly, because they aren't aware of these multiple indexes by default. Use Search API family modules like Autocomplete module instead which will help you to avoid issues.");
-        drupal_set_message($msg, 'warning');
+        \Drupal::messenger()->addWarning(
+          t("You're storing multiple indexes on the same Solr index (aka core). Take care if you use advanced Solr features like spell checking, suggesters, terms, autocomplete and others directly, because they aren't aware of these multiple indexes by default. Use Search API family modules like Autocomplete module instead which will help you to avoid issues.")
+        );
       }
     }
   }

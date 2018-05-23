@@ -8,6 +8,7 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Cache\UseCacheBackendTrait;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api\Entity\Server;
+use Drupal\search_api\LoggerTrait;
 use Drupal\search_api_solr\TypedData\SolrFieldDefinition;
 
 /**
@@ -17,6 +18,7 @@ class SolrFieldManager implements SolrFieldManagerInterface {
 
   use UseCacheBackendTrait;
   use StringTranslationTrait;
+  use LoggerTrait;
 
   /**
    * Static cache of field definitions per Solr server.
@@ -112,9 +114,8 @@ class SolrFieldManager implements SolrFieldManagerInterface {
       }
     }
     catch (SearchApiSolrException $e) {
-      drupal_set_message($this->t('Could not connect to server %server, %message', ['%server' => $server->id(), '%message' => $e->getMessage()]), 'error');
-      // @todo Inject the logger service.
-      \Drupal::logger('search_api_solr')->error('Could not connect to server %server, %message', ['%server' => $server->id(), '%message' => $e->getMessage()]);
+      \Drupal::messenger()->addError($this->t('Could not connect to server %server, %message', ['%server' => $server->id(), '%message' => $e->getMessage()]));
+      $this->getLogger()->error('Could not connect to server %server, %message', ['%server' => $server->id(), '%message' => $e->getMessage()]);
     }
     return $fields;
   }
