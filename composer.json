@@ -34,7 +34,7 @@
     },
     "conflict": {
         "drupal/search_api_solr_multilingual": "*",
-         "drupal/core": "8.4"
+        "drupal/core": "<8.5"
     },
     "suggest": {
         "drupal/facets": "Provides facetted search.",
