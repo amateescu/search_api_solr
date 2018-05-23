@@ -3,7 +3,6 @@
 namespace Drupal\search_api_solr\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\ServerInterface;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -11,8 +10,6 @@ use Symfony\Component\HttpFoundation\Response;
  * Provides different listings of SolrFieldType.
  */
 class SolrFieldTypeController extends ControllerBase {
-
-  use LoggerTrait;
 
   /**
    * Provides the listing page.
@@ -88,7 +85,7 @@ class SolrFieldTypeController extends ControllerBase {
       exit();
     }
     catch (\Exception $e) {
-      $this->logException($e);
+      watchdog_exception('search_api', $e);
       \Drupal::messenger()->addError($this->t('An error occured during the creation of the config.zip. Look at the logs for details.'));
     }
 
