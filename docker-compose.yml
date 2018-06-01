@@ -2,7 +2,7 @@ version: '2'
 
 services:
   solr7phpunit:
-    image: solr:7.2
+    image: solr:7.3
     ports:
      - "8983:8983"
     volumes:
@@ -14,7 +14,7 @@ services:
       - d8
       - /solr-conf
   solr7:
-    image: solr:7.2
+    image: solr:7.3
     ports:
      - "8993:8983"
     volumes:
