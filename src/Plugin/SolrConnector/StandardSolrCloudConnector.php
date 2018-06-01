@@ -57,7 +57,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
         $summary['@collection_name'] = $stats['solr-mbeans']['CORE']['core']['stats']['CORE.collection'];
       }
       else {
-        $summary['@core_name'] = $stats['solr-mbeans']['CORE']['core']['stats']['collectionName'];
+        $summary['@core_name'] = $stats['solr-mbeans']['CORE']['core']['stats']['collection'];
       }
     }
 
