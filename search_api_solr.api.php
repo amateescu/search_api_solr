@@ -13,16 +13,53 @@
 /**
  * Lets modules alter the Solarium select query before executing it.
  *
+ * After this hook, the select query will be finally converted into an
+ * expression that will be processed by the lucene query parser. Therefore you
+ * can't modify the 'q' parameter here, because it gets overwritten by that
+ * conversion. If you need to modify the 'q' parameter you should implement an
+ * event listener instead of this hook that handles the solarium events (our
+ * connector injects the drupal event handler into solarium). If you want to
+ * force a different parser like edismax you must set the 'defType' parameter
+ * accordingly.
+ *
+ * To get a list of solrium events,
+ * @see http://solarium.readthedocs.io/en/stable/customizing-solarium/#plugin-system
+ *
  * @param \Solarium\Core\Query\QueryInterface $solarium_query
  *   The Solarium query object, as generated from the Search API query.
  * @param \Drupal\search_api\Query\QueryInterface $query
  *   The Search API query object representing the executed search query.
  */
 function hook_search_api_solr_query_alter(\Solarium\Core\Query\QueryInterface $solarium_query, \Drupal\search_api\Query\QueryInterface $query) {
-  if ($query->getOption('foobar')) {
-    // If the Search API query has a 'foobar' option, remove all sorting options
-    // from the Solarium query.
-    $solarium_query->clearSorts();
+  if ($query->getOption('my_custom_boost')) {
+    // If the Search API query has a 'my_custom_boost' option, use the edsimax
+    // query handler and add some boost queries.
+
+    /** @var array $solr_field_names
+          maps search_api field names to real field names in the Solr index
+     */
+    $solr_field_names = $query->getIndex()->getServerInstance()->getBackend()->getSolrFieldNames($query->getIndex());
+
+    /** @var \Solarium\Component\EdisMax $edismax */
+    $edismax = $solarium_query->getEDisMax();
+
+    $keys = $query->getKeys();
+    if (is_array($keys)) {
+      $keys = implode(' ', $keys);
+    }
+
+    if ($keys) {
+      $boost_queries['title_exact_phrase'] = [
+        'query' => $solr_field_names['title'] . ':' . $solarium_query->getHelper()->escapePhrase($keys) . '^11.0',
+      ];
+      $edismax->addBoostQueries($boost_queries);
+    }
+
+    $boost_functions = 'recip(abs(ms(NOW/HOUR,' . $solr_field_names['modified'] . ')),3.16e-11,1,.4)^3';
+    $edismax->setBoostFunctions($boost_functions);
+
+    // Avoid the conversion into a lucene parser expression, keep edismax.
+    $solarium_query->addParam('defType', 'edismax');
   }
 }
 
