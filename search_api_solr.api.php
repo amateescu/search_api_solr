@@ -55,6 +55,8 @@ function hook_search_api_solr_query_alter(\Solarium\Core\Query\QueryInterface $s
       $edismax->addBoostQueries($boost_queries);
     }
 
+    // Boost documents by date.
+    // @see https://www.drupal.org/project/search_api_solr/issues/2855329
     $boost_functions = 'recip(abs(ms(NOW/HOUR,' . $solr_field_names['modified'] . ')),3.16e-11,1,.4)^3';
     $edismax->setBoostFunctions($boost_functions);
 
