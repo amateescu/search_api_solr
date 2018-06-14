@@ -97,10 +97,10 @@ class StreamingExpressionBuilder extends Expression {
     $this->sort_fields = [];
     foreach ($this->all_fields_mapped as $search_api_field => $solr_field) {
       if (strpos($solr_field, 't') === 0 || strpos($solr_field, 's') === 0) {
-        $this->sort_fields['sort_' . $search_api_field] = 'sort_' . $search_api_field;
+        $this->sort_fields['sort_' . $search_api_field] = 'sort_' . Utility::encodeSolrName($search_api_field);
       }
       elseif (preg_match('/^([a-z]+)m(_.*)/', $solr_field, $matches) && strpos($solr_field, 'random_') !== 0) {
-        $this->sort_fields[$matches[1] . 's' . $matches[2]] = $matches[1] . 's' . $matches[2];
+        $this->sort_fields['sort' . Utility::decodeSolrName($matches[2])] = $matches[1] . 's' . $matches[2];
       }
     }
 

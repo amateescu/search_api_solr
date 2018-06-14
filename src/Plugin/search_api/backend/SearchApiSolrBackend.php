@@ -815,7 +815,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         // Enable sorts in some special cases.
         if ($first_value && !array_key_exists($name, $special_fields)) {
           if (strpos($field_names[$name], 't') === 0 || strpos($field_names[$name], 's') === 0) {
-            $key = 'sort_' . $name;
+            $key = 'sort_' . $field_names[$name];
             if (!$doc->{$key}) {
               // Truncate the string to avoid Solr string field limitation.
               // @see https://www.drupal.org/node/2809429
@@ -3104,7 +3104,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           // For fulltext fields use the dedicated sort field for faster alpha
           // sorts. Use the same field for strings to sort on a normalized
           // value.
-          $f = 'sort_' . $field;
+          $f = 'sort_' . $field_names[$field];
         }
         elseif (preg_match('/^([a-z]+)m(_.*)/', $field_names[$field], $matches)) {
           // For other multi-valued fields (which aren't sortable by nature) we
