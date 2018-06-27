@@ -201,15 +201,21 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
 
         foreach ($field_names as $field_name) {
           if (isset($highlighted_fields[$field_name])) {
+            $exchanged = FALSE;
             foreach ($language_ids as $language_id) {
-              $language_specific_field = $language_specific_fields[$language_id][$field_name];
-              // Copy the already set highlighting options over to the language
-              // specific fields. getField() creates a new one first.
-              $highlighted_field = $hl->getField($language_specific_field);
-              $highlighted_field->setOptions($highlighted_fields[$field_name]->getOptions());
-              $highlighted_field->setName($language_specific_field);
+              if (isset($language_specific_fields[$language_id][$field_name])) {
+                $language_specific_field = $language_specific_fields[$language_id][$field_name];
+                // Copy the already set highlighting options over to the language
+                // specific fields. getField() creates a new one first.
+                $highlighted_field = $hl->getField($language_specific_field);
+                $highlighted_field->setOptions($highlighted_fields[$field_name]->getOptions());
+                $highlighted_field->setName($language_specific_field);
+                $exchanged = TRUE;
+              }
             }
-            $hl->removeField($field_name);
+            if ($exchanged) {
+              $hl->removeField($field_name);
+            }
           }
         }
       }
@@ -225,7 +231,13 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
         foreach ($language_ids as $language_id) {
           /** @var \Solarium\QueryType\MoreLikeThis\Query $solarium_query */
           foreach ($solarium_query->getMltFields() as $mlt_field) {
-            $mlt_fields[] = $language_specific_fields[$language_id][$mlt_field];
+            if (isset($language_specific_fields[$language_id][$mlt_field])) {
+              $mlt_fields[] = $language_specific_fields[$language_id][$mlt_field];
+            }
+            else {
+              // Make sure untranslated fields are still kept.
+              $mlt_fields[$mlt_field] = $mlt_field;
+            }
           }
         }
         $solarium_query->setMltFields(explode(' ', $mlt_fields));
