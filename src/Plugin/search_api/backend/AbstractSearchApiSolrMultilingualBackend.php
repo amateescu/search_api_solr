@@ -240,7 +240,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
             }
           }
         }
-        $solarium_query->setMltFields(explode(' ', $mlt_fields));
+        $solarium_query->setMltFields($mlt_fields);
       }
       elseif ($keys = $query->getKeys()) {
         /** @var \Solarium\QueryType\Select\Query\Query $solarium_query */
