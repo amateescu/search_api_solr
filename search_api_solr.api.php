@@ -18,8 +18,9 @@
  * can't modify the 'q' parameter here, because it gets overwritten by that
  * conversion. If you need to modify the 'q' parameter you should implement an
  * event listener instead of this hook that handles the solarium events (our
- * connector injects the drupal event handler into solarium). If you want to
- * force a different parser like edismax you must set the 'defType' parameter
+ * connector injects the drupal event handler into solarium) or implement
+ * hook_search_api_solr_converted_query() instead. If you want to force a
+ * different parser like edismax you must set the 'defType' parameter
  * accordingly.
  *
  * To get a list of solrium events,
@@ -66,6 +67,35 @@ function hook_search_api_solr_query_alter(\Solarium\Core\Query\QueryInterface $s
 }
 
 /**
+ * Lets modules alter the converted Solarium select query before executing it.
+ *
+ * This hook is called after the select query is finally converted into an
+ * expression that meets the requirements of the trageted query parser. Using
+ *  this hook you can carefully modify the 'q' parameter here, in oposite to
+ * hook_search_api_solr_query_alter().
+ *
+ * @param \Solarium\Core\Query\QueryInterface $solarium_query
+ *   The Solarium query object, as generated from the Search API query.
+ * @param \Drupal\search_api\Query\QueryInterface $query
+ *   The Search API query object representing the executed search query.
+ */
+function hook_search_api_solr_converted_query_alter(\Solarium\Core\Query\QueryInterface $solarium_query, \Drupal\search_api\Query\QueryInterface $query) {
+  if ($query->getOption('I_know_what_I_am_doing') == 'really!') {
+    // If the Search API query has a 'I_know_what_I_am_doing' option set to
+    // 'really!', overwrite the 'q' parameter.
+    // query handler and add some boost queries.
+
+    /** @var array $solr_field_names
+          maps search_api field names to real field names in the Solr index
+     */
+    $solr_field_names = $query->getIndex()->getServerInstance()->getBackend()->getSolrFieldNames($query->getIndex());
+
+    /** @var \Solarium\Component\EdisMax $edismax */
+    $edismax = $solarium_query->setQuery($solr_field_names['title'] . ':' . $solarium_query->getHelper()->escapePhrase('foo') . '^11.0');
+  }
+}
+
+/**
  * Change the way the index's field names are mapped to Solr field names.
  *
  * @param \Drupal\search_api\IndexInterface $index
@@ -76,9 +106,7 @@ function hook_search_api_solr_query_alter(\Solarium\Core\Query\QueryInterface $s
  *   are also included.
  */
 function hook_search_api_solr_field_mapping_alter(\Drupal\search_api\IndexInterface $index, array &$fields) {
-  if (in_array('entity:node', $index->getDatasourceIds()) && isset($fields['entity:node|body'])) {
-    $fields['entity:node|body'] = 'tm_entity$node|body_value';
-  }
+  $fields['body'] = 'ts_body';
 }
 
 /**

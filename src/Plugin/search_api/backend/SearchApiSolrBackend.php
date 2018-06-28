@@ -1149,6 +1149,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           }
         }
 
+        // Allow modules to alter the converted solarium query.
+        $this->moduleHandler->alter('search_api_solr_converted_query', $solarium_query, $query);
+
         // Send search request.
         $response = $connector->search($solarium_query);
         $body = $response->getBody();
