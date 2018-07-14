@@ -611,9 +611,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                 $status = 'error';
               }
               elseif (!preg_match('/drupal-[' . SEARCH_API_SOLR_MIN_SCHEMA_VERSION . '-9]\./', $stats_summary['@schema_version'])) {
-                $variables[':url'] = Url::fromUri('internal:/' . drupal_get_path('module', 'search_api_solr') . '/INSTALL.txt')
+                $variables[':url'] = Url::fromUri('internal:/' . drupal_get_path('module', 'search_api_solr') . '/INSTALL.md')
                   ->toString();
-                \Drupal::messenger()->addError($this->t('You are using an incompatible schema.xml configuration file. Please follow the instructions in the <a href=":url">INSTALL.txt</a> file for setting up Solr.', $variables));
+                \Drupal::messenger()->addError($this->t('You are using an incompatible schema.xml configuration file. Please follow the instructions in the <a href=":url">INSTALL.md</a> file for setting up Solr.', $variables));
                 $status = 'error';
               }
             }
