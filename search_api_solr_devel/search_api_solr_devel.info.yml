@@ -4,5 +4,5 @@ description: 'Debugging your Solr integration.'
 package: Search
 core: 8.x
 dependencies:
-  - devel
-  - search_api_solr
+  - devel:devel
+  - search_api_solr:search_api_solr

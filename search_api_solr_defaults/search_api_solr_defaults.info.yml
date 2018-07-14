@@ -11,4 +11,4 @@ dependencies:
   - drupal:node
   - drupal:user
   - drupal:views
-  - search_api_solr
+  - search_api_solr:search_api_solr

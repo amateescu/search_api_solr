@@ -6,4 +6,4 @@ package: Search
 dependencies:
   - drupal:language
   - search_api:search_api
-  - system (>=8.5)
+  - drupal:system (>=8.5)
