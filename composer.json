@@ -22,8 +22,8 @@
     "require": {
         "php": "^7.0",
         "maennchen/zipstream-php": "0.4.*",
-        "solarium/solarium": "~4.0",
-        "drupal/search_api": "~1.8"
+        "solarium/solarium": "^4.1.0-rc.1",
+        "drupal/search_api": "~1.9"
     },
     "require-dev": {
         "phayes/geophp": "^1.2",

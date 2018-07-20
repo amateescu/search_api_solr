@@ -7,9 +7,9 @@ php:
   - 7.2
 
 env:
-  - SOLR_VERSION=7.3.1 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.6.x DRUSH_VERSION=~9.0.0
-  - SOLR_VERSION=7.3.1 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.5.x DRUSH_VERSION=~9.0.0
-  - SOLR_VERSION=6.6.4 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=6.x DRUPAL_BRANCH=8.5.x DRUSH_VERSION=~9.0.0
+  - SOLR_VERSION=7.4.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.6.x DRUSH_VERSION=~9.3.0
+  - SOLR_VERSION=7.4.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.5.x DRUSH_VERSION=~9.3.0
+  - SOLR_VERSION=6.6.5 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=6.x DRUPAL_BRANCH=8.5.x DRUSH_VERSION=~9.3.0
 
 notifications:
   irc:
@@ -39,7 +39,7 @@ before_install:
   - export SOLR_CONFS="$TRAVIS_BUILD_DIR/../drupal/modules/contrib/search_api_solr/solr-conf/$SEARCH_API_SOLR_CONF"
 
 install:
-  - git tag 999.0.0
+  - git tag 999.3.0
   # Make sure we don't fail when checking out projects.
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
   - echo -e "Host git.drupal.org\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
@@ -54,7 +54,7 @@ install:
   - composer install
   - if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.2" ]]; then composer run-script drupal-phpunit-upgrade; fi
   - composer config repositories.search_api_solr vcs $TRAVIS_BUILD_DIR
-  - composer require drupal/search_api:1.x-dev drupal/search_api_autocomplete:1.x-dev drupal/search_api_solr:999.0.0 drupal/search_api_location:1.x-dev drupal/facets:1.x-dev drupal/geofield:1.x-dev drupal/composer_deploy drush/drush:$DRUSH_VERSION
+  - composer require drupal/search_api:1.x-dev drupal/search_api_autocomplete:1.x-dev drupal/search_api_solr:999.3.0 drupal/search_api_location:1.x-dev drupal/facets:1.x-dev drupal/geofield:1.x-dev drupal/composer_deploy drush/drush:$DRUSH_VERSION
   # Patch template.
   #########################################
   # to be removed once #2824932 is resolved
@@ -100,7 +100,7 @@ script:
 matrix:
   exclude:
       - php: 7.0
-        env: SOLR_VERSION=7.3.1 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.6.x DRUSH_VERSION=~9.0.0
+        env: SOLR_VERSION=7.4.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.6.x DRUSH_VERSION=~9.3.0
   allow_failures:
       - php: 7.2
-        env: SOLR_VERSION=7.3.1 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.6.x DRUSH_VERSION=~9.0.0
+        env: SOLR_VERSION=7.4.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.6.x DRUSH_VERSION=~9.3.0
