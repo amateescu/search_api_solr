@@ -178,7 +178,7 @@ class StreamingExpressionBuilder extends Expression {
   }
 
   /**
-   * Escapes a value to be used in a Solr search query.
+   * Escapes a value to be used in a Solr streaming expression.
    *
    * @param string $value
    * @param bool $single_term
@@ -188,13 +188,18 @@ class StreamingExpressionBuilder extends Expression {
    *   The escaped value.
    */
   public function _escaped_value(string $value, bool $single_term = TRUE) {
-    return $single_term ?
+    $escaped_string = $single_term ?
       $this->query_helper->escapeTerm($value) :
       $this->query_helper->escapePhrase($value);
+    // If the escaped strings are to be used inside a streaming expression double quotes need to be escaped once more
+    // (e.g. q="field:\"word1 word2\"").
+    // See also https://issues.apache.org/jira/browse/SOLR-8409
+    $escaped_string = str_replace('"', '\\"', $escaped_string);
+    return $escaped_string;
   }
 
   /**
-   * Formats a field and it's value to be used in a Solr search query.
+   * Formats a field and its value to be used in a Solr streaming expression.
    *
    * @param string $search_api_field_name
    * @param string $value
@@ -207,7 +212,7 @@ class StreamingExpressionBuilder extends Expression {
   }
 
   /**
-   * Formats a field and it's escaped value to be used in a Solr search query.
+   * Formats a field and its escaped value to be used in a Solr streaming expression.
    *
    * @param string $search_api_field_name
    * @param string $value
