@@ -310,7 +310,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
         $language_specific_conditions = &$language_specific_condition_group->getConditions();
         $language_specific_conditions[] = $condition;
         $language_fqs = array_merge($language_fqs, $this->reduceFilterQueries(
-          $this->createFilterQueries($language_specific_condition_group, $this->getLanguageSpecificSolrFieldNames($langcode, $solr_fields, reset($index_fields)->getIndex()), $index_fields, $options),
+          $this->createFilterQueries($language_specific_condition_group, $this->getLanguageSpecificSolrFieldNames($langcode, $solr_fields, reset($index_fields)->getIndex()), $index_fields, $options, $query),
           $condition_group
         ));
       }

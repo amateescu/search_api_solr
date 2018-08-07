@@ -1886,7 +1886,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected function getFilterQueries(QueryInterface $query, array $solr_fields, array $index_fields, array &$options) {
     $condition_group = $query->getConditionGroup();
     $this->addLanguageConditions($condition_group, $query);
-    return $this->createFilterQueries($condition_group, $solr_fields, $index_fields, $options);
+    return $this->createFilterQueries($condition_group, $solr_fields, $index_fields, $options, $query);
   }
 
   /**
@@ -1906,7 +1906,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *
    * @throws \Drupal\search_api\SearchApiException
    */
-  protected function createFilterQueries(ConditionGroupInterface $condition_group, array $solr_fields, array $index_fields, array &$options) {
+  protected function createFilterQueries(ConditionGroupInterface $condition_group, array $solr_fields, array $index_fields, array &$options, QueryInterface $query) {
     $fq = [];
 
     $conditions = $condition_group->getConditions();
@@ -1918,17 +1918,41 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           throw new SearchApiException($this->t('Filter term on unknown or unindexed field @field.', ['@field' => $field]));
         }
         $value = $condition->getValue();
-        $filter_query = $this->createFilterQuery($solr_fields[$field], $value, $condition->getOperator(), $index_fields[$field], $options);
+        $filter_query = '';
+
+        if (strpos($solr_fields[$field], 't') === 0) {
+          $parse_mode_id = $query->getParseMode()->getPluginId();
+          $keys['#conjunction'] = $query->getParseMode()->getConjunction();
+          $keys['#negation'] = $condition->getOperator() == '<>';
+          switch ($parse_mode_id) {
+            case 'terms':
+              $keys += explode(' ', preg_replace('/\s+/', ' ', trim($value)));
+              break;
+            case 'phrase':
+              $keys[] = $value;
+              break;
+            case 'direct':
+              $keys = $value;
+              break;
+            default:
+              throw new SearchApiSolrException('Incompatible parse mode.');
+          }
+          $filter_query = $this->flattenKeys($keys, [$solr_fields[$field]], $parse_mode_id);
+        }
+        else {
+          $filter_query = $this->createFilterQuery($solr_fields[$field], $value, $condition->getOperator(), $index_fields[$field], $options);
+        }
+
         if ($filter_query) {
           $fq[] = [
-            'query' => $this->createFilterQuery($solr_fields[$field], $value, $condition->getOperator(), $index_fields[$field], $options),
+            'query' => $filter_query,
             'tags' => $condition_group->getTags(),
           ];
         }
       }
       else {
         // Nested condition group.
-        $nested_fqs = $this->createFilterQueries($condition, $solr_fields, $index_fields, $options);
+        $nested_fqs = $this->createFilterQueries($condition, $solr_fields, $index_fields, $options, $query);
         $fq = array_merge($fq, $this->reduceFilterQueries($nested_fqs, $condition));
       }
     }
@@ -1982,6 +2006,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
   /**
    * Create a single search query string.
+   *
+   * @return string|NULL
+   *    A filter query
    */
   protected function createFilterQuery($field, $value, $operator, FieldInterface $index_field, array &$options) {
     if (!is_array($value)) {
@@ -2751,9 +2778,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         if (
           'direct' == $parse_mode_id ||
           (
+            // Already converted sub keys.
             strpos($l, '(') !== 0 &&
             strpos($l, '+') !== 0 &&
-            strpos($l, '-') !== 0
+            strpos($l, '-') !== 0 &&
+            !preg_match('/^[^:]+:/', $l) // field:value^2
           )
         ) {
           $v = [];
