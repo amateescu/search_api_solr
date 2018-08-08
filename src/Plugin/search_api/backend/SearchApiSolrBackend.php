@@ -2787,8 +2787,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         ) {
           $v = [];
           foreach ($fields as $f) {
-            list($field, $boost) = explode('^', $f);
-            $v[] = $field . ':' . $l . ($boost ? '^' . $boost : '');
+            if (strpos($f, '^') !== FALSE) {
+              list($field, $boost) = explode('^', $f);
+              $v[] = $field . ':' . $l . '^' . $boost;
+            }
+            else {
+              $v[] = $f . ':' . $l;
+            }
           }
           if (count($v) > 1) {
             $l = '(' . implode(' ', $v) . ')';
