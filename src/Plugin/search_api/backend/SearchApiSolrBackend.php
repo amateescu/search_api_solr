@@ -1920,7 +1920,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $value = $condition->getValue();
         $filter_query = '';
 
-        if (strpos($solr_fields[$field], 't') === 0) {
+        if (strpos($solr_fields[$field], 't') === 0 && $value) {
+          // Fulltext fields.
           $parse_mode_id = $query->getParseMode()->getPluginId();
           $keys['#conjunction'] = $query->getParseMode()->getConjunction();
           $keys['#negation'] = $condition->getOperator() == '<>';
@@ -1940,6 +1941,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $filter_query = $this->flattenKeys($keys, [$solr_fields[$field]], $parse_mode_id);
         }
         else {
+          // Non-fulltext fields or fulltext fields checked against NULL.
           $filter_query = $this->createFilterQuery($solr_fields[$field], $value, $condition->getOperator(), $index_fields[$field], $options);
         }
 
