@@ -2395,8 +2395,26 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
+  public function alterTermsAutocompleteQuery(QueryInterface $query) {
+    // Allow modules to alter the solarium autocomplete query.
+    $this->moduleHandler->alter('search_api_solr_terms_autocomplete_query', $query);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getTermsSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input) {
+    // Call an object oriented equivalent to hook_search_api_solr_query_alter().
+    $this->alterTermsAutocompleteQuery($query);
     return $this->getAutocompleteSuggestions($query, $search, $incomplete_key, $user_input);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterSpellcheckAutocompleteQuery(AutocompleteQuery $solarium_query, QueryInterface $query) {
+    // Allow modules to alter the solarium autocomplete query.
+    $this->moduleHandler->alter('search_api_solr_spellcheck_autocomplete_query', $solarium_query, $query);
   }
 
   /**
@@ -2408,6 +2426,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       try {
         $suggestion_factory = new SuggestionFactory($user_input);
         $this->setAutocompleteSpellCheckQuery($query, $solarium_query, $user_input);
+        // Call an object oriented equivalent to hook_search_api_solr_query_alter().
+        $this->alterSpellcheckAutocompleteQuery($solarium_query, $query);
         $result = $this->getSolrConnector()->execute($solarium_query);
         $suggestions = $this->getAutocompleteSpellCheckSuggestions($result, $suggestion_factory);
         // Filter out duplicate suggestions.
@@ -2423,12 +2443,22 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
+  public function alterSuggesterAutocompleteQuery(AutocompleteQuery $solarium_query, QueryInterface $query) {
+    // Allow modules to alter the solarium autocomplete query.
+    $this->moduleHandler->alter('search_api_solr_suggester_autocomplete_query', $solarium_query, $query);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getSuggesterSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input, $options = []) {
     $suggestions = [];
     if ($solarium_query = $this->getAutocompleteQuery($incomplete_key, $user_input)) {
       try {
         $suggestion_factory = new SuggestionFactory($user_input);
         $this->setAutocompleteSuggesterQuery($query, $solarium_query, $user_input, $options);
+        // Call an object oriented equivalent to hook_search_api_solr_query_alter().
+        $this->alterSuggesterAutocompleteQuery($solarium_query, $query);
         $result = $this->getSolrConnector()->execute($solarium_query);
         $suggestions = $this->getAutocompleteSuggesterSuggestions($result, $suggestion_factory);
         // Filter out duplicate suggestions.

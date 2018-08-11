@@ -67,6 +67,45 @@ function hook_search_api_solr_query_alter(\Solarium\Core\Query\QueryInterface $s
 }
 
 /**
+ * Lets modules alter the terms autocomplete query before executing it.
+ *
+ * @param \Drupal\search_api\Query\QueryInterface $query
+ *   The Search API query object representing the executed search query.
+ */
+function hook_search_api_solr_terms_autocomplete_query_alter(\Drupal\search_api\Query\QueryInterface $query) {
+  // If the Search API query has a 'terms' component, set a custom option.
+  $query->setOption('solr_param_code', 'custom-value');
+}
+
+/**
+ * Lets modules alter the spellcheck autocomplete query before executing it.
+ *
+ * @param \Drupal\search_api_solr\Solarium\Autocomplete\Query $solarium_query
+ *   The Solarium query object, as generated from the Search API query.
+ * @param \Drupal\search_api\Query\QueryInterface $query
+ *   The Search API query object representing the executed search query.
+ */
+function hook_search_api_solr_spellcheck_autocomplete_query_alter(\Drupal\search_api_solr\Solarium\Autocomplete\Query $solarium_query, \Drupal\search_api\Query\QueryInterface $query) {
+  // If the Search API query has a 'spellcheck' component, set a custom
+  // dictionary.
+  $solarium_query->getSpellcheck()->setDictionary('custom');
+}
+
+/**
+ * Lets modules alter the suggester autocomplete query before executing it.
+ *
+ * @param \Drupal\search_api_solr\Solarium\Autocomplete\Query $solarium_query
+ *   The Solarium query object, as generated from the Search API query.
+ * @param \Drupal\search_api\Query\QueryInterface $query
+ *   The Search API query object representing the executed search query.
+ */
+function hook_search_api_solr_suggester_autocomplete_query_alter(\Drupal\search_api_solr\Solarium\Autocomplete\Query $solarium_query, \Drupal\search_api\Query\QueryInterface $query) {
+  // If the Search API query has a 'suggester' component, set a custom
+  // dictionary.
+  $solarium_query->getSuggester()->setDictionary('custom');
+}
+
+/**
  * Lets modules alter the converted Solarium select query before executing it.
  *
  * This hook is called after the select query is finally converted into an
