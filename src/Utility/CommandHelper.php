@@ -65,7 +65,7 @@ class CommandHelper implements LoggerAwareInterface {
      $server->setBackendConfig($config);
    }
    $list_builder->setServer($server);
-   ob_end_clean();
+   @ob_end_clean();
    ob_start();
    $zip = $list_builder->getConfigZip();
    $zip->finish();

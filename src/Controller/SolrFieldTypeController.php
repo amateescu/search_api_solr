@@ -74,14 +74,14 @@ class SolrFieldTypeController extends ControllerBase {
    *   A render array as expected by drupal_render().
    */
   public function getConfigZip(ServerInterface $search_api_server) {
-    ob_clean();
+    @ob_clean();
 
     try {
       /** @var \ZipStream\ZipStream $zip */
       $zip = $this->getListBuilder($search_api_server)->getConfigZip();
       $zip->finish();
 
-      ob_end_flush();
+      @ob_end_flush();
       exit();
     }
     catch (\Exception $e) {
