@@ -893,7 +893,20 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     $response = $result->getResponse();
     $json_data = $response->getBody();
     $array_data = Json::decode($json_data);
-    return $array_data[$filepath];
+
+    if (isset($array_data[basename($filepath)])) {
+      // Solarium >= 4.1.0
+      return $array_data[basename($filepath)];
+    }
+    elseif (isset($array_data[$filepath])) {
+      // Solarium < 4.1.0
+      return $array_data[$filepath];
+    }
+
+    // In most (or every) cases when an error happens we won't reach that point,
+    // because a Solr exception is already pased through. Anyway, this exception
+    // will be thrown if the solarium library surprises us again. ;-)
+    throw new SearchApiSolrException('Unable to find extracted files within the Solr response body.');
   }
 
   /**

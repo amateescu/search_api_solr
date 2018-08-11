@@ -362,6 +362,9 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    * @param string $filepath
    *
    * @return string
+   *   The extracted content as string.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function getContentFromExtractResult(ExtractResult $result, $filepath);
 
