@@ -63,8 +63,15 @@ class SolariumRequestLogger implements EventSubscriberInterface {
     $dump = [];
     $parameters = ($method == 'GET') ? explode('&', $request->getQueryString()) : explode('&', $request->getRawData());
     foreach ($parameters as $parameter) {
-      list($name, $value) = explode('=', $parameter);
-      $dump[$name][] = urldecode($value);
+      if ($parameter) {
+        if (strpos($parameter, '=')) {
+          list($name, $value) = explode('=', $parameter);
+          $dump[urldecode($name)][] = urldecode($value);
+        }
+        else {
+          $dump[urldecode($parameter)][] = '';
+        }
+      }
     }
 
     $this->develDumperManager->message(
