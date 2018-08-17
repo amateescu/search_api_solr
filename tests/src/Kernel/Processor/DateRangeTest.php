@@ -17,7 +17,7 @@ use Drupal\Tests\search_api\Kernel\ResultsTrait;
  *
  * @group search_api_solr
  *
- * @see \Drupal\search_api\Plugin\search_api\processor\ContentAccess
+ * @see \Drupal\search_api_solr\Plugin\search_api\processor\DateRange
  */
 class DateRangeTest extends ProcessorTestBase {
 

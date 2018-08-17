@@ -94,42 +94,4 @@ class StreamingExpressionTest extends KernelTestBase {
       $streaming_expression
     );
   }
-
-  /**
-   * Tests double quote workaround.
-   */
-  public function testDoubleQuoteWorkaround() {
-    $processor = \Drupal::getContainer()
-      ->get('search_api.plugin_helper')
-      ->createProcessorPlugin($this->index, 'double_quote_workaround');
-    $this->index->addProcessor($processor);
-    $this->index->save();
-
-    $replacement = $processor->getConfiguration()['replacement'];
-    $this->assertEquals(
-      '|9999999998|',
-      $replacement
-    );
-
-    $streaming_expression =
-      $this->exp->search(
-        $this->exp->_collection(),
-        'q=' . $this->exp->_field_escaped_value('search_api_datasource', 'entity:entity_test_mulrev_changed'),
-        'fq="' . $this->exp->_field_escaped_value('body', 'double "quotes" within the text', /* phrase */FALSE) . '"',
-        'fl="' . $this->exp->_field_list(['name', 'body', 'created']) . '"',
-        'sort="' . $this->exp->_field('created') . ' DESC"',
-        'qt="/export"'
-      );
-
-    $this->assertEquals(
-      'search(d8, q=ss_search_api_datasource:entity\:entity_test_mulrev_changed, fq="\\\\"double ' .$replacement . 'quotes ' . $replacement . ' within the text\\\\"", fl="tm_name,tm_body,ds_created", sort="ds_created DESC", qt="/export")',
-      $streaming_expression
-    );
-
-    $this->assertEquals(
-      'double "quotes" within the text',
-      $processor->decodeStreamingExpressionValue('double ' .$replacement . 'quotes ' . $replacement . ' within the text')
-    );
-  }
-
 }
