@@ -2815,12 +2815,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       foreach($k as &$l) {
         if (
           'direct' == $parse_mode_id ||
+          strpos($l, '"') === 0 ||
           (
             // Already converted sub keys.
             strpos($l, '(') !== 0 &&
             strpos($l, '+') !== 0 &&
             strpos($l, '-') !== 0 &&
-            !preg_match('/^[^:]+:/', $l) // field:value^2
+            !preg_match('/^[^:]+(?<!\\\\):/', $l) // field:value^2 but *not* escaped colons within the value: part1\:part2^2
           )
         ) {
           $v = [];
