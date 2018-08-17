@@ -1,6 +1,6 @@
 plugin.plugin_configuration.search_api_processor.double_quote_workaround:
   type: search_api.fields_processor_configuration
-  label: 'Double quoteworkaround processor configuration'
+  label: 'Double quote workaround processor configuration'
   mapping:
     replacement:
       type: string

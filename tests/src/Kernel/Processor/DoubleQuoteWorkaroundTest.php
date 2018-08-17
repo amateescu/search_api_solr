@@ -62,20 +62,20 @@ class DoubleQuoteWorkaroundTest extends ProcessorTestBase {
       $this->exp->search(
         $this->exp->_collection(),
         'q=' . $this->exp->_field_escaped_value('search_api_datasource', 'entity:entity_test_mulrev_changed'),
-        'fq="' . $this->exp->_field_escaped_value('body', 'double "quotes" within the text', /* phrase */FALSE) . '"',
-        'fl="' . $this->exp->_field_list(['name', 'body', 'created']) . '"',
-        'sort="' . $this->exp->_field('created') . ' DESC"',
+        'fq="' . $this->exp->_field_escaped_value('title', 'double "quotes" within the text', /* phrase */FALSE) . '"',
+        'fl="' . $this->exp->_field('title') . '"',
+        'sort="' . $this->exp->_field('search_api_id') . ' DESC"',
         'qt="/export"'
       );
 
     $this->assertEquals(
-      'search(d8, q=ss_search_api_datasource:entity\:entity_test_mulrev_changed, fq="\\\\"double ' .$replacement . 'quotes ' . $replacement . ' within the text\\\\"", fl="tm_name,tm_body,ds_created", sort="ds_created DESC", qt="/export")',
+      'search(d8, q=ss_search_api_datasource:entity\:entity_test_mulrev_changed, fq="tm_title:\\"double ' . $replacement . 'quotes' . $replacement . ' within the text\\"", fl="tm_title", sort="ss_search_api_id DESC", qt="/export")',
       $streaming_expression
     );
 
     $this->assertEquals(
       'double "quotes" within the text',
-      $this->processor->decodeStreamingExpressionValue('double ' .$replacement . 'quotes ' . $replacement . ' within the text')
+      $this->processor->decodeStreamingExpressionValue('double ' . $replacement . 'quotes' . $replacement . ' within the text')
     );
   }
 }
