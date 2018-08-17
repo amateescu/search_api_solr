@@ -30,7 +30,7 @@ interface SolrProcessorInterface extends ProcessorInterface {
   public function encodeStreamingExpressionValue(string $value);
 
   /**
-   * Dencode a streaming expression value.
+   * Decode a streaming expression value.
    *
    * @param string $value
    *

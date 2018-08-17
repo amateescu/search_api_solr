@@ -64,7 +64,7 @@ class DoubleQuoteWorkaround extends FieldsProcessorPluginBase implements SolrPro
     parent::validateConfigurationForm($form, $form_state);
 
     $replacement = trim($form_state->getValue('replacement'));
-    if (strlen($replacement) < 3) {
+    if (mb_strlen($replacement) < 3) {
       $form_state->setErrorByName('replacement', $this->t('The replacement should at least consist of three cahracters.'));
     }
   }
@@ -75,7 +75,7 @@ class DoubleQuoteWorkaround extends FieldsProcessorPluginBase implements SolrPro
   protected function process(&$value) {
     // do *not* turn a value of null into an empty string!
     if (is_string($value)) {
-      $value = preg_replace('/"/', $this->configuration['replacement'], $value);
+      $value = preg_replace('/"/u', $this->configuration['replacement'], $value);
     }
   }
 
@@ -95,14 +95,14 @@ class DoubleQuoteWorkaround extends FieldsProcessorPluginBase implements SolrPro
    * {@inheritdoc}
    */
   public function encodeStreamingExpressionValue(string $value) {
-    return preg_replace('/"/', $this->configuration['replacement'], $value);
+    return preg_replace('/"/u', $this->configuration['replacement'], $value);
   }
 
   /**
    * {@inheritdoc}
    */
   public function decodeStreamingExpressionValue(string $value) {
-    return preg_replace('/' . preg_quote($this->configuration['replacement'], '/') . '/', '"', $value);
+    return preg_replace('/' . preg_quote($this->configuration['replacement'], '/') . '/u', '"', $value);
   }
 
 }
