@@ -23,6 +23,7 @@ use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Plugin\PluginFormTrait;
 use Drupal\search_api\Plugin\search_api\data_type\value\TextValue;
+use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Query\ConditionInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
@@ -41,6 +42,7 @@ use Drupal\search_api_solr\SolrAutocompleteInterface;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrCloudConnectorInterface;
 use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginManager;
+use Drupal\search_api_solr\SolrProcessorInterface;
 use Drupal\search_api_solr\Utility\SolrCommitTrait;
 use Drupal\search_api_solr\Utility\Utility;
 use Solarium\Component\ComponentAwareQueryInterface;
@@ -1246,12 +1248,39 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $stream->setExpression($stream_expression);
     $this->applySearchWorkarounds($stream, $query);
 
+    $tuples = [];
+
     try {
-      return $connector->stream($stream);
+      $tuples = $connector->stream($stream);
     }
     catch (\Exception $e) {
       throw new SearchApiSolrException($this->t('An error occurred while trying execute a streaming expression on Solr: @msg.', ['@msg' => $e->getMessage()]), $e->getCode(), $e);
     }
+
+    if ($processors = $query->getIndex()->getProcessorsByStage(ProcessorInterface::STAGE_POSTPROCESS_QUERY)) {
+      foreach ($processors as $key => $processor) {
+        if (!($processor instanceof SolrProcessorInterface)) {
+          unset($processors[$key]);
+        }
+      }
+
+      if (count($processors)) {
+        foreach ($tuples as &$tuple) {
+          foreach ($tuple as &$value) {
+            if (is_string($value)) {
+              $value = $processor->decodeStreamingExpressionValue($value) ?: $value;
+            }
+            elseif (is_array($value)) {
+              foreach ($value as &$array_value) {
+                $array_value = $processor->decodeStreamingExpressionValue($array_value) ?: $array_value;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return $tuples;
   }
 
   /**

@@ -3,8 +3,10 @@
 namespace Drupal\search_api_solr\Utility;
 
 use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrCloudConnectorInterface;
+use Drupal\search_api_solr\SolrProcessorInterface;
 use Solarium\QueryType\Stream\Expression;
 
 /**
@@ -188,6 +190,13 @@ class StreamingExpressionBuilder extends Expression {
    *   The escaped value.
    */
   public function _escaped_value(string $value, bool $single_term = TRUE) {
+    if (is_string($value)) {
+      foreach ($this->index->getProcessorsByStage(ProcessorInterface::STAGE_PREPROCESS_QUERY) as $processor) {
+        if ($processor instanceof SolrProcessorInterface) {
+          $value = $processor->encodeStreamingExpressionValue($value) ?: $value;
+        }
+      }
+    }
     $escaped_string = $single_term ?
       $this->query_helper->escapeTerm($value) :
       $this->query_helper->escapePhrase($value);
