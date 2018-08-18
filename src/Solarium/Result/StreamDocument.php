@@ -1,48 +1,32 @@
 <?php
 
-namespace Solarium\QueryType\Select\Result;
+namespace Drupal\search_api_solr\Solarium\Result;
 
-use Solarium\Exception\RuntimeException;
+use Solarium\QueryType\Select\Result\AbstractDocument;
+use Solarium\QueryType\Select\Result\DocumentInterface;
 
 /**
- * Read-only Solr document.
- *
- * This is the default Solr document type returned by a select query. You can
- * access the fields as object properties or iterate over all fields.
+ * Stream result Solr document.
  */
-class Document extends AbstractDocument implements DocumentInterface
-{
-    /**
-     * All fields in this document.
-     *
-     * @var array
-     */
-    protected $fields;
+class StreamDocument extends AbstractDocument implements DocumentInterface {
 
-    /**
-     * Constructor.
-     *
-     * @param array $fields
-     */
-    public function __construct(array $fields)
-    {
-        $this->fields = $fields;
-    }
+  /**
+   * Constructor.
+   *
+   * @param array $fields
+   */
+  public function __construct(array $fields) {
+    $this->fields = $fields;
+  }
 
-    /**
-     * Set field value.
-     *
-     * Magic method for setting a field as property of this object. Since this
-     * is a readonly document an exception will be thrown to prevent this.
-     *
-     *
-     * @param string $name
-     * @param string $value
-     *
-     * @throws RuntimeException
-     */
-    public function __set($name, $value)
-    {
-        throw new RuntimeException('A readonly document cannot be altered');
-    }
+  /**
+   * Set field value.
+   *
+   * @param string $name
+   * @param mixed $value
+   */
+  public function __set($name, $value)
+  {
+    $this->fields[$name] = $value;
+  }
 }

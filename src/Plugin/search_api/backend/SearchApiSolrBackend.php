@@ -1246,12 +1246,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     $stream = $connector->getStreamQuery();
     $stream->setExpression($stream_expression);
+    $stream->setOptions(['documentclass' => 'Drupal\search_api_solr\Solarium\Result\StreamDocument']);
     $this->applySearchWorkarounds($stream, $query);
 
-    $tuples = [];
+    $result = NULL;
 
     try {
-      $tuples = $connector->stream($stream);
+      $result = $connector->stream($stream);
     }
     catch (\Exception $e) {
       throw new SearchApiSolrException($this->t('An error occurred while trying execute a streaming expression on Solr: @msg.', ['@msg' => $e->getMessage()]), $e->getCode(), $e);
@@ -1265,22 +1266,26 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
 
       if (count($processors)) {
-        foreach ($tuples as &$tuple) {
-          foreach ($tuple as &$value) {
-            if (is_string($value)) {
-              $value = $processor->decodeStreamingExpressionValue($value) ?: $value;
+        /** @var \Drupal\search_api_solr\Solarium\Result\StreamDocument $document */
+        foreach ($result as $document) {
+          foreach ($document as $field_name => $field_value) {
+            if (is_string($field_value)) {
+              $document->{$field_name} = $processor->decodeStreamingExpressionValue($field_value) ?: $field_value;
             }
-            elseif (is_array($value)) {
-              foreach ($value as &$array_value) {
-                $array_value = $processor->decodeStreamingExpressionValue($array_value) ?: $array_value;
+            elseif (is_array($field_value)) {
+              foreach ($field_value as &$array_value) {
+                if (is_string($array_value)) {
+                  $array_value = $processor->decodeStreamingExpressionValue($array_value) ?: $array_value;
+                }
               }
+              $document->{$field_name} = $field_value;
             }
           }
         }
       }
     }
 
-    return $tuples;
+    return $result;
   }
 
   /**
