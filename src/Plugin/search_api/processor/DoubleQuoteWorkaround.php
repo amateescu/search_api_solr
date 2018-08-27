@@ -3,6 +3,7 @@
 namespace Drupal\search_api_solr\Plugin\search_api\processor;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api_solr\SolrProcessorInterface;
@@ -81,10 +82,14 @@ class DoubleQuoteWorkaround extends FieldsProcessorPluginBase implements SolrPro
 
   public function postprocessSearchResults(ResultSetInterface $results) {
     foreach ($results->getResultItems() as $resultItem) {
-      foreach ($resultItem->getFields() as $field) {
+      foreach ($resultItem->getFields(FALSE) as $field) {
         $values = $field->getValues();
         foreach ($values as $key => $value) {
-          $values[$key] = $this->decodeStreamingExpressionValue($value);
+          if (is_string($value)) {
+            $values[$key] = $this->decodeStreamingExpressionValue($value);
+          } elseif ($value instanceof TextValueInterface) {
+            $value->setText($this->decodeStreamingExpressionValue($value->getText()));
+          }
         }
         $field->setValues($values);
       }

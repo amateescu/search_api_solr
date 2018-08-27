@@ -1266,19 +1266,21 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
 
       if (count($processors)) {
-        /** @var \Drupal\search_api_solr\Solarium\Result\StreamDocument $document */
-        foreach ($result as $document) {
-          foreach ($document as $field_name => $field_value) {
-            if (is_string($field_value)) {
-              $document->{$field_name} = $processor->decodeStreamingExpressionValue($field_value) ?: $field_value;
-            }
-            elseif (is_array($field_value)) {
-              foreach ($field_value as &$array_value) {
-                if (is_string($array_value)) {
-                  $array_value = $processor->decodeStreamingExpressionValue($array_value) ?: $array_value;
-                }
+        foreach ($processors as $processor) {
+          /** @var \Drupal\search_api_solr\Solarium\Result\StreamDocument $document */
+          foreach ($result as $document) {
+            foreach ($document as $field_name => $field_value) {
+              if (is_string($field_value)) {
+                $document->{$field_name} = $processor->decodeStreamingExpressionValue($field_value) ?: $field_value;
               }
-              $document->{$field_name} = $field_value;
+              elseif (is_array($field_value)) {
+                foreach ($field_value as &$array_value) {
+                  if (is_string($array_value)) {
+                    $array_value = $processor->decodeStreamingExpressionValue($array_value) ?: $array_value;
+                  }
+                }
+                $document->{$field_name} = $field_value;
+              }
             }
           }
         }
