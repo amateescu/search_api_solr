@@ -185,15 +185,20 @@ class StreamingExpressionBuilder extends Expression {
    * @param string $value
    * @param bool $single_term
    *   Escapes the value as single term if TRUE, otherwise as phrase.
+   * @param string $search_api_field_name If provided the method will use it to check for each processor whether the
+   *  it is supposed to be run on the value.  If the the name is not provided no processor will act on the value.
    *
    * @return string
    *   The escaped value.
    */
-  public function _escaped_value(string $value, bool $single_term = TRUE) {
-    if (is_string($value)) {
+  public function _escaped_value(string $value, bool $single_term = TRUE, string $search_api_field_name = NULL) {
+    if (is_string($value) && $search_api_field_name) {
       foreach ($this->index->getProcessorsByStage(ProcessorInterface::STAGE_PREPROCESS_QUERY) as $processor) {
         if ($processor instanceof SolrProcessorInterface) {
-          $value = $processor->encodeStreamingExpressionValue($value) ?: $value;
+          $configuration = $processor->getConfiguration();
+          if (in_array($search_api_field_name, $configuration['fields'])) {
+            $value = $processor->encodeStreamingExpressionValue($value) ?: $value;
+          }
         }
       }
     }
@@ -232,7 +237,7 @@ class StreamingExpressionBuilder extends Expression {
    *   The Solr field name and the escaped value as 'field:value'.
    */
   public function _field_escaped_value(string $search_api_field_name, string $value, bool $single_term = TRUE) {
-    return $this->_field($search_api_field_name) . ':' . $this->_escaped_value($value, $single_term);
+    return $this->_field($search_api_field_name) . ':' . $this->_escaped_value($value, $single_term, $search_api_field_name);
   }
 
   /**
