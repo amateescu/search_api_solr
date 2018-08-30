@@ -137,13 +137,13 @@ function search_api_solr_uninstall() {
  * @return array
  *   All backend configs for active Solr servers keyed by server name.
  */
-function search_api_solr_update_helper_get_backend_configs($prefix = 'search_api_solr') {
+function search_api_solr_update_helper_get_backend_configs($pattern = 'solr') {
   $config_factory = \Drupal::configFactory();
   $backend_configs = [];
   foreach ($config_factory->listAll('search_api.server.') as $server_name) {
     $server = $config_factory->get($server_name);
     // Covers search_api_solr_multilingual, too.
-    if (strpos($server->get('backend'), $prefix) === 0) {
+    if (strpos($server->get('backend'), $pattern) !== FALSE) {
       $backend_configs[$server_name] = $server->get('backend_config');
     }
   }
