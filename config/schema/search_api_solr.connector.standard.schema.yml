@@ -26,6 +26,9 @@ plugin.plugin_configuration.search_api_solr_connector.standard:
     optimize_timeout:
       type: integer
       label: 'Timeout for optimize requests'
+    finalize_timeout:
+      type: integer
+      label: 'Timeout for finalize requests'
     skip_schema_check:
       type: integer
       label: 'Do not validate if the schema is correct'

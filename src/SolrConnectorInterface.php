@@ -410,4 +410,48 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    */
   public function viewSettings();
 
+  /**
+   * Sets a new timeout for queries, but not for indexing or optimization.
+   *
+   * The timeout will not be saved in the configuration of the connector. It
+   * will be overwritten for the current request only.
+   *
+   * @param int $timeout
+   * @param \Solarium\Core\Client\Endpoint|NULL $endpoint
+   *
+   * @return int
+   *   The previous timeout value.
+   */
+  public function adjustTimeout(int $timeout, Endpoint $endpoint = NULL);
+
+  /**
+   * Get the query timeout.
+   *
+   * @param \Solarium\Core\Client\Endpoint|NULL $endpoint
+   *
+   * @return int
+   */
+  public function getTimeout(Endpoint $endpoint = NULL);
+
+  /**
+   * Get the index timeout.
+   *
+   * @return int
+   */
+  public function getIndexTimeout();
+
+  /**
+   * Get the optimize timeout.
+   *
+   * @return int
+   */
+  public function getOptimizeTimeout();
+
+  /**
+   * Get the finalize timeout.
+   *
+   * @return int
+   */
+  public function getFinalizeTimeout();
+
 }

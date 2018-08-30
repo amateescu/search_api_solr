@@ -18,6 +18,7 @@ backend_config:
     timeout: 5
     index_timeout: 10
     optimize_timeout: 15
+    finalize_timeout: 30
     solr_version: ''
     http_method: AUTO
     commit_within: 1000

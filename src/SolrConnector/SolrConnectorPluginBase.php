@@ -93,6 +93,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       'timeout' => 5,
       'index_timeout' => 5,
       'optimize_timeout' => 10,
+      'finalize_timeout' => 30,
       'solr_version' => '',
       'http_method' => 'AUTO',
       'commit_within' => 1000,
@@ -171,6 +172,16 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       '#title' => $this->t('Optimize timeout'),
       '#description' => $this->t('The timeout in seconds for background index optimization queries on a Solr server.'),
       '#default_value' => isset($this->configuration['optimize_timeout']) ? $this->configuration['optimize_timeout'] : 10,
+      '#required' => TRUE,
+    ];
+
+    $form['finalize_timeout'] = [
+      '#type' => 'number',
+      '#min' => 1,
+      '#max' => 180,
+      '#title' => $this->t('Finalize timeout'),
+      '#description' => $this->t('The timeout in seconds for index finalization queries on a Solr server.'),
+      '#default_value' => isset($this->configuration['finalize_timeout']) ? $this->configuration['finalize_timeout'] : 30,
       '#required' => TRUE,
     ];
 
@@ -877,6 +888,49 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
 
     // Reset the timeout setting to the default value for search queries.
     $endpoint->setTimeout($timeout);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function adjustTimeout(int $timeout, Endpoint $endpoint = NULL) {
+    $previous_timeout = $this->getTimeout($endpoint);
+    $endpoint->setTimeout($timeout);
+    return $previous_timeout;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTimeout(Endpoint $endpoint = NULL) {
+    $this->connect();
+
+    if (!$endpoint) {
+      $endpoint = $this->solr->getEndpoint('core');
+    }
+
+    return $endpoint->getTimeout();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getIndexTimeout() {
+    return $this->configuration['index_timeout'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOptimizeTimeout() {
+    return $this->configuration['optimize_timeout'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFinalizeTimeout() {
+    return $this->configuration['finalize_timeout'];
   }
 
   /**

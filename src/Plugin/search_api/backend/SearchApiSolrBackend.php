@@ -936,6 +936,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $lock_name = 'search_api_solr.' . $index->id() . '.finalization_lock';
         if ($lock->acquire($lock_name)) {
           $finalization_in_progress[$index->id()] = TRUE;
+          $connector = $this->getSolrConnector();
+          $previous_timeout = $connector->adjustTimeout($connector->getFinalizeTimeout());
           try {
             if (!empty($settings['commit_before_finalize'])) {
               $this->ensureCommit($this->getServer());
@@ -954,9 +956,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           } catch (\Exception $e) {
             unset($finalization_in_progress[$index->id()]);
             $lock->release('search_api_solr.' . $index->id() . '.finalization_lock');
+            $connector->adjustTimeout($previous_timeout);
             throw new SearchApiSolrException($e->getMessage(), $e->getCode(), $e);
           }
           unset($finalization_in_progress[$index->id()]);
+          $connector->adjustTimeout($previous_timeout);
         }
         else {
           if ($lock->wait($lock_name)) {
