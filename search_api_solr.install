@@ -475,7 +475,9 @@ function search_api_solr_update_8210() {
  */
 function search_api_solr_update_8211() {
   foreach (search_api_solr_update_helper_get_backend_configs() as $server_name => $backend_config) {
-    $backend_config['finalize_timeout'] = 30;
-    search_api_solr_update_helper_save_backend_config($server_name, $backend_config);
+    if (!isset($backend_config['finalize_timeout'])) {
+      $backend_config['finalize_timeout'] = 30;
+      search_api_solr_update_helper_save_backend_config($server_name, $backend_config);
+    }
   }
 }
