@@ -894,6 +894,11 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    * {@inheritdoc}
    */
   public function adjustTimeout(int $timeout, Endpoint $endpoint = NULL) {
+    $this->connect();
+
+    if (!$endpoint) {
+      $endpoint = $this->solr->getEndpoint('core');
+    }
     $previous_timeout = $this->getTimeout($endpoint);
     $endpoint->setTimeout($timeout);
     return $previous_timeout;
