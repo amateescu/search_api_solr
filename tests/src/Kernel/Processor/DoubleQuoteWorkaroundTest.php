@@ -51,12 +51,20 @@ class DoubleQuoteWorkaroundTest extends ProcessorTestBase {
    * Tests double quote workaround.
    */
   public function testDoubleQuoteWorkaround() {
-    $replacement = $this->processor->getConfiguration()['replacement'];
+    $processor = $this->index->getProcessor('double_quote_workaround');
+    $configuration = $processor->getConfiguration();
 
+    $replacement = $configuration['replacement'];
     $this->assertEquals(
       '|9999999998|',
       $replacement
     );
+
+    // Set fields to process
+    $configuration['fields'] = ['title'];
+    $processor->setConfiguration($configuration);
+    $this->index->setProcessors(['double_quote_workaround' => $processor]);
+    $this->index->save();
 
     $streaming_expression =
       $this->exp->search(
