@@ -2,6 +2,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - core.entity_view_display.comment.comment.default
     - core.entity_view_mode.node.search_index
     - field.field.node.article.body
     - field.field.node.article.comment
@@ -23,6 +24,7 @@ content:
     settings: {  }
     third_party_settings: {  }
     label: hidden
+    region: content
   comment:
     type: comment_default
     weight: 2
@@ -30,6 +32,7 @@ content:
       pager_id: 0
     third_party_settings: {  }
     label: hidden
+    region: content
   field_tags:
     type: entity_reference_label
     weight: 1
@@ -37,6 +40,7 @@ content:
       link: false
     third_party_settings: {  }
     label: hidden
+    region: content
 hidden:
   field_image: true
   langcode: true

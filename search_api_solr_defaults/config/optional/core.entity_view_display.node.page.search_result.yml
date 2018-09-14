@@ -20,9 +20,11 @@ content:
       trim_length: 300
     third_party_settings: {  }
     label: hidden
+    region: content
   links:
     weight: 101
     settings: {  }
     third_party_settings: {  }
+    region: content
 hidden:
   langcode: true
