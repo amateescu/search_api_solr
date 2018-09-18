@@ -1570,58 +1570,61 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     // All fields.
     foreach ($values as $value) {
-      switch ($type) {
-        case 'boolean':
-          $value = $value ? 'true' : 'false';
-          break;
+      if (NULL !== $value) {
+        switch ($type) {
+          case 'boolean':
+            $value = $value ? 'true' : 'false';
+            break;
 
-        case 'date':
-          $value = $this->formatDate($value);
-          if ($value === FALSE) {
-            continue(2);
-          }
-          break;
-
-        case 'solr_date_range':
-          $start = $this->formatDate($value->getStart());
-          $end = $this->formatDate($value->getEnd());
-          $value = '[' . $start . ' TO ' . $end . ']';
-          break;
-
-        case 'integer':
-          $value = (int) $value;
-          break;
-
-        case 'decimal':
-          $value = (float) $value;
-          break;
-
-        case 'text':
-          /** @var \Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface $value */
-          $tokens = $value->getTokens();
-          if (is_array($tokens) && !empty($tokens)) {
-            foreach ($tokens as $token) {
-              // @todo handle token boosts broken?
-              // @see https://www.drupal.org/node/2746263
-              $value = $token->getText();
-              $doc->addField($key, $value, $token->getBoost());
-              if (!$first_value) {
-                $first_value = $value;
-              }
+          case 'date':
+            $value = $this->formatDate($value);
+            if ($value === FALSE) {
+              continue(2);
             }
-            $value = NULL;
-          }
-          else {
-            $value = $value->getText();
-          }
-          break;
+            break;
 
-        case 'string':
-        default:
-          // Keep $value as it is.
-      }
+          case 'solr_date_range':
+            $start = $this->formatDate($value->getStart());
+            $end = $this->formatDate($value->getEnd());
+            $value = '[' . $start . ' TO ' . $end . ']';
+            break;
 
-      if ($value) {
+          case 'integer':
+            $value = (int) $value;
+            break;
+
+          case 'decimal':
+            $value = (float) $value;
+            break;
+
+          case 'text':
+            /** @var \Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface $value */
+            $tokens = $value->getTokens();
+            if (is_array($tokens) && !empty($tokens)) {
+              foreach ($tokens as $token) {
+                // @todo handle token boosts broken?
+                // @see https://www.drupal.org/node/2746263
+                if ($value = $token->getText()) {
+                  $doc->addField($key, $value, $token->getBoost());
+                  if (!$first_value) {
+                    $first_value = $value;
+                  }
+                }
+              }
+              continue(2);
+            }
+            else {
+              $value = $value->getText();
+            }
+          // No break, now we have a string.
+          case 'string':
+          default:
+            // Keep $value as it is.
+            if (!$value) {
+              continue(2);
+            }
+        }
+
         $doc->addField($key, $value);
         if (!$first_value) {
           $first_value = $value;
