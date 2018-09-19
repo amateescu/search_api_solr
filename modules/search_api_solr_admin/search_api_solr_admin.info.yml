@@ -1,0 +1,7 @@
+type: module
+name: 'Solr search admin'
+description: 'Provides various Solr administration tasks.'
+core: 8.x
+package: Search
+dependencies:
+  - search_api_solr

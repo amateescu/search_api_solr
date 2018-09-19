@@ -1009,4 +1009,26 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     return parent::__sleep();
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function reloadCore() {
+    $this->connect();
+
+    try {
+      $core = $this->configuration['core'];
+      $core_admin_query = $this->solr->createCoreAdmin();
+      $reload_action = $core_admin_query->createReload();
+      $reload_action->setCore($core);
+      $core_admin_query->setAction($reload_action);
+      $response = $this->solr->coreAdmin($core_admin_query);
+      $was_successful = $response->getWasSuccessful();
+
+      return $was_successful;
+    }
+    catch (HttpException $e) {
+      throw new SearchApiSolrException($this->t('Reloading core @core failed with error code @error_code.', ['@core' => $core, '@error_code' => $e->getCode()]), $e->getCode(), $e);
+    }
+  }
+
 }

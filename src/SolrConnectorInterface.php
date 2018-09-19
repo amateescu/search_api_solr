@@ -411,6 +411,13 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
   public function viewSettings();
 
   /**
+   * Reloads the Solr core.
+   *
+   * @return bool
+   */
+  public function reloadCore();
+
+  /**
    * Sets a new timeout for queries, but not for indexing or optimization.
    *
    * The timeout will not be saved in the configuration of the connector. It

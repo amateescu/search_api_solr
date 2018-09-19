@@ -1,0 +1,5 @@
+search_api_solr_admin.solr_reload_core_form:
+  route_name: 'search_api_solr_admin.solr_reload_core_form'
+  title: 'Reload Core'
+  appears_on:
+    - search_api_solr_admin.solr_admin_form
