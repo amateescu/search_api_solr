@@ -1971,7 +1971,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         // Nested condition.
         $field = $condition->getField();
         if (!isset($index_fields[$field])) {
-          throw new SearchApiException("Filter term on unknown or unindexed field $field");
+          throw new SearchApiException("Filter term on unknown or unindexed field $field.");
         }
         $value = $condition->getValue();
         $filter_query = '';
