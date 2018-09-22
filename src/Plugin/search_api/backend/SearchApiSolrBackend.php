@@ -1200,7 +1200,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $this->postQuery($search_api_result_set, $query, $solarium_result);
       }
       catch (\Exception $e) {
-        throw new SearchApiSolrException($this->t('An error occurred while trying to search with Solr: @msg.', ['@msg' => $e->getMessage()]), $e->getCode(), $e);
+        throw new SearchApiSolrException('An error occurred while trying to search with Solr: ' . $e->getMessage(), $e->getCode(), $e);
       }
     }
   }
@@ -1266,7 +1266,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $result = $connector->stream($stream);
     }
     catch (\Exception $e) {
-      throw new SearchApiSolrException($this->t('An error occurred while trying execute a streaming expression on Solr: @msg.', ['@msg' => $e->getMessage()]), $e->getCode(), $e);
+      throw new SearchApiSolrException('An error occurred while trying execute a streaming expression on Solr: ' . $e->getMessage(), $e->getCode(), $e);
     }
 
     if ($processors = $query->getIndex()->getProcessorsByStage(ProcessorInterface::STAGE_POSTPROCESS_QUERY)) {
@@ -1325,7 +1325,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       return $connector->graph($graph);
     }
     catch (\Exception $e) {
-      throw new SearchApiSolrException($this->t('An error occurred while trying execute a streaming expression on Solr: @msg.', ['@msg' => $e->getMessage()]), $e->getCode(), $e);
+      throw new SearchApiSolrException('An error occurred while trying execute a streaming expression on Solr: ' . $e->getMessage(), $e->getCode(), $e);
     }
   }
 
@@ -1971,7 +1971,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         // Nested condition.
         $field = $condition->getField();
         if (!isset($index_fields[$field])) {
-          throw new SearchApiException($this->t('Filter term on unknown or unindexed field @field.', ['@field' => $field]));
+          throw new SearchApiException("Filter term on unknown or unindexed field $field");
         }
         $value = $condition->getValue();
         $filter_query = '';

@@ -852,18 +852,18 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     $response_code = $e->getCode();
     switch ($response_code) {
       case 404:
-        $description = $this->t('not found');
+        $description = 'not found';
         break;
 
       case 401:
       case 403:
-        $description = $this->t('access denied');
+        $description = 'access denied';
         break;
 
       default:
-        $description = $this->t('unreachable');
+        $description = 'unreachable';
     }
-    throw new SearchApiSolrException($this->t('Solr endpoint @endpoint @description.', ['@endpoint' => $endpoint->getBaseUri(), '@description' => $description]), $response_code, $e);
+    throw new SearchApiSolrException('Solr endpoint ' . $endpoint->getBaseUri() . " $description.", $response_code, $e);
   }
 
   /**
@@ -1027,7 +1027,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       return $was_successful;
     }
     catch (HttpException $e) {
-      throw new SearchApiSolrException($this->t('Reloading core @core failed with error code @error_code.', ['@core' => $core, '@error_code' => $e->getCode()]), $e->getCode(), $e);
+      throw new SearchApiSolrException("Reloading core $core failed with error code " . $e->getCode() . '.', $e->getCode(), $e);
     }
   }
 
