@@ -79,6 +79,14 @@ If you create a new index, such processors won't be offered anymore since
 But the remaining processors are useful and should be activated. For example the
 HTML filter or the Highlighting processor.
 
+By default the Highlighting processor provided by Search API uses PHP to create
+highlighted snippets or an excerpt based on the entities loaded from the
+database. Solr itself can do that much better, especially for different
+languages. If you check `Retrieve result data from Solr` and `Highlight
+retrieved data` on the server edit page, the Highlighting processor will use
+this data directly and bypass it's own logic. To do the highlighting, Solr will
+use the configuration of the Highlighting processor.
+
 Hidden variables
 ----------------
 
