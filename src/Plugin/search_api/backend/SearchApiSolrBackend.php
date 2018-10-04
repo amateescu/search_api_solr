@@ -234,7 +234,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $form['advanced']['highlight_data'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Highlight retrieved data'),
-      '#description' => $this->t('When retrieving result data from the Solr server, try to highlight the search terms in the returned fulltext fields.'),
+      '#description' => $this->t('When retrieving result data from the Solr server, additionally return a highlighted version of the returned fulltext fields. These will be used by the "Highlighting Processor" directly instead of applying its own PHP algorithm.'),
       '#default_value' => $this->configuration['highlight_data'],
     ];
     $form['advanced']['skip_schema_check'] = [
@@ -926,7 +926,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     static $finalization_in_progress = [];
 
     if (!isset($finalization_in_progress[$index->id()]) && !$index->isReadOnly()) {
-      $settings = $index->getThirdPartySettings('search_api_solr');
+      $settings = $index->getThirdPartySettings('search_api_solr') + search_api_solr_default_index_third_party_settings();
       if (
         // Not empty reflects the default FALSE for outdated index configs, too.
         !empty($settings['finalize']) &&
@@ -1052,7 +1052,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
         catch (SearchApiException $exception) {
           // Highlighting processor is not enabled for this index. Just use the
-          // the backend configuration.
+          // the index configuration.
           $this->setHighlighting($solarium_query, $query, $query_fields);
         }
       }
@@ -2922,39 +2922,42 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected function setHighlighting(Query $solarium_query, QueryInterface $query, $highlighted_fields = []) {
     if (!empty($this->configuration['highlight_data'])) {
-      $highlighter = \Drupal::config('search_api_solr.standard_highlighter');
+      $settings = $query->getIndex()->getThirdPartySettings('search_api_solr') + search_api_solr_default_index_third_party_settings();
+      $highlighter = $settings['highlighter'];
 
       $hl = $solarium_query->getHighlighting();
       $hl->setSimplePrefix('[HIGHLIGHT]');
       $hl->setSimplePostfix('[/HIGHLIGHT]');
-      $hl->setSnippets($highlighter->get('highlight.snippets'));
-      $hl->setFragSize($highlighter->get('highlight.fragsize'));
-      $hl->setMergeContiguous($highlighter->get('highlight.mergeContiguous'));
-      $hl->setRequireFieldMatch($highlighter->get('highlight.requireFieldMatch'));
+      $hl->setSnippets($highlighter['highlight']['snippets']);
+      $hl->setFragSize($highlighter['highlight']['fragsize']);
+      $hl->setMergeContiguous($highlighter['highlight']['mergeContiguous']);
+      $hl->setRequireFieldMatch($highlighter['highlight']['requireFieldMatch']);
 
-      if ($highlighter->get('maxAnalyzedChars') != $highlighter->getOriginal('maxAnalyzedChars')) {
-        $hl->setMaxAnalyzedChars($highlighter->get('maxAnalyzedChars'));
+      // Overwrite Solr default values only if required to have shorter request
+      // strings.
+      if (51200 != $highlighter['maxAnalyzedChars']) {
+        $hl->setMaxAnalyzedChars($highlighter['maxAnalyzedChars']);
       }
-      if ($highlighter->get('fragmenter') != $highlighter->getOriginal('fragmenter')) {
-        $hl->setFragmenter($highlighter->get('fragmenter'));
+      if ('gap' != $highlighter['fragmenter']) {
+        $hl->setFragmenter($highlighter['fragmenter']);
+        if ('regex' != $highlighter['fragmenter']) {
+          $hl->setRegexPattern($highlighter['regex']['pattern']);
+          if (0.5 != $highlighter['regex']['slop']) {
+            $hl->setRegexSlop($highlighter['regex']['slop']);
+          }
+          if (10000 != $highlighter['regex']['maxAnalyzedChars']) {
+            $hl->setRegexMaxAnalyzedChars($highlighter['regex']['maxAnalyzedChars']);
+          }
+        }
       }
-      if ($highlighter->get('usePhraseHighlighter') != $highlighter->getOriginal('usePhraseHighlighter')) {
-        $hl->setUsePhraseHighlighter($highlighter->get('usePhraseHighlighter'));
+      if (!$highlighter['usePhraseHighlighter']) {
+        $hl->setUsePhraseHighlighter(FALSE);
       }
-      if ($highlighter->get('highlightMultiTerm') != $highlighter->getOriginal('highlightMultiTerm')) {
-        $hl->setHighlightMultiTerm($highlighter->get('highlightMultiTerm'));
+      if (!$highlighter['highlightMultiTerm']) {
+        $hl->setHighlightMultiTerm(FALSE);
       }
-      if ($highlighter->get('preserveMulti') != $highlighter->getOriginal('preserveMulti')) {
-        $hl->setPreserveMulti($highlighter->get('preserveMulti'));
-      }
-      if ($highlighter->get('regex.slop') != $highlighter->getOriginal('regex.slop')) {
-        $hl->setRegexSlop($highlighter->get('regex.slop'));
-      }
-      if ($highlighter->get('regex.pattern') != $highlighter->getOriginal('regex.pattern')) {
-        $hl->setRegexPattern($highlighter->get('regex.pattern'));
-      }
-      if ($highlighter->get('regex.maxAnalyzedChars') != $highlighter->getOriginal('regex.maxAnalyzedChars')) {
-        $hl->setRegexMaxAnalyzedChars($highlighter->get('regex.maxAnalyzedChars'));
+      if ($highlighter['preserveMulti']) {
+        $hl->setPreserveMulti(TRUE);
       }
 
       foreach ($highlighted_fields as $highlighted_field) {

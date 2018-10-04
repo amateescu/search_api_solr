@@ -134,6 +134,8 @@ function search_api_solr_uninstall() {
 /**
  * Gets all backend configs for active Solr servers.
  *
+ * @param string $pattern
+ *
  * @return array
  *   All backend configs for active Solr servers keyed by server name.
  */
@@ -160,6 +162,41 @@ function search_api_solr_update_helper_get_backend_configs($pattern = 'solr') {
 function search_api_solr_update_helper_save_backend_config($server_name, array $backend_config, $trusted_data = TRUE) {
   \Drupal::configFactory()->getEditable($server_name)
     ->set('backend_config', $backend_config)
+    ->save($trusted_data);
+}
+
+/**
+ * Gets all index third party settings for active Solr servers.
+ *
+ * @param string $pattern
+ *
+ * @return array
+ *   All backend configs for active Solr servers keyed by server name.
+ */
+function search_api_solr_update_helper_get_index_third_party_settings($pattern = 'solr') {
+  $config_factory = \Drupal::configFactory();
+  $index_third_party_settings = [];
+  foreach ($config_factory->listAll('search_api.index.') as $index_id) {
+    $index = $config_factory->get($index_id);
+    $backend_configs = search_api_solr_update_helper_get_backend_configs($pattern);
+    if (isset($backend_configs[$index->get('server')])) {
+      // This index belongs to a Solr server.
+      $index_third_party_settings[$index_id] = $index->get('third_party_settings.search_api_solr');
+    }
+  }
+  return $index_third_party_settings;
+}
+
+/**
+ * Saves a modified backend config for a given Solr server.
+ *
+ * @param string $index_id
+ * @param array $third_party_settings
+ * @param bool $trusted_data
+ */
+function search_api_solr_update_helper_save_index_third_party_settings($index_id, array $third_party_settings, $trusted_data = TRUE) {
+  \Drupal::configFactory()->getEditable($index_id)
+    ->set('third_party_settings.search_api_solr', $third_party_settings)
     ->save($trusted_data);
 }
 
@@ -480,4 +517,22 @@ function search_api_solr_update_8211() {
       search_api_solr_update_helper_save_backend_config($server_name, $backend_config);
     }
   }
+}
+
+/**
+ * Configure highlighter individually per index and remove global config.
+ */
+function search_api_solr_update_8212() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('search_api_solr.standard_highlighter');
+  $data = $config->getRawData();
+
+  foreach (search_api_solr_update_helper_get_index_third_party_settings() as $index_id => $third_party_settings) {
+    if (!isset($third_party_settings['highlighter'])) {
+      $third_party_settings['highlighter'] = $data;
+    }
+    search_api_solr_update_helper_save_index_third_party_settings($index_id, $third_party_settings);
+  }
+
+  $config->delete();
 }
