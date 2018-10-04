@@ -234,7 +234,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $form['advanced']['highlight_data'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Highlight retrieved data'),
-      '#description' => $this->t('When retrieving result data from the Solr server, try to highlight the search terms in the returned fulltext fields.'),
+      '#description' => $this->t('When retrieving result data from the Solr server, additionally return a highlighted version of the returned fulltext fields. These will be used by the "Highlighting Processor" directly instead of applying its own PHP algorithm.'),
       '#default_value' => $this->configuration['highlight_data'],
     ];
     $form['advanced']['skip_schema_check'] = [
@@ -1051,8 +1051,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           }
         }
         catch (SearchApiException $exception) {
-          // Highlighting processor is not enabled for this index. Don't do
-          // anything.
+          // Highlighting processor is not enabled for this index. Just use the
+          // the index configuration.
+          $this->setHighlighting($solarium_query, $query, $query_fields);
         }
       }
 

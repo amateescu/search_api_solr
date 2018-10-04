@@ -191,6 +191,7 @@ function search_api_solr_form_search_api_index_form_alter(&$form, FormStateInter
       '#type' => 'details',
       '#title' => t('Highlighter'),
       '#collapsed' => TRUE,
+      '#description' => t('If "Retrieve result data from Solr" and "Highlight retrieved data" are selected for the Solr backend on the server edit page, these highlighting settings will be used.'),
     ];
 
     $form['third_party_settings']['search_api_solr']['highlighter']['maxAnalyzedChars'] = [
