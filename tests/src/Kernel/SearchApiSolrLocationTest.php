@@ -123,6 +123,13 @@ class SearchApiSolrLocationTest extends SolrBackendTestBase {
    * Tests location searches and distance facets.
    */
   public function testBackend() {
+    // Regression test.
+    // @see https://www.drupal.org/project/search_api_solr/issues/2921774
+    $query = $this->buildSearch(NULL, [], NULL, TRUE);
+    $query->addCondition('location', NULL, '<>');
+    $result = $query->execute();
+    $this->assertResults([1, 2, 3], $result, 'Search for all documents having a location');
+
     // Search 500km from Antwerp.
     $location_options = [
       [

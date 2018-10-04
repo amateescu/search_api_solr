@@ -2115,7 +2115,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     switch ($operator) {
       case '<>':
         if (is_null($value)) {
-          return $this->queryHelper->rangeQuery($field, NULL, NULL);
+          if ('location' == $index_field->getType()) {
+            return $field . ':[0,-180 TO 90,180]';
+          }
+          else {
+            return $this->queryHelper->rangeQuery($field, NULL, NULL);
+          }
         }
         else {
           return '(*:* -' . $field . ':'. $this->queryHelper->escapePhrase($value) . ')';
