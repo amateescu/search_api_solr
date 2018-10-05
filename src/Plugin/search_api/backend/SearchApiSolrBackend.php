@@ -1792,6 +1792,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       return [];
     }
 
+    $connector = $this->getSolrConnector();
+    $solr_version = $connector->getSolrVersion();
+
     $facets = [];
     $index = $query->getIndex();
     $fields = $index->getFields();
@@ -1889,7 +1892,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           if (empty($extract_facets[$matches[1]])) {
             continue;
           }
-          $heatmaps = array_slice($value, 15);
+          $heatmaps = [];
+          if (version_compare($solr_version, '7.5', '>=')) {
+            $heatmaps = $value['counts_ints2D'];
+          }
+          else {
+            $heatmaps = array_slice($value, 15);
+          }
           array_walk_recursive($heatmaps, function ($heatmaps) use (&$heatmap) {
             $heatmap[] = $heatmaps;
           });

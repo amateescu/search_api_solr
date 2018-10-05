@@ -3,6 +3,7 @@
 namespace Drupal\Tests\search_api_solr\Kernel;
 
 use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Entity\Server;
 use Drupal\search_api_solr_test\Logger\InMemoryLogger;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
 use Drupal\search_api_solr\Utility\SolrCommitTrait;
@@ -157,4 +158,19 @@ abstract class SolrBackendTestBase extends BackendTestBase {
    */
   protected function checkModuleUninstall() {}
 
+  /**
+   * @throws \Drupal\search_api\SearchApiException
+   */
+  protected function getSolrVersion() {
+    static $solr_version = FALSE;
+
+    if (!$solr_version) {
+      /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
+      $backend = Server::load($this->serverId)->getBackend();
+      $connector = $backend->getSolrConnector();
+      $solr_version = $connector->getSolrVersion();
+    }
+
+    return $solr_version;
+  }
 }

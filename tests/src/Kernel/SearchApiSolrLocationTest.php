@@ -278,26 +278,43 @@ class SearchApiSolrLocationTest extends SolrBackendTestBase {
       'format' => 'ints2D',
     ];
     $result = $query->execute();
+    $heatmap = [NULL, NULL, NULL, NULL, NULL, NULL, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], NULL, [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL];
+    $filter = [];
+    if (version_compare($this->getSolrVersion(), '7.5', '>=')) {
+      $filter = [
+        "gridLevel" => 2,
+        "columns" => 32,
+        "rows" => 32,
+        "minX" => -180.0,
+        "maxX" => 180.0,
+        "minY" => -90.0,
+        "maxY" => 90.0,
+        "counts_ints2D" => $heatmap,
+      ];
+    }
+    else {
+      $filter = [
+        "gridLevel",
+        2,
+        "columns",
+        32,
+        "rows",
+        32,
+        "minX",
+        -180.0,
+        "maxX",
+        180.0,
+        "minY",
+        -90.0,
+        "maxY",
+        90.0,
+        "counts_ints2D",
+        $heatmap,
+      ];
+    }
     $expected = [
       [
-        'filter' => [
-          "gridLevel",
-          2,
-          "columns",
-          32,
-          "rows",
-          32,
-          "minX",
-          -180.0,
-          "maxX",
-          180.0,
-          "minY",
-          -90.0,
-          "maxY",
-          90.0,
-          "counts_ints2D",
-          [NULL, NULL, NULL, NULL, NULL, NULL, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], NULL, [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL],
-        ],
+        'filter' => $filter,
         'count' => 3,
       ],
     ];
@@ -324,26 +341,43 @@ class SearchApiSolrLocationTest extends SolrBackendTestBase {
       'format' => 'ints2D',
     ];
     $result = $query->execute();
+    $heatmap = [NULL, NULL, NULL, [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL];
+    $filter = [];
+    if (version_compare($this->getSolrVersion(), '7.5', '>=')) {
+      $filter = [
+        "gridLevel" => 2,
+        "columns" => 18,
+        "rows" => 29,
+        "minX" => -67.5,
+        "maxX" => 135.0,
+        "minY" => -90.0,
+        "maxY" => 73.125,
+        "counts_ints2D" => $heatmap,
+      ];
+    }
+    else {
+      $filter = [
+        "gridLevel",
+        2,
+        "columns",
+        18,
+        "rows",
+        29,
+        "minX",
+        -67.5,
+        "maxX",
+        135.0,
+        "minY",
+        -90.0,
+        "maxY",
+        73.125,
+        "counts_ints2D",
+        $heatmap,
+      ];
+    }
     $expected = [
       [
-        'filter' => [
-          "gridLevel",
-          2,
-          "columns",
-          18,
-          "rows",
-          29,
-          "minX",
-          -67.5,
-          "maxX",
-          135.0,
-          "minY",
-          -90.0,
-          "maxY",
-          73.125,
-          "counts_ints2D",
-          [NULL, NULL, NULL, [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL],
-        ],
+        'filter' => $filter,
         'count' => 2,
       ],
     ];
