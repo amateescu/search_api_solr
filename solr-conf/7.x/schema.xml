@@ -237,8 +237,9 @@
   <dynamicField name="pointm_*" type="point" indexed="true"  stored="true" multiValued="true"/>
   <dynamicField name="locs_*" type="location" indexed="true"  stored="true" multiValued="false"/>
   <dynamicField name="locm_*" type="location" indexed="true"  stored="true" multiValued="true"/>
-  <dynamicField name="geos_*" type="geohash" indexed="true"  stored="true" multiValued="false"/>
-  <dynamicField name="geom_*" type="geohash" indexed="true"  stored="true" multiValued="true"/>
+  <!-- GeoHash fields are deprecated. LatLonPointSpatial fields solve all needs. But we keep the dedicated field names for backward compatibility. -->
+  <dynamicField name="geos_*" type="location" indexed="true"  stored="true" multiValued="false"/>
+  <dynamicField name="geom_*" type="location" indexed="true"  stored="true" multiValued="true"/>
   <dynamicField name="bboxs_*" type="bbox" indexed="true" stored="true" multiValued="false" />
   <dynamicField name="bboxm_*" type="bbox" indexed="true" stored="true" multiValued="true" />
   <dynamicField name="rpts_*" type="location_rpt" indexed="true" stored="true" multiValued="false" />
@@ -701,14 +702,9 @@
     <fieldType name="location_rpt" class="solr.SpatialRecursivePrefixTreeFieldType"
         geo="true" distErrPct="0.025" maxDistErr="0.001" distanceUnits="kilometers" />
 
-    <!-- A Geohash is a compact representation of a latitude longitude pair in a single field.
-       See http://wiki.apache.org/solr/SpatialSearch
-     -->
-    <fieldtype name="geohash" class="solr.GeoHashField"/>
-
-  <!-- Spatial rectangle (bounding box) field. It supports most spatial predicates, and has
-   special relevancy modes: score=overlapRatio|area|area2D (local-param to the query).  DocValues is recommended for
-   relevancy. -->
+    <!-- Spatial rectangle (bounding box) field. It supports most spatial predicates, and has
+    special relevancy modes: score=overlapRatio|area|area2D (local-param to the query).  DocValues is recommended for
+    relevancy. -->
     <fieldType name="bbox" class="solr.BBoxField"
                geo="true" distanceUnits="kilometers" numberType="_bbox_coord" />
     <fieldType name="_bbox_coord" class="solr.DoublePointField" docValues="true" stored="false"/>
