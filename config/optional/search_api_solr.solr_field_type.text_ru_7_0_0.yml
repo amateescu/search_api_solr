@@ -63,7 +63,7 @@ field_type:
         -
           class: solr.LowerCaseFilterFactory
         -
-          class: solr.SynonymFilterFactory
+          class: solr.SynonymGraphFilterFactory
           synonyms: synonyms_ru.txt
           expand: true
           ignoreCase: true

@@ -46,7 +46,7 @@ field_type:
         -
           class: solr.ArabicNormalizationFilterFactory
         -
-          class: solr.SynonymFilterFactory
+          class: solr.SynonymGraphFilterFactory
           synonyms: synonyms_ar.txt
           expand: true
           ignoreCase: true

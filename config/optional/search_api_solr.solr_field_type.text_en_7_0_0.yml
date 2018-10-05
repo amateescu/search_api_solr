@@ -63,7 +63,7 @@ field_type:
         class: solr.WhitespaceTokenizerFactory
       filters:
         -
-          class: solr.SynonymFilterFactory
+          class: solr.SynonymGraphFilterFactory
           synonyms: synonyms_en.txt
           expand: true
           ignoreCase: true

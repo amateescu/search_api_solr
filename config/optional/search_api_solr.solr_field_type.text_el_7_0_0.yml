@@ -69,7 +69,7 @@ field_type:
         -
           class: solr.GreekLowerCaseFilterFactory
         -
-          class: solr.SynonymFilterFactory
+          class: solr.SynonymGraphFilterFactory
           synonyms: synonyms_el.txt
           expand: true
           ignoreCase: true

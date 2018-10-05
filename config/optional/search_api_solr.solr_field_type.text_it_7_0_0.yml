@@ -71,7 +71,7 @@ field_type:
         -
           class: solr.LowerCaseFilterFactory
         -
-          class: solr.SynonymFilterFactory
+          class: solr.SynonymGraphFilterFactory
           synonyms: synonyms_it.txt
           expand: true
           ignoreCase: true
