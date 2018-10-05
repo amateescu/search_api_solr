@@ -152,7 +152,8 @@ class SearchApiSolrLocationTest extends SolrBackendTestBase {
     $item = $result->getResultItems()['entity:entity_test_mulrev_changed/3:en'];
     $distance = $item->getField('location__distance')->getValues()[0];
 
-    $this->assertEquals(42.526337, $distance, 'The distance is correctly returned');
+    // We get different precisions from Solr 6 and 7.
+    $this->assertEquals('42.526337', substr($distance, 0 , 9), 'The distance is correctly returned');
 
     // Search between 100km and 6000km from Antwerp.
     $location_options = [
