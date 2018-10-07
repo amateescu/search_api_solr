@@ -174,7 +174,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFieldTypeAsJson() {
+  public function getFieldTypeAsJson(bool $pretty = FALSE) {
     // Unfortunately the JSON encoded field type definition still uses the
     // element names "indexAnalyzer", "queryAnalyzer" and "multiTermAnalyzer"
     // which are deprecated in the XML format. Therefor we need to add some
@@ -196,7 +196,8 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
       $field_type[$type] = $analyzer;
     }
 
-    return Json::encode($field_type);
+    return $pretty ?
+      json_encode($field_type, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) : Json::encode($field_type);
   }
 
   /**
@@ -207,7 +208,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
 
     // Unfortunately the JSON encoded field type definition still uses the
     // element names "indexAnalyzer", "queryAnalyzer" and "multiTermAnalyzer"
-    // which are deprecated in the XML format. Therefor we need to add some
+    // which are deprecated in the XML format. Therefore we need to add some
     // conversion logic.
     foreach (['index' => 'indexAnalyzer', 'query' => 'queryAnalyzer', 'multiterm' => 'multiTermAnalyzer', 'analyzer' => 'analyzer'] as $type => $analyzer) {
       if (!empty($field_type[$analyzer])) {

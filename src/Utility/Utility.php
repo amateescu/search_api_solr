@@ -4,6 +4,8 @@ namespace Drupal\search_api_solr\Utility;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\search_api\ServerInterface;
+use Drupal\search_api_solr\Entity\SolrFieldType;
+use Drupal\search_api_solr\SolrFieldTypeInterface;
 
 /**
  * The separator to indicate the start of a language ID. We must not use any
@@ -418,6 +420,21 @@ class Utility {
       $cfg[] = '+' . self::encodeSolrName($tag);
     }
     return implode(' ', $cfg);
+  }
+
+  /**
+   * Returns the complete file name for a text file.
+   *
+   * @param string $text_file_name
+   * @param SolrFieldTypeInterface $solr_field_type
+   *
+   * @return string
+   */
+  public static function completeTextFileName(string $text_file_name, SolrFieldTypeInterface $solr_field_type) {
+    if ($custom_code = $solr_field_type->getCustomCode()) {
+      $text_file_name .= '_' . $custom_code;
+    }
+    return $text_file_name . '_' . $solr_field_type->getFieldTypeLanguageCode() . '.txt';
   }
 
 }

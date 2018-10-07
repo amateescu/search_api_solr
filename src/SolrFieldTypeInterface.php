@@ -53,10 +53,13 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    *
    * The JSON format is used to interact with a managed Solr schema.
    *
+   * @param bool $pretty
+   *   Return pretty printed JSON.
+   *
    * @return string
    *   The Solr Field Type definition as JSON.
    */
-  public function getFieldTypeAsJson();
+  public function getFieldTypeAsJson(bool $pretty = FALSE);
 
   /**
    * Sets the Solr Field Type definition as JSON.

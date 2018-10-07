@@ -4,6 +4,7 @@ namespace Drupal\search_api_solr\Form;
 
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\search_api_solr\Utility\Utility;
 
 /**
  * Builds the form to export a SolrFieldType.
@@ -14,6 +15,8 @@ class SolrFieldTypeExportForm extends EntityForm {
    * {@inheritdoc}
    */
   public function form(array $form, FormStateInterface $form_state) {
+    \Drupal::messenger()->addWarning($this->t('In the future, this form will be used to export and push specific parts of the current SolrFieldType configuration to a Solr server based on a manged schema. But at the moment you can only see in which parts the SolrFiledType is split and how they\'re serialized.'));
+
     /** @var \Drupal\search_api_solr\Entity\SolrFieldType $solr_field_type */
     $solr_field_type = $this->entity;
 
@@ -44,7 +47,7 @@ class SolrFieldTypeExportForm extends EntityForm {
       '#title' => $this->t('XML'),
       '#description' => $this->t('XML representation to be used as part of schema.xml.'),
       '#default_value' => $solr_field_type->getFieldTypeAsXml(),
-      '#disabled' => FALSE,
+      '#disabled' => TRUE,
     ];
 
     $form['solr_configs'] = [
@@ -55,7 +58,7 @@ class SolrFieldTypeExportForm extends EntityForm {
     $form['solr_configs']['xml'] = [
       '#type' => 'textarea',
       '#title' => $this->t('XML'),
-      '#description' => $this->t('XML representation to be used as part of schema.xml.'),
+      '#description' => $this->t('XML representation to be used as part of solrconfig.xml.'),
       '#default_value' => $solr_field_type->getSolrConfigsAsXml(),
       '#disabled' => TRUE,
     ];
@@ -69,7 +72,7 @@ class SolrFieldTypeExportForm extends EntityForm {
     foreach ($text_files as $text_file_name => $text_file) {
       $form['text_files'][$text_file_name] = [
         '#type' => 'textarea',
-        '#title' => $text_file_name,
+        '#title' => Utility::completeTextFileName($text_file_name, $solr_field_type),
         '#default_value' => $text_file,
         '#disabled' => TRUE,
       ];
@@ -80,9 +83,16 @@ class SolrFieldTypeExportForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
+  public function actions(array $form, FormStateInterface $form_state) {
+    // @todo add actions like 'push stopwords to Solr'
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
-
   }
 
   /**

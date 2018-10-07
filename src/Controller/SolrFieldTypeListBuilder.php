@@ -8,6 +8,7 @@ use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrMultilingualBackendInterface;
+use Drupal\search_api_solr\Utility\Utility;
 use ZipStream\ZipStream;
 
 /**
@@ -290,10 +291,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     foreach ($solr_field_types as $solr_field_type) {
       $text_files = $solr_field_type->getTextFiles();
       foreach ($text_files as $text_file_name => $text_file) {
-        if ($custom_code = $solr_field_type->getCustomCode()) {
-          $text_file_name .= '_' . $custom_code;
-        }
-        $text_file_name .= '_' . $solr_field_type->getFieldTypeLanguageCode() . '.txt';
+        $text_file_name = Utility::completeTextFileName($text_file_name, $solr_field_type);
         $zip->addFile($text_file_name, $text_file);
         $solrcore_properties['solr.replication.confFiles'] .= ',' . $text_file_name;
       }
