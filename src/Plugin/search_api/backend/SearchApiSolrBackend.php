@@ -1072,20 +1072,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $this->getIndexFilterQueryString($index)
       );
 
-      // @todo Make this more configurable so that Search API can choose which
-      //   fields it wants to fetch. But don't skip the minimum required fields as
-      //   currently set in the "else" path.
-      //   @see https://www.drupal.org/node/2880674
-      if (!empty($this->configuration['retrieve_data'])) {
-        $solarium_query->setFields(['*', 'score']);
-      }
-      else {
-        $returned_fields = [$field_names['search_api_id'], $field_names['search_api_language'], $field_names['search_api_relevance']];
-        if (!$this->configuration['site_hash']) {
-          $returned_fields[] = 'hash';
-        }
-        $solarium_query->setFields($returned_fields);
-      }
+      // Set the list of fields to retrieve.
+      $this->setFields($solarium_query, $field_names, $query->getOption('search_api_retrieved_properties', []));
 
       // Set sorts.
       $this->setSorts($solarium_query, $query, $field_names);
@@ -1237,6 +1225,50 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
     }
      */
+  }
+
+  /**
+   * Set the list of fields Solr should return as result.
+   *
+   * @param \Solarium\QueryType\Select\Query\Query $solarium_query
+   *   The solr query.
+   * @param array $field_names
+   *   The field names.
+   * @param array $retrieved_properties
+   *   The $retrieved properties to set.
+   */
+  protected function setFields(Query $solarium_query, array $field_names, array $retrieved_properties = []) {
+    // The list of fields Solr must return to built a Search API result.
+    $required_fields = [$field_names['search_api_id'], $field_names['search_api_language'], $field_names['search_api_relevance']];
+    if (!$this->configuration['site_hash']) {
+      $required_fields[] = 'hash';
+    }
+
+    $returned_fields = [];
+
+    if (!empty($this->configuration['retrieve_data'])) {
+      // If Search API provides information about the fields to retrieve,
+      // limit the fields accordingly. ...
+      foreach ($retrieved_properties as $datasource_id => $datasource_fields) {
+        foreach (array_keys($datasource_fields) as $field_name) {
+          if (isset($field_names[$field_name])) {
+            $returned_fields[] = $field_names[$field_name];
+          }
+        }
+      }
+      if ($returned_fields) {
+        $returned_fields = array_merge($returned_fields, $required_fields);
+      }
+      // ... Otherwise return all fields and score.
+      else {
+        $returned_fields = ['*', $field_names['search_api_relevance']];
+      }
+    }
+    else {
+      $returned_fields = $required_fields;
+    }
+
+    $solarium_query->setFields(array_unique($returned_fields));
   }
 
   /**
