@@ -8,8 +8,6 @@ search_api_solr.solr_field_type.*:
     label:
       type: label
       label: 'Label'
-    uuid:
-      type: string
     managed_schema:
       type: boolean
       label: 'Managed schema'
