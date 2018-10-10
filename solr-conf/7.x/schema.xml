@@ -69,57 +69,60 @@
      -->
 
 
-   <!-- Valid attributes for fields:
-     name: mandatory - the name for the field
-     type: mandatory - the name of a field type from the
-       <types> fieldType section
-     indexed: true if this field should be indexed (searchable or sortable)
-     stored: true if this field should be retrievable
-     docValues: true if this field should have doc values. Doc values are
-       useful (required, if you are using *Point fields) for faceting,
-       grouping, sorting and function queries. Doc values will make the index
-       faster to load, more NRT-friendly and more memory-efficient.
-       They however come with some limitations: they are currently only
-       supported by StrField, UUIDField, all *PointFields, and depending
-       on the field type, they might require the field to be single-valued,
-       be required or have a default value (check the documentation
-       of the field type you're interested in for more information)
-     multiValued: true if this field may contain multiple values per document
-     omitNorms: (expert) set to true to omit the norms associated with
-       this field (this disables length normalization and index-time
-       boosting for the field, and saves some memory).  Only full-text
-       fields or fields that need an index-time boost need norms.
-       Norms are omitted for primitive (non-analyzed) types by default.
-     termVectors: [false] set to true to store the term vector for a
-       given field.
-       When using MoreLikeThis, fields used for similarity should be
-       stored for best performance.
-     termPositions: Store position information with the term vector.
-       This will increase storage costs.
-     termOffsets: Store offset information with the term vector. This
-       will increase storage costs.
-     required: The field is required.  It will throw an error if the
-       value does not exist
-     default: a value that should be used if no value is specified
-       when adding a document.
-   -->
+  <!-- Valid attributes for fields:
+    name: mandatory - the name for the field
+    type: mandatory - the name of a field type from the
+      fieldTypes
+    indexed: true if this field should be indexed (searchable or sortable)
+    stored: true if this field should be retrievable
+    docValues: true if this field should have doc values. Doc values are
+      useful (required, if you are using *Point fields) for faceting,
+      grouping, sorting and function queries. Doc values will make the index
+      faster to load, more NRT-friendly and more memory-efficient.
+      They however come with some limitations: they are currently only
+      supported by StrField, UUIDField, all *PointFields, and depending
+      on the field type, they might require the field to be single-valued,
+      be required or have a default value (check the documentation
+      of the field type you're interested in for more information)
+    multiValued: true if this field may contain multiple values per document
+    omitNorms: (expert) set to true to omit the norms associated with
+      this field (this disables length normalization and index-time
+      boosting for the field, and saves some memory).  Only full-text
+      fields or fields that need an index-time boost need norms.
+      Norms are omitted for primitive (non-analyzed) types by default.
+    termVectors: [false] set to true to store the term vector for a
+      given field.
+      When using MoreLikeThis, fields used for similarity should be
+      stored for best performance.
+    termPositions: Store position information with the term vector.
+      This will increase storage costs.
+    termOffsets: Store offset information with the term vector. This
+      will increase storage costs.
+    termPayloads: Store payload information with the term vector. This
+      will increase storage costs.
+    required: The field is required.  It will throw an error if the
+      value does not exist
+    default: a value that should be used if no value is specified
+      when adding a document.
+  -->
 
-   <!-- field names should consist of alphanumeric or underscore characters only and
-      not start with a digit.  This is not currently strictly enforced,
-      but other field names will not have first class support from all components
-      and back compatibility is not guaranteed.  Names with both leading and
-      trailing underscores (e.g. _version_) are reserved.
-   -->
+  <!-- field names should consist of alphanumeric or underscore characters only and
+     not start with a digit.  This is not currently strictly enforced,
+     but other field names will not have first class support from all components
+     and back compatibility is not guaranteed.  Names with both leading and
+     trailing underscores (e.g. _version_) are reserved.
+  -->
 
-   <!-- If you remove this field, you must _also_ disable the update log in solrconfig.xml
-      or Solr won't start. _version_ and update log are required for SolrCloud
-   -->
-   <field name="_version_" type="plong" indexed="true" stored="true"/>
+  <!-- If you remove this field, you must _also_ disable the update log in solrconfig.xml
+     or Solr won't start. _version_ and update log are required for SolrCloud
+  -->
+  <!-- doc values are enabled by default for primitive types such as long so we don't index the version field  -->
+  <field name="_version_" type="plong" indexed="false" stored="false"/>
 
-   <!-- points to the root document of a block of nested documents. Required for nested
-      document support, may be removed otherwise
-   -->
-   <field name="_root_" type="string" indexed="true" stored="false"/>
+  <!-- points to the root document of a block of nested documents. Required for nested
+     document support, may be removed otherwise
+  -->
+  <field name="_root_" type="string" indexed="true" stored="false" docValues="false" />
 
   <!-- Only remove the "id" field if you have a very good reason to. While not strictly
   required, it is highly recommended. A <uniqueKey> is present in almost all Solr
@@ -134,7 +137,7 @@
     Apache Solr Search Integration 7.x:
       The format used is $document->id = $site_hash . '/' . $entity_type . '/' . $entity->id;
   -->
-  <field name="id" type="string" indexed="true" stored="true" required="true" />
+  <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" />
 
   <!-- Search Api specific fields -->
   <!-- index_id is the machine name of the search index this entry belongs to. -->
