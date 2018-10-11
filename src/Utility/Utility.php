@@ -194,6 +194,31 @@ class Utility {
   }
 
   /**
+   * Returns the highlighted keys from a snippet highlighted by Solr.
+   *
+   * @param string|array $snippets
+   *   The snippet(s) to format.
+   *
+   * @return array
+   *   The highlighted keys.
+   */
+  public static function getHighlightedKeys($snippets) {
+    if (is_string($snippets)) {
+      $snippets = [$snippets];
+    }
+
+    $keys = [];
+
+    foreach ($snippets as $snippet) {
+      if (preg_match_all('@\[HIGHLIGHT\](.+?)\[/HIGHLIGHT\]@', $snippet, $matches)) {
+        $keys = array_merge($keys, $matches[1]);
+      }
+    }
+
+    return array_unique($keys);
+  }
+
+  /**
    * Changes highlighting tags from our custom, HTML-safe ones to HTML.
    *
    * @param string|array $snippet

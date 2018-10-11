@@ -76,6 +76,16 @@ processor_settings:
   aggregated_field:
     weights:
       add_properties: 20
+  highlight:
+    highlight: server
+    highlight_partial: false
+    excerpt: true
+    excerpt_length: 256
+    exclude_fields: {  }
+    prefix: '<strong>'
+    suffix: '</strong>'
+    weights:
+      postprocess_query: 0
   rendered_item:
     weights:
       add_properties: 0

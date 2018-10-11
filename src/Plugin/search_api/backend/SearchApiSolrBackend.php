@@ -233,8 +233,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     ];
     $form['advanced']['highlight_data'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Highlight retrieved data'),
-      '#description' => $this->t('When retrieving result data from the Solr server, additionally return a highlighted version of the returned fulltext fields. These will be used by the "Highlighting Processor" directly instead of applying its own PHP algorithm.'),
+      '#title' => $this->t('Retrieve highlighted snippets'),
+      '#description' => $this->t('Return a highlighted version of the indexed fulltext fields. These will be used by the "Highlighting Processor" directly instead of applying its own PHP algorithm.'),
       '#default_value' => $this->configuration['highlight_data'],
     ];
     $form['advanced']['skip_schema_check'] = [
@@ -243,10 +243,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#description' => $this->t('Skip the automatic check for schema-compatibillity. Use this override if you are seeing an error-message about an incompatible schema.xml configuration file, and you are sure the configuration is compatible.'),
       '#default_value' => $this->configuration['skip_schema_check'],
     ];
-    // Highlighting retrieved data only makes sense when we retrieve data.
-    // (Actually, internally it doesn't really matter. However, from a user's
-    // perspective, having to check both probably makes sense.)
-    $form['advanced']['highlight_data']['#states']['invisible'][':input[name="backend_config[advanced][retrieve_data]"]']['checked'] = FALSE;
 
     $domains = SolrFieldType::getAvailableDomains();
     $form['advanced']['domain'] = [
@@ -2799,11 +2795,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       catch (SearchApiException $exception) {
         // Highlighting processor is not enabled for this index.
       }
-
       $snippets = [];
+      $keys = [];
       foreach ($field_mapping as $search_api_property => $solr_property) {
         if (!empty($data['highlighting'][$solr_id][$solr_property])) {
           foreach ($data['highlighting'][$solr_id][$solr_property] as $value) {
+            $keys = array_merge($keys, Utility::getHighlightedKeys($value));
             // Contrary to above, we here want to preserve HTML, so we just
             // replace the [HIGHLIGHT] tags with the appropriate format.
             $snippets[$search_api_property][] = Utility::formatHighlighting($value, $prefix, $suffix);
@@ -2812,6 +2809,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
       if ($snippets) {
         $item->setExtraData('highlighted_fields', $snippets);
+        $item->setExtraData('highlighted_keys', array_unique($keys));
       }
     }
   }
