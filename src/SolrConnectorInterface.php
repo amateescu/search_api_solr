@@ -461,4 +461,11 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    */
   public function getFinalizeTimeout();
 
+  /**
+   * Alter the newly assembled Solr configuration files.
+   *
+   * @param array $files
+   */
+  public function alterConfigFiles(array &$files);
+
 }

@@ -280,10 +280,11 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     $search_api_solr_conf_path = drupal_get_path('module', 'search_api_solr') . '/solr-conf/' . $solr_branch;
     $solrcore_properties = parse_ini_file($search_api_solr_conf_path . '/solrcore.properties', FALSE, INI_SCANNER_RAW);
 
-    $zip = new ZipStream('solr_' . $solr_branch . '_config.zip');
-    $zip->addFile('schema_extra_types.xml', $this->getSchemaExtraTypesXml());
-    $zip->addFile('schema_extra_fields.xml', $this->getSchemaExtraFieldsXml());
-    $zip->addFile('solrconfig_extra.xml', $this->getSolrconfigExtraXml());
+    $files = [
+      'schema_extra_types.xml' => $this->getSchemaExtraTypesXml(),
+      'schema_extra_fields.xml'=> $this->getSchemaExtraFieldsXml(),
+      'solrconfig_extra.xml' => $this->getSolrconfigExtraXml(),
+    ];
 
     // Add language specific text files.
     $solr_field_types = $this->load();
@@ -292,7 +293,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       $text_files = $solr_field_type->getTextFiles();
       foreach ($text_files as $text_file_name => $text_file) {
         $text_file_name = Utility::completeTextFileName($text_file_name, $solr_field_type);
-        $zip->addFile($text_file_name, $text_file);
+        $files[$text_file_name] = $text_file;
         $solrcore_properties['solr.replication.confFiles'] .= ',' . $text_file_name;
       }
     }
@@ -304,22 +305,27 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     foreach ($solrcore_properties as $property => $value) {
       $solrcore_properties_string .= $property . '=' . $value . "\n";
     }
-    $zip->addFile('solrcore.properties', $solrcore_properties_string);
-
-    // @todo provide a hook to add more things.
+    $files['solrcore.properties'] = $solrcore_properties_string;
 
     // Now add all remaining static files from the conf dir that have not been
     // generated dynamically above.
     foreach (scandir($search_api_solr_conf_path) as $file) {
       if (strpos($file, '.') !== 0) {
-        foreach ($zip->files as $zipped_file) {
-          /* @see \ZipStream\ZipStream::addToCdr() */
-          if ($file == $zipped_file[0]) {
+        foreach (array_keys($files) as $existing_file) {
+          if ($file == $existing_file) {
             continue(2);
           }
         }
-        $zip->addFileFromPath($file, $search_api_solr_conf_path . '/' . $file);
+        $files[$file] = file_get_contents($search_api_solr_conf_path . '/' . $file);
       }
+    }
+
+    $connector->alterConfigFiles($files);
+
+    $zip = new ZipStream('solr_' . $solr_branch . '_config.zip');
+
+    foreach ($files as $name => $content) {
+      $zip->addFile($name, $content);
     }
 
     return $zip;

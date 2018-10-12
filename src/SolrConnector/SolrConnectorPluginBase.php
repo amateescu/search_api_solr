@@ -1031,4 +1031,10 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function alterConfigFiles(array &$files) {
+    // To be overwritten if required.
+  }
 }
