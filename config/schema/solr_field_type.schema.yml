@@ -198,6 +198,26 @@ search_api_solr.solr_field_type.*:
                       type: boolean
                       label: 'BeiderMorseFilter::concat'
                       nullable: true
+                    han:
+                      type: boolean
+                      label: 'CJKBigramFilterFactory::han'
+                      nullable: true
+                    hiragana:
+                      type: boolean
+                      label: 'CJKBigramFilterFactory::hiragana'
+                      nullable: true
+                    katakana:
+                      type: boolean
+                      label: 'CJKBigramFilterFactory::katakana'
+                      nullable: true
+                    hangul:
+                      type: boolean
+                      label: 'CJKBigramFilterFactory::hangul'
+                      nullable: true
+                    outputUnigrams:
+                      type: boolean
+                      label: 'CJKBigramFilterFactory::outputUnigrams'
+                      nullable: true
     solr_configs:
       type: mapping
       mapping:
