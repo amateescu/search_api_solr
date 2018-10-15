@@ -28,11 +28,11 @@ field_type:
           class: solr.LowerCaseFilterFactory
         -
           class: solr.CJKBigramFilterFactory
-          han: 1
-          hiragana: 0
-          katakana: 0
-          hangul: 0
-          outputUnigrams: 0
+          han: true
+          hiragana: false
+          katakana: false
+          hangul: false
+          outputUnigrams: false
     -
       type: query
       tokenizer:
@@ -44,10 +44,10 @@ field_type:
           class: solr.LowerCaseFilterFactory
         -
           class: solr.CJKBigramFilterFactory
-          han: 1
-          hiragana: 0
-          katakana: 0
-          hangul: 0
-          outputUnigrams: 0
+          han: true
+          hiragana: false
+          katakana: false
+          hangul: false
+          outputUnigrams: false
 solr_configs: { }
 text_files: { }
