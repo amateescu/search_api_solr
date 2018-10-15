@@ -539,11 +539,13 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     $stats = $this->execute($query)->getData();
     if (!empty($stats)) {
       $solr_version = $this->getSolrVersion(TRUE);
-      $max_time = 0;
+      $max_time = -1;
       if (version_compare($solr_version, '7.0', '>=')) {
         $update_handler_stats = $stats['solr-mbeans']['UPDATE']['updateHandler']['stats'];
         $summary['@pending_docs'] = (int) $update_handler_stats['UPDATE.updateHandler.docsPending'];
-        $max_time = (int) $update_handler_stats['UPDATE.updateHandler.softAutoCommitMaxTime'];
+        if (isset($update_handler_stats['UPDATE.updateHandler.softAutoCommitMaxTime'])) {
+          $max_time = (int) $update_handler_stats['UPDATE.updateHandler.softAutoCommitMaxTime'];
+        }
         $summary['@deletes_by_id'] = (int) $update_handler_stats['UPDATE.updateHandler.deletesById'];
         $summary['@deletes_by_query'] = (int) $update_handler_stats['UPDATE.updateHandler.deletesByQuery'];
         $summary['@core_name'] = $stats['solr-mbeans']['CORE']['core']['stats']['CORE.coreName'];
