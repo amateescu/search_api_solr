@@ -464,7 +464,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       $this->assertEquals('en', $fields['ss_search_api_language']);
       $this->assertArrayHasKey('score', $fields);
       $this->assertArrayHasKey('tm_body', $fields);
-      $this->assertContains('solr_search_index-entity:entity_test_mulrev_changed/3:en', $fields['id']);
+      $this->assertContains('search_index-entity:entity_test_mulrev_changed/3:en', $fields['id']);
       $this->assertEquals('3', $fields['its_id']);
       $this->assertArrayHasKey('twm_suggest', $fields);
     }
