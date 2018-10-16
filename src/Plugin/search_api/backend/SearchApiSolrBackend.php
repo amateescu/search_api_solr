@@ -3397,4 +3397,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     return FALSE;
   }
 
+  /**
+   * {@inheritdoc}
+   *
+   * Don't return the big twm_suggest field.
+   */
+  protected function getQueryFulltextFields(QueryInterface $query) {
+    $fulltext_fields = parent::getQueryFulltextFields($query);
+    $solr_field_names = $this->getSolrFieldNames($query->getIndex());
+    return array_filter($fulltext_fields, function ($value) use ($solr_field_names) {
+      return 'twm_suggest' != $solr_field_names[$value];
+    });
+  }
+
 }

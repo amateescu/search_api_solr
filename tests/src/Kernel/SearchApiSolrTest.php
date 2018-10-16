@@ -420,7 +420,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   }
 
   /**
-   * Tests highlight options.
+   * Tests retrieve_data options.
    */
   public function testRetrieveData() {
     $server = $this->getIndex()->getServerInstance();
@@ -444,6 +444,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       $this->assertArrayNotHasKey('tm_body', $fields);
       $this->assertArrayNotHasKey('id', $fields);
       $this->assertArrayNotHasKey('its_id', $fields);
+      $this->assertArrayNotHasKey('twm_suggest', $fields);
     }
 
     // Retrieve all fields.
@@ -465,6 +466,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       $this->assertArrayHasKey('tm_body', $fields);
       $this->assertContains('solr_search_index-entity:entity_test_mulrev_changed/3:en', $fields['id']);
       $this->assertEquals('3', $fields['its_id']);
+      $this->assertArrayHasKey('twm_suggest', $fields);
     }
 
     // Retrieve list of fields in addition to required fields.
@@ -483,7 +485,18 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       $this->assertArrayHasKey('tm_body', $fields);
       $this->assertArrayNotHasKey('id', $fields);
       $this->assertArrayNotHasKey('its_id', $fields);
+      $this->assertArrayNotHasKey('twm_suggest', $fields);
     }
+
+    $backend = $server->getBackend();
+    $this->assertEquals([
+      0 => 'name',
+      1 => 'body',
+      2 => 'body_unstemmed',
+      // body_suggest should be removed by getQueryFulltextFields().
+      // 3 => 'body_suggest',
+      4 => 'category_ngram',
+    ], $this->invokeMethod($backend, 'getQueryFulltextFields', [$query]));
   }
 
   /**
