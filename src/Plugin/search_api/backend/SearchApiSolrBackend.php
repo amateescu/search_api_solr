@@ -1406,12 +1406,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $pref .= 'm';
           }
           else {
-            if (
-              $this->fieldsHelper->isFieldIdReserved($key) ||
-              // At the moment Solr's stream expressions for graphs only support
-              // single value fields because they need to be sorted internally.
-              strpos($type, 'graph_') === 0
-            ) {
+            if ($this->fieldsHelper->isFieldIdReserved($key)) {
               $pref .= 's';
             }
             else {

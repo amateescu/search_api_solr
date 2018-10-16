@@ -422,6 +422,73 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   /**
    * Tests highlight options.
    */
+  public function testRetrieveData() {
+    $server = $this->getIndex()->getServerInstance();
+    $config = $server->getBackendConfig();
+
+    $this->insertExampleContent();
+    $this->indexItems($this->indexId);
+
+    // Retrieve just required fields.
+    $query = $this->buildSearch('foobar');
+    $results = $query->execute();
+    $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
+    /** @var \Drupal\search_api\Item\ItemInterface $result */
+    foreach ($results as $result) {
+      /** @var \Solarium\QueryType\Select\Result\Document $solr_document */
+      $solr_document = $result->getExtraData('search_api_solr_document', NULL);
+      $fields = $solr_document->getFields();
+      $this->assertEquals('entity:entity_test_mulrev_changed/3:en', $fields['ss_search_api_id']);
+      $this->assertEquals('en', $fields['ss_search_api_language']);
+      $this->assertArrayHasKey('score', $fields);
+      $this->assertArrayNotHasKey('tm_body', $fields);
+      $this->assertArrayNotHasKey('id', $fields);
+      $this->assertArrayNotHasKey('its_id', $fields);
+    }
+
+    // Retrieve all fields.
+    $config['retrieve_data'] = TRUE;
+    $server->setBackendConfig($config);
+    $server->save();
+
+    $query = $this->buildSearch('foobar');
+    $results = $query->execute();
+    $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
+    /** @var \Drupal\search_api\Item\ItemInterface $result */
+    foreach ($results as $result) {
+      /** @var \Solarium\QueryType\Select\Result\Document $solr_document */
+      $solr_document = $result->getExtraData('search_api_solr_document', NULL);
+      $fields = $solr_document->getFields();
+      $this->assertEquals('entity:entity_test_mulrev_changed/3:en', $fields['ss_search_api_id']);
+      $this->assertEquals('en', $fields['ss_search_api_language']);
+      $this->assertArrayHasKey('score', $fields);
+      $this->assertArrayHasKey('tm_body', $fields);
+      $this->assertContains('solr_search_index-entity:entity_test_mulrev_changed/3:en', $fields['id']);
+      $this->assertEquals('3', $fields['its_id']);
+    }
+
+    // Retrieve list of fields in addition to required fields.
+    $query = $this->buildSearch('foobar');
+    $query->setOption('search_api_retrieved_properties', ['entity' => ['body' => TRUE]]);
+    $results = $query->execute();
+    $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
+    /** @var \Drupal\search_api\Item\ItemInterface $result */
+    foreach ($results as $result) {
+      /** @var \Solarium\QueryType\Select\Result\Document $solr_document */
+      $solr_document = $result->getExtraData('search_api_solr_document', NULL);
+      $fields = $solr_document->getFields();
+      $this->assertEquals('entity:entity_test_mulrev_changed/3:en', $fields['ss_search_api_id']);
+      $this->assertEquals('en', $fields['ss_search_api_language']);
+      $this->assertArrayHasKey('score', $fields);
+      $this->assertArrayHasKey('tm_body', $fields);
+      $this->assertArrayNotHasKey('id', $fields);
+      $this->assertArrayNotHasKey('its_id', $fields);
+    }
+  }
+
+  /**
+   * Tests highlight options.
+   */
   public function testHighlight() {
     $server = $this->getIndex()->getServerInstance();
     $config = $server->getBackendConfig();
@@ -441,9 +508,9 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $config['highlight_data'] = TRUE;
     $server->setBackendConfig($config);
     $server->save();
+
     $query = $this->buildSearch('foobar');
     $results = $query->execute();
-
     $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
     /** @var \Drupal\search_api\Item\ItemInterface $result */
     foreach ($results as $result) {
@@ -455,7 +522,6 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     // Test highlghting with stemming.
     $query = $this->buildSearch('foobars');
     $results = $query->execute();
-
     $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
     /** @var \Drupal\search_api\Item\ItemInterface $result */
     foreach ($results as $result) {

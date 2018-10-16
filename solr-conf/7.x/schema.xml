@@ -128,7 +128,7 @@
   required, it is highly recommended. A <uniqueKey> is present in almost all Solr
   installations. See the <uniqueKey> declaration below where <uniqueKey> is set to "id".
   -->
-  <!-- The document id is usually derived from a site-spcific key (hash) and the
+  <!-- The document id is usually derived from a site-specific key (hash) and the
     entity type and ID like:
     Search Api 7.x:
       The format used is $document->id = $index_id . '-' . $item_id
@@ -137,7 +137,8 @@
     Apache Solr Search Integration 7.x:
       The format used is $document->id = $site_hash . '/' . $entity_type . '/' . $entity->id;
   -->
-  <field name="id" type="string" indexed="true" stored="false" required="true" multiValued="false" docValues="true"/>
+  <!-- The Highlighter Component requires the id field to be "stored" even if docValues are set. -->
+  <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" docValues="true"/>
 
   <!-- Search Api specific fields -->
   <!-- index_id is the machine name of the search index this entry belongs to. -->
