@@ -220,10 +220,27 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
         }
       }
 
-      if (empty($this->configuration['retrieve_data'])) {
-        // We need the language to be part of the result to modify the result
-        // accordingly in extractResults().
-        $solarium_query->addField($field_names[SEARCH_API_LANGUAGE_FIELD_NAME]);
+      if (!empty($this->configuration['retrieve_data'])) {
+        if ($search_api_retrieved_properties = $query->getOption('search_api_retrieved_properties', [])) {
+          $language_specific_fields_to_retrieve = [];
+          $fields_to_retrieve = $solarium_query->getFields();
+          foreach ($fields_to_retrieve as $key => $field_name) {
+            $language_specific_name = FALSE;
+            foreach ($language_ids as $language_id) {
+              if (isset($language_specific_fields[$language_id][$field_name])) {
+                $language_specific_fields_to_retrieve[] = $language_specific_fields[$language_id][$field_name];
+                $language_specific_name = TRUE;
+              }
+            }
+            if ($language_specific_name) {
+              unset($fields_to_retrieve[$key]);
+            }
+          }
+
+          if ($language_specific_fields_to_retrieve) {
+            $solarium_query->setFields(array_merge($language_specific_fields_to_retrieve, $fields_to_retrieve));
+          }
+        }
       }
 
       if ($query->hasTag('mlt')) {

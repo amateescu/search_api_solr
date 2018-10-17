@@ -425,6 +425,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   public function testRetrieveData() {
     $server = $this->getIndex()->getServerInstance();
     $config = $server->getBackendConfig();
+    $backend = $server->getBackend();
 
     $this->insertExampleContent();
     $this->indexItems($this->indexId);
@@ -488,7 +489,6 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       $this->assertArrayNotHasKey('twm_suggest', $fields);
     }
 
-    $backend = $server->getBackend();
     $this->assertEquals([
       0 => 'name',
       1 => 'body',
