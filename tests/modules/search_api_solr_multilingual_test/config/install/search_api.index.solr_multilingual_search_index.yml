@@ -29,16 +29,16 @@ field_settings:
     type: text
     datasource_id: 'entity:entity_test_mulrev_changed'
     property_path: body
-#  body_unstemmed:
-#    label: Body
-#    type: solr_text_unstemmed
-#    datasource_id: 'entity:entity_test_mulrev_changed'
-#    property_path: body
-#  body_suggest:
-#    label: Body
-#    type: solr_text_suggester
-#    datasource_id: 'entity:entity_test_mulrev_changed'
-#    property_path: body
+  body_unstemmed:
+    label: Body
+    type: solr_text_unstemmed
+    datasource_id: 'entity:entity_test_mulrev_changed'
+    property_path: body
+  body_suggest:
+    label: Body
+    type: solr_text_suggester
+    datasource_id: 'entity:entity_test_mulrev_changed'
+    property_path: body
   type:
     label: Type
     type: string
