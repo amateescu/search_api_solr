@@ -824,7 +824,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
               // search_api_id quickly exceeds 32 characters and the interesting
               // ID is at the end of the string:
               // 'entity:entity_test_mulrev_changed/2:en'
-              if (Unicode::strlen($first_value) > 128) {
+              if (mb_strlen($first_value) > 128) {
                 $first_value = Unicode::truncate($first_value, 128);
               }
               // Always copy fulltext fields to a dedicated field for faster
@@ -2433,8 +2433,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected function getAutocompleteQuery(&$incomplete_key, &$user_input) {
     // Make the input lowercase as the indexed data is (usually) also all
     // lowercase.
-    $incomplete_key = Unicode::strtolower($incomplete_key);
-    $user_input = Unicode::strtolower($user_input);
+    $incomplete_key = mb_strtolower($incomplete_key);
+    $user_input = mb_strtolower($user_input);
     $connector = $this->getSolrConnector();
     $solr_version = $connector->getSolrVersion();
     if (version_compare($solr_version, '6.5', '=')) {
