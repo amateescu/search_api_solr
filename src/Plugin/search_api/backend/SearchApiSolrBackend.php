@@ -439,6 +439,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'search_api_autocomplete',
       'search_api_facets',
       'search_api_facets_operator_or',
+      'search_api_granular',
       'search_api_mlt',
       'search_api_random_sort',
       'search_api_data_type_location',
@@ -2312,8 +2313,50 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         continue;
       }
       $field = $field_names[$info['field']];
-      // Create the Solarium facet field object.
-      $facet_field = $facet_set->createFacetField($field)->setField($field);
+      $facet_field = NULL;
+
+      // Backward compatibility for facets.
+      $info += ['query_type' => 'search_api_string'];
+
+      switch ($info['query_type']) {
+        case 'search_api_granular':
+          $facet_field = $facet_set->createFacetRange([
+            'key' => $field,
+            'field' => $field,
+            'start' => $info['min_value'],
+            'end' => $info['max_value'],
+            'gap' => $info['granularity'],
+          ]);
+          $includes = [];
+          if ($info['include_lower']) {
+            $includes[] = 'lower';
+          }
+          if ($info['include_upper']) {
+            $includes[] = 'upper';
+          }
+          if ($info['include_edges']) {
+            $includes[] = 'edge';
+          }
+          $facet_field->setInclude($includes);
+          break;
+
+        case 'search_api_string':
+        default:
+          // Create the Solarium facet field object.
+          $facet_field = $facet_set->createFacetField($field)->setField($field);
+          // Set limit, unless it's the default.
+          if ($info['limit'] != 10) {
+            $limit = $info['limit'] ? $info['limit'] : -1;
+            $facet_field->setLimit($limit);
+          }
+          // Set missing, if specified.
+          if ($info['missing']) {
+            $facet_field->setMissing(TRUE);
+          }
+          else {
+            $facet_field->setMissing(FALSE);
+          }
+      }
 
       // For "OR" facets, add the expected tag for exclusion.
       if (isset($info['operator']) && strtolower($info['operator']) === 'or') {
@@ -2321,22 +2364,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $facet_field->setExcludes(['facet:' . $info['field']]);
       }
 
-      // Set limit, unless it's the default.
-      if ($info['limit'] != 10) {
-        $limit = $info['limit'] ? $info['limit'] : -1;
-        $facet_field->setLimit($limit);
-      }
       // Set mincount, unless it's the default.
       if ($info['min_count'] != 1) {
         $facet_field->setMinCount($info['min_count']);
-      }
-
-      // Set missing, if specified.
-      if ($info['missing']) {
-        $facet_field->setMissing(TRUE);
-      }
-      else {
-        $facet_field->setMissing(FALSE);
       }
     }
   }
