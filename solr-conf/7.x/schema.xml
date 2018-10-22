@@ -185,7 +185,7 @@
   <dynamicField name="bs_*"  type="boolean" indexed="true"  stored="false" multiValued="false" docValues="true"/>
   <!-- Regular text (without processing) can be stored in a string field-->
   <dynamicField name="ss_*"  type="string"  indexed="true"  stored="false" multiValued="false" docValues="true"/>
-  <!-- For field types using SORTED_SET, multiple identical entries are collapsed into a single value. Thus if I insert values 4, 5, 2, 4, 1, my return will be 1, 2, 4, 5 when enabling doValues. Therefor the multiValued string field diesn't use docValues. -->
+  <!-- For field types using SORTED_SET, multiple identical entries are collapsed into a single value. Thus if I insert values 4, 5, 2, 4, 1, my return will be 1, 2, 4, 5 when enabling docValues. Therefore the multiValued string field doesn't use docValues. -->
   <dynamicField name="sm_*"  type="string"  indexed="true"  stored="true" multiValued="true" docValues="false"/>
   <dynamicField name="ses_*" type="edge_n2_kw_string"  indexed="true"  stored="true" multiValued="false"/>
   <dynamicField name="sem_*" type="edge_n2_kw_string"  indexed="true"  stored="true" multiValued="true"/>
