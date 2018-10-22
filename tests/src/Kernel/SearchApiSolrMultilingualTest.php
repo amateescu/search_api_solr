@@ -94,17 +94,6 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
   }
 
   /**
-   * Tests classic multilingual schema.
-   */
-  public function testClassicMultilingualSchema() {
-    /** @var \Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
-    $list_builder = \Drupal::entityTypeManager()
-      ->getListBuilder('solr_field_type');
-
-    // @todo
-  }
-
-  /**
    * Tests language fallback.
    */
   public function testLanguageFallback() {

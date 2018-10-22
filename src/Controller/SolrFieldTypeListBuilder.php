@@ -266,13 +266,11 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   }
 
   /**
-   * @return \ZipStream\ZipStream
+   * @return array
    *
    * @throws \Drupal\search_api\SearchApiException
-   * @throws \ZipStream\Exception\FileNotFoundException
-   * @throws \ZipStream\Exception\FileNotReadableException
    */
-  public function getConfigZip() {
+  public function getConfigFiles() {
     /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
     $backend = $this->getBackend();
     $connector = $backend->getSolrConnector();
@@ -322,7 +320,25 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
     $connector->alterConfigFiles($files);
 
+    return $files;
+  }
+
+  /**
+   * @return \ZipStream\ZipStream
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   * @throws \ZipStream\Exception\FileNotFoundException
+   * @throws \ZipStream\Exception\FileNotReadableException
+   */
+  public function getConfigZip() {
+    /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
+    $backend = $this->getBackend();
+    $connector = $backend->getSolrConnector();
+    $solr_branch = $connector->getSolrBranch($this->assumed_minimum_version);
+
     $zip = new ZipStream('solr_' . $solr_branch . '_config.zip');
+
+    $files = $this->getConfigFiles();
 
     foreach ($files as $name => $content) {
       $zip->addFile($name, $content);

@@ -97,6 +97,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       'solr_version' => '',
       'http_method' => 'AUTO',
       'commit_within' => 1000,
+      'jmx' => FALSE,
     ];
   }
 
@@ -195,10 +196,9 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     ];
 
     $form['workarounds'] = [
-      '#type' => 'fieldset',
+      '#type' => 'details',
       '#title' => $this->t('Connector Workarounds'),
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
+      '#open' => FALSE,
     ];
 
     $form['workarounds']['solr_version'] = [
@@ -224,6 +224,19 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
         'POST' => 'POST',
         'GET' => 'GET',
       ],
+    ];
+
+    $form['advanced'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Advanced server configuration'),
+      '#open' => FALSE,
+    ];
+
+    $form['advanced']['jmx'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable JMX'),
+      '#description' => $this->t('Enable JMX based monitoring.'),
+      '#default_value' => isset($this->configuration['jmx']) ? $this->configuration['jmx'] : FALSE,
     ];
 
     return $form;
@@ -271,9 +284,13 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     foreach ($values['workarounds'] as $key => $value) {
       $form_state->setValue($key, $value);
     }
+    foreach ($values['advanced'] as $key => $value) {
+      $form_state->setValue($key, $value);
+    }
 
     // Clean-up the form to avoid redundant entries in the stored configuration.
     $form_state->unsetValue('workarounds');
+    $form_state->unsetValue('advanced');
 
     $this->traitSubmitConfigurationForm($form, $form_state);
   }
@@ -1037,6 +1054,8 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    * {@inheritdoc}
    */
   public function alterConfigFiles(array &$files) {
-    // To be overwritten if required.
+    if ($this->configuration['jmx']) {
+      $files['solrconfig_extra.xml'] .= "<jmx />\n";
+    }
   }
 }

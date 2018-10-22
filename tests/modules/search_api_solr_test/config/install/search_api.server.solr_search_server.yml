@@ -24,6 +24,7 @@ backend_config:
     username: ''
     password: ''
     commit_within: 1000
+    jmx: false
 status: true
 langcode: en
 dependencies:

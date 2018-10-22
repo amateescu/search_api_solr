@@ -25,6 +25,7 @@ backend_config:
     commit_within: 1000
     solr_version: ''
     http_method: AUTO
+    jmx: false
   retrieve_data: false
   highlight_data: false
   skip_schema_check: false

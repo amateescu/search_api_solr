@@ -860,4 +860,28 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertResults([1], $results, 'Ngram string "Dog".');
   }
 
+  /**
+   * Test generation of Solr configuration files.
+   */
+  public function testConfigGeneration() {
+    $server = $this->getServer();
+    $backend_config = $server->getBackendConfig();
+
+    /** @var \Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
+    $list_builder = \Drupal::entityTypeManager()
+      ->getListBuilder('solr_field_type');
+
+    $list_builder->setServer($server);
+
+    $config_files= $list_builder->getConfigFiles();
+    $this->assertNotContains('<jmx />', $config_files['solrconfig_extra.xml']);
+
+    $backend_config['connector_config']['jmx'] = TRUE;
+    $server->setBackendConfig($backend_config);
+    $server->save();
+
+    $config_files= $list_builder->getConfigFiles();
+    $this->assertContains('<jmx />', $config_files['solrconfig_extra.xml']);
+  }
+
 }
