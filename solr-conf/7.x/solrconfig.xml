@@ -3,6 +3,7 @@
 <!DOCTYPE config [
   <!ENTITY spellcheck SYSTEM "solrconfig_spellcheck.xml">
   <!ENTITY extra SYSTEM "solrconfig_extra.xml">
+  <!ENTITY index SYSTEM "solrconfig_index.xml">
 ]>
 
 <!--
@@ -267,6 +268,10 @@
          this is enabled here, and controlled through log4j2.xml
       -->
     <infoStream>true</infoStream>
+
+    <!-- Let the config generator easily inject additional stuff. -->
+    &index;
+
   </indexConfig>
 
   <!-- The default high-performance update handler -->

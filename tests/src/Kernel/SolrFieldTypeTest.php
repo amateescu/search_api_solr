@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\search_api_solr\Kernel;
 
-use Drupal\config\Tests\SchemaCheckTestTrait;
 use Drupal\config_test\TestInstallStorage;
 use Drupal\Core\Config\InstallStorage;
 use Drupal\Core\Config\TypedConfigManager;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\Tests\SchemaCheckTestTrait;
 
 /**
  * Provides tests for Solr field typa configs.

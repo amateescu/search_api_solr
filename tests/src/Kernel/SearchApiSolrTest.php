@@ -862,8 +862,10 @@ class SearchApiSolrTest extends SolrBackendTestBase {
 
   /**
    * Test generation of Solr configuration files.
+   *
+   * @dataProvider configGenerationDataProvider
    */
-  public function testConfigGeneration() {
+  public function testConfigGeneration(string $language, array $files) {
     $server = $this->getServer();
     $backend_config = $server->getBackendConfig();
 
@@ -873,8 +875,15 @@ class SearchApiSolrTest extends SolrBackendTestBase {
 
     $list_builder->setServer($server);
 
-    $config_files= $list_builder->getConfigFiles();
-    $this->assertContains('hook_search_api_solr_config_files_alter() works', $config_files['test.txt']);
+    $config_files = $list_builder->getConfigFiles();
+
+    foreach ($files as $file_name => $expected_strings) {
+      $this->assertArrayHasKey($file_name, $config_files);
+      foreach ($expected_strings as $string) {
+        $this->assertContains($string, $config_files[$file_name]);
+      }
+    }
+
     $this->assertContains($server->id(), $config_files['test.txt']);
     $this->assertNotContains('<jmx />', $config_files['solrconfig_extra.xml']);
 
@@ -883,9 +892,55 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $server->save();
 
     $config_files= $list_builder->getConfigFiles();
-    $this->assertContains('hook_search_api_solr_config_files_alter() works', $config_files['test.txt']);
-    $this->assertContains($server->id(), $config_files['test.txt']);
     $this->assertContains('<jmx />', $config_files['solrconfig_extra.xml']);
+  }
+
+  /**
+   * Data provider for testConfigGeneration method.
+   *
+   * @return array
+   */
+  public function configGenerationDataProvider() {
+    return [
+      'und' => [
+        'und',
+        [
+          'schema_extra_types.xml' => [
+            'fieldType name="text_phonetic_und" class="solr.TextField"',
+            'fieldType name="text_und" class="solr.TextField"',
+          ],
+          'schema_extra_fields.xml' => [
+            '<dynamicField name="tcphonetics_*" type="text_phonetic_und" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
+            '<dynamicField name="tcphoneticm_*" type="text_phonetic_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
+            '<dynamicField name="tocphonetics_*" type="text_phonetic_und" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
+            '<dynamicField name="tocphoneticm_*" type="text_phonetic_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
+          ],
+          'solrconfig_extra.xml' => [
+            '<str name="name">und</str>',
+          ],
+          'stopwords_phonetic_und.txt' => [],
+          'protwords_phonetic_und.txt' => [],
+          'stopwords_und.txt' => [],
+          'synonyms_und.txt' => [
+            'drupal, durpal',
+          ],
+          'protwords_und.txt' => [],
+          'accents_und.txt' => [
+            '"\u00C4" => "A"',
+          ],
+          'mapping-ISOLatin1Accent.txt' => [
+            '"\u00c4" => "A"',
+          ],
+          'solrcore.properties' => [],
+          'elevate.xml' => [],
+          'schema.xml' => [],
+          'solrconfig.xml' => [],
+          'test.txt' => [
+            'hook_search_api_solr_config_files_alter() works',
+          ],
+        ],
+      ],
+    ];
   }
 
 }

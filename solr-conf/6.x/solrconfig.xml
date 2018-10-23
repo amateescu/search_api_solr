@@ -3,6 +3,7 @@
 <!DOCTYPE config [
   <!ENTITY spellcheck SYSTEM "solrconfig_spellcheck.xml">
   <!ENTITY extra SYSTEM "solrconfig_extra.xml">
+  <!ENTITY index SYSTEM "solrconfig_index.xml">
 ]>
 
 <!--
@@ -36,7 +37,7 @@
        that you fully re-index after changing this setting as it can
        affect both how text is indexed and queried.
     -->
-  <luceneMatchVersion>${solr.luceneMatchVersion:LUCENE_60}</luceneMatchVersion>
+  <luceneMatchVersion>${solr.luceneMatchVersion:LUCENE_64}</luceneMatchVersion>
 
   <!-- <lib/> directives can be used to instruct Solr to load any Jars
        identified and use them to resolve any "plugins" specified in
@@ -273,7 +274,11 @@
          IndexWriter to write its info stream to solr's log. By default,
          this is enabled here, and controlled through log4j.properties.
       -->
-     <infoStream>true</infoStream>
+    <infoStream>true</infoStream>
+
+    <!-- Let the config generator easily inject additional stuff. -->
+    &index;
+
   </indexConfig>
 
 

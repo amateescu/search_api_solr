@@ -3,6 +3,7 @@
 namespace Drupal\Tests\search_api_solr\Kernel;
 
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Utility\Utility;
 
@@ -12,6 +13,8 @@ use Drupal\search_api\Utility\Utility;
  * @group search_api_solr
  */
 class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
+
+  protected $language_ids = ['und', 'en', 'de', 'de-at'];
 
   /**
    * Modules to enable for this test.
@@ -50,11 +53,15 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
    * {@inheritdoc}
    */
   protected function installConfigs() {
-    parent::installConfigs();
+    foreach ($this->language_ids as $language_id) {
+      ConfigurableLanguage::createFromLangcode($language_id)->save();
+    }
 
     $this->installConfig([
       'search_api_solr_multilingual_test',
     ]);
+
+    parent::installConfigs();
   }
 
   /**
@@ -287,6 +294,100 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
       }
     }
     return $item_ids;
+  }
+
+  /**
+   * Data provider for testConfigGeneration method.
+   *
+   * @return array
+   */
+  public function configGenerationDataProvider() {
+    return [
+      'en' => [
+        'en',
+        [
+          'schema_extra_types.xml' => [
+            'fieldType name="text_phonetic_en" class="solr.TextField"',
+            'fieldType name="text_en" class="solr.TextField"',
+          ],
+          'schema_extra_fields.xml' => [
+            '<dynamicField name="tcphonetics_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
+            '<dynamicField name="tcphoneticm_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
+            '<dynamicField name="tocphonetics_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
+            '<dynamicField name="tocphoneticm_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
+            '<dynamicField name="ts_X3b_en_*" type="text_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
+            '<dynamicField name="tm_X3b_en_*" type="text_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
+            '<dynamicField name="tos_X3b_en_*" type="text_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
+            '<dynamicField name="tom_X3b_en_*" type="text_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
+          ],
+          'solrconfig_extra.xml' => [
+            '<str name="name">en</str>',
+          ],
+          'stopwords_phonetic_en.txt' => [],
+          'protwords_phonetic_en.txt' => [],
+          'stopwords_en.txt' => [],
+          'synonyms_en.txt' => [
+            'drupal, durpal',
+          ],
+          'protwords_en.txt' => [],
+          'accents_en.txt' => [
+            '"\u00C4" => "A"'
+          ],
+          'mapping-ISOLatin1Accent.txt' => [
+            '"\u00c4" => "A"',
+          ],
+          'solrcore.properties' => [],
+          'elevate.xml' => [],
+          'schema.xml' => [],
+          'solrconfig.xml' => [],
+          'test.txt' => [
+            'hook_search_api_solr_config_files_alter() works'
+          ],
+        ],
+      ],
+      'de' => [
+        'de',
+        [
+          'schema_extra_types.xml' => [
+            'fieldType name="text_phonetic_de" class="solr.TextField"',
+            'fieldType name="text_de" class="solr.TextField"',
+          ],
+          'schema_extra_fields.xml' => [
+            '<dynamicField name="tcphonetics_X3b_de_*" type="text_phonetic_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
+            '<dynamicField name="tcphoneticm_X3b_de_*" type="text_phonetic_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
+            '<dynamicField name="tocphonetics_X3b_de_*" type="text_phonetic_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
+            '<dynamicField name="tocphoneticm_X3b_de_*" type="text_phonetic_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
+            '<dynamicField name="ts_X3b_de_*" type="text_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
+            '<dynamicField name="tm_X3b_de_*" type="text_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
+            '<dynamicField name="tos_X3b_de_*" type="text_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
+            '<dynamicField name="tom_X3b_de_*" type="text_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
+          ],
+          'solrconfig_extra.xml' => [
+            '<str name="name">de</str>',
+          ],
+          'stopwords_phonetic_de.txt' => [],
+          'protwords_phonetic_de.txt' => [],
+          'stopwords_de.txt' => [],
+          'synonyms_de.txt' => [
+            'drupal, durpal',
+          ],
+          'protwords_de.txt' => [],
+          'accents_de.txt' => [
+            ' Not needed if German2 Porter stemmer is used.'
+          ],
+          'mapping-ISOLatin1Accent.txt' => [
+            '"\u00c4" => "A"',
+          ],
+          'solrcore.properties' => [],
+          'elevate.xml' => [],
+          'schema.xml' => [],
+          'solrconfig.xml' => [],
+          'test.txt' => [
+            'hook_search_api_solr_config_files_alter() works'
+          ],
+        ],
+      ],
+    ];
   }
 
 }
