@@ -874,6 +874,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $list_builder->setServer($server);
 
     $config_files= $list_builder->getConfigFiles();
+    $this->assertContains('hook_search_api_solr_config_files_alter() works', $config_files['test.txt']);
+    $this->assertContains($server->id(), $config_files['test.txt']);
     $this->assertNotContains('<jmx />', $config_files['solrconfig_extra.xml']);
 
     $backend_config['connector_config']['jmx'] = TRUE;
@@ -881,6 +883,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $server->save();
 
     $config_files= $list_builder->getConfigFiles();
+    $this->assertContains('hook_search_api_solr_config_files_alter() works', $config_files['test.txt']);
+    $this->assertContains($server->id(), $config_files['test.txt']);
     $this->assertContains('<jmx />', $config_files['solrconfig_extra.xml']);
   }
 

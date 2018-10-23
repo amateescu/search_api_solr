@@ -1053,7 +1053,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function alterConfigFiles(array &$files) {
+  public function alterConfigFiles(array &$files, string $lucene_match_version, string $server_id = '') {
     if ($this->configuration['jmx']) {
       $files['solrconfig_extra.xml'] .= "<jmx />\n";
     }

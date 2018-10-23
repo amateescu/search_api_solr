@@ -235,5 +235,22 @@ function hook_search_api_solr_finalize_index(\Drupal\search_api\IndexInterface $
 }
 
 /**
+ * Alter the newly assembled Solr configuration files.
+ *
+ * @param string[] $files
+ *   Array of config files keyed by file names.
+ * @param string $lucene_match_version
+ *   Lucene (Solr) minor version string.
+ * @param string $server_id
+ *   Optional Search API server id. Will be set in most cases but might be
+ *   empty when the config generation is triggered via UI or drush.
+ */
+function hook_search_api_solr_config_files_alter(array &$files, string $lucene_match_version, string $server_id = '') {
+  $files['solrconfig_extra.xml'] .= "<!-- Append additional stuff -->\n";
+  // If you want to modify the existing XML files we recommend to use PHP's DOM
+  // API.
+}
+
+/**
  * @} End of "addtogroup hooks".
  */

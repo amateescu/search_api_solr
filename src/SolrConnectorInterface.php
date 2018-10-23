@@ -464,8 +464,14 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
   /**
    * Alter the newly assembled Solr configuration files.
    *
-   * @param array $files
+   * @param string[] $files
+   *   Array of config files keyed by file names.
+   * @param string $lucene_match_version
+   *   Lucene (Solr) minor version string.
+   * @param string $server_id
+   *   Optional Search API server id. Will be set in most cases but might be
+   *   empty when the config generation is triggered via UI or drush.
    */
-  public function alterConfigFiles(array &$files);
+  public function alterConfigFiles(array &$files, string $lucene_match_version, string $server_id = '');
 
 }

@@ -23,6 +23,11 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
   /**
    * @var string
+   */
+  protected $serverId = '';
+
+  /**
+   * @var string
    *   A Solr version string.
    */
   protected $assumed_minimum_version = '';
@@ -318,8 +323,8 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       }
     }
 
-    $connector->alterConfigFiles($files);
-
+    $connector->alterConfigFiles($files, $solrcore_properties['solr.luceneMatchVersion'], $this->serverId);
+    $this->moduleHandler->alter('search_api_solr_config_files', $files, $solrcore_properties['solr.luceneMatchVersion'], $this->serverId);
     return $files;
   }
 
@@ -356,7 +361,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    */
   public function setServer(ServerInterface $server) {
     $this->setBackend($server->getBackend());
-
+    $this->serverId = $server->id();
   }
 
   /**
@@ -366,7 +371,6 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    */
   public function setBackend(SolrBackendInterface $backend) {
     $this->backend = $backend;
-
   }
 
   /**
