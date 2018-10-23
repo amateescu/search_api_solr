@@ -125,7 +125,7 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
     $this->indexItems($this->indexId);
 
     $results = $this->buildSearch()->execute();
-    $this->assertEquals(6, $results->getResultCount(), 'Number of indexed entities is correct.');
+    $this->assertEquals(7, $results->getResultCount(), 'Number of indexed entities is correct.');
 
     // Stemming "en":
     // gene => gene
