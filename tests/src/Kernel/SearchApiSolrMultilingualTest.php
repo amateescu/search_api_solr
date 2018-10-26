@@ -14,7 +14,7 @@ use Drupal\search_api\Utility\Utility;
  */
 class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
 
-  protected $language_ids = ['und', 'en', 'de', 'de-at'];
+  protected $language_ids = ['en', 'de', 'de-at'];
 
   /**
    * Modules to enable for this test.
@@ -125,7 +125,7 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
     $this->indexItems($this->indexId);
 
     $results = $this->buildSearch()->execute();
-    $this->assertEquals(7, $results->getResultCount(), 'Number of indexed entities is correct.');
+    $this->assertEquals(6, $results->getResultCount(), 'Number of indexed entities is correct.');
 
     // Stemming "en":
     // gene => gene
