@@ -367,11 +367,18 @@ class StreamingExpressionBuilder extends Expression {
    * @throws \Drupal\search_api\SearchApiException
    */
   public function _search_all() {
+    static $rows = 0;
+
+    if (!$rows) {
+      $rows = \Drupal::state()
+        ->get('search_api_solr.' . $this->index->id() . '.search_all_rows', 0);
+    }
+
     return
       $this->search(
         $this->_collection(),
         implode(', ', func_get_args()),
-        'rows=' . ($this->index->getTrackerInstance()->getTotalItemsCount() * 10)
+        'rows=' . $rows
       );
   }
 

@@ -456,3 +456,23 @@ function search_api_solr_entity_operation(\Drupal\Core\Entity\EntityInterface $s
   }
   return $operations;
 }
+
+/**
+ * Implements function hook_search_api_items_indexed().
+ *
+ * @param \Drupal\search_api\Entity\Index $index
+ * @param string[] $processed_ids
+ *
+ * @throws \Drupal\search_api\SearchApiException
+ */
+function search_api_solr_search_api_items_indexed($index, $processed_ids) {
+  if ($index->getServerInstance()->getBackend() instanceof SolrBackendInterface) {
+    // The _search_all() streaming expression needs a row limit that much higher
+    // then the real number of rows. Therefore we set a 10 times higher row
+    // limit as indexed documents. To increase the number of query result cache
+    // hits we set "normalize" the nearest higher power of 2.
+    $rows = $index->getTrackerInstance()->getIndexedItemsCount() * 10;
+    for ($i = pow(2,14); $i < $rows; $i *= 2) {}
+    \Drupal::state()->set('search_api_solr.' . $index->id() . '.search_all_rows', $i);
+  }
+}
