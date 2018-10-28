@@ -311,10 +311,11 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
             'fieldType name="text_en" class="solr.TextField"',
           ],
           'schema_extra_fields.xml' => [
-            '<dynamicField name="tcphonetics_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
-            '<dynamicField name="tcphoneticm_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
-            '<dynamicField name="tocphonetics_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
-            '<dynamicField name="tocphoneticm_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
+            # phonetic is currently not available vor Solr 6.x.
+            #'<dynamicField name="tcphonetics_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
+            #'<dynamicField name="tcphoneticm_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
+            #'<dynamicField name="tocphonetics_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
+            #'<dynamicField name="tocphoneticm_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
             '<dynamicField name="ts_X3b_en_*" type="text_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
             '<dynamicField name="tm_X3b_en_*" type="text_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
             '<dynamicField name="tos_X3b_en_*" type="text_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
@@ -353,10 +354,11 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
             'fieldType name="text_de" class="solr.TextField"',
           ],
           'schema_extra_fields.xml' => [
-            '<dynamicField name="tcphonetics_X3b_de_*" type="text_phonetic_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
-            '<dynamicField name="tcphoneticm_X3b_de_*" type="text_phonetic_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
-            '<dynamicField name="tocphonetics_X3b_de_*" type="text_phonetic_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
-            '<dynamicField name="tocphoneticm_X3b_de_*" type="text_phonetic_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
+            # phonetic is currently not available vor Solr 6.x.
+            #'<dynamicField name="tcphonetics_X3b_de_*" type="text_phonetic_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
+            #'<dynamicField name="tcphoneticm_X3b_de_*" type="text_phonetic_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
+            #'<dynamicField name="tocphonetics_X3b_de_*" type="text_phonetic_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
+            #'<dynamicField name="tocphoneticm_X3b_de_*" type="text_phonetic_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
             '<dynamicField name="ts_X3b_de_*" type="text_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
             '<dynamicField name="tm_X3b_de_*" type="text_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
             '<dynamicField name="tos_X3b_de_*" type="text_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
