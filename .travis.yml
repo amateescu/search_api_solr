@@ -52,9 +52,8 @@ install:
   - git clone --depth=1 --branch $DRUPAL_BRANCH https://git.drupal.org/project/drupal.git
   - cd $TRAVIS_BUILD_DIR/../drupal
   - composer install
-  - if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.2" ]]; then composer run-script drupal-phpunit-upgrade; fi
   - composer config repositories.search_api_solr vcs $TRAVIS_BUILD_DIR
-  - composer require drupal/search_api:1.x-dev drupal/search_api_autocomplete:1.x-dev drupal/search_api_solr:999.3.0 drupal/search_api_location:1.x-dev drupal/facets:1.x-dev drupal/geofield:1.x-dev drupal/composer_deploy drush/drush:$DRUSH_VERSION
+  - composer require drupal/search_api:1.x-dev drupal/search_api_autocomplete:1.x-dev drupal/search_api_solr:999.3.0 drupal/search_api_location:1.x-dev drupal/facets:1.x-dev drupal/geofield:1.x-dev drupal/composer_deploy drush/drush:$DRUSH_VERSION drupal/drush_language:1.x-dev
   - composer run-script drupal-phpunit-upgrade
   # Patch template.
   #########################################
@@ -74,6 +73,9 @@ before_script:
   - php -S localhost:8888 >& /dev/null &
   # Install the site.
   - ./vendor/bin/drush -v site-install minimal --db-url=mysql://root:@localhost/drupal --yes
+  - ./vendor/bin/drush en --yes drush_language
+  - ./vendor/bin/drush language-add en
+  - ./vendor/bin/drush language-add de
   # Let dev versions fullfill module version dependencies.
   - ./vendor/bin/drush en composer_deploy --yes
   # Generate a multilingual Solr configuration. Therefore we have to install the

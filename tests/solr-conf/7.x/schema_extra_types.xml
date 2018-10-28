@@ -80,7 +80,7 @@
 <fieldType name="text_phonetic_de" class="solr.TextField" positionIncrementGap="100">
   <analyzer type="index">
     <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-    <filter class="solr.WordDelimiterGraphFilterFactory" protected="protwords_phonetic_de.txt" generateWordParts="1" generateNumberParts="1" splitOnCaseChange="0" catenateWords="1" catenateNumbers="1" catenateAll="0" stemEnglishPossessive="0" preserveOriginal="1"/>
+    <filter class="solr.WordDelimiterGraphFilterFactory" protected="protwords_phonetic_de.txt" generateWordParts="1" generateNumberParts="1" splitOnCaseChange="0" splitOnNumerics="1" catenateWords="1" catenateNumbers="1" catenateAll="0" stemEnglishPossessive="0" preserveOriginal="1"/>
     <filter class="solr.LengthFilterFactory" min="2" max="100"/>
     <filter class="solr.LowerCaseFilterFactory"/>
     <filter class="solr.DictionaryCompoundWordTokenFilterFactory" dictionary="nouns_phonetic_de.txt" minWordSize="5" minSubwordSize="4" maxSubwordSize="15" onlyLongestMatch=""/>
@@ -106,7 +106,7 @@
   <analyzer type="index">
     <charFilter class="solr.MappingCharFilterFactory" mapping="accents_de.txt"/>
     <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-    <filter class="solr.WordDelimiterGraphFilterFactory" protected="protwords_de.txt" generateWordParts="1" generateNumberParts="1" splitOnCaseChange="0" catenateWords="1" catenateNumbers="1" catenateAll="0" stemEnglishPossessive="0" preserveOriginal="1"/>
+    <filter class="solr.WordDelimiterGraphFilterFactory" protected="protwords_de.txt" generateWordParts="1" generateNumberParts="1" splitOnCaseChange="0" splitOnNumerics="1" catenateWords="1" catenateNumbers="1" catenateAll="0" stemEnglishPossessive="0" preserveOriginal="1"/>
     <filter class="solr.LengthFilterFactory" min="2" max="100"/>
     <filter class="solr.LowerCaseFilterFactory"/>
     <filter class="solr.DictionaryCompoundWordTokenFilterFactory" dictionary="nouns_de.txt" minWordSize="5" minSubwordSize="4" maxSubwordSize="15" onlyLongestMatch=""/>
