@@ -307,7 +307,8 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
         'en',
         [
           'schema_extra_types.xml' => [
-            'fieldType name="text_phonetic_en" class="solr.TextField"',
+            # phonetic is currently not available vor Solr 6.x.
+            #'fieldType name="text_phonetic_en" class="solr.TextField"',
             'fieldType name="text_en" class="solr.TextField"',
           ],
           'schema_extra_fields.xml' => [
@@ -324,8 +325,9 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
           'solrconfig_extra.xml' => [
             '<str name="name">en</str>',
           ],
-          'stopwords_phonetic_en.txt' => [],
-          'protwords_phonetic_en.txt' => [],
+          # phonetic is currently not available vor Solr 6.x.
+          #'stopwords_phonetic_en.txt' => [],
+          #'protwords_phonetic_en.txt' => [],
           'stopwords_en.txt' => [],
           'synonyms_en.txt' => [
             'drupal, durpal',
@@ -350,7 +352,8 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
         'de',
         [
           'schema_extra_types.xml' => [
-            'fieldType name="text_phonetic_de" class="solr.TextField"',
+            # phonetic is currently not available vor Solr 6.x.
+            #'fieldType name="text_phonetic_de" class="solr.TextField"',
             'fieldType name="text_de" class="solr.TextField"',
           ],
           'schema_extra_fields.xml' => [
@@ -367,8 +370,9 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
           'solrconfig_extra.xml' => [
             '<str name="name">de</str>',
           ],
-          'stopwords_phonetic_de.txt' => [],
-          'protwords_phonetic_de.txt' => [],
+          # phonetic is currently not available vor Solr 6.x.
+          #'stopwords_phonetic_de.txt' => [],
+          #'protwords_phonetic_de.txt' => [],
           'stopwords_de.txt' => [],
           'synonyms_de.txt' => [
             'drupal, durpal',
