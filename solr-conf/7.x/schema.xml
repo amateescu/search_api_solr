@@ -258,13 +258,13 @@
   <dynamicField name="eff_*" type="file"/>
 
   <!-- Sortable version of the dynamic string field. We need to store it for streaming expressions. -->
-  <dynamicField name="sort_*" type="sortString" indexed="true" stored="true"/>
+  <dynamicField name="sort_*" type="collated" indexed="false" stored="false" docValues="true"/>
 
   <!-- A random sort field -->
   <dynamicField name="random_*" type="random" indexed="true" stored="true"/>
 
   <!-- This field is used to store access information (e.g. node access grants), as opposed to field data -->
-  <dynamicField name="access_*" type="pint" indexed="true" stored="false" multiValued="true"/>
+  <dynamicField name="access_*" type="pint" indexed="true" stored="false" multiValued="true" docValues="true"/>
 
   <!-- The following causes solr to ignore any fields that don't already match an existing
        field name or dynamic field, rather than reporting them as an error.
@@ -552,73 +552,10 @@
       </analyzer>
     </fieldType>
 
-    <!-- This is an example of using the KeywordTokenizer along
-         With various TokenFilterFactories to produce a sortable field
-         that does not include some properties of the source text
-      -->
-    <fieldType name="alphaOnlySort" class="solr.TextField" omitNorms="true">
-      <analyzer>
-        <!-- KeywordTokenizer does no actual tokenizing, so the entire
-             input string is preserved as a single token
-          -->
-        <tokenizer class="solr.KeywordTokenizerFactory"/>
-        <!-- The LowerCase TokenFilter does what you expect, which can be
-             when you want your sorting to be case insensitive
-          -->
-        <filter class="solr.LowerCaseFilterFactory" />
-        <!-- The TrimFilter removes any leading or trailing whitespace -->
-        <filter class="solr.TrimFilterFactory" />
-        <!-- The PatternReplaceFilter gives you the flexibility to use
-             Java Regular expression to replace any sequence of characters
-             matching a pattern with an arbitrary replacement string,
-             which may include back references to portions of the original
-             string matched by the pattern.
-
-             See the Java Regular Expression documentation for more
-             information on pattern and replacement string syntax.
-
-             http://docs.oracle.com/javase/8/docs/api/java/util/regex/package-summary.html
-          -->
-        <filter class="solr.PatternReplaceFilterFactory"
-                pattern="([^a-z])" replacement="" replace="all"
-        />
-      </analyzer>
-    </fieldType>
-
-    <!-- The Solr 6.x example file replaced the sortString type by alphaOnlySort
-         above. This one is not suitable for search_api_id which consists of
-         characters, numbers and punctuation, for example
-         'entity:entity_test_mulrev_changed/2:en'.
-     -->
-    <fieldType name="sortString" class="solr.TextField" omitNorms="true">
-      <analyzer>
-        <!-- KeywordTokenizer does no actual tokenizing, so the entire
-            input string is preserved as a single token
-          -->
-        <tokenizer class="solr.KeywordTokenizerFactory"/>
-        <!-- The LowerCase TokenFilter does what you expect, which can be
-            when you want your sorting to be case insensitive
-          -->
-        <filter class="solr.LowerCaseFilterFactory" />
-        <!-- The TrimFilter removes any leading or trailing whitespace -->
-        <filter class="solr.TrimFilterFactory" />
-        <!-- The PatternReplaceFilter gives you the flexibility to use
-            Java Regular expression to replace any sequence of characters
-            matching a pattern with an arbitrary replacement string,
-            which may include back refrences to portions of the orriginal
-            string matched by the pattern.
-
-            See the Java Regular Expression documentation for more
-            information on pattern and replacement string syntax.
-
-            http://java.sun.com/j2se/1.5.0/docs/api/java/util/regex/package-summary.html
-
-        <filter class="solr.PatternReplaceFilterFactory"
-               pattern="(^\p{Punct}+)" replacement="" replace="all"
-        />
-        -->
-      </analyzer>
-    </fieldType>
+    <fieldType name="collated" class="solr.ICUCollationField"
+               locale="en"
+               strength="primary"
+               caseLevel="false" />
 
     <fieldType name="phonetic" stored="false" indexed="true" class="solr.TextField" >
       <analyzer>
