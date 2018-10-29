@@ -249,6 +249,12 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     $f = function (\SimpleXMLElement $element, array $attributes) use (&$f) {
       foreach ($attributes as $key => $value) {
         if (is_scalar($value)) {
+          if (is_bool($value) === TRUE) {
+            // SimpleXMLElement::addAtribute() converts booleans to integers 0
+            // and 1. But Solr requires the strings 'false' and 'true'.
+            $value = $value ? 'true' : 'false';
+          }
+
           switch ($key) {
             case 'VALUE':
               // @see https://stackoverflow.com/questions/3153477
