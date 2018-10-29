@@ -906,20 +906,23 @@ class SearchApiSolrTest extends SolrBackendTestBase {
         'und',
         [
           'schema_extra_types.xml' => [
-            'fieldType name="text_phonetic_und" class="solr.TextField"',
+            # phonetic is currently not available vor Solr 6.x.
+            #'fieldType name="text_phonetic_und" class="solr.TextField"',
             'fieldType name="text_und" class="solr.TextField"',
           ],
           'schema_extra_fields.xml' => [
-            '<dynamicField name="tcphonetics_*" type="text_phonetic_und" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
-            '<dynamicField name="tcphoneticm_*" type="text_phonetic_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
-            '<dynamicField name="tocphonetics_*" type="text_phonetic_und" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
-            '<dynamicField name="tocphoneticm_*" type="text_phonetic_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
+            # phonetic is currently not available vor Solr 6.x.
+            #'<dynamicField name="tcphonetics_*" type="text_phonetic_und" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
+            #'<dynamicField name="tcphoneticm_*" type="text_phonetic_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
+            #'<dynamicField name="tocphonetics_*" type="text_phonetic_und" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
+            #'<dynamicField name="tocphoneticm_*" type="text_phonetic_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
           ],
           'solrconfig_extra.xml' => [
             '<str name="name">und</str>',
           ],
-          'stopwords_phonetic_und.txt' => [],
-          'protwords_phonetic_und.txt' => [],
+          # phonetic is currently not available vor Solr 6.x.
+          #'stopwords_phonetic_und.txt' => [],
+          #'protwords_phonetic_und.txt' => [],
           'stopwords_und.txt' => [],
           'synonyms_und.txt' => [
             'drupal, durpal',
