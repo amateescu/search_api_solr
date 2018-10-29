@@ -28,7 +28,6 @@ field_type:
           class: solr.StopFilterFactory
           ignoreCase: true
           words: stopwords_ar.txt
-          enablePositionIncrements: true
         -
           class: solr.ArabicNormalizationFilterFactory
         -
@@ -44,7 +43,6 @@ field_type:
           class: solr.StopFilterFactory
           ignoreCase: true
           words: stopwords_ar.txt
-          enablePositionIncrements: true
         -
           class: solr.ArabicNormalizationFilterFactory
         -
