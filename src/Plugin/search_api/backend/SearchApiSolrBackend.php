@@ -51,6 +51,8 @@ use Solarium\Core\Query\Helper;
 use Solarium\Core\Query\QueryInterface as SolariumQueryInterface;
 use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\Exception\ExceptionInterface;
+use Solarium\Exception\StreamException;
+use Solarium\QueryType\Stream\Expression;
 use Solarium\QueryType\Update\Query\Query as UpdateQuery;
 use Solarium\QueryType\Select\Query\Query;
 use Solarium\QueryType\Select\Result\Result;
@@ -959,6 +961,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             unset($finalization_in_progress[$index->id()]);
             $lock->release('search_api_solr.' . $index->id() . '.finalization_lock');
             $connector->adjustTimeout($previous_timeout);
+            if ($e instanceof StreamException) {
+              throw new SearchApiSolrException($e->getMessage() . "\n" . Expression::indent($e->getExpression()), $e->getCode(), $e);
+            }
             throw new SearchApiSolrException($e->getMessage(), $e->getCode(), $e);
           }
           unset($finalization_in_progress[$index->id()]);
@@ -1293,38 +1298,41 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     try {
       $result = $connector->stream($stream);
-    }
-    catch (\Exception $e) {
-      throw new SearchApiSolrException('An error occurred while trying execute a streaming expression on Solr: ' . $e->getMessage(), $e->getCode(), $e);
-    }
 
-    if ($processors = $query->getIndex()->getProcessorsByStage(ProcessorInterface::STAGE_POSTPROCESS_QUERY)) {
-      foreach ($processors as $key => $processor) {
-        if (!($processor instanceof SolrProcessorInterface)) {
-          unset($processors[$key]);
+      if ($processors = $query->getIndex()->getProcessorsByStage(ProcessorInterface::STAGE_POSTPROCESS_QUERY)) {
+        foreach ($processors as $key => $processor) {
+          if (!($processor instanceof SolrProcessorInterface)) {
+            unset($processors[$key]);
+          }
         }
-      }
 
-      if (count($processors)) {
-        foreach ($processors as $processor) {
-          /** @var \Drupal\search_api_solr\Solarium\Result\StreamDocument $document */
-          foreach ($result as $document) {
-            foreach ($document as $field_name => $field_value) {
-              if (is_string($field_value)) {
-                $document->{$field_name} = $processor->decodeStreamingExpressionValue($field_value) ?: $field_value;
-              }
-              elseif (is_array($field_value)) {
-                foreach ($field_value as &$array_value) {
-                  if (is_string($array_value)) {
-                    $array_value = $processor->decodeStreamingExpressionValue($array_value) ?: $array_value;
-                  }
+        if (count($processors)) {
+          foreach ($processors as $processor) {
+            /** @var \Drupal\search_api_solr\Solarium\Result\StreamDocument $document */
+            foreach ($result as $document) {
+              foreach ($document as $field_name => $field_value) {
+                if (is_string($field_value)) {
+                  $document->{$field_name} = $processor->decodeStreamingExpressionValue($field_value) ?: $field_value;
                 }
-                $document->{$field_name} = $field_value;
+                elseif (is_array($field_value)) {
+                  foreach ($field_value as &$array_value) {
+                    if (is_string($array_value)) {
+                      $array_value = $processor->decodeStreamingExpressionValue($array_value) ?: $array_value;
+                    }
+                  }
+                  $document->{$field_name} = $field_value;
+                }
               }
             }
           }
         }
       }
+    }
+    catch (StreamException $e) {
+      throw new SearchApiSolrException($e->getMessage() . "\n" . Expression::indent($e->getExpression()), $e->getCode(), $e);
+    }
+    catch (\Exception $e) {
+      throw new SearchApiSolrException('An error occurred while trying execute a streaming expression on Solr: ' . $e->getMessage(), $e->getCode(), $e);
     }
 
     return $result;
