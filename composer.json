@@ -23,7 +23,7 @@
         "php": "^7.0",
         "ext-json": "*",
         "maennchen/zipstream-php": "0.4.*",
-        "solarium/solarium": "~4.1.0",
+        "solarium/solarium": "~4.2.0",
         "drupal/search_api": "~1.9"
     },
     "require-dev": {
