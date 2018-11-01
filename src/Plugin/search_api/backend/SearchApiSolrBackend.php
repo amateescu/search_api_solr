@@ -1075,7 +1075,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       );
 
       // Set the list of fields to retrieve.
-      $this->setFields($solarium_query, $field_names, $query->getOption('search_api_retrieved_properties', []));
+      $this->setFields($solarium_query, $field_names, $query->getOption('search_api_retrieved_field_values', []));
 
       // Set sorts.
       $this->setSorts($solarium_query, $query, $field_names);
@@ -1236,10 +1236,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   The solr query.
    * @param array $field_names
    *   The field names.
-   * @param array $retrieved_properties
-   *   The $retrieved properties to set.
+   * @param array $fields_to_be_retrieved
+   *   The filed values to be retrieved form Solr.
    */
-  protected function setFields(Query $solarium_query, array $field_names, array $retrieved_properties = []) {
+  protected function setFields(Query $solarium_query, array $field_names, array $fields_to_be_retrieved = []) {
     // The list of fields Solr must return to built a Search API result.
     $required_fields = [$field_names['search_api_id'], $field_names['search_api_language'], $field_names['search_api_relevance']];
     if (!$this->configuration['site_hash']) {
@@ -1251,11 +1251,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     if (!empty($this->configuration['retrieve_data'])) {
       // If Search API provides information about the fields to retrieve,
       // limit the fields accordingly. ...
-      foreach ($retrieved_properties as $datasource_id => $datasource_fields) {
-        foreach (array_keys($datasource_fields) as $field_name) {
-          if (isset($field_names[$field_name])) {
-            $returned_fields[] = $field_names[$field_name];
-          }
+      foreach ($fields_to_be_retrieved as $field_name) {
+        if (isset($field_names[$field_name])) {
+          $returned_fields[] = $field_names[$field_name];
         }
       }
       if ($returned_fields) {

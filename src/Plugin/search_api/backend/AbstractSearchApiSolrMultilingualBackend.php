@@ -221,7 +221,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
       }
 
       if (!empty($this->configuration['retrieve_data'])) {
-        if ($search_api_retrieved_properties = $query->getOption('search_api_retrieved_properties', [])) {
+        if ($fields_to_be_retrieved = $query->getOption('search_api_retrieved_field_values', [])) {
           $language_specific_fields_to_retrieve = [];
           $fields_to_retrieve = $solarium_query->getFields();
           foreach ($fields_to_retrieve as $key => $field_name) {

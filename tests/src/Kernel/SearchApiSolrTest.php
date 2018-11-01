@@ -472,7 +472,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
 
     // Retrieve list of fields in addition to required fields.
     $query = $this->buildSearch('foobar');
-    $query->setOption('search_api_retrieved_properties', ['entity' => ['body' => TRUE]]);
+    $query->setOption('search_api_retrieved_field_values', ['body' => 'body']);
     $results = $query->execute();
     $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
     /** @var \Drupal\search_api\Item\ItemInterface $result */
