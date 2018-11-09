@@ -137,5 +137,5 @@ third_party_settings:
         requireFieldMatch: false
         snippets: 3
         fragsize: 0
-      advanced:
-        index_prefix: 'index_prefix'
+    advanced:
+      index_prefix: 'index_prefix'
