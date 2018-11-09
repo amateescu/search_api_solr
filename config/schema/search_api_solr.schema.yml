@@ -78,5 +78,5 @@ search_api.index.*.third_party.search_api_solr:
       label: 'advanced settings'
       mapping:
         index_prefix:
-          type: machine_name
+          type: string
           label: 'The prefix for the Solr index'
