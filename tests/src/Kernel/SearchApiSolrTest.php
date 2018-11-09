@@ -64,6 +64,13 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   protected function backendSpecificRegressionTests() {
     $this->regressionTest2888629();
     $this->regressionTest2850160();
+    $this->indexPrefixTest();
+  }
+
+  protected function indexPrefixTest() {
+    $index = $this->getIndex();
+    $prefixed_index_id = $this->invokeMethod($backend, 'getIndexId', [$index]);
+    $this->assertEquals('server_prefixindex_prefix' . $index->id(), $prefixed_index_id);
   }
 
   /**

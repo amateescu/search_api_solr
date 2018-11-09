@@ -8,6 +8,7 @@ backend_config:
   highlight_data: false
   skip_schema_check: false
   domain: generic
+  server_prefix: 'server_prefix'
   connector: basic_auth
   connector_config:
     scheme: http

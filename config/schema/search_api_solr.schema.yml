@@ -7,9 +7,6 @@ search_api_solr.settings:
     last_optimize:
       type: integer
       label: 'Last time the indexes were optimized'
-    index_prefix:
-      type: string
-      label: 'The default prefix for Solr indexes'
     cron_action:
       type: string
       label: 'Cron action'
@@ -76,3 +73,10 @@ search_api.index.*.third_party.search_api_solr:
             fragsize:
               type: integer
               label: 'Specifies the size, in characters, of fragments to consider for highlighting.'
+    advanced:
+      type: mapping
+      label: 'advanced settings'
+      mapping:
+        index_prefix:
+          type: machine_name
+          label: 'The prefix for the Solr index'

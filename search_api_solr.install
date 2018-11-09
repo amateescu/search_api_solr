@@ -536,3 +536,31 @@ function search_api_solr_update_8212() {
 
   $config->delete();
 }
+
+/**
+ * Configure index prefixes individually per server and index.
+ */
+function search_api_solr_update_8213() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('search_api_solr.settings');
+  $data = $config->getRawData();
+
+  foreach (search_api_solr_update_helper_get_index_third_party_settings() as $index_id => $third_party_settings) {
+    if (!isset($third_party_settings['advanced']) && !isset($third_party_settings['advanced']['index_prefix'])) {
+      $third_party_settings['advanced']['index_prefix'] = isset($data['index_prefix_' . $index_id]) ? $data['index_prefix_' . $index_id] : '';
+      unset($data['index_prefix_' . $index_id]);
+    }
+    search_api_solr_update_helper_save_index_third_party_settings($index_id, $third_party_settings);
+  }
+
+  foreach (search_api_solr_update_helper_get_backend_configs() as $server_name => $backend_config) {
+    if (!isset($backend_config['server_prefix'])) {
+      $backend_config['server_prefix'] = isset($data['index_prefix']) ? $data['index_prefix'] : '';
+      search_api_solr_update_helper_save_backend_config($server_name, $backend_config);
+    }
+  }
+  unset($data['index_prefix']);
+
+  $config->setData($data);
+  $config->save(TRUE);
+}

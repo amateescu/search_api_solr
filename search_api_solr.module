@@ -119,7 +119,10 @@ function search_api_solr_default_index_third_party_settings() {
         'requireFieldMatch' => FALSE,
         'snippets' => 3,
         'fragsize' => 0,
-      ]
+      ],
+      'advanced' => [
+        'index_prefix' => '',
+      ],
     ],
   ];
 }
@@ -298,6 +301,20 @@ function search_api_solr_form_search_api_index_form_alter(&$form, FormStateInter
       '#description' => t('Specifies the size, in characters, of fragments to consider for highlighting. 0 indicates that no fragmenting should be considered and the whole field value should be used. This parameter accepts per-field overrides.'),
       '#default_value' => $settings['highlighter']['highlight']['fragsize'],
     ];
+
+    $form['third_party_settings']['search_api_solr']['advanced'] = [
+      '#tree' => TRUE,
+      '#type' => 'details',
+      '#title' => t('Advanced'),
+    ];
+
+    $form['third_party_settings']['search_api_solr']['advanced']['index_prefix'] = [
+      '#type' => 'textfield',
+      '#title' => t('Index prefix'),
+      '#description' => t("By default, the index ID in the Solr server is the same as the index's machine name in Drupal. This setting will let you specify an additional prefix. Only use alphanumeric characters and underscores. Since changing the prefix makes the currently indexed data inaccessible, you should not change this variable when no data is indexed."),
+      '#default_value' => $settings['advanced']['index_prefix'],
+    ];
+
   }
 }
 

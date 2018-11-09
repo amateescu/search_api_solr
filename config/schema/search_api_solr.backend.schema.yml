@@ -14,6 +14,9 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
     site_hash:
       type: boolean
       label: 'Restrict searches to current site'
+    server_prefix:
+      type: machine_name
+      label: 'The default prefix for Solr indexes on this backend'
     domain:
       type: string
       label: 'The targeted content domain'

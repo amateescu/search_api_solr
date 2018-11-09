@@ -198,7 +198,6 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     $form['workarounds'] = [
       '#type' => 'details',
       '#title' => $this->t('Connector Workarounds'),
-      '#open' => FALSE,
     ];
 
     $form['workarounds']['solr_version'] = [
@@ -229,7 +228,6 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     $form['advanced'] = [
       '#type' => 'details',
       '#title' => $this->t('Advanced server configuration'),
-      '#open' => FALSE,
     ];
 
     $form['advanced']['jmx'] = [

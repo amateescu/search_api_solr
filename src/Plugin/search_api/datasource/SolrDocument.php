@@ -239,7 +239,6 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
     $form['advanced'] = [
       '#type' => 'details',
       '#title' => $this->t('Advanced configuration'),
-      '#open' => FALSE,
     ];
     $form['advanced']['request_handler'] = [
       '#type' => 'textfield',

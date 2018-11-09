@@ -182,6 +182,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'highlight_data' => FALSE,
       'skip_schema_check' => FALSE,
       'site_hash' => FALSE,
+      'server_prefix' => '',
       'domain' => 'generic',
       // Set the default for new servers to NULL to force "safe" un-selected
       // radios. @see https://www.drupal.org/node/2820244
@@ -222,10 +223,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $this->buildConnectorConfigForm($form, $form_state);
 
     $form['advanced'] = [
-      '#type' => 'fieldset',
+      '#type' => 'details',
       '#title' => $this->t('Advanced'),
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
     ];
     $form['advanced']['retrieve_data'] = [
       '#type' => 'checkbox',
@@ -246,6 +245,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#default_value' => $this->configuration['skip_schema_check'],
     ];
 
+    $form['advanced']['server_prefix'] = [
+      '#type' => 'textfield',
+      '#title' => t('All index prefix'),
+      '#description' => t("By default, the index ID in the Solr server is the same as the index's machine name in Drupal. This setting will let you specify an additional prefix. Only use alphanumeric characters and underscores. Since changing the prefix makes the currently indexed data inaccessible, you should not change this variable when no data is indexed."),
+      '#default_value' => $this->configuration['server_prefix'],
+    ];
+
     $domains = SolrFieldType::getAvailableDomains();
     $form['advanced']['domain'] = [
       '#type' => 'select',
@@ -256,10 +262,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     ];
 
     $form['multisite'] = [
-      '#type' => 'fieldset',
+      '#type' => 'details',
       '#title' => $this->t('Multi-site compatibility'),
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
       '#description' => $this->t("By default a single Solr backend based Search API server is able to index the data of multiple Drupal sites. But this is an expert-only and dangerous feature that mainly exists for backward compatibility. If you really index multiple sites in one index and don't activate 'Retrieve results for this site only' below you have to ensure that you enable 'Retrieve result data from Solr'! Otherwise it could lead to any kind of errors!"),
     ];
     $description = $this->t("Automatically filter all searches to only retrieve results from this Drupal site. The default and intended behavior is to display results from all sites. WARNING: Enabling this filter might break features like autocomplete, spell checking or suggesters!");
@@ -751,7 +755,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $connector = $this->getSolrConnector();
 
     $documents = [];
-    $index_id = $this->getIndexId($index->id());
+    $index_id = $this->getIndexId($index);
     $field_names = $this->getSolrFieldNames($index);
     $languages = $this->languageManager->getLanguages();
     $request_time = $this->formatDate(\Drupal::time()->getRequestTime());
@@ -864,7 +868,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function deleteItems(IndexInterface $index, array $ids) {
     try {
-      $index_id = $this->getIndexId($index->id());
+      $index_id = $this->getIndexId($index);
       $solr_ids = [];
       foreach ($ids as $id) {
         $solr_ids[] = $this->createId($index_id, $id);
@@ -887,7 +891,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Since the index ID we use for indexing can contain arbitrary
     // prefixes, we have to escape it for use in the query.
     $connector = $this->getSolrConnector();
-    $query = '+index_id:' . $this->getIndexId($this->queryHelper->escapePhrase($index->id()));
+    $query = '+index_id:' . $this->queryHelper->escapePhrase($this->getIndexId($index));
     $query .= ' +hash:' . $this->queryHelper->escapePhrase(Utility::getSiteHash());
     if ($datasource_id) {
       $query .= ' +' . $this->getSolrFieldNames($index)['search_api_datasource'] . ':' . $this->queryHelper->escapePhrase($datasource_id);
@@ -902,7 +906,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getIndexFilterQueryString(IndexInterface $index) {
-    $index_id = $this->getIndexId($index->id());
+    $index_id = $this->getIndexId($index);
 
     $fq = '+index_id:' . $this->queryHelper->escapeTerm($index_id);
 
@@ -1017,7 +1021,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       // Get field information.
       /** @var \Drupal\search_api\Entity\Index $index */
       $index = $query->getIndex();
-      $index_id = $this->getIndexId($index->id());
+      $index_id = $this->getIndexId($index);
       $field_names = $this->getSolrFieldNames($index);
 
       $connector = $this->getSolrConnector();
@@ -2759,23 +2763,19 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * Prefixes an index ID as configured.
    *
    * The resulting ID will be a concatenation of the following strings:
-   * - If set, the "search_api_solr.settings.index_prefix" configuration.
-   * - If set, the index-specific "search_api_solr.settings.index_prefix_INDEX"
-   *   configuration.
+   * - If set, the server-specific index_prefix.
+   * - If set, the index-specific prefix.
    * - The index's machine name.
    *
-   * @param string $machine_name
-   *   The index's machine name.
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The index.
    *
    * @return string
    *   The prefixed machine name.
    */
-  protected function getIndexId($machine_name) {
-    // Prepend per-index prefix.
-    $id = $this->searchApiSolrSettings->get('index_prefix_' . $machine_name) . $machine_name;
-    // Prepend environment prefix.
-    $id = $this->searchApiSolrSettings->get('index_prefix') . $id;
-    return $id;
+  protected function getIndexId(IndexInterface $index) {
+    $settings = $index->getThirdPartySettings('search_api_solr') + search_api_solr_default_index_third_party_settings();
+    return $this->configuration['server_prefix'] . $settings['advanced']['index_prefix'] . $index->id();
   }
 
   /**

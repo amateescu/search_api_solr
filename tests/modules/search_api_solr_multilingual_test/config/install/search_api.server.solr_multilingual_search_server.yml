@@ -7,6 +7,8 @@ backend_config:
   retrieve_data: false
   highlight_data: false
   skip_schema_check: false
+  domain: generic
+  server_prefix: 'server_prefix'
   connector: basic_auth
   connector_config:
     scheme: http
@@ -22,11 +24,11 @@ backend_config:
     http_method: AUTO
     username: ''
     password: ''
+    commit_within: 1000
     jmx: false
   sasm_limit_search_page_to_content_language: false
   sasm_search_page_include_language_independent: false
   sasm_language_unspecific_fallback_on_schema_issues: true
-  domain: generic
 status: true
 langcode: en
 dependencies:

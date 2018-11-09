@@ -172,7 +172,6 @@ class DevelController extends ControllerBase {
                       $output_details[$details_id] = [
                         '#type' => 'details',
                         '#title' => $this->t('Row #@num: local and Solr indexing data', ['@num' => $num + 1]),
-                        '#open' => FALSE,
                       ];
 
                       $output_details[$details_id][] = [
