@@ -120,9 +120,9 @@ function search_api_solr_default_index_third_party_settings() {
         'snippets' => 3,
         'fragsize' => 0,
       ],
-      'advanced' => [
-        'index_prefix' => '',
-      ],
+    ],
+    'advanced' => [
+      'index_prefix' => '',
     ],
   ];
 }

@@ -68,6 +68,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   }
 
   protected function indexPrefixTest() {
+    $backend = Server::load($this->serverId)->getBackend();
     $index = $this->getIndex();
     $prefixed_index_id = $this->invokeMethod($backend, 'getIndexId', [$index]);
     $this->assertEquals('server_prefixindex_prefix' . $index->id(), $prefixed_index_id);

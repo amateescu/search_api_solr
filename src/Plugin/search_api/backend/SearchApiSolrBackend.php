@@ -1801,7 +1801,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
       }
 
-      $solr_id = $this->createId($index->id(), $result_item->getId());
+      $solr_id = $this->createId($this->getIndexId($index), $result_item->getId());
       $this->getHighlighting($result->getData(), $solr_id, $result_item, $field_names);
 
       $result_set->addResultItem($result_item);
