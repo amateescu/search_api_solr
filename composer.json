@@ -16,7 +16,7 @@
     ],
     "support": {
         "issues": "https://www.drupal.org/project/issues/search_api_solr",
-        "irc": "irc://irc.freenode.org/drupal-search-api",
+        "irc": "https://drupalchat.me/channel/search",
         "source": "http://git.drupal.org/project/search_api_solr.git"
     },
     "require": {
@@ -24,7 +24,7 @@
         "ext-json": "*",
         "maennchen/zipstream-php": "0.4.*",
         "solarium/solarium": "~4.2.0",
-        "drupal/search_api": "~1.9"
+        "drupal/search_api": "~1.11"
     },
     "require-dev": {
         "phayes/geophp": "^1.2",
@@ -35,7 +35,7 @@
     },
     "conflict": {
         "drupal/search_api_solr_multilingual": "*",
-        "drupal/core": "<8.5"
+        "drupal/core": "<8.6"
     },
     "suggest": {
         "drupal/facets": "Provides facetted search.",
