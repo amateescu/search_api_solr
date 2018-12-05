@@ -8,6 +8,7 @@ use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\Utility;
 use Drupal\search_api_autocomplete\Entity\Search;
+use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\Tests\search_api_solr\Traits\InvokeMethodTrait;
 use Drupal\search_api_solr\Utility\SolrCommitTrait;
@@ -243,6 +244,71 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     ];
 
     return [$fields, $mapping];
+  }
+
+  /**
+   * Tests the conversion of Search API queries into Solr queries.
+   */
+  public function testQueryParsers() {
+    /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
+    $backend = Server::load($this->serverId)->getBackend();
+
+    $query = $this->buildSearch('foo "apple pie" bar');
+
+    $flat = $this->invokeMethod($backend, 'flattenKeys', [
+      $query->getKeys(),
+      [],
+      'phrase',
+    ]);
+    $this->assertEquals('(+"foo" +"apple pie" +"bar")', $flat);
+
+    $flat = $this->invokeMethod($backend, 'flattenKeys', [
+      $query->getKeys(),
+      [],
+      'terms',
+    ]);
+    $this->assertEquals('(+foo +apple\ pie +bar)', $flat);
+
+    $exception = FALSE;
+    try {
+      $flat = $this->invokeMethod($backend, 'flattenKeys', [
+        $query->getKeys(),
+        [],
+        'direct',
+      ]);
+    }
+    catch (SearchApiSolrException $e) {
+      $exception = TRUE;
+    }
+    $this->assertTrue($exception);
+
+    $flat = $this->invokeMethod($backend, 'flattenKeys', [
+      $query->getKeys(),
+      ['solr_field'],
+      'phrase',
+    ]);
+    $this->assertEquals('(+solr_field:"foo" +solr_field:"apple pie" +solr_field:"bar")', $flat);
+
+    $flat = $this->invokeMethod($backend, 'flattenKeys', [
+      $query->getKeys(),
+      ['solr_field'],
+      'terms',
+    ]);
+    $this->assertEquals('(+solr_field:foo +solr_field:apple\ pie +solr_field:bar)', $flat);
+
+    $flat = $this->invokeMethod($backend, 'flattenKeys', [
+      $query->getKeys(),
+      ['solr_field_1', 'solr_field_2'],
+      'phrase',
+    ]);
+    $this->assertEquals('(+(solr_field_1:"foo" solr_field_2:"foo") +(solr_field_1:"apple pie" solr_field_2:"apple pie") +(solr_field_1:"bar" solr_field_2:"bar"))', $flat);
+
+    $flat = $this->invokeMethod($backend, 'flattenKeys', [
+      $query->getKeys(),
+      ['solr_field_1', 'solr_field_2'],
+      'terms',
+    ]);
+    $this->assertEquals('(+(solr_field_1:foo solr_field_2:foo) +(solr_field_1:apple\ pie solr_field_2:apple\ pie) +(solr_field_1:bar solr_field_2:bar))', $flat);
   }
 
   /**
