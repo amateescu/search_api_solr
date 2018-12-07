@@ -275,6 +275,27 @@ class StreamingExpressionBuilder extends Expression {
   }
 
   /**
+   * Calls _escaped_value on each array element and returns the imploded result.
+   *
+   * @param string $glue The string to put between the escaped values.
+   *   This can be used to create an "or" condition from the array of values,
+   *   for example, by passing the string ' || ' as glue.
+   * @param array $values The array of values to escape
+   * @param bool $single_term Whether to escape as a single term or as a phrase.
+   * @param string $search_api_field_name Passed on to _escaped_value();
+   *   influences whether processors act on the values.
+   *
+   * @return string The imploded string of escaped values.
+   */
+  public function _escape_and_implode(string $glue, array $values, $single_term = TRUE, string $search_api_field_name = NULL) {
+    $escaped_values = [];
+    foreach ($values as $value) {
+      $escaped_values[] = $this->_escaped_value($value, $single_term, $search_api_field_name);
+    }
+    return implode($glue, $escaped_values);
+  }
+
+  /**
    * Rename a field within select().
    *
    * @param string $search_api_field_name_source
