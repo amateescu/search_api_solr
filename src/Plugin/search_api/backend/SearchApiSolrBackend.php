@@ -1129,6 +1129,18 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         // in a backward compatible way.
         // @see https://lucene.apache.org/solr/guide/7_2/solr-upgrade-notes.html#solr-7-2
         if ($edismax) {
+          $parse_mode_id = $query->getParseMode()->getPluginId();
+          if ('terms' == $parse_mode_id) {
+            // Using the 'phrase' parse mode, Search API provides one big phrase
+            // as keys. Using the 'terms' parse mode, Search API provides chunks
+            // of single terms as keys. But these chunks might contain not just
+            // real terms but again a phrase if you enter something like this in
+            // the search box: term1 "term2 as phrase" term3. This will be
+            // converted in this keys array: ['term1', 'term2 as phrase',
+            // 'term3']. To have Solr behave like the database backend, these
+            // three "terms" should be handled like three phrases.
+            $parse_mode_id = 'phrase';
+          }
           /** @var Query $solarium_query */
           $params = $solarium_query->getParams();
           // Extract keys.
@@ -1140,10 +1152,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           ) {
             // Edismax was forced via API or the query fields were removed via
             // API (like the multilingual backend does).
-            $keys = $this->flattenKeys($keys, [], $query->getParseMode()->getPluginId());
+            $keys = $this->flattenKeys($keys, [], $parse_mode_id);
           }
           else {
-            $keys = $this->flattenKeys($keys, explode(' ', $query_fields_boosted), $query->getParseMode()->getPluginId());
+            $keys = $this->flattenKeys($keys, explode(' ', $query_fields_boosted), $parse_mode_id);
           }
 
           if (!empty($keys)) {
@@ -2025,6 +2037,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $keys['#conjunction'] = $query->getParseMode()->getConjunction();
           $keys['#negation'] = $condition->getOperator() == '<>';
           switch ($parse_mode_id) {
+            // This is a hack.
+            // @see https://www.drupal.org/project/search_api/issues/2991134
             case 'terms':
               $keys += explode(' ', preg_replace('/\s+/', ' ', trim($value)));
               break;
