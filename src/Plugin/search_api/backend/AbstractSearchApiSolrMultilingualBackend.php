@@ -263,6 +263,19 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
         /** @var \Solarium\QueryType\Select\Query\Query $solarium_query */
         $edismax = $solarium_query->getEDisMax();
         if ($solr_fields = $edismax->getQueryFields()) {
+          $parse_mode_id = $query->getParseMode()->getPluginId();
+          if ('terms' == $parse_mode_id) {
+            // Using the 'phrase' parse mode, Search API provides one big phrase
+            // as keys. Using the 'terms' parse mode, Search API provides chunks
+            // of single terms as keys. But these chunks might contain not just
+            // real terms but again a phrase if you enter something like this in
+            // the search box: term1 "term2 as phrase" term3. This will be
+            // converted in this keys array: ['term1', 'term2 as phrase',
+            // 'term3']. To have Solr behave like the database backend, these
+            // three "terms" should be handled like three phrases.
+            $parse_mode_id = 'phrase';
+          }
+
           $new_keys = [];
 
           foreach ($language_ids as $language_id) {
@@ -276,7 +289,7 @@ abstract class AbstractSearchApiSolrMultilingualBackend extends SearchApiSolrBac
               // any change for the other languages, too.
               return;
             }
-            $flat_keys = $this->flattenKeys($keys, explode(' ', $new_solr_fields));
+            $flat_keys = $this->flattenKeys($keys, explode(' ', $new_solr_fields), $parse_mode_id);
             if (
               strpos($flat_keys, '(') !== 0 &&
               strpos($flat_keys, '+(') !== 0 &&
