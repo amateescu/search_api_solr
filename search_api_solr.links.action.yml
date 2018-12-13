@@ -19,3 +19,8 @@ entity.solr_field_type.config_zip_collection:
   appears_on:
     - entity.solr_field_type.collection
     - entity.search_api_server.canonical
+entity.search_api_index.solr_multisite_datasource_clone_form:
+  route_name: entity.search_api_index.solr_multisite_datasource_clone_form
+  title: 'Clone for Solr Multisite Datasource'
+  appears_on:
+    - entity.search_api_index.canonical

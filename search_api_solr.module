@@ -493,3 +493,8 @@ function search_api_solr_search_api_items_indexed($index, $processed_ids) {
     \Drupal::state()->set('search_api_solr.' . $index->id() . '.search_all_rows', $i);
   }
 }
+
+function search_api_solr_entity_type_alter(array &$entity_types) {
+  /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
+  $entity_types['search_api_index']->setFormClass('solr_multisite_datasource_clone', 'Drupal\\search_api_solr\\Form\\IndexSolrMultisiteDatasourceCloneForm');
+}

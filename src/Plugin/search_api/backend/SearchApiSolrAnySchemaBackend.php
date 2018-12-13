@@ -26,6 +26,7 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
     $conf = parent::defaultConfiguration();
     $conf['retrieve_data'] = TRUE;
     $conf['skip_schema_check'] = TRUE;
+    $conf['site_hash'] = FALSE;
     return $conf;
   }
 
@@ -36,6 +37,7 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
     $form = parent::buildConfigurationForm($form, $form_state);
     $form['advanced']['retrieve_data']['#disabled'] = TRUE;
     $form['advanced']['skip_schema_check']['#disabled'] = TRUE;
+    $form['multi_site']['site_hash']['#disabled'] = TRUE;
     // @todo force read-only
 
     return $form;
@@ -56,47 +58,66 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
     // Do not alter the query if the index does not use the solr_document
     // datasource.
     $index = $query->getIndex();
-    if (!$index->isValidDatasource('solr_document')) {
+    if ($index->isValidDatasource('solr_document')) {
+      // Set requestHandler for the query type.
+      $config = $index->getDatasource('solr_document')->getConfiguration();
+      if (!empty($config['request_handler'])) {
+        $solarium_query->addParam('qt', $config['request_handler']);
+      }
+
+      // Set the default query, if necessary and configured.
+      if (!$solarium_query->getQuery() && !empty($config['default_query'])) {
+        $solarium_query->setQuery($config['default_query']);
+      }
+    }
+    elseif (!$index->isValidDatasource('solr_multisite_document')) {
       return;
     }
 
     // Remove the filter queries that limit the results based on site and index.
     $solarium_query->removeFilterQuery('index_filter');
+  }
 
-    // Set requestHandler for the query type.
-    $config = $index->getDatasource('solr_document')->getConfiguration();
-    if (!empty($config['request_handler'])) {
-      $solarium_query->addParam('qt', $config['request_handler']);
+  protected function getDatasourceConfig(QueryInterface $query) {
+    $index = $query->getIndex();
+    $config = [];
+    if ($index->isValidDatasource('solr_document')) {
+      $config = $index->getDatasource('solr_document')->getConfiguration();
     }
-
-    // Set the default query, if necessary and configured.
-    if (!$solarium_query->getQuery() && !empty($config['default_query'])) {
-      $solarium_query->setQuery($config['default_query']);
+    elseif ($index->isValidDatasource('solr_multisite_document')) {
+      $config = $index->getDatasource('solr_multisite_document')->getConfiguration();
     }
+    return $config;
+  }
 
-    $backend = $index->getServerInstance()->getBackend();
-    if ($backend instanceof SearchApiSolrBackend) {
-      $solr_config = $backend->getConfiguration();
-      // @todo Should we maybe not even check that setting and use this to
-      //   auto-enable fields retrieval from Solr?
-      if (!empty($solr_config['retrieve_data'])) {
-        $fields_list = [];
-        foreach ($backend->getSolrFieldNames($index) as $solr_field_name) {
-          $fields_list[] = $solr_field_name;
-        }
-        $extra_fields = [
-          'language_field',
-          'label_field',
-          'url_field',
-        ];
-        foreach ($extra_fields as $config_key) {
-          if (!empty($config[$config_key])) {
-            $fields_list[] = $config[$config_key];
-          }
-        }
-        $solarium_query->setFields(array_unique($fields_list));
+  /**
+   * Get the list of fields Solr must return as result.
+   *
+   * @param array $field_names
+   *   The field names.
+   * @param array $fields_to_be_retrieved
+   *   The field values to be retrieved from Solr.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The \Drupal\search_api\Query\Query object representing the executed
+   *   search query.
+   *
+   * @return array
+   */
+  protected function getRequiredFields(array $field_names, QueryInterface $query = NULL) {
+    $config = $this->getDatasourceConfig($query);
+    $required_fields = parent::getRequiredFields($field_names);
+
+    $extra_fields = [
+      'label_field',
+      'url_field',
+    ];
+    foreach ($extra_fields as $config_key) {
+      if (!empty($config[$config_key])) {
+        $required_fields[] = $config[$config_key];
       }
     }
+
+    return array_filter($required_fields);
   }
 
   /**
@@ -127,15 +148,24 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
   protected function postQuery(ResultSetInterface $results, QueryInterface $query, $response) {
     parent::postQuery($results, $query, $response);
 
-    // Do not alter the results if the index does not use the solr_document
-    // datasource.
-    $datasources = $query->getIndex()->getDatasources();
-    if (!isset($datasources['solr_document'])) {
+    $index = $query->getIndex();
+    $datasource = '';
+
+    if ($index->isValidDatasource('solr_document')) {
+      $datasource = 'solr_document';
+    }
+    elseif ($index->isValidDatasource('solr_multisite_document')) {
+      $datasource = 'solr_multisite_document';
+    }
+    else {
+      // Do not alter the results if the index does not use the solr_document
+      // datasource.
       return;
     }
 
     /** @var \Drupal\search_api_solr\SolrDocumentFactoryInterface $solr_document_factory */
-    $solr_document_factory = \Drupal::getContainer()->get('solr_document.factory');
+    $solr_document_factory = \Drupal::getContainer()->get($datasource . '.factory');
+
 
     /** @var \Drupal\search_api\Item\Item $item */
     foreach ($results->getResultItems() as $item) {
@@ -152,7 +182,7 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
       $reflection = new \ReflectionClass($item);
       $id_property = $reflection->getProperty('itemId');
       $id_property->setAccessible(TRUE);
-      $id_property->setValue($item, 'solr_document/' . $item->getId());
+      $id_property->setValue($item, $datasource . '/' . $item->getId());
     }
   }
 
@@ -179,12 +209,7 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
     if (!isset($this->fieldNames[$index->id()]) || $reset) {
       parent::getSolrFieldNames($index, $reset);
 
-      // Do not alter mappings if the index does not use the solr_document
-      // datasource.
-      $datasources = $index->getDatasources();
-      if (isset($datasources['solr_document'])) {
-        // Set the ID field.
-        $config = $index->getDatasource('solr_document')->getConfiguration();
+      if ($config = $this->getDatasourceConfig($query)) {
         $this->fieldNames[$index->id()]['search_api_id'] = $config['id_field'];
         $this->fieldNames[$index->id()]['search_api_language'] = $config['language_field'];
 
@@ -192,15 +217,15 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
         $index_fields = $index->getFields();
 
         // Re-map the indexed fields.
-        foreach ($this->fieldNames[$index->id()] as $raw => $name) {
+        foreach ($this->fieldNames[$index->id()] as $search_api_name => $solr_name) {
           // Ignore the Search API fields.
-          if (strpos($raw, 'search_api_') === 0
-            || empty($index_fields[$raw])
-            || $index_fields[$raw]->getDatasourceId() !== 'solr_document'
+          if (strpos($search_api_name, 'search_api_') === 0
+            || empty($index_fields[$search_api_name])
+            || strpos($index_fields[$search_api_name]->getDatasourceId(), 'solr_') !== 0
           ) {
             continue;
           }
-          $this->fieldNames[$index->id()][$raw] = $index_fields[$raw]->getPropertyPath();
+          $this->fieldNames[$index->id()][$search_api_name] = $index_fields[$search_api_name]->getPropertyPath();
         }
       }
     }

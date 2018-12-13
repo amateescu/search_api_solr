@@ -165,12 +165,7 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function getPropertyDefinitions() {
-    $fields = [];
-    $server_id = $this->index->getServerId();
-    if ($server_id) {
-      $fields = $this->getSolrFieldManager()->getFieldDefinitions($server_id);
-    }
-    return $fields;
+    return $this->getSolrFieldManager()->getFieldDefinitions($this->index);
   }
 
   /**
@@ -217,7 +212,7 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
     $fields = $single_valued_fields = [];
     foreach ($this->getPropertyDefinitions() as $name => $property) {
       $fields[$name] = $property->getLabel();
-      if (!$property->isMultivalued()) {
+      if (!$property->isList()) {
         $single_valued_fields[$name] = $property->getLabel();
       }
     }

@@ -10,21 +10,21 @@ use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 interface SolrDocumentDefinitionInterface extends ComplexDataDefinitionInterface {
 
   /**
-   * Gets the Search API Server ID.
+   * Gets the Search API Index ID.
    *
    * @return string|null
-   *   The Server ID, or NULL if the Server is unknown.
+   *   The Index ID, or NULL if the Index is unknown.
    */
-  public function getServerId();
+  public function getIndexId();
 
   /**
-   * Sets the Search API Server ID.
+   * Sets the Search API Index ID.
    *
-   * @param string $server_id
+   * @param string $index_id
    *   The Server ID to set.
    *
    * @return $this
    */
-  public function setServerId($server_id);
+  public function setIndexId(string $index_id);
 
 }

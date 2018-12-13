@@ -3,6 +3,7 @@
 namespace Drupal\search_api_solr\TypedData;
 
 use Drupal\Core\TypedData\ComplexDataDefinitionBase;
+use Drupal\search_api\Entity\Index;
 
 /**
  * A typed data definition class for describing Solr documents.
@@ -19,15 +20,15 @@ class SolrDocumentDefinition extends ComplexDataDefinitionBase implements SolrDo
   /**
    * Creates a new Solr document definition.
    *
-   * @param string $server_id
-   *   The Search API server the Solr document definition belongs to.
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The Search Api index the Solr document definition belongs to.
    *
    * @return static
    */
-  public static function create($server_id) {
-    $definition['type'] = 'solr_document:' . $server_id;
+  public static function create(IndexInterface $index) {
+    $definition['type'] = 'solr_document:' . $index->id();
     $document_definition = new static($definition);
-    $document_definition->setServerId($server_id);
+    $document_definition->setIndexId($index->id());
     return $document_definition;
   }
 
@@ -38,27 +39,27 @@ class SolrDocumentDefinition extends ComplexDataDefinitionBase implements SolrDo
     // The data type should be in the form of "solr_document:$server_id".
     $parts = explode(':', $data_type, 2);
     if ($parts[0] != 'solr_document') {
-      throw new \InvalidArgumentException('Data type must be in the form of "solr_document:SERVER_ID".');
+      throw new \InvalidArgumentException('Data type must be in the form of "solr_document:INDEX_ID".');
     }
     if (empty($parts[1])) {
-      throw new \InvalidArgumentException('A Search API Server must be specified.');
+      throw new \InvalidArgumentException('A Search API Index must be specified.');
     }
 
-    return self::create($parts[1]);
+    return self::create(Index::load($parts[1]));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getServerId() {
-    return isset($this->definition['constraints']['Server']) ? $this->definition['constraints']['Server'] : NULL;
+  public function getIndexId() {
+    return isset($this->definition['constraints']['Index']) ? $this->definition['constraints']['Index'] : NULL;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setServerId($server_id) {
-    return $this->addConstraint('Server', $server_id);
+  public function setIndexId(string $index_id) {
+    return $this->addConstraint('Index', $index_id);
   }
 
   /**
@@ -67,10 +68,11 @@ class SolrDocumentDefinition extends ComplexDataDefinitionBase implements SolrDo
   public function getPropertyDefinitions() {
     if (!isset($this->propertyDefinitions)) {
       $this->propertyDefinitions = [];
-      if (!empty($this->getServerId())) {
+      if (!empty($this->getIndexId())) {
+        $index = Index::load($this->getIndexId());
         /** @var \Drupal\search_api_solr\SolrFieldManagerInterface $field_manager */
         $field_manager = \Drupal::getContainer()->get('solr_field.manager');
-        $this->propertyDefinitions = $field_manager->getFieldDefinitions($this->getServerId());
+        $this->propertyDefinitions = $field_manager->getFieldDefinitions($index);
       }
     }
     return $this->propertyDefinitions;

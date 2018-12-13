@@ -8,8 +8,8 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Cache\UseCacheBackendTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\search_api\IndexInterface;
 use Drupal\search_api\LoggerTrait;
-use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\TypedData\SolrFieldDefinition;
 use Psr\Log\LoggerInterface;
 
@@ -55,86 +55,91 @@ class SolrFieldManager implements SolrFieldManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFieldDefinitions($server_id) {
-    if (!isset($this->fieldDefinitions[$server_id])) {
+  public function getFieldDefinitions(IndexInterface $index) {
+    $index_id = $index->id();
+    if (!isset($this->fieldDefinitions[$index_id])) {
       // Not prepared, try to load from cache.
-      $cid = 'solr_field_definitions:' . $server_id;
+      $cid = 'solr_field_definitions:' . $index_id;
       if ($cache = $this->cacheGet($cid)) {
         $field_definitions = $cache->data;
       }
       else {
-        /** @var \Drupal\search_api\ServerInterface|null $server */
-        $server = $this->serverStorage->load($server_id);
-        // Load the server entity.
-        if ($server === NULL) {
-          throw new \InvalidArgumentException('The Search API server could not be loaded.');
-        }
-
-        // Don't attempt to connect to server if config is disabled. Cache will
-        // clear itself when server config is enabled again.
-        $field_definitions = $server->status() ? $this->buildFieldDefinitions($server) : [];
-        $this->cacheSet($cid, $field_definitions, Cache::PERMANENT, $server->getCacheTagsToInvalidate());
+        $field_definitions = $this->buildFieldDefinitions($index);
+        $this->cacheSet($cid, $field_definitions, Cache::PERMANENT, $index->getCacheTagsToInvalidate());
       }
 
-      $this->fieldDefinitions[$server_id] = $field_definitions;
+      $this->fieldDefinitions[$index_id] = $field_definitions;
     }
-    return $this->fieldDefinitions[$server_id];
+    return $this->fieldDefinitions[$index_id];
   }
 
   /**
    * Builds the field definitions for a Solr server from its Luke handler.
    *
-   * @param \Drupal\search_api\ServerInterface $server
-   *   The server from which we are retrieving field information.
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The index from which we are retrieving field information.
    *
-   * @return \Drupal\search_api_solr\TypedData\SolrFieldDefinitionInterface[]
+   * @return \Drupal\Core\TypedData\DataDefinitionInterface[]
    *   The array of field definitions for the server, keyed by field name.
    *
    * @throws \InvalidArgumentException
    */
-  protected function buildFieldDefinitions(ServerInterface $server) {
-    $backend = $server->getBackend();
-    if (!$backend instanceof SolrBackendInterface) {
-      throw new \InvalidArgumentException("The Search API server's backend must be an instance of SolrBackendInterface.");
+  protected function buildFieldDefinitions(IndexInterface $index) {
+    /** @var \Drupal\search_api\ServerInterface|null $server */
+    $server = $index->getServerInstance();
+    // Load the server entity.
+    if ($server === NULL) {
+      throw new \InvalidArgumentException('The Search API server could not be loaded.');
     }
-    $fields = [];
-    try {
-      $luke = $backend->getSolrConnector()->getLuke();
-      foreach ($luke['fields'] as $name => $definition) {
-        $field = new SolrFieldDefinition($definition);
-        $label = Unicode::ucfirst(trim(str_replace('_', ' ', $name)));
-        $field->setLabel($label);
-        // The Search API can't deal with arbitrary item types. To make things
-        // easier, just use one of those known to the Search API.
-        if (strpos($field->getDataType(), 'text') !== FALSE) {
-          $field->setDataType('search_api_text');
-        }
-        elseif (strpos($field->getDataType(), 'date') !== FALSE) {
-          $field->setDataType('timestamp');
-        }
-        elseif (strpos($field->getDataType(), 'int') !== FALSE) {
-          $field->setDataType('integer');
-        }
-        elseif (strpos($field->getDataType(), 'long') !== FALSE) {
-          $field->setDataType('integer');
-        }
-        elseif (strpos($field->getDataType(), 'float') !== FALSE) {
-          $field->setDataType('float');
-        }
-        elseif (strpos($field->getDataType(), 'double') !== FALSE) {
-          $field->setDataType('float');
-        }
-        elseif (strpos($field->getDataType(), 'bool') !== FALSE) {
-          $field->setDataType('boolean');
-        }
-        else {
-          $field->setDataType('string');
-        }
-        $fields[$name] = $field;
+
+    // Don't attempt to connect to server if config is disabled. Cache will
+    // clear itself when server config is enabled again.
+    if ($server->status()) {
+      $backend = $server->getBackend();
+      if (!$backend instanceof SolrBackendInterface) {
+        throw new \InvalidArgumentException("The Search API server's backend must be an instance of SolrBackendInterface.");
       }
-    }
-    catch (SearchApiSolrException $e) {
-      $this->getLogger()->error('Could not connect to server %server, %message', ['%server' => $server->id(), '%message' => $e->getMessage()]);
+      try {
+        $luke = $backend->getSolrConnector()->getLuke();
+        foreach ($luke['fields'] as $name => $definition) {
+          $field = new SolrFieldDefinition($definition);
+          $label = Unicode::ucfirst(trim(str_replace('_', ' ', $name)));
+          $field->setLabel($label);
+          // The Search API can't deal with arbitrary item types. To make things
+          // easier, just use one of those known to the Search API.
+          if (strpos($field->getDataType(), 'text') !== FALSE) {
+            $field->setDataType('search_api_text');
+          }
+          elseif (strpos($field->getDataType(), 'date') !== FALSE) {
+            $field->setDataType('timestamp');
+          }
+          elseif (strpos($field->getDataType(), 'int') !== FALSE) {
+            $field->setDataType('integer');
+          }
+          elseif (strpos($field->getDataType(), 'long') !== FALSE) {
+            $field->setDataType('integer');
+          }
+          elseif (strpos($field->getDataType(), 'float') !== FALSE) {
+            $field->setDataType('float');
+          }
+          elseif (strpos($field->getDataType(), 'double') !== FALSE) {
+            $field->setDataType('float');
+          }
+          elseif (strpos($field->getDataType(), 'bool') !== FALSE) {
+            $field->setDataType('boolean');
+          }
+          else {
+            $field->setDataType('string');
+          }
+          $fields[$name] = $field;
+        }
+      } catch (SearchApiSolrException $e) {
+        $this->getLogger()
+          ->error('Could not connect to server %server, %message', [
+            '%server' => $server->id(),
+            '%message' => $e->getMessage()
+          ]);
+      }
     }
     return $fields;
   }

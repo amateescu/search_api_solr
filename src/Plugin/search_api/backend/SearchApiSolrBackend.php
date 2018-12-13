@@ -1079,7 +1079,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       );
 
       // Set the list of fields to retrieve.
-      $this->setFields($solarium_query, $field_names, $query->getOption('search_api_retrieved_field_values', []));
+      $this->setFields($solarium_query, $field_names, $query->getOption('search_api_retrieved_field_values', []), $query);
 
       // Set sorts.
       $this->setSorts($solarium_query, $query, $field_names);
@@ -1246,6 +1246,28 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
+   * Get the list of fields Solr must return as result.
+   *
+   * @param array $field_names
+   *   The field names.
+   * @param array $fields_to_be_retrieved
+   *   The field values to be retrieved from Solr.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The \Drupal\search_api\Query\Query object representing the executed
+   *   search query.
+   *
+   * @return array
+   */
+  protected function getRequiredFields(array $field_names, QueryInterface $query = NULL) {
+    // The list of fields Solr must return to built a Search API result.
+    $required_fields = [$field_names['search_api_id'], $field_names['search_api_language'], $field_names['search_api_relevance']];
+    if (!$this->configuration['site_hash']) {
+      $required_fields[] = 'hash';
+    }
+    return $required_fields;
+  }
+
+  /**
    * Set the list of fields Solr should return as result.
    *
    * @param \Solarium\QueryType\Select\Query\Query $solarium_query
@@ -1253,15 +1275,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @param array $field_names
    *   The field names.
    * @param array $fields_to_be_retrieved
-   *   The filed values to be retrieved form Solr.
+   *   The field values to be retrieved from Solr.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The \Drupal\search_api\Query\Query object representing the executed
+   *   search query.
    */
-  protected function setFields(Query $solarium_query, array $field_names, array $fields_to_be_retrieved = []) {
-    // The list of fields Solr must return to built a Search API result.
-    $required_fields = [$field_names['search_api_id'], $field_names['search_api_language'], $field_names['search_api_relevance']];
-    if (!$this->configuration['site_hash']) {
-      $required_fields[] = 'hash';
-    }
-
+  protected function setFields(Query $solarium_query, array $field_names, array $fields_to_be_retrieved = [], QueryInterface $query = NULL) {
+    $required_fields = $this->getRequiredFields($field_names);
     $returned_fields = [];
 
     if (!empty($this->configuration['retrieve_data'])) {

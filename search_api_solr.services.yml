@@ -29,6 +29,14 @@ services:
     class: Drupal\search_api_solr\SolrFieldManager
     arguments: ['@cache.discovery', '@entity_type.manager', '@logger.channel.search_api']
 
+  solr_multisite_document.factory:
+    class: Drupal\search_api_solr\SolrMultisiteDocumentFactory
+    arguments: ['@typed_data_manager']
+
+  solr_multisite_field.manager:
+    class: Drupal\search_api_solr\SolrMultisiteFieldManager
+    arguments: ['@cache.discovery', '@entity_type.manager', '@logger.channel.search_api']
+
   solarium.query_helper:
     class: Solarium\Core\Query\Helper
 

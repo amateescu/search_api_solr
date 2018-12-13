@@ -40,8 +40,7 @@ class SolrDocument extends TypedData implements \IteratorAggregate, ComplexDataI
    * @return static
    */
   public static function createFromItem(ItemInterface $item) {
-    $server_id = $item->getIndex()->getServerInstance()->id();
-    $definition = SolrDocumentDefinition::create($server_id);
+    $definition = SolrDocumentDefinition::create($item->getIndex());
     $instance = new static($definition);
     $instance->setValue($item);
     return $instance;

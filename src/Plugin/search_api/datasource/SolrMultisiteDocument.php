@@ -2,16 +2,6 @@
 
 namespace Drupal\search_api_solr\Plugin\search_api\datasource;
 
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Plugin\PluginFormInterface;
-use Drupal\Core\TypedData\ComplexDataInterface;
-use Drupal\Core\Url;
-use Drupal\search_api\Datasource\DatasourcePluginBase;
-use Drupal\search_api\LoggerTrait;
-use Drupal\search_api\Plugin\PluginFormTrait;
-use Drupal\search_api\SearchApiException;
-use Drupal\search_api_solr\SolrDocumentFactoryInterface;
-use Drupal\search_api_solr\SolrFieldManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -32,7 +22,7 @@ class SolrMultisiteDocument extends SolrDocument {
     /** @var static $datasource */
     $datasource = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
-    $datasource->setSolrDocumentFactory($container->get('solr_document.factory'));
+    $datasource->setSolrDocumentFactory($container->get('solr_multisite_document.factory'));
     $datasource->setSolrFieldManager($container->get('solr_multisite_field.manager'));
 
     return $datasource;
@@ -45,7 +35,7 @@ class SolrMultisiteDocument extends SolrDocument {
    *   The Solr document factory.
    */
   public function getSolrDocumentFactory() {
-    return $this->solrDocumentFactory ?: \Drupal::getContainer()->get('solr_document.factory');
+    return $this->solrDocumentFactory ?: \Drupal::getContainer()->get('solr_multisite_document.factory');
   }
 
   /**
