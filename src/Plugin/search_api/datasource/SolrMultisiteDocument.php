@@ -16,8 +16,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class SolrMultisiteDocument extends SolrDocument {
 
-  protected static $solr_field = 'solr_multisite_field';
-  protected static $solr_document = 'solr_multisite_document';
+  protected $solr_field = 'solr_multisite_field';
+  protected $solr_document = 'solr_multisite_document';
 
   /**
    * {@inheritdoc}

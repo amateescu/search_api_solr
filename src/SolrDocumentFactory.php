@@ -33,7 +33,7 @@ class SolrDocumentFactory implements SolrDocumentFactoryInterface {
    * {@inheritdoc}
    */
   public function create(ItemInterface $item) {
-    $plugin = $this->typedDataManager->getDefinition(self::$solr_document)['class'];
+    $plugin = $this->typedDataManager->getDefinition(static::$solr_document)['class'];
     return $plugin::createFromItem($item);
   }
 
