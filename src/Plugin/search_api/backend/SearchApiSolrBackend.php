@@ -1281,7 +1281,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   search query.
    */
   protected function setFields(Query $solarium_query, array $field_names, array $fields_to_be_retrieved = [], QueryInterface $query = NULL) {
-    $required_fields = $this->getRequiredFields($field_names);
+    $required_fields = $this->getRequiredFields($field_names, $query);
     $returned_fields = [];
 
     if (!empty($this->configuration['retrieve_data'])) {

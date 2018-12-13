@@ -53,13 +53,10 @@ class SolrMultisiteDocument extends SolrDocument {
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    $config = [];
+    $config = parent::defaultConfiguration();
     $config['id_field'] = 'id';
-    $config['request_handler'] = '';
-    $config['label_field'] = '';
     $config['language_field'] = 'ss_language';
     $config['url_field'] = 'site';
-    $config['default_query'] = '*:*';
 
     $config['target_index'] = '';
     $config['target_hash'] = '';
@@ -85,7 +82,7 @@ class SolrMultisiteDocument extends SolrDocument {
       '#title' => $this->t('Targeted site hash'),
       '#required' => TRUE,
       '#description' => $this->t('Enter the hash of the targeted site.'),
-      '#default_value' => $this->configuration['target_index'],
+      '#default_value' => $this->configuration['target_hash'],
     ];
 
     $form['id_field'] = [
