@@ -78,8 +78,7 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
     $solarium_query->removeFilterQuery('index_filter');
   }
 
-  protected function getDatasourceConfig(QueryInterface $query) {
-    $index = $query->getIndex();
+  protected function getDatasourceConfig(IndexInterface $index) {
     $config = [];
     if ($index->isValidDatasource('solr_document')) {
       $config = $index->getDatasource('solr_document')->getConfiguration();
@@ -104,7 +103,7 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
    * @return array
    */
   protected function getRequiredFields(array $field_names, QueryInterface $query = NULL) {
-    $config = $this->getDatasourceConfig($query);
+    $config = $this->getDatasourceConfig($query->getIndex());
     $required_fields = parent::getRequiredFields($field_names);
 
     $extra_fields = [
@@ -209,7 +208,7 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
     if (!isset($this->fieldNames[$index->id()]) || $reset) {
       parent::getSolrFieldNames($index, $reset);
 
-      if ($config = $this->getDatasourceConfig($query)) {
+      if ($config = $this->getDatasourceConfig($index)) {
         $this->fieldNames[$index->id()]['search_api_id'] = $config['id_field'];
         $this->fieldNames[$index->id()]['search_api_language'] = $config['language_field'];
 
