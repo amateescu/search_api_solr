@@ -20,15 +20,15 @@ class SolrDocumentDefinition extends ComplexDataDefinitionBase implements SolrDo
   /**
    * Creates a new Solr document definition.
    *
-   * @param \Drupal\search_api\IndexInterface $index
+   * @param string $index_id
    *   The Search Api index the Solr document definition belongs to.
    *
    * @return static
    */
-  public static function create(IndexInterface $index) {
-    $definition['type'] = 'solr_document:' . $index->id();
+  public static function create($index_id) {
+    $definition['type'] = 'solr_document:' . $index_id;
     $document_definition = new static($definition);
-    $document_definition->setIndexId($index->id());
+    $document_definition->setIndexId($index_id);
     return $document_definition;
   }
 
@@ -45,7 +45,7 @@ class SolrDocumentDefinition extends ComplexDataDefinitionBase implements SolrDo
       throw new \InvalidArgumentException('A Search API Index must be specified.');
     }
 
-    return self::create(Index::load($parts[1]));
+    return self::create($parts[1]);
   }
 
   /**

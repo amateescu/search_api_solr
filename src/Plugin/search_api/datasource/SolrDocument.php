@@ -25,6 +25,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
 
+  protected static $solr_field = 'solr_field';
+  protected static $solr_document = 'solr_document';
+
   use PluginFormTrait;
   use LoggerTrait;
 
@@ -49,8 +52,8 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
     /** @var static $datasource */
     $datasource = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
-    $datasource->setSolrDocumentFactory($container->get('solr_document.factory'));
-    $datasource->setSolrFieldManager($container->get('solr_field.manager'));
+    $datasource->setSolrDocumentFactory($container->get(self::$solr_document . '.factory'));
+    $datasource->setSolrFieldManager($container->get(self::$solr_field . '.manager'));
 
     return $datasource;
   }
@@ -75,7 +78,7 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
    *   The Solr document factory.
    */
   public function getSolrDocumentFactory() {
-    return $this->solrDocumentFactory ?: \Drupal::getContainer()->get('solr_document.factory');
+    return $this->solrDocumentFactory ?: \Drupal::getContainer()->get(self::$solr_document . '.factory');
   }
 
   /**
@@ -98,7 +101,7 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
    *   The Solr field manager.
    */
   public function getSolrFieldManager() {
-    return $this->solrFieldManager ?: \Drupal::getContainer()->get('solr_field.manager');
+    return $this->solrFieldManager ?: \Drupal::getContainer()->get(self::$solr_field . '.manager');
   }
 
   /**

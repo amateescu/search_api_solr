@@ -79,6 +79,10 @@ class IndexSolrMultisiteDatasourceCloneForm extends IndexForm {
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->getEntity();
 
+    // We need to call Index::writeChangesToSettings to keep the field and
+    // processor settings which are not part of this form. Index::preSave()
+    // takes the shortcut and doesn't call Index::writeChangesToSettings because
+    // an config entity created via createDuplicate() is considered as new, too.
     $reflection = new \ReflectionClass($index);
     $method = $reflection->getMethod('writeChangesToSettings');
     $method->setAccessible(TRUE);

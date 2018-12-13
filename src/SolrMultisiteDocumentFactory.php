@@ -9,12 +9,6 @@ use Drupal\search_api\Item\ItemInterface;
  */
 class SolrMultisiteDocumentFactory extends SolrDocumentFactory {
 
-  /**
-   * {@inheritdoc}
-   */
-  public function create(ItemInterface $item) {
-    $plugin = $this->typedDataManager->getDefinition('solr_multisite_document')['class'];
-    return $plugin::createFromItem($item);
-  }
+  protected static $solr_document = 'solr_multisite_document';
 
 }

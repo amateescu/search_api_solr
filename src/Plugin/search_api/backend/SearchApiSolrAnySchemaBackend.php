@@ -46,6 +46,23 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
   /**
    * {@inheritdoc}
    */
+  public function getIndexFilterQueryString(IndexInterface $index) {
+    $fq = '';
+    $config = $this->getDatasourceConfig($index);
+    if (isset($config['target_index'])) {
+      $fq = '+index_id:' . $this->queryHelper->escapeTerm($config['target_index']);
+
+      // Set the site hash filter, if enabled.
+      if ($config['target_hash']) {
+        $fq .= ' +hash:' . $this->queryHelper->escapeTerm($config['target_hash']);
+      }
+    }
+    return $fq;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function preQuery(SolariumQueryInterface $solarium_query, QueryInterface $query) {
     parent::preQuery($solarium_query, $query);
 
@@ -70,12 +87,6 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
         $solarium_query->setQuery($config['default_query']);
       }
     }
-    elseif (!$index->isValidDatasource('solr_multisite_document')) {
-      return;
-    }
-
-    // Remove the filter queries that limit the results based on site and index.
-    $solarium_query->removeFilterQuery('index_filter');
   }
 
   protected function getDatasourceConfig(IndexInterface $index) {

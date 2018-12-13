@@ -891,10 +891,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Since the index ID we use for indexing can contain arbitrary
     // prefixes, we have to escape it for use in the query.
     $connector = $this->getSolrConnector();
-    $query = '+index_id:' . $this->queryHelper->escapePhrase($this->getIndexId($index));
-    $query .= ' +hash:' . $this->queryHelper->escapePhrase(Utility::getSiteHash());
+    $query = '+index_id:' . $this->queryHelper->escapeTerm($this->getIndexId($index));
+    $query .= ' +hash:' . $this->queryHelper->escapeTerm(Utility::getSiteHash());
     if ($datasource_id) {
-      $query .= ' +' . $this->getSolrFieldNames($index)['search_api_datasource'] . ':' . $this->queryHelper->escapePhrase($datasource_id);
+      $query .= ' +' . $this->getSolrFieldNames($index)['search_api_datasource'] . ':' . $this->queryHelper->escapeTerm($datasource_id);
     }
     $update_query = $connector->getUpdateQuery();
     $update_query->addDeleteQuery($query);
@@ -1074,9 +1074,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
 
       // Set the Index (and site) filter.
-      $solarium_query->createFilterQuery('index_filter')->setQuery(
-        $this->getIndexFilterQueryString($index)
-      );
+      if ($index_filter = $this->getIndexFilterQueryString($index)) {
+        $solarium_query->createFilterQuery('index_filter')->setQuery(
+          $index_filter
+        );
+      }
 
       // Set the list of fields to retrieve.
       $this->setFields($solarium_query, $field_names, $query->getOption('search_api_retrieved_field_values', []), $query);
