@@ -13,8 +13,7 @@ class SolrMultisiteFieldDefinition extends DataDefinition {
    * {@inheritdoc}
    */
   public function isList() {
-    // @todo
-    return FALSE;
+    return $this->definition['multivalued'];
   }
 
   /**
