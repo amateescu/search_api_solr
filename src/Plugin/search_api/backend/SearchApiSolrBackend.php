@@ -18,6 +18,7 @@ use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\Url;
+use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Item\Field;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\ItemInterface;
@@ -783,7 +784,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
 
       // Add the site hash and language-specific base URL.
-      $site_hash = $this->getTargetedSiteHash();
+      $site_hash = $this->getTargetedSiteHash($index);
       $doc->setField('hash', $site_hash);
       $doc->addField('sm_context_tags', Utility::encodeSolrName('search_api_solr/site_hash:' . $site_hash));
       $lang = $item->getLanguage();
@@ -892,7 +893,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // prefixes, we have to escape it for use in the query.
     $connector = $this->getSolrConnector();
     $query = '+index_id:' . $this->queryHelper->escapeTerm($this->getIndexId($index));
-    $query .= ' +hash:' . $this->queryHelper->escapeTerm($this->getTargetedSiteHash());
+    $query .= ' +hash:' . $this->queryHelper->escapeTerm($this->getTargetedSiteHash($index));
     if ($datasource_id) {
       $query .= ' +' . $this->getSolrFieldNames($index)['search_api_datasource'] . ':' . $this->queryHelper->escapeTerm($datasource_id);
     }
@@ -906,13 +907,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getIndexFilterQueryString(IndexInterface $index) {
-    $index_id = $this->getTargetedIndexId($index);
-
-    $fq = '+index_id:' . $this->queryHelper->escapeTerm($index_id);
+    $fq = '+index_id:' . $this->queryHelper->escapeTerm($this->getTargetedIndexId($index));
 
     // Set the site hash filter, if enabled.
     if ($this->configuration['site_hash']) {
-      $fq .= ' +hash:' . $this->queryHelper->escapeTerm($this->getTargetedSiteHash());
+      $fq .= ' +hash:' . $this->queryHelper->escapeTerm($this->getTargetedSiteHash($index));
     }
 
     return $fq;
@@ -1411,7 +1410,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @see \Drupal\search_api_solr\Utility\Utility::getSiteHash()
    */
   protected function createId($index_id, $item_id) {
-    return $this->getTargetedSiteHash() . "-$index_id-$item_id";
+    return $this->getTargetedSiteHash(Index::load($index_id)) . "-$index_id-$item_id";
   }
 
   /**
@@ -1738,7 +1737,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected function extractResults(QueryInterface $query, ResultInterface $result) {
     $index = $query->getIndex();
     $fields = $index->getFields(TRUE);
-    $site_hash = $this->getTargetedSiteHash();
+    $site_hash = $this->getTargetedSiteHash($index);
     // We can find the item ID and the score in the special 'search_api_*'
     // properties. Mappings are provided for these properties in
     // SearchApiSolrBackend::getSolrFieldNames().
