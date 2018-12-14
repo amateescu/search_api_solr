@@ -18,7 +18,6 @@ use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\Url;
-use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Item\Field;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\ItemInterface;
@@ -756,7 +755,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $connector = $this->getSolrConnector();
 
     $documents = [];
-    $index_id = $this->getIndexId($index);
+    $index_id = $this->getTargetedIndexId($index);
+    $site_hash = $this->getTargetedSiteHash($index);
     $field_names = $this->getSolrFieldNames($index);
     $languages = $this->languageManager->getLanguages();
     $request_time = $this->formatDate(\Drupal::time()->getRequestTime());
@@ -771,7 +771,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       /** @var \Solarium\QueryType\Update\Query\Document\Document $doc */
       $doc = $update_query->createDocument();
       $doc->setField('timestamp', $request_time);
-      $doc->setField('id', $this->createId($index_id, $id));
+      $doc->setField('id', $this->createId($site_hash, $index_id, $id));
       $doc->setField('index_id', $index_id);
       // Suggester context boolean filter queries have issues with special
       // characters like '/' or ':' if not properly quoted (by solarium). We
@@ -784,7 +784,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
 
       // Add the site hash and language-specific base URL.
-      $site_hash = $this->getTargetedSiteHash($index);
       $doc->setField('hash', $site_hash);
       $doc->addField('sm_context_tags', Utility::encodeSolrName('search_api_solr/site_hash:' . $site_hash));
       $lang = $item->getLanguage();
@@ -869,10 +868,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function deleteItems(IndexInterface $index, array $ids) {
     try {
-      $index_id = $this->getIndexId($index);
+      $index_id = $this->getTargetedIndexId($index);
+      $site_hash = $this->getTargetedSiteHash($index);
       $solr_ids = [];
       foreach ($ids as $id) {
-        $solr_ids[] = $this->createId($index_id, $id);
+        $solr_ids[] = $this->createId($site_hash, $index_id, $id);
       }
       $connector = $this->getSolrConnector();
       $update_query = $connector->getUpdateQuery();
@@ -892,7 +892,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Since the index ID we use for indexing can contain arbitrary
     // prefixes, we have to escape it for use in the query.
     $connector = $this->getSolrConnector();
-    $query = '+index_id:' . $this->queryHelper->escapeTerm($this->getIndexId($index));
+    $query = '+index_id:' . $this->queryHelper->escapeTerm($this->getTargetedIndexId($index));
     $query .= ' +hash:' . $this->queryHelper->escapeTerm($this->getTargetedSiteHash($index));
     if ($datasource_id) {
       $query .= ' +' . $this->getSolrFieldNames($index)['search_api_datasource'] . ':' . $this->queryHelper->escapeTerm($datasource_id);
@@ -1020,7 +1020,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       // Get field information.
       /** @var \Drupal\search_api\Entity\Index $index */
       $index = $query->getIndex();
-      $index_id = $this->getIndexId($index);
+      $index_id = $this->getTargetedIndexId($index);
+      $site_hash = $this->getTargetedSiteHash($index);
       $field_names = $this->getSolrFieldNames($index);
 
       $connector = $this->getSolrConnector();
@@ -1029,7 +1030,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $index_fields = $index->getFields();
       $index_fields += $this->getSpecialFields($index);
       if ($query->hasTag('mlt')) {
-        $solarium_query = $this->getMoreLikeThisQuery($query, $index_id, $index_fields, $field_names);
+        $solarium_query = $this->getMoreLikeThisQuery($query, $site_hash, $index_id, $index_fields, $field_names);
       }
       else {
         // Instantiate a Solarium select query.
@@ -1407,10 +1408,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * This has to consist of both index and item ID. Optionally, the site hash is
    * also included.
    *
-   * @see \Drupal\search_api_solr\Utility\Utility::getSiteHash()
+   * @param $site_hash
+   * @param $index_id
+   * @param $item_id
+   *
+   * @return string
    */
-  protected function createId($index_id, $item_id) {
-    return $this->getTargetedSiteHash(Index::load($index_id)) . "-$index_id-$item_id";
+  protected function createId($site_hash, $index_id, $item_id) {
+    return "$site_hash-$index_id-$item_id";
   }
 
   /**
@@ -1834,7 +1839,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
       }
 
-      $solr_id = $this->createId($this->getIndexId($index), $result_item->getId());
+      $solr_id = $this->createId($this->getTargetedSiteHash($index), $this->getTargetedIndexId($index), $result_item->getId());
       $this->getHighlighting($result->getData(), $solr_id, $result_item, $field_names);
 
       $result_set->addResultItem($result_item);
@@ -3086,6 +3091,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *
    * @param \Solarium\QueryType\MorelikeThis\Query $solarium_query
    *   The solr mlt query.
+   * @param string $site_hash
+   *   Site Hash.
    * @param string $index_id
    *   Solr specific index ID.
    * @param array $index_fields
@@ -3095,7 +3102,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *
    * @return \Solarium\QueryType\MorelikeThis\Query $solarium_query
    */
-  protected function getMoreLikeThisQuery(QueryInterface $query, $index_id, $index_fields = [], $fields = []) {
+  protected function getMoreLikeThisQuery(QueryInterface $query, $site_hash, $index_id, $index_fields = [], $fields = []) {
     $connector = $this->getSolrConnector();
     $solarium_query = $connector->getMoreLikeThisQuery();
     $mlt_options = $query->getOption('search_api_mlt');
@@ -3151,8 +3158,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     if (!empty($ids)) {
-      array_walk($ids, function (&$id, $key) use ($index_id) {
-        $id = $this->createId($index_id, $id);
+      array_walk($ids, function (&$id, $key) use ($site_hash, $index_id) {
+        $id = $this->createId($site_hash, $index_id, $id);
         $id = $this->queryHelper->escapePhrase($id);
       });
 
