@@ -106,6 +106,40 @@ interface SolrBackendInterface extends BackendInterface {
   public function getIndexFilterQueryString(IndexInterface $index);
 
   /**
+   * Prefixes an index ID as configured.
+   *
+   * The resulting ID will be a concatenation of the following strings:
+   * - If set, the server-specific index_prefix.
+   * - If set, the index-specific prefix.
+   * - The index's machine name.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The index.
+   *
+   * @return string
+   *   The prefixed machine name.
+   */
+  public function getIndexId(IndexInterface $index);
+
+  /**
+   * Returns the targeted Index ID. In case of multisite it might differ.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *
+   * @return string
+   */
+  public function getTargetedIndexId(IndexInterface $index);
+
+  /**
+   * Returns the targeted site hash. In case of multisite it might differ.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *
+   * @return string
+   */
+  public function getTargetedSiteHash(IndexInterface $index);
+
+  /**
    * Executes a streaming expression.
    *
    * @param \Drupal\search_api\Query\QueryInterface $query

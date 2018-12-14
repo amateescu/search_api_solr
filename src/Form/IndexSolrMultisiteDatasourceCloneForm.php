@@ -4,6 +4,8 @@ namespace Drupal\search_api_solr\Form;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Form\IndexForm;
+use Drupal\search_api\Utility\Utility as SearchApiUtility;
+use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrAnySchemaBackend;
 use Drupal\search_api_solr\Utility\Utility;
 
 /**
@@ -87,6 +89,27 @@ class IndexSolrMultisiteDatasourceCloneForm extends IndexForm {
     $method = $reflection->getMethod('writeChangesToSettings');
     $method->setAccessible(TRUE);
     $method->invoke($index);
+  }
+
+  /**
+   * Retrieves all available servers as an options list.
+   *
+   * @return string[]
+   *   An associative array mapping server IDs to their labels.
+   */
+  protected function getServerOptions() {
+    $options = [];
+    /** @var \Drupal\search_api\ServerInterface[] $servers */
+    $servers = $this->entityTypeManager
+      ->getStorage('search_api_server')
+      ->loadMultiple();
+    foreach ($servers as $server_id => $server) {
+      if ($server->getBackend() instanceof SearchApiSolrAnySchemaBackend) {
+        // @todo Special formatting for disabled servers.
+        $options[$server_id] = SearchApiUtility::escapeHtml($server->label());
+      }
+    }
+    return $options;
   }
 
 }

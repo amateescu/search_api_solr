@@ -46,18 +46,17 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
   /**
    * {@inheritdoc}
    */
-  public function getIndexFilterQueryString(IndexInterface $index) {
-    $fq = '';
+  public function getTargetedIndexId(IndexInterface $index) {
     $config = $this->getDatasourceConfig($index);
-    if (isset($config['target_index'])) {
-      $fq = '+index_id:' . $this->queryHelper->escapeTerm($config['target_index']);
+    return isset($config['target_index']) ? $config['target_index'] : parent::getTargetedIndexId($index);
+  }
 
-      // Set the site hash filter, if enabled.
-      if ($config['target_hash']) {
-        $fq .= ' +hash:' . $this->queryHelper->escapeTerm($config['target_hash']);
-      }
-    }
-    return $fq;
+  /**
+   * {@inheritdoc}
+   */
+  public function getTargetedSiteHash(IndexInterface $index) {
+    $config = $this->getDatasourceConfig($index);
+    return isset($config['target_hash']) ? $config['target_hash'] : parent::getTargetedSiteHash($index);
   }
 
   /**
@@ -241,7 +240,7 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
     }
 
     // Let modules adjust the field mappings.
-    $this->moduleHandler->alter('search_api_solr_field_mapping', $index, $ret);
+    $this->moduleHandler->alter('search_api_solr_field_mapping', $index, $this->fieldNames[$index->id()]);
 
     return $this->fieldNames[$index->id()];
   }

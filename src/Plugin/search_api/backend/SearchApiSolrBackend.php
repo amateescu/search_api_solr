@@ -783,7 +783,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
 
       // Add the site hash and language-specific base URL.
-      $site_hash = Utility::getSiteHash();
+      $site_hash = $this->getTargetedSiteHash();
       $doc->setField('hash', $site_hash);
       $doc->addField('sm_context_tags', Utility::encodeSolrName('search_api_solr/site_hash:' . $site_hash));
       $lang = $item->getLanguage();
@@ -892,7 +892,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // prefixes, we have to escape it for use in the query.
     $connector = $this->getSolrConnector();
     $query = '+index_id:' . $this->queryHelper->escapeTerm($this->getIndexId($index));
-    $query .= ' +hash:' . $this->queryHelper->escapeTerm(Utility::getSiteHash());
+    $query .= ' +hash:' . $this->queryHelper->escapeTerm($this->getTargetedSiteHash());
     if ($datasource_id) {
       $query .= ' +' . $this->getSolrFieldNames($index)['search_api_datasource'] . ':' . $this->queryHelper->escapeTerm($datasource_id);
     }
@@ -906,13 +906,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getIndexFilterQueryString(IndexInterface $index) {
-    $index_id = $this->getIndexId($index);
+    $index_id = $this->getTargetedIndexId($index);
 
     $fq = '+index_id:' . $this->queryHelper->escapeTerm($index_id);
 
     // Set the site hash filter, if enabled.
     if ($this->configuration['site_hash']) {
-      $fq .= ' +hash:' . $this->queryHelper->escapeTerm(Utility::getSiteHash());
+      $fq .= ' +hash:' . $this->queryHelper->escapeTerm($this->getTargetedSiteHash());
     }
 
     return $fq;
@@ -1411,7 +1411,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @see \Drupal\search_api_solr\Utility\Utility::getSiteHash()
    */
   protected function createId($index_id, $item_id) {
-    return Utility::getSiteHash() . "-$index_id-$item_id";
+    return $this->getTargetedSiteHash() . "-$index_id-$item_id";
   }
 
   /**
@@ -1738,7 +1738,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected function extractResults(QueryInterface $query, ResultInterface $result) {
     $index = $query->getIndex();
     $fields = $index->getFields(TRUE);
-    $site_hash = Utility::getSiteHash();
+    $site_hash = $this->getTargetedSiteHash();
     // We can find the item ID and the score in the special 'search_api_*'
     // properties. Mappings are provided for these properties in
     // SearchApiSolrBackend::getSolrFieldNames().
@@ -2796,22 +2796,25 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
-   * Prefixes an index ID as configured.
-   *
-   * The resulting ID will be a concatenation of the following strings:
-   * - If set, the server-specific index_prefix.
-   * - If set, the index-specific prefix.
-   * - The index's machine name.
-   *
-   * @param \Drupal\search_api\IndexInterface $index
-   *   The index.
-   *
-   * @return string
-   *   The prefixed machine name.
+   * {@inheritdoc}
    */
-  protected function getIndexId(IndexInterface $index) {
+  public function getIndexId(IndexInterface $index) {
     $settings = $index->getThirdPartySettings('search_api_solr') + search_api_solr_default_index_third_party_settings();
     return $this->configuration['server_prefix'] . $settings['advanced']['index_prefix'] . $index->id();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTargetedIndexId(IndexInterface $index) {
+    return $this->getIndexId($index);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTargetedSiteHash(IndexInterface $index) {
+    return Utility::getSiteHash();
   }
 
   /**

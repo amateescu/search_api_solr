@@ -25,9 +25,14 @@ class StreamingExpressionBuilder extends Expression {
   protected $index_filter_query;
 
   /**
-   * @var IndexInterface
+   * @var string
    */
-  protected $index;
+  protected $targeted_index_id;
+
+  /**
+   * @var string
+   */
+  protected $targeted_site_hash;
 
   /**
    * @var string
@@ -79,7 +84,8 @@ class StreamingExpressionBuilder extends Expression {
 
     $this->collection = $connector->getCollectionName();
     $this->index_filter_query = $backend->getIndexFilterQueryString($index);
-    $this->index = $index;
+    $this->targeted_index_id = $backend->getTargetedIndexId($index);
+    $this->targeted_site_hash = $backend->getTargetedSiteHash($index);
     $this->request_time = $backend->formatDate(\Drupal::time()->getRequestTime());
     $this->all_fields_mapped = $backend->getSolrFieldNames($index) + [
       // Search API Solr Search specific fields.
@@ -153,7 +159,7 @@ class StreamingExpressionBuilder extends Expression {
         return $this->sort_fields[$search_api_field_name];
       }
       else {
-        throw new \InvalidArgumentException(sprintf('Field %s does not exist in index %s.', $search_api_field_name, $this->index->id()));
+        throw new \InvalidArgumentException(sprintf('Field %s does not exist in index %s.', $search_api_field_name, $this->targeted_index_id));
       }
     }
     return $this->field_name_mapping[$search_api_field_name];
@@ -426,7 +432,7 @@ class StreamingExpressionBuilder extends Expression {
 
     if (!$rows) {
       $rows = \Drupal::state()
-        ->get('search_api_solr.' . $this->index->id() . '.search_all_rows', 0);
+        ->get('search_api_solr.' . $this->targeted_index_id . '.search_all_rows', 0);
     }
 
     return
@@ -515,13 +521,13 @@ class StreamingExpressionBuilder extends Expression {
   }
 
   /**
-   * Returns the ID of the current index.
+   * Returns the ID of the targeted index.
    *
    * @return string
    *   The index ID.
    */
   public function _index_id() {
-    return $this->index->id();
+    return $this->targeted_index_id;
   }
 
   /**
@@ -533,7 +539,7 @@ class StreamingExpressionBuilder extends Expression {
    *   The site hash.
    */
   public function _site_hash() {
-    return Utility::getSiteHash();
+    return $this->targeted_site_hash;
   }
 
   /**
