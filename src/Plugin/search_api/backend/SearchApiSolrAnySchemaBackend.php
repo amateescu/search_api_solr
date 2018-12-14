@@ -26,7 +26,6 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
     $conf = parent::defaultConfiguration();
     $conf['retrieve_data'] = TRUE;
     $conf['skip_schema_check'] = TRUE;
-    $conf['site_hash'] = FALSE;
     return $conf;
   }
 
@@ -37,7 +36,8 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
     $form = parent::buildConfigurationForm($form, $form_state);
     $form['advanced']['retrieve_data']['#disabled'] = TRUE;
     $form['advanced']['skip_schema_check']['#disabled'] = TRUE;
-    $form['multi_site']['site_hash']['#disabled'] = TRUE;
+    $form['multisite']['site_hash']['#title'] = $this->t('Retrieve results for one site only');
+    $form['multisite']['site_hash']['#description'] = $this->t('Automatically filter all searches to only retrieve results for one Drupal site as configured per multisite index.');
     // @todo force read-only
 
     return $form;
@@ -75,6 +75,9 @@ class SearchApiSolrAnySchemaBackend extends SearchApiSolrBackend {
     // datasource.
     $index = $query->getIndex();
     if ($index->isValidDatasource('solr_document')) {
+      // Remove the filter queries that limit the results based on site and index.
+      $solarium_query->removeFilterQuery('index_filter');
+
       // Set requestHandler for the query type.
       $config = $index->getDatasource('solr_document')->getConfiguration();
       if (!empty($config['request_handler'])) {

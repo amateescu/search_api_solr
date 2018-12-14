@@ -71,6 +71,7 @@ class IndexSolrMultisiteDatasourceCloneForm extends IndexForm {
     $form['datasource_configs']['solr_multisite_document']['target_index']['#default_value'] = $target_index;
     $form['datasource_configs']['solr_multisite_document']['target_hash']['#default_value'] = Utility::getSiteHash();
     $form['options']['read_only']['#default_value'] = TRUE;
+    $form['status']['#default_value'] = FALSE;
 
     return $form;
   }
