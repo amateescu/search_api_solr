@@ -35,6 +35,11 @@ class StreamingExpressionBuilder extends Expression {
   protected $targeted_site_hash;
 
   /**
+   * @var IndexInterface
+   */
+  protected $index;
+
+  /**
    * @var string
    */
   protected $request_time;
@@ -86,6 +91,7 @@ class StreamingExpressionBuilder extends Expression {
     $this->index_filter_query = $backend->getIndexFilterQueryString($index);
     $this->targeted_index_id = $backend->getTargetedIndexId($index);
     $this->targeted_site_hash = $backend->getTargetedSiteHash($index);
+    $this->index = $index;
     $this->request_time = $backend->formatDate(\Drupal::time()->getRequestTime());
     $this->all_fields_mapped = $backend->getSolrFieldNames($index) + [
       // Search API Solr Search specific fields.
