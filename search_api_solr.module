@@ -4,6 +4,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\search_api\Entity\Server;
+use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrAnySchemaBackend;
@@ -453,23 +454,44 @@ function search_api_solr_get_servers($only_active = TRUE) {
  *
  * Adds an operation to Solr servers to directly generate and download a config.
  *
- * @param \Drupal\Core\Entity\EntityInterface $server
+ * @param \Drupal\Core\Entity\EntityInterface $entity
  *
  * @return array
  * @throws \Drupal\search_api\SearchApiException
  */
-function search_api_solr_entity_operation(\Drupal\Core\Entity\EntityInterface $server) {
+function search_api_solr_entity_operation(\Drupal\Core\Entity\EntityInterface $entity) {
   $operations = [];
   if (
-    $server instanceof Server &&
-    $server->getBackend() instanceof SolrBackendInterface &&
-    !($server->getBackend() instanceof SearchApiSolrAnySchemaBackend)
+    $entity instanceof ServerInterface &&
+    $entity->getBackend() instanceof SolrBackendInterface &&
+    !($entity->getBackend() instanceof SearchApiSolrAnySchemaBackend)
   ) {
     $operations['get_config_zip'] = [
       'title' => t('Get config.zip'),
-      'url' => \Drupal\Core\Url::fromRoute('entity.solr_field_type.config_zip_collection', ['search_api_server' => $server->id()]),
+      'url' => \Drupal\Core\Url::fromRoute('entity.solr_field_type.config_zip_collection', ['search_api_server' => $entity->id()]),
       'weight' => 50,
     ];
+  }
+  elseif ($entity instanceof IndexInterface) {
+    if (
+      $entity->isServerEnabled() &&
+      $entity->getServerInstance()->getBackend() instanceof SolrBackendInterface &&
+      !($entity->getServerInstance()->getBackend() instanceof SearchApiSolrAnySchemaBackend)
+    ) {
+      $operations['clone_for_multisite'] = [
+        'title' => t('Clone for Multisite'),
+        'url' => \Drupal\Core\Url::fromRoute('entity.search_api_index.solr_multisite_datasource_clone_form', ['search_api_index' => $entity->id()]),
+        'weight' => 50,
+      ];
+    }
+    elseif ($entity->isValidDatasource('solr_multisite_document')) {
+      $operations['update_for_multisite'] = [
+        'title' => t('Update for Multisite'),
+        // @todo
+        'url' => \Drupal\Core\Url::fromRoute('entity.search_api_index.solr_multisite_datasource_clone_form', ['search_api_index' => $entity->id()]),
+        'weight' => 50,
+      ];
+    }
   }
   return $operations;
 }
