@@ -8,7 +8,6 @@ dependencies:
     - language.entity.ja
 id: text_ja_6_0_0
 label: 'Japanese Text Field'
-managed_schema: false
 minimum_solr_version: 6.0.0
 field_type_language_code: ja
 domains: { }

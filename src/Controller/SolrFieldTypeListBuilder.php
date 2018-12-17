@@ -80,13 +80,11 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       $solr_version = '9999.0.0';
       $operator = '>=';
       $domain = 'generic';
-      $multilingual = FALSE;
       $warning = FALSE;
       try {
         /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
         $backend = $this->getBackend();
         $domain = $backend->getDomain();
-        $multilingual = ($backend instanceof SolrMultilingualBackendInterface);
         $solr_version = $backend->getSolrConnector()->getSolrVersion();
         if (version_compare($solr_version, '0.0.0', '==')) {
           $solr_version = '9999.0.0';
@@ -106,54 +104,47 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
       // We filter to those field types that are relevant for the current server.
       // There are multiple entities having the same field_type.name but different
-      // values for managed_schema, minimum_solr_version and domains.
+      // values for minimum_solr_version and domains.
       $selection = [];
       foreach ($entities as $key => $solr_field_type) {
-        if ($multilingual || 'und' == $solr_field_type->getFieldTypeLanguageCode()) {
-          /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
-          $version = $solr_field_type->getMinimumSolrVersion();
-          $domains = $solr_field_type->getDomains();
-          if (
-            $solr_field_type->isManagedSchema() != $this->getBackend()
-              ->isManagedSchema() ||
-            version_compare($version, $solr_version, '>') ||
-            (!in_array($domain, $domains) && !in_array('generic', $domains))
-          ) {
-            unset($entities[$key]);
-          }
-          else {
-            $name = $solr_field_type->getFieldTypeName();
-            if (isset($selection[$name])) {
-              // The more specific domain has precedence over a newer version.
-              if (
-                // Current selection domain is 'generic' but something more
-                // specific is found.
-                ('generic' != $domain && 'generic' == $selection[$name]['domain'] && in_array($domain, $domains)) ||
-                // A newer version of the current selection domain is found.
-                (version_compare($version, $selection[$name]['version'], $operator) && in_array($selection[$name]['domain'], $domains))
-              ) {
-                unset($entities[$selection[$name]['key']]);
-                $selection[$name] = [
-                  'version' => $version,
-                  'key' => $key,
-                  'domain' => in_array($domain, $domains) ? $domain : 'generic',
-                ];
-              }
-              else {
-                unset($entities[$key]);
-              }
-            }
-            else {
+        /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
+        $version = $solr_field_type->getMinimumSolrVersion();
+        $domains = $solr_field_type->getDomains();
+        if (
+          version_compare($version, $solr_version, '>') ||
+          (!in_array($domain, $domains) && !in_array('generic', $domains))
+        ) {
+          unset($entities[$key]);
+        }
+        else {
+          $name = $solr_field_type->getFieldTypeName();
+          if (isset($selection[$name])) {
+            // The more specific domain has precedence over a newer version.
+            if (
+              // Current selection domain is 'generic' but something more
+              // specific is found.
+              ('generic' != $domain && 'generic' == $selection[$name]['domain'] && in_array($domain, $domains)) ||
+              // A newer version of the current selection domain is found.
+              (version_compare($version, $selection[$name]['version'], $operator) && in_array($selection[$name]['domain'], $domains))
+            ) {
+              unset($entities[$selection[$name]['key']]);
               $selection[$name] = [
                 'version' => $version,
                 'key' => $key,
                 'domain' => in_array($domain, $domains) ? $domain : 'generic',
               ];
             }
+            else {
+              unset($entities[$key]);
+            }
           }
-        }
-        else {
-          unset($entities[$key]);
+          else {
+            $selection[$name] = [
+              'version' => $version,
+              'key' => $key,
+              'domain' => in_array($domain, $domains) ? $domain : 'generic',
+            ];
+          }
         }
       }
 
@@ -207,9 +198,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     $xml = '';
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
     foreach ($this->load() as $solr_field_type) {
-      if (!$solr_field_type->isManagedSchema()) {
-        $xml .= $solr_field_type->getFieldTypeAsXml();
-      }
+      $xml .= $solr_field_type->getFieldTypeAsXml();
     }
     return $xml;
   }
@@ -222,21 +211,19 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     $xml = '';
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
     foreach ($this->load() as $solr_field_type) {
-      if (!$solr_field_type->isManagedSchema()) {
-        foreach ($solr_field_type->getDynamicFields($multilingual) as $dynamic_field) {
-          $xml .= '<dynamicField ';
-          foreach ($dynamic_field as $attribute => $value) {
-            $xml .= $attribute . '="' . (is_bool($value) ? ($value ? 'true' : 'false') : $value) . '" ';
-          }
-          $xml .= "/>\n";
+      foreach ($solr_field_type->getDynamicFields($multilingual) as $dynamic_field) {
+        $xml .= '<dynamicField ';
+        foreach ($dynamic_field as $attribute => $value) {
+          $xml .= $attribute . '="' . (is_bool($value) ? ($value ? 'true' : 'false') : $value) . '" ';
         }
-        foreach ($solr_field_type->getCopyFields() as $copy_field) {
-          $xml .= '<copyField ';
-          foreach ($copy_field as $attribute => $value) {
-            $xml .= $attribute . '="' . (is_bool($value) ? ($value ? 'true' : 'false') : $value) . '" ';
-          }
-          $xml .= "/>\n";
+        $xml .= "/>\n";
+      }
+      foreach ($solr_field_type->getCopyFields() as $copy_field) {
+        $xml .= '<copyField ';
+        foreach ($copy_field as $attribute => $value) {
+          $xml .= $attribute . '="' . (is_bool($value) ? ($value ? 'true' : 'false') : $value) . '" ';
         }
+        $xml .= "/>\n";
       }
     }
     return $xml;
@@ -249,12 +236,10 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     $search_components = [];
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
     foreach ($this->load() as $solr_field_type) {
-      if (!$solr_field_type->isManagedSchema()) {
-        $xml = $solr_field_type->getSolrConfigsAsXml();
-        if (preg_match_all('@(<searchComponent name="[^"]+"[^>]*?>)(.*?)</searchComponent>@sm', $xml, $matches)) {
-          foreach ($matches[1] as $key => $search_component) {
-            $search_components[$search_component][] = $matches[2][$key];
-          }
+      $xml = $solr_field_type->getSolrConfigsAsXml();
+      if (preg_match_all('@(<searchComponent name="[^"]+"[^>]*?>)(.*?)</searchComponent>@sm', $xml, $matches)) {
+        foreach ($matches[1] as $key => $search_component) {
+          $search_components[$search_component][] = $matches[2][$key];
         }
       }
     }

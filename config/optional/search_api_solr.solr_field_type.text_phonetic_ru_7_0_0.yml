@@ -8,7 +8,6 @@ dependencies:
     - language.entity.ru
 id: text_phonetic_ru_7_0_0
 label: 'Fulltext Phonetic Russian'
-managed_schema: false
 minimum_solr_version: 7.0.0
 custom_code: phonetic
 field_type_language_code: ru

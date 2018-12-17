@@ -5,6 +5,7 @@ namespace Drupal\search_api_solr\EventSubscriber;
 use Drupal\Core\Config\ConfigCrudEvent;
 use Drupal\Core\Config\ConfigEvents;
 use Drupal\Core\Config\ConfigInstallerInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -45,7 +46,7 @@ class ConfigSubscriber implements EventSubscriberInterface {
     $saved_config = $event->getConfig();
 
     if (preg_match('@^language\.entity\.(.+)@', $saved_config->getName(), $matches) &&
-        $matches[1] != 'und') {
+        $matches[1] != LanguageInterface::LANGCODE_NOT_SPECIFIED) {
       $restrict_by_dependency = [
         'module' => 'search_api_solr',
       ];

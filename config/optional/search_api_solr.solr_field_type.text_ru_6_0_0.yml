@@ -8,7 +8,6 @@ dependencies:
     - language.entity.ru
 id: text_ru_6_0_0
 label: 'Russian Text Field'
-managed_schema: false
 minimum_solr_version: 6.0.0
 custom_code: ''
 field_type_language_code: ru

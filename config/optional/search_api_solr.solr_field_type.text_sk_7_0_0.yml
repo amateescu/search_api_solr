@@ -8,7 +8,6 @@ dependencies:
     - language.entity.sk
 id: text_sk_7_0_0
 label: 'Slovak Text Field'
-managed_schema: false
 minimum_solr_version: 7.0.0
 custom_code: ''
 field_type_language_code: sk

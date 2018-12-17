@@ -92,11 +92,9 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
   /**
    * Gets a list of dynamic Solr fields that will use this Solr Field Type.
    *
-   * @param bool $multilingual
-   *
    * @return array
    */
-  public function getDynamicFields($multilingual = FALSE);
+  public function getDynamicFields();
 
   /**
    * Gets a list of copy fields that will use this Solr Field Type.
@@ -154,22 +152,6 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    *   as values.
    */
   public function setTextFiles($text_files);
-
-  /**
-   * Indicates if the Solr Field Type requires a server using a managed schema.
-   *
-   * @return bool
-   *   True if the Solr Field Type requires a managed schema, false if the Solr
-   *   Field Type is designed for a classic schema.
-   */
-  public function isManagedSchema();
-
-  /**
-   * Sets if the Solr Field Type requires a server using a managed schema.
-   *
-   * @param bool $managed_schema
-   */
-  public function setManagedSchema($managed_schema);
 
   /**
    * Gets the minimum Solr version that is supported by this Solr Field Type.

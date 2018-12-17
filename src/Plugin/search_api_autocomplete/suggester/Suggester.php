@@ -76,9 +76,7 @@ class Suggester extends SuggesterPluginBase implements PluginFormInterface {
     ];
 
     $langcode_options['any'] = $this->t('Any language');
-    if ($server->getBackend()  instanceof SolrMultilingualBackendInterface) {
-      $langcode_options['multilingual'] = $this->t('Let the multilingual Solr server handle it dynamically.');
-    }
+    $langcode_options['multilingual'] = $this->t('Let the Solr server handle it dynamically.');
     foreach (\Drupal::languageManager()->getLanguages() as $language) {
       $langcode_options[$language->getId()] = $language->getName();
     }

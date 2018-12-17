@@ -28,6 +28,7 @@ class SolrFieldNamesTest extends KernelTestBase {
     'node',
     'user',
     'link',
+    'language',
     'search_api',
     'search_api_solr',
     'system',

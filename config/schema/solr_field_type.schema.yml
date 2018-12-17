@@ -8,9 +8,6 @@ search_api_solr.solr_field_type.*:
     label:
       type: label
       label: 'Label'
-    managed_schema:
-      type: boolean
-      label: 'Managed schema'
     minimum_solr_version:
       type: string
       label: 'The minimum version the Solr server'

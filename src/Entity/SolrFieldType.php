@@ -4,6 +4,7 @@ namespace Drupal\search_api_solr\Entity;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Drupal\search_api_solr\SolrFieldTypeInterface;
 use Drupal\search_api_solr\Utility\Utility;
@@ -53,13 +54,6 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    * @var string
    */
   protected $label;
-
-  /**
-   * Indicates if the field type requires a managed schema.
-   *
-   * @var bool
-   */
-  protected $managed_schema;
 
   /**
    * Minimum Solr version required by this field type.
@@ -232,7 +226,6 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     $comment = '';
     if ($add_commment) {
       $comment = "<!--\n  " . $this->label() . "\n  " .
-        ($this->isManagedSchema() ? " for managed schema\n  " : '') .
         $this->getMinimumSolrVersion() .
         "\n-->\n";
     }
@@ -312,7 +305,6 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     $comment = '';
     if ($add_commment) {
       $comment = "<!--\n  Special configs for " . $this->label() . "\n  " .
-        ($this->isManagedSchema() ? " for managed schema\n  " : '') .
         $this->getMinimumSolrVersion() .
         "\n-->\n";
     }
@@ -324,30 +316,26 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   /**
    * {@inheritdoc}
    */
-  public function getDynamicFields($multilingual = FALSE) {
+  public function getDynamicFields() {
     $dynamic_fields = [];
     $prefixes = $this->custom_code ? ['tc' . $this->custom_code, 'toc' . $this->custom_code] : ['t', 'to'];
     foreach ($prefixes as $prefix_without_cardinality) {
       foreach (['s', 'm'] as $cardinality) {
-        if ($multilingual || $this->custom_code) {
-          $prefix = $prefix_without_cardinality . $cardinality;
-          $name = $multilingual ?
-            Utility::getLanguageSpecificSolrDynamicFieldPrefix($prefix, $this->field_type_language_code) :
-            $prefix . '_';
-          $dynamic_fields[] = $dynamic_field = [
-            'name' => SearchApiSolrUtility::encodeSolrName($name) . '*',
-            'type' => $this->field_type['name'],
-            'stored' => TRUE,
-            'indexed' => TRUE,
-            'multiValued' => ('m' === $cardinality),
-            'termVectors' => TRUE,
-            'omitNorms' => strpos($prefix, 'to') === 0,
-          ];
-          if ($multilingual && $this->custom_code && 'und' == $this->field_type_language_code) {
-            // Add a language-unspecific default dynamic field for that custom code.
-            $dynamic_field['name'] = SearchApiSolrUtility::encodeSolrName($prefix) . '_*';
-            $dynamic_fields[] = $dynamic_field;
-          }
+        $prefix = $prefix_without_cardinality . $cardinality;
+        $name = Utility::getLanguageSpecificSolrDynamicFieldPrefix($prefix, $this->field_type_language_code);
+        $dynamic_fields[] = $dynamic_field = [
+          'name' => SearchApiSolrUtility::encodeSolrName($name) . '*',
+          'type' => $this->field_type['name'],
+          'stored' => TRUE,
+          'indexed' => TRUE,
+          'multiValued' => ('m' === $cardinality),
+          'termVectors' => TRUE,
+          'omitNorms' => strpos($prefix, 'to') === 0,
+        ];
+        if ($this->custom_code && LanguageInterface::LANGCODE_NOT_SPECIFIED == $this->field_type_language_code) {
+          // Add a language-unspecific default dynamic field for that custom code.
+          $dynamic_field['name'] = SearchApiSolrUtility::encodeSolrName($prefix) . '_*';
+          $dynamic_fields[] = $dynamic_field;
         }
       }
     }
@@ -401,20 +389,6 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     foreach ($text_files as $name => $content) {
       $this->addTextFile($name, $content);
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isManagedSchema() {
-    return $this->managed_schema;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setManagedSchema($managed_schema) {
-    $this->managed_schema = $managed_schema;
   }
 
   /**
