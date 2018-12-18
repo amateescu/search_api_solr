@@ -20,6 +20,7 @@ class SearchApiSolrLocationTest extends SolrBackendTestBase {
    * @var string[]
    */
   public static $modules = [
+    'language',
     'search_api_location',
     'search_api_test_example_content',
     'search_api_solr_test',

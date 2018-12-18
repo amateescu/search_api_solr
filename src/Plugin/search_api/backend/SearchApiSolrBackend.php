@@ -1171,7 +1171,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       try {
         // Allow modules to alter the solarium query.
         $this->moduleHandler->alter('search_api_solr_query', $solarium_query, $query);
-        $this->preQuery($solarium_query, $query);
 
         // Since Solr 7.2 the edsimax query parser doesn't allow local
         // parameters anymore. But since we don't want to force all modules that
@@ -1228,7 +1227,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         if (200 != $response->getStatusCode()) {
           throw new SearchApiSolrException(strip_tags($body), $response->getStatusCode());
         }
-        $this->alterSolrResponseBody($body, $query);
         $response = new Response($body, $response->getHeaders());
 
         $solarium_result = $connector->createSearchResult($solarium_query, $response);
@@ -1254,7 +1252,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
 
         $this->moduleHandler->alter('search_api_solr_search_results', $search_api_result_set, $query, $solarium_result);
-        $this->postQuery($search_api_result_set, $query, $solarium_result);
       }
       catch (\Exception $e) {
         throw new SearchApiSolrException('An error occurred while trying to search with Solr: ' . $e->getMessage(), $e->getCode(), $e);
@@ -2164,25 +2161,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     return $this->createFilterQueries($condition_group, $options, $query);
-
-    $fq = [];
-    foreach ($conditions as $condition) {
-      $language_fqs = [];
-      foreach ($query->getLanguages() as $langcode) {
-        $language_specific_condition_group = $query->createConditionGroup();
-        $language_specific_condition_group->addCondition('search_api_language', $langcode);
-        $language_specific_conditions = &$language_specific_condition_group->getConditions();
-        $language_specific_conditions[] = $condition;
-        $language_fqs = array_merge($language_fqs, $this->reduceFilterQueries(
-          $this->createFilterQueries($language_specific_condition_group, $this->getLanguageSpecificSolrFieldNames($langcode, $solr_fields, reset($index_fields)->getIndex()), $index_fields, $options, $query),
-          $condition_group
-        ));
-      }
-      $language_aware_condition_group = $query->createConditionGroup('OR');
-      $fq = array_merge($fq, $this->reduceFilterQueries($language_fqs, $language_aware_condition_group, TRUE));
-    }
-
-    return $fq;
   }
 
   /**
@@ -2641,174 +2619,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
-   * Allow custom changes before sending a search query to Solr.
-   *
-   * This allows subclasses to apply custom changes before the query is sent to
-   * Solr. Works exactly like hook_search_api_solr_query_alter().
-   *
-   * @param \Solarium\Core\Query\QueryInterface $solarium_query
-   *   The Solarium query object.
-   * @param \Drupal\search_api\Query\QueryInterface $query
-   *   The \Drupal\search_api\Query\Query object representing the executed
-   *   search query.
-   */
-  protected function preQuery(SolariumQueryInterface $solarium_query, QueryInterface $query) {
-    // Do not modify 'Server index status' queries.
-    // @see https://www.drupal.org/node/2668852
-    if ($query->hasTag('server_index_status')) {
-      return;
-    }
-
-    return;
-
-    if ($keys = $query->getKeys()) {
-      /** @var \Solarium\QueryType\Select\Query\Query $solarium_query */
-      $edismax = $solarium_query->getEDisMax();
-      if ($solr_fields = $edismax->getQueryFields()) {
-        $parse_mode_id = $query->getParseMode()->getPluginId();
-        if ('terms' == $parse_mode_id) {
-          // Using the 'phrase' parse mode, Search API provides one big phrase
-          // as keys. Using the 'terms' parse mode, Search API provides chunks
-          // of single terms as keys. But these chunks might contain not just
-          // real terms but again a phrase if you enter something like this in
-          // the search box: term1 "term2 as phrase" term3. This will be
-          // converted in this keys array: ['term1', 'term2 as phrase',
-          // 'term3']. To have Solr behave like the database backend, these
-          // three "terms" should be handled like three phrases.
-          $parse_mode_id = 'phrase';
-        }
-
-        $new_keys = [];
-
-        foreach ($language_ids as $language_id) {
-          $new_solr_fields = $solr_fields;
-          foreach ($fulltext_fields as $fulltext_field) {
-            $field_name = $field_names[$fulltext_field];
-            $new_solr_fields = str_replace($field_name, $language_specific_fields[$language_id][$field_name], $new_solr_fields);
-          }
-          if ($new_solr_fields == $solr_fields) {
-            // If there's no change for the first language, there won't be
-            // any change for the other languages, too.
-            return;
-          }
-          $flat_keys = $this->flattenKeys($keys, explode(' ', $new_solr_fields), $parse_mode_id);
-          if (
-            strpos($flat_keys, '(') !== 0 &&
-            strpos($flat_keys, '+(') !== 0 &&
-            strpos($flat_keys, '-(') !== 0
-          ) {
-            $flat_keys = '(' . $flat_keys . ')';
-          }
-          $new_keys[] = $flat_keys;
-        }
-
-        if (count($new_keys) > 1) {
-          $new_keys['#conjunction'] = 'OR';
-        }
-        $new_keys['#escaped'] = TRUE;
-
-        // Preserve the original keys to be set again in postQuery().
-        $this->origKeys = $query->getOriginalKeys();
-
-        // The orginal keys array is now already flatten once per language.
-        // that means that we already build Solr query strings containing
-        // fields and keys. Now we set these query strings again as keys
-        // using an OR conjunction but remove all query fields. That will
-        // cause the parent class to just concatenate the language specific
-        // query strings using OR as they are.
-        $query->keys($new_keys);
-        $edismax->setQueryFields([]);
-      }
-    }
-  }
-
-  /**
-   * Allow custom changes before search results are returned for subclasses.
-   *
-   * Works exactly like hook_search_api_solr_search_results_alter().
-   *
-   * @param \Drupal\search_api\Query\ResultSetInterface $results
-   *   The results array that will be returned for the search.
-   * @param \Drupal\search_api\Query\QueryInterface $query
-   *   The \Drupal\search_api\Query\Query object representing the executed
-   *   search query.
-   * @param object $response
-   *   The response object returned by Solr.
-   */
-  protected function postQuery(ResultSetInterface $results, QueryInterface $query, $response) {
-    return;
-
-    if ($this->origKeys) {
-      $query->keys($this->origKeys);
-    }
-  }
-
-  /**
-   * Allow custom changes to the response body before extracting values.
-   *
-   * @param string $body
-   * @param \Drupal\search_api\Query\QueryInterface $query
-   */
-  protected function alterSolrResponseBody(&$body, QueryInterface $query) {
-return;
-
-    $data = json_decode($body);
-
-    $index = $query->getIndex();
-    $field_names = $this->getSolrFieldNames($index, TRUE);
-    $doc_languages = [];
-
-    if (isset($data->response)) {
-      foreach ($data->response->docs as $doc) {
-        $language_id = $doc_languages[$this->createId($this->getTargetedSiteHash($index), $this->getTargetedIndexId($index), $doc->{$field_names['search_api_id']})] = $doc->{$field_names['search_api_language']};
-        foreach (array_keys(get_object_vars($doc)) as $language_specific_field_name) {
-          $field_name = Utility::getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($language_specific_field_name);
-          if ($field_name != $language_specific_field_name) {
-            if (Utility::getLanguageIdFromLanguageSpecificSolrDynamicFieldName($language_specific_field_name) == $language_id) {
-              $doc->{$field_name} = $doc->{$language_specific_field_name};
-              unset($doc->{$language_specific_field_name});
-            }
-          }
-        }
-      }
-    }
-
-
-    if (isset($data->facet_counts)) {
-      $facet_set_helper = new FacetSet();
-      foreach (get_object_vars($data->facet_counts->facet_fields) as $language_specific_field_name => $facet_terms) {
-        $field_name = Utility::getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($language_specific_field_name);
-        if ($field_name != $language_specific_field_name) {
-          if (isset($data->facet_counts->facet_fields->{$field_name})) {
-            // @todo this simple merge of all language specific fields to one
-            //   language unspecific fields should be configurable.
-            $key_value = $facet_set_helper->convertToKeyValueArray($data->facet_counts->facet_fields->{$field_name}) +
-              $facet_set_helper->convertToKeyValueArray($facet_terms);
-            $facet_terms = [];
-            foreach ($key_value as $key => $value) {
-              // @todo check for NULL key of "missing facets".
-              $facet_terms[] = $key;
-              $facet_terms[] = $value;
-            }
-          }
-          $data->facet_counts->facet_fields->{$field_name} = $facet_terms;
-        }
-      }
-    }
-
-    $body = json_encode($data);
-  }
-
-
-  /**
    * Implements autocomplete compatible to AutocompleteBackendInterface.
    *
    * @see \Drupal\search_api_autocomplete\AutocompleteBackendInterface
    */
   public function getAutocompleteSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input) {
-    // For example, let the multilingual backend set the correct fields.
-    $this->alterSearchApiQuery($query);
-
     $suggestions = [];
     if ($solarium_query = $this->getAutocompleteQuery($incomplete_key, $user_input)) {
       try {
