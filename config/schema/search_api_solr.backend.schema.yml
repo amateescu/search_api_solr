@@ -31,9 +31,6 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
     sasm_search_page_include_language_independent:
       type: boolean
       label: 'Include languages independent content in search results'
-    sasm_language_unspecific_fallback_on_schema_issues:
-      type: boolean
-      label: 'Use language undefined fall back'
 
 plugin.plugin_configuration.search_api_backend.search_api_solr_any_schema:
   type: plugin.plugin_configuration.search_api_backend.search_api_solr

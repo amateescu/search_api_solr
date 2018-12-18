@@ -72,56 +72,10 @@ class SearchApiSolrMultilingualTest extends SearchApiSolrTest {
   }
 
   /**
-   * Tests the conversion of language aware queries into Solr queries.
-   */
-  public function testQueryConditionsAndLanguageFilter() {
-    /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
-    $backend = Server::load($this->serverId)->getBackend();
-    list($fields, $mapping) = $this->getFieldsAndMapping($backend);
-    $options = [];
-
-    $query = $this->buildSearch();
-    $query->setLanguages(['en']);
-    $query->addCondition('x', 5, '=');
-    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
-    $this->assertEquals('(+ss_search_api_language:"en" +solr_x:"5")', $fq[0]['query']);
-    $this->assertFalse(isset($fq[1]));
-
-    $query = $this->buildSearch();
-    $query->setLanguages(['en', 'de']);
-    $condition_group = $query->createConditionGroup();
-    $condition_group->addCondition('x', 5);
-    $inner_condition_group = $query->createConditionGroup();
-    $inner_condition_group->addCondition('y', [1, 2, 3], 'NOT IN');
-    $condition_group->addConditionGroup($inner_condition_group);
-    $query->addConditionGroup($condition_group);
-    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
-    $this->assertEquals('(+ss_search_api_language:"en" +(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))) (+ss_search_api_language:"de" +(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3")))', $fq[0]['query']);
-    $this->assertFalse(isset($fq[1]));
-  }
-
-  /**
    * Tests language fallback.
    */
   public function testLanguageFallback() {
-    $server = $this->getIndex()->getServerInstance();
-    $config = $server->getBackendConfig();
-
-    $config['sasm_language_unspecific_fallback_on_schema_issues'] = FALSE;
-    $server->setBackendConfig($config)->save();
-    $this->assertFalse($this->getIndex()->getServerInstance()->getBackendConfig()['sasm_language_unspecific_fallback_on_schema_issues']);
-
     $this->insertMultilingualExampleContent();
-
-    $this->indexItems($this->indexId);
-    $this->assertLogMessage(LOG_ERR, '%type while trying to index items on index %index: @message in %function (line %line of %file)');
-
-    $this->clearIndex();
-
-    $config['sasm_language_unspecific_fallback_on_schema_issues'] = TRUE;
-    $server->setBackendConfig($config)->save();
-    $this->assertTrue($this->getIndex()->getServerInstance()->getBackendConfig()['sasm_language_unspecific_fallback_on_schema_issues']);
-
     $this->indexItems($this->indexId);
 
     $results = $this->buildSearch()->execute();

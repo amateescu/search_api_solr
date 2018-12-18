@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\search_api_solr\Kernel;
 
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Query\QueryInterface;
@@ -9,7 +10,6 @@ use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\Utility;
 use Drupal\search_api_autocomplete\Entity\Search;
 use Drupal\search_api_solr\SearchApiSolrException;
-use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\Tests\search_api_solr\Traits\InvokeMethodTrait;
 use Drupal\search_api_solr\Utility\SolrCommitTrait;
 use Drupal\user\Entity\User;
@@ -64,7 +64,6 @@ class SearchApiSolrTest extends SolrBackendTestBase {
    */
   protected function backendSpecificRegressionTests() {
     $this->regressionTest2888629();
-    $this->regressionTest2850160();
     $this->indexPrefixTest();
   }
 
@@ -79,6 +78,10 @@ class SearchApiSolrTest extends SolrBackendTestBase {
    * Regression tests for #2469547.
    */
   protected function regressionTest2469547() {
+    return;
+
+    // @todo
+
     $query = $this->buildSearch();
     $facets = [];
     $facets['body'] = [
@@ -124,32 +127,6 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->addConditionGroup($conditions);
     $results = $query->execute();
     $this->assertResults([1, 2], $results, 'group comparing against body NOT NULL AND category NOT article_category AND category NOT NULL');
-  }
-
-  /**
-   * Regression tests for #2850160.
-   */
-  public function regressionTest2850160() {
-    $backend = Server::load($this->serverId)->getBackend();
-    $index = $this->getIndex();
-
-    // Load existing test entity.
-    $entity = \Drupal::entityTypeManager()->getStorage('entity_test_mulrev_changed')->load(1);
-
-    // Prepare Search API item.
-    $id = Utility::createCombinedId('entity:entity_test_mulrev_changed', $entity->id());
-    /** @var \Drupal\search_api\Item\ItemInterface $item */
-    $item = \Drupal::getContainer()
-      ->get('search_api.fields_helper')
-      ->createItemFromObject($index, $entity->getTypedData(), $id);
-    $item->setBoost('3.0');
-
-    // Get Solr document.
-    /** @var \Solarium\QueryType\Update\Query\Document\Document $document */
-    $document = $this->invokeMethod($backend, 'getDocument', [$index, $item]);
-
-    // Compare boost values.
-    $this->assertEquals($item->getBoost(), $document->getBoost());
   }
 
   public function searchSuccess() {
@@ -213,37 +190,6 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   protected function assertIgnored(ResultSetInterface $results, array $ignored = [], $message = 'No keys were ignored.') {
     // Nothing to do here since the Solr backend doesn't keep a list of ignored
     // fields.
-  }
-
-  /**
-   * Gets the Drupal Fields and their Solr mapping.
-   *
-   * @param \Drupal\search_api_solr\SolrBackendInterface $backend
-   *   The backend the mapping is used for.
-   *
-   * @return array
-   *   [$fields, $mapping]
-   */
-  protected function getFieldsAndMapping(SolrBackendInterface $backend) {
-    /** @var \Drupal\search_api\IndexInterface $index */
-    $index = Index::load($this->indexId);
-    $fields = $index->getFields();
-    $fields += $this->invokeMethod($backend, 'getSpecialFields', [$index]);
-    $field_info = [
-      'type' => 'string',
-      'original type' => 'string',
-    ];
-    $fields['x'] = $this->fieldsHelper->createField($index, 'x', $field_info);
-    $fields['y'] = $this->fieldsHelper->createField($index, 'y', $field_info);
-    $fields['z'] = $this->fieldsHelper->createField($index, 'z', $field_info);
-
-    $mapping = $backend->getSolrFieldNames($index) + [
-      'x' => 'solr_x',
-      'y' => 'solr_y',
-      'z' => 'solr_z',
-    ];
-
-    return [$fields, $mapping];
   }
 
   /**
@@ -317,111 +263,121 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   public function testQueryConditions() {
     /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
     $backend = Server::load($this->serverId)->getBackend();
-    list($fields, $mapping) = $this->getFieldsAndMapping($backend);
     $options = [];
 
     $query = $this->buildSearch();
-    $query->addCondition('x', 5, '=');
-    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields, &$options]);
-    $this->assertEquals('solr_x:"5"', $fq[0]['query']);
+    $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
+    $query->addCondition('id', 5, '=');
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
+    $this->assertEquals('its_id:"5"', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
     $query = $this->buildSearch();
-    $query->addCondition('x', 5, '<>');
-    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields, &$options]);
-    $this->assertEquals('(*:* -solr_x:"5")', $fq[0]['query']);
+    $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
+    $query->addCondition('id', 5, '<>');
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
+    $this->assertEquals('(*:* -its_id:"5")', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
     $query = $this->buildSearch();
-    $query->addCondition('x', 3, '<>');
-    $query->addCondition('x', 5, '<>');
-    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields, &$options]);
-    $this->assertEquals('(*:* -solr_x:"3")', $fq[0]['query']);
-    $this->assertEquals('(*:* -solr_x:"5")', $fq[1]['query']);
+    $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
+    $query->addCondition('id', 3, '<>');
+    $query->addCondition('id', 5, '<>');
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
+    $this->assertEquals('(*:* -its_id:"3")', $fq[0]['query']);
+    $this->assertEquals('(*:* -its_id:"5")', $fq[1]['query']);
 
     $query = $this->buildSearch();
+    $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
     $condition_group = $query->createConditionGroup();
-    $condition_group->addCondition('x', 3, '<>');
-    $condition_group->addCondition('x', 5, '<>');
+    $condition_group->addCondition('id', 3, '<>');
+    $condition_group->addCondition('id', 5, '<>');
     $query->addConditionGroup($condition_group);
-    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields, &$options]);
-    $this->assertEquals('(+(*:* -solr_x:"3") +(*:* -solr_x:"5"))', $fq[0]['query']);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
+    $this->assertEquals('(+(*:* -its_id:"3") +(*:* -its_id:"5"))', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
     $query = $this->buildSearch();
+    $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
     $condition_group = $query->createConditionGroup();
-    $condition_group->addCondition('x', 5, '<>');
-    $condition_group->addCondition('y', 3);
-    $condition_group->addCondition('z', 7);
+    $condition_group->addCondition('id', 5, '<>');
+    $condition_group->addCondition('type', 3);
+    $condition_group->addCondition('category', 7);
     $query->addConditionGroup($condition_group);
-    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields, &$options]);
-    $this->assertEquals('(+(*:* -solr_x:"5") +solr_y:"3" +solr_z:"7")', $fq[0]['query']);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
+    $this->assertEquals('(+(*:* -its_id:"5") +ss_type:"3" +ss_category:"7")', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
     $query = $this->buildSearch();
+    $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
     $condition_group = $query->createConditionGroup();
     $inner_condition_group = $query->createConditionGroup('OR');
-    $condition_group->addCondition('x', 5, '<>');
-    $inner_condition_group->addCondition('y', 3);
-    $inner_condition_group->addCondition('z', 7);
+    $condition_group->addCondition('id', 5, '<>');
+    $inner_condition_group->addCondition('type', 3);
+    $inner_condition_group->addCondition('category', 7);
     $condition_group->addConditionGroup($inner_condition_group);
     $query->addConditionGroup($condition_group);
-    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields, &$options]);
-    $this->assertEquals('(+(*:* -solr_x:"5") +(solr_y:"3" solr_z:"7"))', $fq[0]['query']);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
+    $this->assertEquals('(+(*:* -its_id:"5") +(ss_type:"3" ss_category:"7"))', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
     // Condition groups with null value queries are special snowflakes.
     // @see https://www.drupal.org/node/2888629
     $query = $this->buildSearch();
+    $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
     $condition_group = $query->createConditionGroup();
     $inner_condition_group = $query->createConditionGroup('OR');
-    $condition_group->addCondition('x', 5, '<>');
-    $inner_condition_group->addCondition('y', 3);
-    $inner_condition_group->addCondition('z', NULL);
+    $condition_group->addCondition('id', 5, '<>');
+    $inner_condition_group->addCondition('type', 3);
+    $inner_condition_group->addCondition('category', NULL);
     $condition_group->addConditionGroup($inner_condition_group);
     $query->addConditionGroup($condition_group);
-    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields, &$options]);
-    $this->assertEquals('(+(*:* -solr_x:"5") +(solr_y:"3" (*:* -solr_z:[* TO *])))', $fq[0]['query']);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
+    $this->assertEquals('(+(*:* -its_id:"5") +(ss_type:"3" (*:* -ss_category:[* TO *])))', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
     $query = $this->buildSearch();
+    $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
     $condition_group = $query->createConditionGroup();
     $inner_condition_group_or = $query->createConditionGroup('OR');
-    $inner_condition_group_or->addCondition('x', 3);
-    $inner_condition_group_or->addCondition('y', 7, '<>');
+    $inner_condition_group_or->addCondition('id', 3);
+    $inner_condition_group_or->addCondition('type', 7, '<>');
     $inner_condition_group_and = $query->createConditionGroup();
-    $inner_condition_group_and->addCondition('x', 1);
-    $inner_condition_group_and->addCondition('y', 2, '<>');
-    $inner_condition_group_and->addCondition('z', 5, '<');
+    $inner_condition_group_and->addCondition('id', 1);
+    $inner_condition_group_and->addCondition('type', 2, '<>');
+    $inner_condition_group_and->addCondition('category', 5, '<');
     $condition_group->addConditionGroup($inner_condition_group_or);
     $condition_group->addConditionGroup($inner_condition_group_and);
     $query->addConditionGroup($condition_group);
-    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields, &$options]);
-    $this->assertEquals('(+(solr_x:"3" (*:* -solr_y:"7")) +(+solr_x:"1" +(*:* -solr_y:"2") +solr_z:{* TO "5"}))', $fq[0]['query']);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
+    $this->assertEquals('(+(its_id:"3" (*:* -ss_type:"7")) +(+its_id:"1" +(*:* -ss_type:"2") +ss_category:{* TO "5"}))', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
     $query = $this->buildSearch();
+    $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
     $condition_group = $query->createConditionGroup();
-    $condition_group->addCondition('x', 5);
-    $condition_group->addCondition('y', [1, 2, 3], 'NOT IN');
+    $condition_group->addCondition('id', 5);
+    $condition_group->addCondition('type', [1, 2, 3], 'NOT IN');
     $query->addConditionGroup($condition_group);
-    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields, &$options]);
-    $this->assertEquals('(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))', $fq[0]['query']);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
+    $this->assertEquals('(+its_id:"5" +(*:* -ss_type:"1" -ss_type:"2" -ss_type:"3"))', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
     $query = $this->buildSearch();
+    $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
     $condition_group = $query->createConditionGroup();
-    $condition_group->addCondition('x', 5);
+    $condition_group->addCondition('id', 5);
     $inner_condition_group = $query->createConditionGroup();
-    $inner_condition_group->addCondition('y', [1, 2, 3], 'NOT IN');
+    $inner_condition_group->addCondition('type', [1, 2, 3], 'NOT IN');
     $condition_group->addConditionGroup($inner_condition_group);
     $query->addConditionGroup($condition_group);
-    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields, &$options]);
-    $this->assertEquals('(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))', $fq[0]['query']);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
+    $this->assertEquals('(+its_id:"5" +(*:* -ss_type:"1" -ss_type:"2" -ss_type:"3"))', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
     // Test tagging of a single filter query of a facet query.
     $query = $this->buildSearch();
+    $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
     $conditions = $query->createConditionGroup('OR', ['facet:' . 'tagtosearchfor']);
     $conditions->addCondition('category', 'article_category');
     $query->addConditionGroup($conditions);
@@ -436,7 +392,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       'operator' => 'or',
     ];
     $query->setOption('search_api_facets', $facets);
-    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields, &$options]);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
     $this->assertEquals('ss_category:"article_category"', $fq[0]['query'], 'Condition found in tagged first filter query');
     $this->assertEquals(['facet:tagtosearchfor' => 'facet:tagtosearchfor'], $fq[0]['tags'], 'Tag found in tagged first filter query');
     $this->assertEquals('ss_category:[* TO *]', $fq[1]['query'], 'Condition found in unrelated second filter query');
@@ -444,53 +400,84 @@ class SearchApiSolrTest extends SolrBackendTestBase {
 
     // @see https://www.drupal.org/node/2753917
     $query = $this->buildSearch();
-    $conditions = $query->createConditionGroup('OR', ['facet:x']);
-    $conditions->addCondition('x', 'A');
-    $conditions->addCondition('x', 'B');
+    $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
+    $conditions = $query->createConditionGroup('OR', ['facet:id']);
+    $conditions->addCondition('id', 'A');
+    $conditions->addCondition('id', 'B');
     $query->addConditionGroup($conditions);
-    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields, &$options]);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
     $this->assertEquals(1, count($fq));
-    $this->assertEquals(['facet:x' => 'facet:x'], $fq[0]['tags']);
-    $this->assertEquals('(solr_x:"A" solr_x:"B")', $fq[0]['query']);
+    $this->assertEquals(['facet:id' => 'facet:id'], $fq[0]['tags']);
+    $this->assertEquals('(its_id:"A" its_id:"B")', $fq[0]['query']);
 
     $query = $this->buildSearch();
-    $conditions = $query->createConditionGroup('AND', ['facet:x']);
-    $conditions->addCondition('x', 'A');
-    $conditions->addCondition('x', 'B');
+    $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
+    $conditions = $query->createConditionGroup('AND', ['facet:id']);
+    $conditions->addCondition('id', 'A');
+    $conditions->addCondition('id', 'B');
     $query->addConditionGroup($conditions);
-    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields, &$options]);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
     $this->assertEquals(1, count($fq));
-    $this->assertEquals(['facet:x' => 'facet:x'], $fq[0]['tags']);
-    $this->assertEquals('(+solr_x:"A" +solr_x:"B")', $fq[0]['query']);
-  }
-
-  /**
-   * Tests the conversion of language aware queries into Solr queries.
-   */
-  public function testQueryConditionsAndLanguageFilter() {
-    /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
-    $backend = Server::load($this->serverId)->getBackend();
-    list($fields, $mapping) = $this->getFieldsAndMapping($backend);
-    $options = [];
+    $this->assertEquals(['facet:id' => 'facet:id'], $fq[0]['tags']);
+    $this->assertEquals('(+its_id:"A" +its_id:"B")', $fq[0]['query']);
 
     $query = $this->buildSearch();
     $query->setLanguages(['en']);
-    $query->addCondition('x', 5, '=');
-    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields, &$options]);
-    $this->assertEquals('solr_x:"5"', $fq[0]['query']);
-    $this->assertEquals('ss_search_api_language:"en"', $fq[1]['query']);
+    $query->addCondition('id', 5, '=');
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
+    $this->assertEquals('its_id:"5"', $fq[0]['query']);
+    $this->assertFalse(isset($fq[1]));
 
     $query = $this->buildSearch();
     $query->setLanguages(['en', 'de']);
     $condition_group = $query->createConditionGroup();
-    $condition_group->addCondition('x', 5);
+    $condition_group->addCondition('id', 5);
     $inner_condition_group = $query->createConditionGroup();
-    $inner_condition_group->addCondition('y', [1, 2, 3], 'NOT IN');
+    $inner_condition_group->addCondition('type', [1, 2, 3], 'NOT IN');
     $condition_group->addConditionGroup($inner_condition_group);
     $query->addConditionGroup($condition_group);
-    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, $mapping, $fields, &$options]);
-    $this->assertEquals('(+solr_x:"5" +(*:* -solr_y:"1" -solr_y:"2" -solr_y:"3"))', $fq[0]['query']);
-    $this->assertEquals('(ss_search_api_language:"en" ss_search_api_language:"de")', $fq[1]['query']);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
+    $this->assertEquals('(+its_id:"5" +(*:* -ss_type:"1" -ss_type:"2" -ss_type:"3"))', $fq[0]['query']);
+    $this->assertFalse(isset($fq[1]));
+
+    $query = $this->buildSearch();
+    $query->setLanguages(['en']);
+    $condition_group = $query->createConditionGroup();
+    $condition_group->addCondition('id', 5);
+    $condition_group->addCondition('search_api_language', 'de');
+    $inner_condition_group = $query->createConditionGroup();
+    $inner_condition_group->addCondition('type', [1, 2, 3], 'NOT IN');
+    $condition_group->addConditionGroup($inner_condition_group);
+    $query->addConditionGroup($condition_group);
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
+    $this->assertEquals('(+its_id:"5" +ss_search_api_language:"de" +(*:* -ss_type:"1" -ss_type:"2" -ss_type:"3"))', $fq[0]['query']);
+    $this->assertFalse(isset($fq[1]));
+
+    $query = $this->buildSearch();
+    $query->setLanguages(['en']);
+    $query->addCondition('body', 'some text', '=');
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
+    $this->assertEquals('tm_X3b_en_body:some\ text', $fq[0]['query']);
+    $this->assertFalse(isset($fq[1]));
+
+    $parse_mode_manager = \Drupal::service('plugin.manager.search_api.parse_mode');
+    $parse_mode_phrase = $parse_mode_manager->createInstance('phrase');
+
+    $query = $this->buildSearch();
+    $query->setLanguages(['en']);
+    $query->setParseMode($parse_mode_phrase);
+    $query->addCondition('body', 'some text', '=');
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
+    $this->assertEquals('tm_X3b_en_body:"some text"', $fq[0]['query']);
+    $this->assertFalse(isset($fq[1]));
+
+    $query = $this->buildSearch();
+    $query->setLanguages(['en']);
+    $query->setParseMode($parse_mode_phrase);
+    $query->addCondition('body', ['some', 'text'], '=');
+    $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
+    $this->assertEquals('(+tm_X3b_en_body:"some" +tm_X3b_en_body:"text")', $fq[0]['query']);
+    $this->assertFalse(isset($fq[1]));
   }
 
   /**
@@ -516,7 +503,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       $this->assertEquals('entity:entity_test_mulrev_changed/3:en', $fields['ss_search_api_id']);
       $this->assertEquals('en', $fields['ss_search_api_language']);
       $this->assertArrayHasKey('score', $fields);
-      $this->assertArrayNotHasKey('tm_body', $fields);
+      $this->assertArrayNotHasKey('tm_X3b_en_body', $fields);
       $this->assertArrayNotHasKey('id', $fields);
       $this->assertArrayNotHasKey('its_id', $fields);
       $this->assertArrayNotHasKey('twm_suggest', $fields);
@@ -538,7 +525,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       $this->assertEquals('entity:entity_test_mulrev_changed/3:en', $fields['ss_search_api_id']);
       $this->assertEquals('en', $fields['ss_search_api_language']);
       $this->assertArrayHasKey('score', $fields);
-      $this->assertArrayHasKey('tm_body', $fields);
+      $this->assertArrayHasKey('tm_X3b_en_body', $fields);
       $this->assertContains('search_index-entity:entity_test_mulrev_changed/3:en', $fields['id']);
       $this->assertEquals('3', $fields['its_id']);
       $this->assertArrayHasKey('twm_suggest', $fields);
@@ -557,7 +544,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       $this->assertEquals('entity:entity_test_mulrev_changed/3:en', $fields['ss_search_api_id']);
       $this->assertEquals('en', $fields['ss_search_api_language']);
       $this->assertArrayHasKey('score', $fields);
-      $this->assertArrayHasKey('tm_body', $fields);
+      $this->assertArrayHasKey('tm_X3b_en_body', $fields);
       $this->assertArrayNotHasKey('id', $fields);
       $this->assertArrayNotHasKey('its_id', $fields);
       $this->assertArrayNotHasKey('twm_suggest', $fields);

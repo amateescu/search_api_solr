@@ -80,42 +80,40 @@ function search_api_solr_requirements($phase) {
 
     foreach ($servers as $server) {
       $backend = $server->getBackend();
-      if ($backend instanceof SolrMultilingualBackendInterface) {
-        $key = 'search_api_solr_multilingual_' . $server->id();
-        $requirements[$key] = [
-          'title' => t('Multilingual Solr Server'),
-          'value' => t('Schema complete'),
-          'severity' => REQUIREMENT_OK,
-          'description' => t('Schema on server <a href=":url">@server</a> contains all required language-specific fields.', [
-            ':url' => $server->toUrl('canonical')->toString(),
-            '@server' => $server->label(),
-          ]),
-        ];
+      $key = 'search_api_solr_multilingual_' . $server->id();
+      $requirements[$key] = [
+        'title' => t('Multilingual Solr Server'),
+        'value' => t('Schema complete'),
+        'severity' => REQUIREMENT_OK,
+        'description' => t('Schema on server <a href=":url">@server</a> contains all required language-specific fields.', [
+          ':url' => $server->toUrl('canonical')->toString(),
+          '@server' => $server->label(),
+        ]),
+      ];
 
-        if ($backend->isAvailable()) {
-          $stats = $backend->getSchemaLanguageStatistics();
-          if ($missing_languages = array_filter($stats, function ($state) {
-            return !$state;
-          })) {
-            $requirements[$key]['value'] = t('Schema incomplete');
-            $requirements[$key]['severity'] = $backend->hasLanguageUndefinedFallback() ? REQUIREMENT_WARNING : REQUIREMENT_ERROR;
-            $requirements[$key]['description'] = t(
-              'There are some language-specific field types missing in schema of Solr server <a href=":url">@server</a>: @languages.', [
-              ':url' => $server->toUrl('canonical')->toString(),
-              '@server' => $server->label(),
-              '@languages' => implode(', ', array_keys($missing_languages)),
-            ]);
-          }
-        }
-        else {
-          $requirements[$key]['value'] = t('Not reachable');
-          $requirements[$key]['severity'] = REQUIREMENT_ERROR;
+      if ($backend->isAvailable()) {
+        $stats = $backend->getSchemaLanguageStatistics();
+        if ($missing_languages = array_filter($stats, function ($state) {
+          return !$state;
+        })) {
+          $requirements[$key]['value'] = t('Schema incomplete');
+          $requirements[$key]['severity'] = REQUIREMENT_WARNING;
           $requirements[$key]['description'] = t(
-            'Solr server <a href=":url">@server</a> is not reachable.', [
+            'There are some language-specific field types missing in schema of Solr server <a href=":url">@server</a>: @languages.', [
             ':url' => $server->toUrl('canonical')->toString(),
             '@server' => $server->label(),
+            '@languages' => implode(', ', array_keys($missing_languages)),
           ]);
         }
+      }
+      else {
+        $requirements[$key]['value'] = t('Not reachable');
+        $requirements[$key]['severity'] = REQUIREMENT_ERROR;
+        $requirements[$key]['description'] = t(
+          'Solr server <a href=":url">@server</a> is not reachable.', [
+          ':url' => $server->toUrl('canonical')->toString(),
+          '@server' => $server->label(),
+        ]);
       }
     }
   }

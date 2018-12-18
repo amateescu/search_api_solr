@@ -185,11 +185,4 @@ interface SolrBackendInterface extends BackendInterface {
    */
   public function getSchemaLanguageStatistics();
 
-  /**
-   * Indicates if the fallback for not supported languages is active.
-   *
-   * @return bool
-   */
-  public function hasLanguageUndefinedFallback();
-
 }
