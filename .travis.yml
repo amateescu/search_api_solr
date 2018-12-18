@@ -82,10 +82,10 @@ before_script:
   # test modules before the tests.
   - cp -a core/modules/system/tests/modules/entity_test core/modules/system/entity_test
   - cp -a modules/contrib/search_api/tests/search_api_test_example_content modules/contrib/search_api/search_api_test_example_content
-  - cp -a modules/contrib/search_api_solr/tests/modules/search_api_solr_multilingual_test modules/contrib/search_api_solr/search_api_solr_multilingual_test
-  - ./vendor/bin/drush en --yes search_api_solr_multilingual_test
-  - ./vendor/bin/drush solr-gsc solr_multilingual_search_server conf.zip $SOLR_VERSION
-  - rm -rf core/modules/system/entity_test modules/contrib/search_api/search_api_test_example_content modules/contrib/search_api_solr/search_api_solr_multilingual_test
+  - cp -a modules/contrib/search_api_solr/tests/modules/search_api_solr_test modules/contrib/search_api_solr/search_api_solr_test
+  - ./vendor/bin/drush en --yes search_api_solr_test
+  - ./vendor/bin/drush solr-gsc solr_search_server conf.zip $SOLR_VERSION
+  - rm -rf core/modules/system/entity_test modules/contrib/search_api/search_api_test_example_content modules/contrib/search_api_solr/search_api_solr_test
   - mkdir $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8
   - mkdir $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf
   - unzip -o conf.zip -d $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf
