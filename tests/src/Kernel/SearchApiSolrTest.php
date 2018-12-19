@@ -206,13 +206,13 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   protected function checkBackendSpecificFeatures() {
     $this->checkQueryParsers();
     $this->checkQueryConditions();
-    $this->checkRetrieveData();
-    $this->clearIndex();
     $this->checkHighlight();
     $this->clearIndex();
     $this->checkSearchResultSorts();
     $this->clearIndex();
     $this->checkDatasourceAdditionAndDeletion();
+    $this->clearIndex();
+    $this->checkRetrieveData();
   }
 
   /**
