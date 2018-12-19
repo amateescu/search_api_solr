@@ -2045,7 +2045,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         // Create the typed data object for the Item immediately after the query
         // has been run. Doing this now can prevent the Search API from having to
         // query for individual documents later.
-        $result_item->setOriginalObject($solr_document_factory->create($item));
+        $result_item->setOriginalObject($solr_document_factory->create($result_item));
      }
      else {
         $result_item = $this->fieldsHelper->createItem($index, $item_id);
