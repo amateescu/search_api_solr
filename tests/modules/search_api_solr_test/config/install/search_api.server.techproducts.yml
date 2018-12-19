@@ -1,0 +1,33 @@
+id: techproducts
+name: techproducts
+description: techproducts
+backend: search_api_solr
+backend_config:
+  site_hash: false
+  retrieve_data: true
+  highlight_data: false
+  skip_schema_check: true
+  domain: generic
+  server_prefix: ''
+  connector: standard
+  connector_config:
+    scheme: http
+    host: localhost
+    port: '8983'
+    path: /solr
+    core: techproducts
+    timeout: 5
+    index_timeout: 5
+    optimize_timeout: 10
+    finalize_timeout: 30
+    solr_version: ''
+    http_method: AUTO
+    commit_within: 1000
+    jmx: false
+  sasm_limit_search_page_to_content_language: false
+  sasm_search_page_include_language_independent: false
+status: true
+langcode: en
+dependencies:
+  module:
+    - search_api_solr

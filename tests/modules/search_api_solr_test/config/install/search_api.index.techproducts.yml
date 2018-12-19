@@ -63,4 +63,4 @@ tracker_settings:
 options:
   index_directly: true
   cron_limit: 50
-server: solr_search_server
+server: techproducts

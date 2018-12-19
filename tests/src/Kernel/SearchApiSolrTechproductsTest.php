@@ -19,6 +19,13 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
   ];
 
   /**
+   * A Search API server ID.
+   *
+   * @var string
+   */
+  protected $serverId = 'techproducts';
+
+  /**
    * A Search API index ID.
    *
    * @var string
@@ -52,16 +59,16 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
       ->sort('search_api_id');
     $result = $query->execute();
     $this->assertEquals([
-      "0579B002",
-      "100-435805",
-      "3007WFP",
-      "6H500F0",
-      "9885A004",
-      "EN7800GTX/2DHTV/256M",
-      "EUR",
-      "F8V7067-APL-KIT",
-      "GB18030TEST",
-      "GBP",
+      "solr_document/0579B002",
+      "solr_document/100-435805",
+      "solr_document/3007WFP",
+      "solr_document/6H500F0",
+      "solr_document/9885A004",
+      "solr_document/EN7800GTX/2DHTV/256M",
+      "solr_document/EUR",
+      "solr_document/F8V7067-APL-KIT",
+      "solr_document/GB18030TEST",
+      "solr_document/GBP",
     ], array_keys($result->getResultItems()), 'Search for all tech products');
   }
 

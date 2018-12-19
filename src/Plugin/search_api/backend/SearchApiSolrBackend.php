@@ -1531,7 +1531,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected function hasIndexJustSolrDocumentDatasource(IndexInterface $index) {
     $datasource_ids = $index->getDatasourceIds();
-    return 1 == count($datasource_ids) && array_key_exists('solr_document', $datasource_ids);
+    return (1 == count($datasource_ids)) && in_array('solr_document', $datasource_ids);
   }
 
   /**
@@ -2045,21 +2045,27 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
         /** @var \Drupal\search_api_solr\SolrDocumentFactoryInterface $solr_document_factory */
         $solr_document_factory = \Drupal::getContainer()->get($datasource . '.factory');
-        $result_item = $this->fieldsHelper->createItem($index, $item_id, $index->getDatasource($datasource));
+        $result_item = $this->fieldsHelper->createItem($index, $datasource . '/' . $item_id);
         // Create the typed data object for the Item immediately after the query
         // has been run. Doing this now can prevent the Search API from having to
         // query for individual documents later.
         $result_item->setOriginalObject($solr_document_factory->create($result_item));
-     }
-     else {
-        $result_item = $this->fieldsHelper->createItem($index, $item_id);
-     }
+      }
+      else {
+         $result_item = $this->fieldsHelper->createItem($index, $item_id);
+      }
 
-      $language_id = $doc_fields[$language_field];
-      $language_specific_field_names = $this->getLanguageSpecificSolrFieldNames($language_id, $index);
+      $field_names = [];
+      if ($language_field) {
+        $language_id = $doc_fields[$language_field];
+        $result_item->setLanguage($language_id);
+        $field_names = $this->getLanguageSpecificSolrFieldNames($language_id, $index);
+      }
+      else {
+        $field_names = $this->getSolrFieldNames($index);
+      }
 
       $result_item->setExtraData('search_api_solr_document', $doc);
-      $result_item->setLanguage($language_id);
 
       if (isset($doc_fields[$score_field])) {
         $result_item->setScore($doc_fields[$score_field]);
@@ -2072,7 +2078,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       // Extract properties from the Solr document, translating from Solr to
       // Search API property names. This reverses the mapping in
       // SearchApiSolrBackend::getSolrFieldNames().
-      foreach ($language_specific_field_names as $search_api_property => $solr_property) {
+      foreach ($field_names as $search_api_property => $solr_property) {
         if (isset($doc_fields[$solr_property]) && isset($fields[$search_api_property])) {
           $doc_field = is_array($doc_fields[$solr_property]) ? $doc_fields[$solr_property] : [$doc_fields[$solr_property]];
           $field = clone $fields[$search_api_property];
@@ -2097,7 +2103,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
 
       $solr_id = $this->createId($this->getTargetedSiteHash($index), $this->getTargetedIndexId($index), $result_item->getId());
-      $this->getHighlighting($result->getData(), $solr_id, $result_item, $language_specific_field_names);
+      $this->getHighlighting($result->getData(), $solr_id, $result_item, $field_names);
 
       $result_set->addResultItem($result_item);
     }
@@ -2255,9 +2261,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @see \Drupal\search_api\Query\QueryInterface::getLanguages()
    */
   protected function addLanguageConditions(ConditionGroupInterface $condition_group, QueryInterface $query) {
-    $languages = $query->getLanguages();
-    if ($languages !== NULL) {
-      $condition_group->addCondition('search_api_language', $languages, 'IN');
+    $language_ids = $query->getLanguages();
+    if ($language_ids !== NULL) {
+      $index = $query->getIndex();
+      $field_names = $this->getSolrFieldNames($index);
+      // For solr_document datasource, search_api_language might not be mapped.
+      if (!empty($field_names['search_api_language'])) {
+        $condition_group->addCondition('search_api_language', $language_ids, 'IN');
+      }
     }
   }
 
@@ -2277,7 +2288,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected function getFilterQueries(QueryInterface $query, array &$options) {
     $condition_group = $query->getConditionGroup();
     $conditions = $condition_group->getConditions();
-    if (empty($conditions) || empty($query->getLanguages())) {
+    if (empty($conditions)) {
       $this->addLanguageConditions($condition_group, $query);
     }
 
