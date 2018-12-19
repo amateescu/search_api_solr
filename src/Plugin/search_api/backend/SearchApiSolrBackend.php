@@ -1604,12 +1604,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $index_id = $index->id();
     if (!isset($field_names[$index_id]) || !isset($field_names[$index_id][$language_id])) {
       $field_names[$index_id][$language_id] = $this->formatSolrFieldNames($language_id, $index, $reset);
-      foreach ($index->getFulltextFields() as $name) {
-        if ('twm_suggest' != $field_names[$index_id][$language_id][$name])
-        $field_names[$index_id][$language_id][$name] = Utility::encodeSolrName(
-          Utility::getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_names[$index_id][$language_id][$name], $language_id)
-        );
-      }
     }
 
     return $field_names[$index_id][$language_id];
