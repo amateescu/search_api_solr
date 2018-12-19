@@ -323,7 +323,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     foreach ($prefixes as $prefix_without_cardinality) {
       foreach (['s', 'm'] as $cardinality) {
         $prefix = $prefix_without_cardinality . $cardinality;
-        $name = $prefix . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . '_';
+        $name = $prefix . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $this->field_type_language_code . '_';
         $dynamic_fields[] = $dynamic_field = [
           'name' => SearchApiSolrUtility::encodeSolrName($name) . '*',
           'type' => $this->field_type['name'],
