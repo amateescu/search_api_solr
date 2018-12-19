@@ -1533,15 +1533,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * @param $language_id
    * @param \Drupal\search_api\IndexInterface $index
-   * @param bool $reset
    *
    * @return string[]
    * @throws \Drupal\search_api\SearchApiException
    */
-  protected function formatSolrFieldNames($language_id, IndexInterface $index, $reset = FALSE) {
+  protected function formatSolrFieldNames($language_id, IndexInterface $index) {
     // Caching is done by getLanguageSpecificSolrFieldNames().
     // This array maps "local property name" => "solr doc property name".
-    $ret = [
+    $field_ampping = [
       'search_api_relevance' => 'score',
       'search_api_random' => 'random',
     ];
@@ -1549,22 +1548,22 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Add the names of any fields configured on the index.
     $fields = $index->getFields();
     $fields += $this->getSpecialFields($index);
-    foreach ($fields as $key => $field) {
+    foreach ($fields as $search_api_name => $field) {
       switch ($field->getDatasourceId()) {
         case 'solr_document':
         case 'solr_multisite_document':
-          $ret[$key] = $field->getPropertyPath();
+          $field_ampping[$search_api_name] = $field->getPropertyPath();
           break;
 
         default:
-          if (empty($ret[$key])) {
+          if (empty($field_ampping[$search_api_name])) {
             // Generate a field name; this corresponds with naming conventions in
             // our schema.xml.
             $type = $field->getType();
             if ('solr_text_suggester' == $type) {
               // Any field of this type will be indexed in the same Solr field.
               // The 'twm_suggest' is the backend for the suggester component.
-              $ret[$key] = 'twm_suggest';
+              $field_ampping[$search_api_name] = 'twm_suggest';
               continue;
             }
             $type_info = Utility::getDataTypeInfo($type);
@@ -1592,7 +1591,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
               $pref .= 'm' . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $language_id;
             }
             else {
-              if ($this->fieldsHelper->isFieldIdReserved($key)) {
+              if ($this->fieldsHelper->isFieldIdReserved($search_api_name)) {
                 $pref .= 's';
               }
               else {
@@ -1617,8 +1616,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                 }
               }
             }
-            $name = $pref . '_' . $key;
-            $ret[$key] = Utility::encodeSolrName($name);
+            $name = $pref . '_' . $search_api_name;
+            $field_ampping[$search_api_name] = Utility::encodeSolrName($name);
 
             // Add a distance pseudo field for any location field. These fields
             // don't really exist in the solr core, but we tell solr to name the
@@ -1631,7 +1630,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
               // this field works as for sorting, too. 'ft' is the prefix for
               // decimal (at the moment).
               $dist_info = Utility::getDataTypeInfo('decimal');
-              $ret[$key . '__distance'] = Utility::encodeSolrName($dist_info['prefix'] . 's_' . $key . '__distance');
+              $field_ampping[$search_api_name . '__distance'] = Utility::encodeSolrName($dist_info['prefix'] . 's_' . $search_api_name . '__distance');
             }
           }
       }
@@ -1640,14 +1639,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     if ($this->hasIndexJustSolrDatasources($index)) {
       // No other datasource than solr_*, overwrite some search_api_* fields.
       $config = $this->getDatasourceConfig($index);
-      $ret['search_api_id'] = $config['id_field'];
-      $ret['search_api_language'] = $config['language_field'];
+      $field_ampping['search_api_id'] = $config['id_field'];
+      $field_ampping['search_api_language'] = $config['language_field'];
     }
 
     // Let modules adjust the field mappings.
-    $this->moduleHandler->alter('search_api_solr_field_mapping', $index, $ret);
+    $this->moduleHandler->alter('search_api_solr_field_mapping', $index, $field_ampping);
 
-    return $this->fieldNames[$index->id()];
+    return $field_ampping;
   }
 
   /**
@@ -1672,7 +1671,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     $index_id = $index->id();
     if (!isset($field_names[$index_id]) || !isset($field_names[$index_id][$language_id])) {
-      $field_names[$index_id][$language_id] = $this->formatSolrFieldNames($language_id, $index, $reset);
+      $field_names[$index_id][$language_id] = $this->formatSolrFieldNames($language_id, $index);
     }
 
     return $field_names[$index_id][$language_id];

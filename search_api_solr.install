@@ -562,3 +562,46 @@ function search_api_solr_update_8213() {
   $config->setData($data);
   $config->save(TRUE);
 }
+
+/**
+ * Migrate Solr backends to the new unified Solr backend
+ */
+function search_api_solr_update_8300() {
+  $config_factory = \Drupal::configFactory();
+  foreach ($config_factory->listAll('search_api_solr.solr_field_type.m_') as $field_type_name) {
+    $config_factory->getEditable($field_type_name)->delete();
+  }
+
+  foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+    unset($field_type_config['managed_schema']);
+    search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
+  }
+
+  foreach ($config_factory->listAll('search_api.server.') as $server_name) {
+    $server = $config_factory->getEditable($server_name);
+    $backend_config = $server->get('backend_config');
+    switch ($server->get('backend')) {
+      case 'search_api_solr':
+        $backend_config['sasm_limit_search_page_to_content_language'] = FALSE;
+        $backend_config['sasm_search_page_include_language_independent'] = FALSE;
+        break;
+
+      case 'search_api_solr_multilingual':
+      case 'search_api_solr_multilingual_managed_schema':
+        unset($backend_config['sasm_language_unspecific_fallback_on_schema_issues'];
+        $server->set('backend', 'search_api_solr');
+        break;
+
+      case 'search_api_solr_any_schema':
+        $backend_config['sasm_limit_search_page_to_content_language'] = FALSE;
+        $backend_config['sasm_search_page_include_language_independent'] = FALSE;
+        $server->set('backend', 'search_api_solr');
+        break;
+
+      default:
+        continue(2);
+    }
+    $server->set('backend_config', $backend_config)
+      ->save(TRUE);
+  }
+}
