@@ -384,6 +384,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $form_state->setError($form['connector'], $this->t('The connector could not be activated.'));
       }
     }
+
+    // @todo If any Solr Document datasource is selected, retrieve_data must be set.
+
+    // @todo If solr_document is the only datasource, skip_schema_check must be set.
   }
 
   /**
