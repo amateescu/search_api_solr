@@ -1550,7 +1550,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $fields = $index->getFields();
     $fields += $this->getSpecialFields($index);
     foreach ($fields as $key => $field) {
-      switch ($field->getDatasource()->getPluginId()) {
+      switch ($field->getDatasourceId()) {
         case 'solr_document':
         case 'solr_multisite_document':
           $ret[$key] = $field->getPropertyPath();
