@@ -206,7 +206,6 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   protected function checkBackendSpecificFeatures() {
     $this->checkQueryParsers();
     $this->checkQueryConditions();
-    $this->insertExampleContent();
     $this->checkRetrieveData();
     $this->clearIndex();
     $this->checkHighlight();
@@ -214,7 +213,6 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->checkSearchResultSorts();
     $this->clearIndex();
     $this->checkDatasourceAdditionAndDeletion();
-    $this->clearIndex();
   }
 
   /**
@@ -1019,9 +1017,6 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertEquals(2, $results->getResultCount(), 'Two results for "Gene" in Austrian entities.');
 
     // Tests language limiting via options.
-    $this->insertMultilingualExampleContent();
-    $this->indexItems($this->indexId);
-
     $server = $this->getIndex()->getServerInstance();
     $config = $server->getBackendConfig();
 
