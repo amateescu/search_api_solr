@@ -5,6 +5,7 @@ namespace Drupal\search_api_solr\Entity;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Drupal\search_api_solr\SolrFieldTypeInterface;
 use Drupal\search_api_solr\Utility\Utility;
@@ -322,7 +323,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     foreach ($prefixes as $prefix_without_cardinality) {
       foreach (['s', 'm'] as $cardinality) {
         $prefix = $prefix_without_cardinality . $cardinality;
-        $name = Utility::getLanguageSpecificSolrDynamicFieldPrefix($prefix, $this->field_type_language_code);
+        $name = $prefix . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . '_';
         $dynamic_fields[] = $dynamic_field = [
           'name' => SearchApiSolrUtility::encodeSolrName($name) . '*',
           'type' => $this->field_type['name'],

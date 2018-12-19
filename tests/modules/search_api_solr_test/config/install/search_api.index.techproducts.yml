@@ -2,7 +2,7 @@ langcode: en
 status: true
 dependencies:
   config:
-    - search_api.server.techproducts
+    - search_api.server.solr_search_server
   module:
     - search_api
     - search_api_solr
@@ -63,4 +63,4 @@ tracker_settings:
 options:
   index_directly: true
   cron_limit: 50
-server: techproducts
+server: solr_search_server

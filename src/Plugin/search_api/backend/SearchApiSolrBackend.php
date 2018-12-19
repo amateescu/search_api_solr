@@ -31,7 +31,6 @@ use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\ConditionGroupInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Backend\BackendPluginBase;
-use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\DataTypeHelperInterface;
 use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility as SearchApiUtility;
@@ -59,23 +58,6 @@ use Solarium\QueryType\Select\Query\Query;
 use Solarium\QueryType\Select\Result\Result;
 use Solarium\QueryType\Update\Query\Document\Document;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-
-/**
- * The minimum required Solr schema version.
- */
-define('SEARCH_API_SOLR_MIN_SCHEMA_VERSION', 6);
-
-/**
- * The separator to indicate the start of a language ID. We must not use any
- * character that has a special meaning within regular expressions. Additionally
- * we have to avoid characters that are valid for Drupal machine names.
- * The end of a language ID is indicated by an underscore '_' which could not
- * occur within the language ID itself because Drupal uses lanague tags.
- *
- * @see http://de2.php.net/manual/en/regexp.reference.meta.php
- * @see https://www.w3.org/International/articles/language-tags/
- */
-define('SEARCH_API_SOLR_LANGUAGE_SEPARATOR', ';');
 
 /**
  * Apache Solr backend for search api.
@@ -645,7 +627,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                 \Drupal::messenger()->addError($this->t('Your schema.xml version is too old. Please replace all configuration files with the ones packaged with this module and re-index you data.'));
                 $status = 'error';
               }
-              elseif (!preg_match('/drupal-[' . SEARCH_API_SOLR_MIN_SCHEMA_VERSION . '-9]\./', $stats_summary['@schema_version'])) {
+              elseif (!preg_match('/drupal-[' . SolrBackendInterface::SEARCH_API_SOLR_MIN_SCHEMA_VERSION . '-9]\./', $stats_summary['@schema_version'])) {
                 $variables[':url'] = Url::fromUri('internal:/' . drupal_get_path('module', 'search_api_solr') . '/INSTALL.md')
                   ->toString();
                 \Drupal::messenger()->addError($this->t('You are using an incompatible schema.xml configuration file. Please follow the instructions in the <a href=":url">INSTALL.md</a> file for setting up Solr.', $variables));
@@ -1033,7 +1015,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $search_api_result_set = $this->extractResults($query, $solarium_result);
 
       $this->moduleHandler->alter('search_api_solr_search_results', $search_api_result_set, $query, $solarium_result);
-      $this->postQuery($search_api_result_set, $query, $solarium_result);
     }
     else {
       $mlt_options = $query->getOption('search_api_mlt');
@@ -1134,11 +1115,32 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           ->addTags($filter_query['tags']);
       }
 
-      // Set the Index (and site) filter.
-      if ($index_filter = $this->getIndexFilterQueryString($index)) {
+      if (!$this->hasIndexJustSolrDocumentDatasource($index)) {
+        // Set the Index (and site) filter.
         $solarium_query->createFilterQuery('index_filter')->setQuery(
-          $index_filter
+          $this->getIndexFilterQueryString($index)
         );
+      }
+      else {
+        // Set requestHandler for the query type, if necessary and configured.
+        $config = $index->getDatasource('solr_document')->getConfiguration();
+        if (!empty($config['request_handler'])) {
+          $solarium_query->addParam('qt', $config['request_handler']);
+        }
+
+        // Set the default query, if necessary and configured.
+        if (!$solarium_query->getQuery() && !empty($config['default_query'])) {
+          $solarium_query->setQuery($config['default_query']);
+        }
+
+        // The query builder of Search API Solr Search bases on 'OR' which is the
+        // default value for solr, too. But a foreign schema could have a
+        // non-default config for q.op. Therefor we need to set it explicitly if not
+        // set.
+        $params = $solarium_query->getParams();
+        if (!isset($params['q.op'])) {
+          $solarium_query->addParam('q.op', 'OR');
+        }
       }
 
       // Set the list of fields to retrieve.
@@ -1315,13 +1317,28 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @return array
    */
   protected function getRequiredFields(QueryInterface $query = NULL) {
-    $field_names = $this->getSolrFieldNames($query->getIndex());
+    $index = $query->getIndex();
+    $field_names = $this->getSolrFieldNames($index);
     // The list of fields Solr must return to built a Search API result.
     $required_fields = [$field_names['search_api_id'], $field_names['search_api_language'], $field_names['search_api_relevance']];
     if (!$this->configuration['site_hash']) {
       $required_fields[] = 'hash';
     }
-    return $required_fields;
+
+    if ($this->hasIndexJustSolrDocumentDatasource($index)) {
+      $config = $this->getDatasourceConfig($index);
+      $extra_fields = [
+        'label_field',
+        'url_field',
+      ];
+      foreach ($extra_fields as $config_key) {
+        if (!empty($config[$config_key])) {
+          $required_fields[] = $config[$config_key];
+        }
+      }
+    }
+
+    return array_filter($required_fields);
   }
 
   /**
@@ -1474,6 +1491,46 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
+   * @param \Drupal\search_api\IndexInterface $index
+   *
+   * @return array
+   * @throws \Drupal\search_api\SearchApiException
+   */
+  protected function getDatasourceConfig(IndexInterface $index) {
+    $config = [];
+    if ($index->isValidDatasource('solr_document')) {
+      $config = $index->getDatasource('solr_document')->getConfiguration();
+    }
+    elseif ($index->isValidDatasource('solr_multisite_document')) {
+      $config = $index->getDatasource('solr_multisite_document')->getConfiguration();
+    }
+    return $config;
+  }
+
+  /**
+   * @param \Drupal\search_api\IndexInterface $index
+   *
+   * @return bool
+   */
+  protected function hasIndexJustSolrDatasources(IndexInterface $index) {
+    $datasource_ids = $index->getDatasourceIds();
+    $datasource_ids = array_filter($datasource_ids, function ($datasource_id) {
+      return strpos($datasource_id, 'solr_') !== 0;
+    });
+    return !$datasource_ids;
+  }
+
+  /**
+   * @param \Drupal\search_api\IndexInterface $index
+   *
+   * @return bool
+   */
+  protected function hasIndexJustSolrDocumentDatasource(IndexInterface $index) {
+    $datasource_ids = $index->getDatasourceIds();
+    return 1 == count($datasource_ids) && array_key_exists('solr_document', $datasource_ids);
+  }
+
+  /**
    * @param $language_id
    * @param \Drupal\search_api\IndexInterface $index
    * @param bool $reset
@@ -1483,100 +1540,112 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected function formatSolrFieldNames($language_id, IndexInterface $index, $reset = FALSE) {
     // Caching is done by getLanguageSpecificSolrFieldNames().
-    if (!isset($this->fieldNames[$index->id()]) || $reset) {
-      // This array maps "local property name" => "solr doc property name".
-      $ret = [
-        'search_api_relevance' => 'score',
-        'search_api_random' => 'random',
-      ];
+    // This array maps "local property name" => "solr doc property name".
+    $ret = [
+      'search_api_relevance' => 'score',
+      'search_api_random' => 'random',
+    ];
 
-      // Add the names of any fields configured on the index.
-      $fields = $index->getFields();
-      $fields += $this->getSpecialFields($index);
-      foreach ($fields as $key => $field) {
-        if (empty($ret[$key])) {
-          // Generate a field name; this corresponds with naming conventions in
-          // our schema.xml.
-          $type = $field->getType();
-          if ('solr_text_suggester' == $type) {
-            // Any field of this type will be indexed in the same Solr field.
-            // The 'twm_suggest' is the backend for the suggester component.
-            $ret[$key] = 'twm_suggest';
-            continue;
-          }
-          $type_info = Utility::getDataTypeInfo($type);
-          $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
-          if (strpos($pref, 't') === 0) {
-            // All text types need to be treated as multiple because some Search
-            // API processors produce boosted string tokens for a single valued
-            // drupal field. We need to store such tokens and their boost, too.
-            // The dynamic field tm_* will become tm;en* for English. Following
-            // this pattern we also have fall backs automatically:
-            // - tm;de-AT_*
-            // - tm;de_*
-            // - tm_*
-            // This concept bases on the fact that "longer patterns will be
-            // matched first. If equal size patterns both match, the first
-            // appearing in the schema will be used." This is not obvious from
-            // the example above. But you need to take into account that the
-            // real field name for solr will be encoded. So the real values for
-            // the example above are:
-            // - tm_X3b_de_X2d_AT_*
-            // - tm_X3b_de_*
-            // - tm_*
-            // @see \Drupal\search_api_solr\Utility\Utility::encodeSolrName()
-            // @see https://wiki.apache.org/solr/SchemaXml#Dynamic_fields
-            $pref .= 'm' . SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $language_id;
-          }
-          else {
-            if ($this->fieldsHelper->isFieldIdReserved($key)) {
-              $pref .= 's';
+    // Add the names of any fields configured on the index.
+    $fields = $index->getFields();
+    $fields += $this->getSpecialFields($index);
+    foreach ($fields as $key => $field) {
+      switch ($field->getDatasource()->getPluginId()) {
+        case 'solr_document':
+        case 'solr_multisite_document':
+          $ret[$key] = $field->getPropertyPath();
+          break;
+
+        default:
+          if (empty($ret[$key])) {
+            // Generate a field name; this corresponds with naming conventions in
+            // our schema.xml.
+            $type = $field->getType();
+            if ('solr_text_suggester' == $type) {
+              // Any field of this type will be indexed in the same Solr field.
+              // The 'twm_suggest' is the backend for the suggester component.
+              $ret[$key] = 'twm_suggest';
+              continue;
+            }
+            $type_info = Utility::getDataTypeInfo($type);
+            $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
+            if (strpos($pref, 't') === 0) {
+              // All text types need to be treated as multiple because some Search
+              // API processors produce boosted string tokens for a single valued
+              // drupal field. We need to store such tokens and their boost, too.
+              // The dynamic field tm_* will become tm;en* for English. Following
+              // this pattern we also have fall backs automatically:
+              // - tm;de-AT_*
+              // - tm;de_*
+              // - tm_*
+              // This concept bases on the fact that "longer patterns will be
+              // matched first. If equal size patterns both match, the first
+              // appearing in the schema will be used." This is not obvious from
+              // the example above. But you need to take into account that the
+              // real field name for solr will be encoded. So the real values for
+              // the example above are:
+              // - tm_X3b_de_X2d_AT_*
+              // - tm_X3b_de_*
+              // - tm_*
+              // @see \Drupal\search_api_solr\Utility\Utility::encodeSolrName()
+              // @see https://wiki.apache.org/solr/SchemaXml#Dynamic_fields
+              $pref .= 'm' . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $language_id;
             }
             else {
-              if ($field->getDataDefinition()->isList() || $this->isHierarchicalField($field)) {
-                $pref .= 'm';
+              if ($this->fieldsHelper->isFieldIdReserved($key)) {
+                $pref .= 's';
               }
               else {
-                try {
-                  $datasource = $field->getDatasource();
-                  if (!$datasource) {
-                    throw new SearchApiException();
-                  }
-                  else {
-                    $pref .= $this->getPropertyPathCardinality($field->getPropertyPath(), $datasource->getPropertyDefinitions()) != 1 ? 'm' : 's';
-                  }
-                } catch (SearchApiException $e) {
-                  // Thrown by $field->getDatasource(). Assume multi value to be
-                  // safe.
+                if ($field->getDataDefinition()
+                    ->isList() || $this->isHierarchicalField($field)) {
                   $pref .= 'm';
+                }
+                else {
+                  try {
+                    $datasource = $field->getDatasource();
+                    if (!$datasource) {
+                      throw new SearchApiException();
+                    }
+                    else {
+                      $pref .= $this->getPropertyPathCardinality($field->getPropertyPath(), $datasource->getPropertyDefinitions()) != 1 ? 'm' : 's';
+                    }
+                  } catch (SearchApiException $e) {
+                    // Thrown by $field->getDatasource(). Assume multi value to be
+                    // safe.
+                    $pref .= 'm';
+                  }
                 }
               }
             }
-          }
-          $name = $pref . '_' . $key;
-          $ret[$key] = Utility::encodeSolrName($name);
+            $name = $pref . '_' . $key;
+            $ret[$key] = Utility::encodeSolrName($name);
 
-          // Add a distance pseudo field for any location field. These fields
-          // don't really exist in the solr core, but we tell solr to name the
-          // distance calculation results that way. Later we directly pass these
-          // as "fields" to Drupal and especially Views.
-          if ($type == 'location') {
-            // Solr returns the calculated distance value as a single decimal
-            // value (even for multi-valued location fields). Therefore we have
-            // to prefix the field name accordingly by fts_*. This ensures that
-            // this field works as for sorting, too. 'ft' is the prefix for
-            // decimal (at the moment).
-            $dist_info = Utility::getDataTypeInfo('decimal');
-            $ret[$key . '__distance'] = Utility::encodeSolrName($dist_info['prefix'] . 's_' . $key . '__distance');
+            // Add a distance pseudo field for any location field. These fields
+            // don't really exist in the solr core, but we tell solr to name the
+            // distance calculation results that way. Later we directly pass these
+            // as "fields" to Drupal and especially Views.
+            if ($type == 'location') {
+              // Solr returns the calculated distance value as a single decimal
+              // value (even for multi-valued location fields). Therefore we have
+              // to prefix the field name accordingly by fts_*. This ensures that
+              // this field works as for sorting, too. 'ft' is the prefix for
+              // decimal (at the moment).
+              $dist_info = Utility::getDataTypeInfo('decimal');
+              $ret[$key . '__distance'] = Utility::encodeSolrName($dist_info['prefix'] . 's_' . $key . '__distance');
+            }
           }
-        }
       }
-
-      // Let modules adjust the field mappings.
-      $this->moduleHandler->alter('search_api_solr_field_mapping', $index, $ret);
-
-      $this->fieldNames[$index->id()] = $ret;
     }
+
+    if ($this->hasIndexJustSolrDatasources($index)) {
+      // No other datasource than solr_*, overwrite some search_api_* fields.
+      $config = $this->getDatasourceConfig($index);
+      $ret['search_api_id'] = $config['id_field'];
+      $ret['search_api_language'] = $config['language_field'];
+    }
+
+    // Let modules adjust the field mappings.
+    $this->moduleHandler->alter('search_api_solr_field_mapping', $index, $ret);
 
     return $this->fieldNames[$index->id()];
   }
@@ -1955,15 +2024,37 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       if (empty($doc_fields[$id_field])) {
         throw new SearchApiSolrException(sprintf('The result does not contain the essential ID field "%s".', $id_field));
       }
-      $item_id = $doc_fields[$id_field];
-      $language_id = $doc_fields[$language_field];
-      $language_specific_field_names = $this->getLanguageSpecificSolrFieldNames($language_id, $index);
 
+      $item_id = $doc_fields[$id_field];
       // For items coming from a different site, we need to adapt the item ID.
       if (isset($doc_fields['hash']) && !$this->configuration['site_hash'] && $doc_fields['hash'] != $site_hash) {
         $item_id = $doc_fields['hash'] . '--' . $item_id;
       }
-      $result_item = $this->fieldsHelper->createItem($index, $item_id);
+
+     $result_item = NULL;
+      if ($this->hasIndexJustSolrDatasources($index)) {
+        $datasource = '';
+        if ($index->isValidDatasource('solr_document')) {
+          $datasource = 'solr_document';
+        }
+        elseif ($index->isValidDatasource('solr_multisite_document')) {
+          $datasource = 'solr_multisite_document';
+        }
+        /** @var \Drupal\search_api_solr\SolrDocumentFactoryInterface $solr_document_factory */
+        $solr_document_factory = \Drupal::getContainer()->get($datasource . '.factory');
+        $result_item = $this->fieldsHelper->createItem($index, $item_id, $index->getDatasource($datasource));
+        // Create the typed data object for the Item immediately after the query
+        // has been run. Doing this now can prevent the Search API from having to
+        // query for individual documents later.
+        $result_item->setOriginalObject($solr_document_factory->create($item));
+     }
+     else {
+        $result_item = $this->fieldsHelper->createItem($index, $item_id);
+     }
+
+      $language_id = $doc_fields[$language_field];
+      $language_specific_field_names = $this->getLanguageSpecificSolrFieldNames($language_id, $index);
+
       $result_item->setExtraData('search_api_solr_document', $doc);
       $result_item->setLanguage($language_id);
 
@@ -2995,14 +3086,16 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getTargetedIndexId(IndexInterface $index) {
-    return $this->getIndexId($index);
+    $config = $this->getDatasourceConfig($index);
+    return isset($config['target_index']) ? $config['target_index'] : $this->getIndexId($index);
   }
 
   /**
    * {@inheritdoc}
    */
   public function getTargetedSiteHash(IndexInterface $index) {
-    return Utility::getSiteHash();
+    $config = $this->getDatasourceConfig($index);
+    return isset($config['target_hash']) ? $config['target_hash'] : Utility::getSiteHash();
   }
 
   /**

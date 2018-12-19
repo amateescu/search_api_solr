@@ -17,6 +17,23 @@ use Solarium\QueryType\Update\Query\Query as UpdateQuery;
 interface SolrBackendInterface extends BackendInterface {
 
   /**
+   * The minimum required Solr schema version.
+   */
+  const SEARCH_API_SOLR_MIN_SCHEMA_VERSION = 6;
+
+  /**
+   * The separator to indicate the start of a language ID. We must not use any
+   * character that has a special meaning within regular expressions. Additionally
+   * we have to avoid characters that are valid for Drupal machine names.
+   * The end of a language ID is indicated by an underscore '_' which could not
+   * occur within the language ID itself because Drupal uses lanague tags.
+   *
+   * @see http://de2.php.net/manual/en/regexp.reference.meta.php
+   * @see https://www.w3.org/International/articles/language-tags/
+   */
+  const SEARCH_API_SOLR_LANGUAGE_SEPARATOR = ';';
+
+  /**
    * Creates a list of all indexed field names mapped to their Solr field names.
    *
    * The special fields "search_api_id" and "search_api_relevance" are also

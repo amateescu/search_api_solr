@@ -15,15 +15,8 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
    * @var string[]
    */
   public static $modules = [
-    'search_api_solr_techproducts_test',
+    'search_api_solr_test',
   ];
-
-  /**
-   * A Search API server ID.
-   *
-   * @var string
-   */
-  protected $serverId = 'techproducts';
 
   /**
    * A Search API index ID.
@@ -39,7 +32,7 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
     parent::installConfigs();
 
     $this->installConfig([
-      'search_api_solr_techproducts_test',
+      'search_api_solr_test',
     ]);
   }
 
