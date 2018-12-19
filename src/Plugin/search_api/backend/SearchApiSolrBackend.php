@@ -66,6 +66,18 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 define('SEARCH_API_SOLR_MIN_SCHEMA_VERSION', 6);
 
 /**
+ * The separator to indicate the start of a language ID. We must not use any
+ * character that has a special meaning within regular expressions. Additionally
+ * we have to avoid characters that are valid for Drupal machine names.
+ * The end of a language ID is indicated by an underscore '_' which could not
+ * occur within the language ID itself because Drupal uses lanague tags.
+ *
+ * @see http://de2.php.net/manual/en/regexp.reference.meta.php
+ * @see https://www.w3.org/International/articles/language-tags/
+ */
+define('SEARCH_API_SOLR_LANGUAGE_SEPARATOR', ';');
+
+/**
  * Apache Solr backend for search api.
  *
  * @SearchApiBackend(
@@ -1462,9 +1474,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
-   * {@inheritdoc}
+   * @param $language_id
+   * @param \Drupal\search_api\IndexInterface $index
+   * @param bool $reset
+   *
+   * @return string[]
+   * @throws \Drupal\search_api\SearchApiException
    */
-  protected function formatSolrFieldNames(IndexInterface $index, $reset = FALSE) {
+  protected function formatSolrFieldNames($language_id, IndexInterface $index, $reset = FALSE) {
     // Caching is done by getLanguageSpecificSolrFieldNames().
     if (!isset($this->fieldNames[$index->id()]) || $reset) {
       // This array maps "local property name" => "solr doc property name".
@@ -1493,7 +1510,23 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             // All text types need to be treated as multiple because some Search
             // API processors produce boosted string tokens for a single valued
             // drupal field. We need to store such tokens and their boost, too.
-            $pref .= 'm';
+            // The dynamic field tm_* will become tm;en* for English. Following
+            // this pattern we also have fall backs automatically:
+            // - tm;de-AT_*
+            // - tm;de_*
+            // - tm_*
+            // This concept bases on the fact that "longer patterns will be
+            // matched first. If equal size patterns both match, the first
+            // appearing in the schema will be used." This is not obvious from
+            // the example above. But you need to take into account that the
+            // real field name for solr will be encoded. So the real values for
+            // the example above are:
+            // - tm_X3b_de_X2d_AT_*
+            // - tm_X3b_de_*
+            // - tm_*
+            // @see \Drupal\search_api_solr\Utility\Utility::encodeSolrName()
+            // @see https://wiki.apache.org/solr/SchemaXml#Dynamic_fields
+            $pref .= 'm' . SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $language_id;
           }
           else {
             if ($this->fieldsHelper->isFieldIdReserved($key)) {
@@ -1570,7 +1603,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     $index_id = $index->id();
     if (!isset($field_names[$index_id]) || !isset($field_names[$index_id][$language_id])) {
-      $field_names[$index_id][$language_id] = $this->formatSolrFieldNames($index, $reset);
+      $field_names[$index_id][$language_id] = $this->formatSolrFieldNames($language_id, $index, $reset);
       foreach ($index->getFulltextFields() as $name) {
         if ('twm_suggest' != $field_names[$index_id][$language_id][$name])
         $field_names[$index_id][$language_id][$name] = Utility::encodeSolrName(
