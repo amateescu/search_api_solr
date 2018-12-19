@@ -201,9 +201,26 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   }
 
   /**
+   * Checks backend specific features.
+   */
+  protected function checkBackendSpecificFeatures() {
+    $this->checkQueryParsers();
+    $this->checkQueryConditions();
+    $this->insertExampleContent();
+    $this->checkRetrieveData();
+    $this->clearIndex();
+    $this->checkHighlight();
+    $this->clearIndex();
+    $this->checkSearchResultSorts();
+    $this->clearIndex();
+    $this->checkDatasourceAdditionAndDeletion();
+    $this->clearIndex();
+  }
+
+  /**
    * Tests the conversion of Search API queries into Solr queries.
    */
-  public function testQueryParsers() {
+  protected function checkQueryParsers() {
     /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
     $backend = Server::load($this->serverId)->getBackend();
 
@@ -268,7 +285,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   /**
    * Tests the conversion of Search API queries into Solr queries.
    */
-  public function testQueryConditions() {
+  protected function checkQueryConditions() {
     /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
     $backend = Server::load($this->serverId)->getBackend();
     $options = [];
@@ -491,12 +508,11 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   /**
    * Tests retrieve_data options.
    */
-  public function testRetrieveData() {
+  protected function checkRetrieveData() {
     $server = $this->getIndex()->getServerInstance();
     $config = $server->getBackendConfig();
     $backend = $server->getBackend();
 
-    $this->insertExampleContent();
     $this->indexItems($this->indexId);
 
     // Retrieve just required fields.
@@ -571,11 +587,10 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   /**
    * Tests highlight options.
    */
-  public function testHighlight() {
+  protected function checkHighlight() {
     $server = $this->getIndex()->getServerInstance();
     $config = $server->getBackendConfig();
 
-    $this->insertExampleContent();
     $this->indexItems($this->indexId);
 
     $query = $this->buildSearch('foobar');
@@ -631,8 +646,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   /**
    * Tests addition and deletion of a data source.
    */
-  public function testDatasourceAdditionAndDeletion() {
-    $this->insertExampleContent();
+  protected function checkDatasourceAdditionAndDeletion() {
     $this->indexItems($this->indexId);
 
     $results = $this->buildSearch()->execute();
@@ -714,9 +728,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   /**
    * Tests search result sorts.
    */
-  public function testSearchResultSorts() {
-    $this->insertExampleContent();
-
+  protected function checkSearchResultSorts() {
     // Add node with body length just above the solr limit for search fields.
     // It's exceeded by just a single char to simulate an edge case.
     $this->addTestEntity(6, [
@@ -970,9 +982,9 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   }
 
   /**
-   * Tests language fallback.
+   * Tests language fallback and language limiting via options.
    */
-  public function testLanguageFallback() {
+  public function testLanguageFallbackAndLanguageLimitedByOptions() {
     $this->insertMultilingualExampleContent();
     $this->indexItems($this->indexId);
 
@@ -1005,12 +1017,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->setLanguages(['de-at']);
     $results = $query->execute();
     $this->assertEquals(2, $results->getResultCount(), 'Two results for "Gene" in Austrian entities.');
-  }
 
-  /**
-   * Tests language limiting via options.
-   */
-  public function testLanguageLimitedByOptions() {
+    // Tests language limiting via options.
     $this->insertMultilingualExampleContent();
     $this->indexItems($this->indexId);
 
