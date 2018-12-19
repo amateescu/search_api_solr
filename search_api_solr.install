@@ -588,7 +588,7 @@ function search_api_solr_update_8300() {
 
       case 'search_api_solr_multilingual':
       case 'search_api_solr_multilingual_managed_schema':
-        unset($backend_config['sasm_language_unspecific_fallback_on_schema_issues'];
+        unset($backend_config['sasm_language_unspecific_fallback_on_schema_issues']);
         $server->set('backend', 'search_api_solr');
         break;
 
