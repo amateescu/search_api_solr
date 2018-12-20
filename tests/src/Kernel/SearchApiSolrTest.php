@@ -830,6 +830,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       'name' => 'Test Article 1',
       'body' => 'The test article number 1 about cats, dogs and trees.',
       'type' => 'article',
+      'category' => 'dogs and trees',
     ]);
 
     // Add another node with body length equal to the limit.
@@ -837,6 +838,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       'name' => 'Test Article 1',
       'body' => 'The test article number 2 about a tree.',
       'type' => 'article',
+      'category' => 'trees',
     ]);
 
     $this->indexItems($this->indexId);
