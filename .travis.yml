@@ -58,12 +58,12 @@ install:
   # Patch template.
   #########################################
   # to be removed once #2824932 is resolved
-  #- cd modules/search_api
+  #- cd modules/contrib/search_api
   #- curl https://www.drupal.org/files/issues/2824932.patch | patch -p1
   #- cd $TRAVIS_BUILD_DIR/../drupal
   #########################################
   # to be removed once #2824932 is resolved
-  - cd modules/search_api
+  - cd modules/contrib/search_api
   - curl https://www.drupal.org/files/issues/2018-12-20/3021717.patch | patch -p1
   - cd $TRAVIS_BUILD_DIR/../drupal
 
