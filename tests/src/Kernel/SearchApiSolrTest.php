@@ -204,6 +204,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
    * Checks backend specific features.
    */
   protected function checkBackendSpecificFeatures() {
+    $this->checkBasicAuth();
     $this->checkQueryParsers();
     $this->checkQueryConditions();
     $this->checkHighlight();
@@ -628,7 +629,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   /**
    * Test that basic auth config gets passed to Solarium.
    */
-  public function testBasicAuth() {
+  protected function checkBasicAuth() {
     $server = $this->getServer();
     $config = $server->getBackendConfig();
     $config['connector_config']['username'] = 'foo';
@@ -638,6 +639,10 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $backend = $server->getBackend();
     $auth = $backend->getSolrConnector()->getEndpoint()->getAuthentication();
     $this->assertEquals(['username' => 'foo', 'password' => 'bar'], $auth);
+
+    $config['connector_config']['username'] = '';
+    $config['connector_config']['password'] = '';
+    $server->setBackendConfig($config);
   }
 
   /**
@@ -818,9 +823,9 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   }
 
   /**
-   * Tests the autocomplete support.
+   * Tests the autocomplete support and ngram results.
    */
-  public function testAutocomplete() {
+  public function testAutocompleteAndNgram() {
     $this->addTestEntity(1, [
       'name' => 'Test Article 1',
       'body' => 'The test article number 1 about cats, dogs and trees.',
@@ -904,29 +909,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertEquals('The test <b>artic</b>le number 2 about a tree.', $suggestions[1]->getSuggestedKeys());
 
     // @todo more suggester tests
-  }
 
-  /**
-   * Tests ngram search result.
-   */
-  public function testNgramResult() {
-    $this->addTestEntity(1, [
-      'name' => 'Test Article 1',
-      'body' => 'The test article number 1 about cats, dogs and trees.',
-      'type' => 'article',
-      'category' => 'dogs and trees',
-    ]);
-
-    // Add another node with body length equal to the limit.
-    $this->addTestEntity(2, [
-      'name' => 'Test Article 1',
-      'body' => 'The test article number 2 about a tree.',
-      'type' => 'article',
-      'category' => 'trees',
-    ]);
-
-    $this->indexItems($this->indexId);
-
+    // Tests ngram search result.
     $results = $this->buildSearch(['tre'], [], ['category_ngram'])
       ->execute();
     $this->assertResults([1, 2], $results, 'Ngram text "tre".');
