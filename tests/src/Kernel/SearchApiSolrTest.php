@@ -208,11 +208,11 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->checkQueryConditions();
     $this->checkHighlight();
     $this->clearIndex();
-    $this->checkSearchResultSorts();
-    $this->clearIndex();
     $this->checkDatasourceAdditionAndDeletion();
     $this->clearIndex();
     $this->checkRetrieveData();
+    $this->clearIndex();
+    $this->checkSearchResultSorts();
   }
 
   /**
@@ -572,14 +572,13 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       $this->assertArrayNotHasKey('twm_suggest', $fields);
     }
 
-    $this->assertEquals([
-      0 => 'name',
-      1 => 'body',
-      2 => 'body_unstemmed',
-      // body_suggest should be removed by getQueryFulltextFields().
-      // 3 => 'body_suggest',
-      4 => 'category_ngram',
-    ], $this->invokeMethod($backend, 'getQueryFulltextFields', [$query]));
+    $fulltext_fields = array_flip($this->invokeMethod($backend, 'getQueryFulltextFields', [$query]));
+    $this->assertArrayHasKey('name', $fulltext_fields);
+    $this->assertArrayHasKey('body', $fulltext_fields);
+    $this->assertArrayHasKey('body_unstemmed', $fulltext_fields);
+    $this->assertArrayHasKey('category_ngram', $fulltext_fields);
+    // body_suggest should be removed by getQueryFulltextFields().
+    $this->assertArrayNotHasKey('body_suggest', $fulltext_fields);
   }
 
   /**
@@ -807,12 +806,15 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $results = $this->buildSearch(NULL, [], [], FALSE)
       ->sort('changed')
       ->execute();
-    $this->assertResults([1, 2, 3, 4, 5, 6, 7], $results, 'Sort by last update date');
+    $this->assertResults([1, 2, 4, 5, 3, 6, 7], $results, 'Sort by last update date');
 
     $results = $this->buildSearch(NULL, [], [], FALSE)
       ->sort('changed', QueryInterface::SORT_DESC)
       ->execute();
-    $this->assertResults([7, 6, 5, 4, 3, 2, 1], $results, 'Sort by last update date descending');
+    $this->assertResults([7, 6, 3, 5, 4, 2, 1], $results, 'Sort by last update date descending');
+
+    $this->removeTestEntity(6);
+    $this->removeTestEntity(7);
   }
 
   /**
