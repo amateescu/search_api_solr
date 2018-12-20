@@ -1019,6 +1019,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $search_api_result_set = $this->extractResults($query, $solarium_result);
 
       $this->moduleHandler->alter('search_api_solr_search_results', $search_api_result_set, $query, $solarium_result);
+      $this->postQuery($search_api_result_set, $query, $solarium_result);
     }
     else {
       $mlt_options = $query->getOption('search_api_mlt');
@@ -1189,6 +1190,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       try {
         // Allow modules to alter the solarium query.
         $this->moduleHandler->alter('search_api_solr_query', $solarium_query, $query);
+        $this->preQuery($solarium_query, $query);
 
         // Since Solr 7.2 the edsimax query parser doesn't allow local
         // parameters anymore. But since we don't want to force all modules that
@@ -1219,7 +1221,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             !$query_fields_boosted
           ) {
             // Edismax was forced via API or the query fields were removed via
-            // API (like the multilingual backend does).
+            // API.
             $keys = $this->flattenKeys($keys, [], $parse_mode_id);
           }
           else {
@@ -1245,9 +1247,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         if (200 != $response->getStatusCode()) {
           throw new SearchApiSolrException(strip_tags($body), $response->getStatusCode());
         }
-        $response = new Response($body, $response->getHeaders());
+        $search_api_response = new Response($body, $response->getHeaders());
 
-        $solarium_result = $connector->createSearchResult($solarium_query, $response);
+        $solarium_result = $connector->createSearchResult($solarium_query, $search_api_response);
 
         // Extract results.
         $search_api_result_set = $this->extractResults($query, $solarium_result);
@@ -1270,6 +1272,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
 
         $this->moduleHandler->alter('search_api_solr_search_results', $search_api_result_set, $query, $solarium_result);
+        $this->postQuery($search_api_result_set, $query, $solarium_result);
       }
       catch (\Exception $e) {
         throw new SearchApiSolrException('An error occurred while trying to search with Solr: ' . $e->getMessage(), $e->getCode(), $e);
@@ -2703,6 +2706,37 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $facet_field->setMinCount($info['min_count']);
       }
     }
+  }
+
+  /**
+   * Allow custom changes before sending a search query to Solr.
+   *
+   * This allows subclasses to apply custom changes before the query is sent to
+   * Solr. Works exactly like hook_search_api_solr_query_alter().
+   *
+   * @param \Solarium\Core\Query\QueryInterface $solarium_query
+   *   The Solarium query object.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The \Drupal\search_api\Query\Query object representing the executed
+   *   search query.
+   */
+  protected function preQuery(SolariumQueryInterface $solarium_query, QueryInterface $query) {
+  }
+
+  /**
+   * Allow custom changes before search results are returned for subclasses.
+   *
+   * Works exactly like hook_search_api_solr_search_results_alter().
+   *
+   * @param \Drupal\search_api\Query\ResultSetInterface $results
+   *   The results array that will be returned for the search.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The \Drupal\search_api\Query\Query object representing the executed
+   *   search query.
+   * @param object $response
+   *   The response object returned by Solr.
+   */
+  protected function postQuery(ResultSetInterface $results, QueryInterface $query, $response) {
   }
 
   /**
