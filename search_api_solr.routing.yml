@@ -107,3 +107,9 @@ entity.search_api_index.solr_multisite_datasource_clone_form:
   requirements:
     _entity_access: 'search_api_index.edit'
 
+entity.search_api_index.solr_multisite_datasource_update_form:
+  path: '/admin/config/search/search-api/index/{search_api_index}/solr_multisite_datasource_update'
+  defaults:
+    _entity_form: 'search_api_index.solr_multisite_datasource_update'
+  requirements:
+    _entity_access: 'search_api_index.edit'

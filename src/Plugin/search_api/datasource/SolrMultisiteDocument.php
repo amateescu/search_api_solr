@@ -29,6 +29,7 @@ class SolrMultisiteDocument extends SolrDocument {
     $config['url_field'] = 'site';
 
     $config['target_index'] = '';
+    $config['target_index_machine_name'] = '';
     $config['target_hash'] = '';
     return $config;
   }
@@ -40,11 +41,19 @@ class SolrMultisiteDocument extends SolrDocument {
     $form = parent::buildConfigurationForm($form, $form_state);
 
     $form['target_index'] = [
-      '#type' => 'machine_name',
+      '#type' => 'textfield',
       '#title' => $this->t('Targeted index'),
       '#required' => TRUE,
-      '#description' => $this->t('Enter the machine name of the targeted index.'),
+      '#description' => $this->t('Enter the prefixed name of the targeted index.'),
       '#default_value' => $this->configuration['target_index'],
+    ];
+
+    $form['target_index'] = [
+      '#type' => 'target_index_machine_name',
+      '#title' => $this->t('Targeted index machine name'),
+      '#required' => TRUE,
+      '#description' => $this->t('Enter the machine name of the targeted index.'),
+      '#default_value' => $this->configuration['target_index_machine_name'],
     ];
 
     $form['target_hash'] = [

@@ -5,6 +5,9 @@ plugin.plugin_configuration.search_api_datasource.solr_multisite_document:
     target_index:
       type: string
       label: "Targeted index"
+    target_index_machine_name:
+      type: string
+      label: "Targeted index"
     target_hash:
       type: string
       label: "Targeted site hash"

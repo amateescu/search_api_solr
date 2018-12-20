@@ -1559,8 +1559,18 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     foreach ($fields as $search_api_name => $field) {
       switch ($field->getDatasourceId()) {
         case 'solr_document':
-        case 'solr_multisite_document':
           $field_ampping[$search_api_name] = $field->getPropertyPath();
+          break;
+
+        case 'solr_multisite_document':
+          $field_ampping[$search_api_name] =
+            Utility::encodeSolrName(
+              preg_replace(
+                '/^(t[a-z]*m' . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . ')' . LanguageInterface::LANGCODE_NOT_SPECIFIED .'(.+)/',
+                '$1' . $language_id . '$2',
+                Utility::decodeSolrName($field->getPropertyPath())
+              )
+            );
           break;
 
         default:

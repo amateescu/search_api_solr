@@ -5,7 +5,7 @@ namespace Drupal\search_api_solr\Form;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Form\IndexForm;
 use Drupal\search_api\Utility\Utility as SearchApiUtility;
-use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrAnySchemaBackend;
+use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\Utility\Utility;
 
 /**
@@ -34,6 +34,7 @@ class IndexSolrMultisiteDatasourceCloneForm extends IndexForm {
       $server = $this->entity->getServerInstance();
       /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
       $backend = $server->getBackend();
+
       /** @var \Drupal\search_api\IndexInterface $index */
       $index = $this->entity->createDuplicate();
 
@@ -55,7 +56,8 @@ class IndexSolrMultisiteDatasourceCloneForm extends IndexForm {
 
       $index->setFields($fields);
 
-      $target_index = $this->entity->id();
+      $target_index = $backend->getTargetedIndexId($this->entity);
+      $target_index_machine_name = $this->entity->id();
 
       $this->entity = $index;
     }
@@ -69,6 +71,7 @@ class IndexSolrMultisiteDatasourceCloneForm extends IndexForm {
 
     $form['datasources']['#default_value'] = ['solr_multisite_document'];
     $form['datasource_configs']['solr_multisite_document']['target_index']['#default_value'] = $target_index;
+    $form['datasource_configs']['solr_multisite_document']['target_index_machine_name']['#default_value'] = $target_index_machine_name;
     $form['datasource_configs']['solr_multisite_document']['target_hash']['#default_value'] = Utility::getSiteHash();
     $form['options']['read_only']['#default_value'] = TRUE;
     $form['status']['#default_value'] = FALSE;
@@ -105,7 +108,7 @@ class IndexSolrMultisiteDatasourceCloneForm extends IndexForm {
       ->getStorage('search_api_server')
       ->loadMultiple();
     foreach ($servers as $server_id => $server) {
-      if ($server->getBackend() instanceof SearchApiSolrAnySchemaBackend) {
+      if ($server->getBackend() instanceof SolrBackendInterface) {
         // @todo Special formatting for disabled servers.
         $options[$server_id] = SearchApiUtility::escapeHtml($server->label());
       }
