@@ -26,6 +26,7 @@ use Drupal\search_api\Plugin\search_api\data_type\value\TextValue;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Query\ConditionGroup;
 use Drupal\search_api\Query\ConditionInterface;
+use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\ConditionGroupInterface;
