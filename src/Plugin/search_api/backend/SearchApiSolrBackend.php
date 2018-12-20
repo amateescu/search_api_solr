@@ -1654,17 +1654,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
-   * Gets a language-specific mapping from Drupal to Solr field names.
-   *
-   * @param string $language_id
-   *   The language to get the mapping for.
-   * @param \Drupal\search_api\IndexInterface $index_fields
-   *   The fields handled by the curent index.
-   * @param bool $reset
-   *   (optional) Whether to reset the static cache.
-   *
-   * @return array
-   *   The language-specific mapping from Drupal to Solr field names.
+   * {@inheritdoc}
    */
   public function getLanguageSpecificSolrFieldNames($language_id, IndexInterface $index, $reset = FALSE) {
     static $field_names = [];
@@ -1682,42 +1672,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
-   * Gets a language-specific mapping from Drupal to Solr field names.
-   *
-   * @param array $language_ids
-   *   The language to get the mapping for.
-   * @param \Drupal\search_api\IndexInterface $index_fields
-   *   The fields handled by the curent index.
-   * @param bool $reset
-   *   (optional) Whether to reset the static cache.
-   *
-   * @return array
-   *   The language-specific mapping from Drupal to Solr field names.
-   */
-  public function getMultipleLanguageSpecificSolrFieldNames(array $language_ids, IndexInterface $index, $reset = FALSE) {
-    $field_names = [];
-
-    foreach ($language_ids as $language_id) {
-      $field_names[$language_id] = $this->getLanguageSpecificSolrFieldNames($language_id, $index, $reset);
-      // Just reset once.
-      $reset = FALSE;
-    }
-
-    return $field_names;
-  }
-
-  /**
-   * Gets a language-specific mapping from Drupal to Solr field names.
-   *
-   * @param array $language_ids
-   *   The language to get the mapping for.
-   * @param \Drupal\search_api\IndexInterface $index_fields
-   *   The fields handled by the curent index.
-   * @param bool $reset
-   *   (optional) Whether to reset the static cache.
-   *
-   * @return array
-   *   The language-specific mapping from Drupal to Solr field names.
+   * {@inheritdoc}
    */
   public function getSolrFieldNamesKeyedByLanguage(array $language_ids, IndexInterface $index, $reset = FALSE) {
     $field_names = [];

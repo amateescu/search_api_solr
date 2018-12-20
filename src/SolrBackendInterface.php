@@ -50,6 +50,36 @@ interface SolrBackendInterface extends BackendInterface {
   public function getSolrFieldNames(IndexInterface $index, $reset = FALSE);
 
   /**
+   * Gets a language-specific mapping from Drupal to Solr field names.
+   *
+   * @param string $language_id
+   *   The language to get the mapping for.
+   * @param \Drupal\search_api\IndexInterface $index_fields
+   *   The fields handled by the curent index.
+   * @param bool $reset
+   *   (optional) Whether to reset the static cache.
+   *
+   * @return array
+   *   The language-specific mapping from Drupal to Solr field names.
+   */
+  public function getLanguageSpecificSolrFieldNames($language_id, IndexInterface $index, $reset = FALSE);
+
+  /**
+   * Gets a language-specific mapping from Drupal to Solr field names.
+   *
+   * @param array $language_ids
+   *   The language to get the mapping for.
+   * @param \Drupal\search_api\IndexInterface $index_fields
+   *   The fields handled by the curent index.
+   * @param bool $reset
+   *   (optional) Whether to reset the static cache.
+   *
+   * @return array
+   *   The language-specific mapping from Drupal to Solr field names.
+   */
+  public function getSolrFieldNamesKeyedByLanguage(array $language_ids, IndexInterface $index, $reset = FALSE);
+
+  /**
    * Returns the Solr connector used for this backend.
    *
    * @return \Drupal\search_api_solr\SolrConnectorInterface
