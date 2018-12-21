@@ -50,6 +50,7 @@ class IndexSolrMultisiteUpdateForm extends IndexForm {
       }
 
       $this->entity->setFields($fields);
+      $this->entity->setProcessors($target_index->getProcessors());
 
       $target_index_prefixed = $backend->getTargetedIndexId($target_index);
     }
