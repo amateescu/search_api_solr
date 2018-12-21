@@ -7,8 +7,8 @@ php:
   - 7.2
 
 env:
-  - SOLR_VERSION=7.5.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.4.0
-  - SOLR_VERSION=7.5.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.6.x DRUSH_VERSION=~9.4.0
+  - SOLR_VERSION=7.6.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.4.0
+  - SOLR_VERSION=7.6.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.6.x DRUSH_VERSION=~9.4.0
   - SOLR_VERSION=6.6.5 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=6.x DRUPAL_BRANCH=8.6.x DRUSH_VERSION=~9.4.0
 
 notifications:
@@ -59,13 +59,9 @@ install:
   #########################################
   # to be removed once #2824932 is resolved
   #- cd modules/contrib/search_api
-  #- curl https://www.drupal.org/files/issues/2824932.patch | patch -p1
+  #- curl https://www.drupal.org/files/issues/2018-12-20/3021717.patch | patch -p1
   #- cd $TRAVIS_BUILD_DIR/../drupal
   #########################################
-  # to be removed once #2824932 is resolved
-  - cd modules/contrib/search_api
-  - curl https://www.drupal.org/files/issues/2018-12-20/3021717.patch | patch -p1
-  - cd $TRAVIS_BUILD_DIR/../drupal
 
 before_script:
   - export SOLR_INDEX_WAIT=4
@@ -106,7 +102,7 @@ script:
 matrix:
   exclude:
       - php: 7.0
-        env: SOLR_VERSION=7.5.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.4.0
+        env: SOLR_VERSION=7.6.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.4.0
   allow_failures:
       - php: 7.2
-        env: SOLR_VERSION=7.5.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.4.0
+        env: SOLR_VERSION=7.6.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.4.0
