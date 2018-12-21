@@ -95,7 +95,12 @@ class StreamingExpressionBuilder extends Expression {
     $this->targeted_site_hash = $backend->getTargetedSiteHash($index);
     $this->index = $index;
     $this->request_time = $backend->formatDate(\Drupal::time()->getRequestTime());
-    $this->all_fields_mapped = $backend->getSolrFieldNamesKeyedByLanguage($language_ids, $index);
+    $this->all_fields_mapped = [];
+    foreach ($backend->getSolrFieldNamesKeyedByLanguage($language_ids, $index) as $search_api_field => $solr_field) {
+      foreach ($solr_field as $language_id => $solr_field_name) {
+        $this->all_fields_mapped[$language_id][$search_api_field] = $solr_field_name;
+      }
+    }
     foreach ($language_ids as $language_id) {
       $this->all_fields_mapped[$language_id] += [
         // Search API Solr Search specific fields.
