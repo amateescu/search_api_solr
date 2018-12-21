@@ -100,16 +100,16 @@ entity.solr_field_type.config_zip_collection:
     _permission: 'administer search_api'
     _search_api_solr_local_action_access_check: 'TRUE'
 
-entity.search_api_index.solr_multisite_datasource_clone_form:
-  path: '/admin/config/search/search-api/index/{search_api_index}/solr_multisite_datasource_clone'
+entity.search_api_index.solr_multisite_clone_form:
+  path: '/admin/config/search/search-api/index/{search_api_index}/solr_multisite_clone'
   defaults:
-    _entity_form: 'search_api_index.solr_multisite_datasource_clone'
+    _entity_form: 'search_api_index.solr_multisite_clone'
   requirements:
     _entity_access: 'search_api_index.edit'
 
-entity.search_api_index.solr_multisite_datasource_update_form:
-  path: '/admin/config/search/search-api/index/{search_api_index}/solr_multisite_datasource_update'
+entity.search_api_index.solr_multisite_update_form:
+  path: '/admin/config/search/search-api/index/{search_api_index}/solr_multisite_update'
   defaults:
-    _entity_form: 'search_api_index.solr_multisite_datasource_update'
+    _entity_form: 'search_api_index.solr_multisite_update'
   requirements:
     _entity_access: 'search_api_index.edit'

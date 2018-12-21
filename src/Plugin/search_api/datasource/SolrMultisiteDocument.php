@@ -48,8 +48,8 @@ class SolrMultisiteDocument extends SolrDocument {
       '#default_value' => $this->configuration['target_index'],
     ];
 
-    $form['target_index'] = [
-      '#type' => 'target_index_machine_name',
+    $form['target_index_machine_name'] = [
+      '#type' => 'machine_name',
       '#title' => $this->t('Targeted index machine name'),
       '#required' => TRUE,
       '#description' => $this->t('Enter the machine name of the targeted index.'),

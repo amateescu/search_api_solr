@@ -8,7 +8,7 @@ use Drupal\search_api\Form\IndexForm;
 /**
  * Provides a form for the Index entity.
  */
-class IndexSolrMultisiteDatasourceUpdateForm extends IndexForm {
+class IndexSolrMultisiteUpdateForm extends IndexForm {
 
   /**
    * {@inheritdoc}
@@ -51,7 +51,7 @@ class IndexSolrMultisiteDatasourceUpdateForm extends IndexForm {
 
       $this->entity->setFields($fields);
 
-      $target_index = $backend->getTargetedIndexId($target_index);
+      $target_index_prefixed = $backend->getTargetedIndexId($target_index);
     }
 
     $form = IndexForm::form($form, $form_state);
@@ -61,7 +61,7 @@ class IndexSolrMultisiteDatasourceUpdateForm extends IndexForm {
 
     $this->buildEntityForm($form, $form_state, $this->entity);
 
-    $form['datasource_configs']['solr_multisite_document']['target_index']['#default_value'] = $target_index;
+    $form['datasource_configs']['solr_multisite_document']['target_index']['#default_value'] = $target_index_prefixed;
 
     return $form;
   }

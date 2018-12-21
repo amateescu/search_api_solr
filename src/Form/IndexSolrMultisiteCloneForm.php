@@ -11,7 +11,7 @@ use Drupal\search_api_solr\Utility\Utility;
 /**
  * Provides a form for the Index entity.
  */
-class IndexSolrMultisiteDatasourceCloneForm extends IndexForm {
+class IndexSolrMultisiteCloneForm extends IndexForm {
 
   /**
    * {@inheritdoc}
@@ -69,6 +69,7 @@ class IndexSolrMultisiteDatasourceCloneForm extends IndexForm {
 
     $this->buildEntityForm($form, $form_state, $index);
 
+    $form['name']['#default_value'] = 'Multisite ' . $form['name']['#default_value'];
     $form['datasources']['#default_value'] = ['solr_multisite_document'];
     $form['datasource_configs']['solr_multisite_document']['target_index']['#default_value'] = $target_index;
     $form['datasource_configs']['solr_multisite_document']['target_index_machine_name']['#default_value'] = $target_index_machine_name;
