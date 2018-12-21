@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api_solr\Utility;
 
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
@@ -45,24 +46,24 @@ class StreamingExpressionBuilder extends Expression {
   protected $request_time;
 
   /**
-   * @var string[]
+   * @var string[][]
    */
-  protected $field_name_mapping;
+  protected $all_fields_including_graph_fields_mapped;
 
   /**
-   * @var string[]
+   * @var string[][]
    */
   protected $all_fields_mapped;
 
   /**
-   * @var string[]
+   * @var string[][]
    */
   protected $all_doc_value_fields_mapped;
 
   /**
-   * @var string[]
+   * @var string[][]
    */
-  protected $sort_fields;
+  protected $sort_fields_mapped;
 
   /**
    * @var \Solarium\Core\Query\Helper
@@ -87,50 +88,54 @@ class StreamingExpressionBuilder extends Expression {
       throw new SearchApiSolrException('Streaming expression are only supported by a Solr Cloud connector.');
     }
 
+    $language_ids = array_merge(array_keys(\Drupal::languageManager()->getLanguages()), [LanguageInterface::LANGCODE_NOT_SPECIFIED]);
     $this->collection = $connector->getCollectionName();
     $this->index_filter_query = $backend->getIndexFilterQueryString($index);
     $this->targeted_index_id = $backend->getTargetedIndexId($index);
     $this->targeted_site_hash = $backend->getTargetedSiteHash($index);
     $this->index = $index;
     $this->request_time = $backend->formatDate(\Drupal::time()->getRequestTime());
-    $this->all_fields_mapped = $backend->getSolrFieldNames($index) + [
-      // Search API Solr Search specific fields.
-      'id' => 'id',
-      'index_id' => 'index_id',
-      'hash' => 'hash',
-      'site' => 'site',
-      'timestamp' => 'timestamp',
-      'context_tags' => 'sm_context_tags',
-      // @todo to be removed
-      'spell' => 'spell',
-    ];
-    $this->field_name_mapping = $this->all_fields_mapped + [
-      // Graph traversal reserved names. We can't get a conflict here since all
-      // dynamic fields are prefixed.
-      'node' => 'node',
-      'collection' => 'collection',
-      'field' => 'field',
-      'level' => 'level',
-      'ancestors' => 'ancestors',
-    ];
-    $this->sort_fields = [];
-    foreach ($this->all_fields_mapped as $search_api_field => $solr_field) {
-      if (strpos($solr_field, 't') === 0 || strpos($solr_field, 's') === 0) {
-        $this->sort_fields['sort_' . $search_api_field] = 'sort_' . Utility::encodeSolrName($search_api_field);
-      }
-      elseif (preg_match('/^([a-z]+)m(_.*)/', $solr_field, $matches) && strpos($solr_field, 'random_') !== 0) {
-        $this->sort_fields['sort' . Utility::decodeSolrName($matches[2])] = $matches[1] . 's' . $matches[2];
-      }
+    $this->all_fields_mapped = $backend->getSolrFieldNamesKeyedByLanguage($language_ids, $index);
+    foreach ($language_ids as $language_id) {
+      $this->all_fields_mapped[$language_id] += [
+        // Search API Solr Search specific fields.
+        'id' => 'id',
+        'index_id' => 'index_id',
+        'hash' => 'hash',
+        'site' => 'site',
+        'timestamp' => 'timestamp',
+        'context_tags' => 'sm_context_tags',
+        // @todo to be removed
+        'spell' => 'spell',
+      ];
+      $this->all_fields_including_graph_fields_mapped[$language_id] = $this->all_fields_mapped[$language_id] + [
+        // Graph traversal reserved names. We can't get a conflict here since all
+        // dynamic fields are prefixed.
+        'node' => 'node',
+        'collection' => 'collection',
+        'field' => 'field',
+        'level' => 'level',
+        'ancestors' => 'ancestors',
+      ];
+      $this->sort_fields_mapped[$language_id] = [];
+      foreach ($this->all_fields_mapped[$language_id] as $search_api_field => $solr_field) {
+        if (strpos($solr_field, 't') === 0 || strpos($solr_field, 's') === 0) {
+          $this->sort_fields_mapped['sort_' . $search_api_field] = 'sort_' . Utility::encodeSolrName($search_api_field);
+        }
+        elseif (preg_match('/^([a-z]+)m(_.*)/', $solr_field, $matches) && strpos($solr_field, 'random_') !== 0) {
+          $this->sort_fields_mapped['sort' . Utility::decodeSolrName($matches[2])] = $matches[1] . 's' . $matches[2];
+        }
 
-      if (
-        strpos($solr_field, 's') === 0 ||
-        strpos($solr_field, 'i') === 0 ||
-        strpos($solr_field, 'f') === 0 ||
-        strpos($solr_field, 'p') === 0 ||
-        strpos($solr_field, 'b') === 0 ||
-        strpos($solr_field, 'h') === 0
-      ) {
-        $this->all_doc_value_fields_mapped[$search_api_field] = $solr_field;
+        if (
+          strpos($solr_field, 's') === 0 ||
+          strpos($solr_field, 'i') === 0 ||
+          strpos($solr_field, 'f') === 0 ||
+          strpos($solr_field, 'p') === 0 ||
+          strpos($solr_field, 'b') === 0 ||
+          strpos($solr_field, 'h') === 0
+        ) {
+          $this->all_doc_value_fields_mapped[$language_id][$search_api_field] = $solr_field;
+        }
       }
     }
 
@@ -156,19 +161,20 @@ class StreamingExpressionBuilder extends Expression {
    *
    * @return string
    *   The Solr field name.
+   * @param string $language_id
    *
    * @throws \InvalidArgumentException
    */
-  public function _field(string $search_api_field_name) {
-    if (!isset($this->field_name_mapping[$search_api_field_name])) {
-      if (isset($this->sort_fields[$search_api_field_name])) {
-        return $this->sort_fields[$search_api_field_name];
+  public function _field(string $search_api_field_name, string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
+    if (!isset($this->all_fields_including_graph_fields_mapped[$language_id][$search_api_field_name])) {
+      if (isset($this->sort_fields[$language_id][$search_api_field_name])) {
+        return $this->sort_fields_mapped[$language_id][$search_api_field_name];
       }
       else {
         throw new \InvalidArgumentException(sprintf('Field %s does not exist in index %s.', $search_api_field_name, $this->targeted_index_id));
       }
     }
-    return $this->field_name_mapping[$search_api_field_name];
+    return $this->all_fields_including_graph_fields_mapped[$language_id][$search_api_field_name];
   }
 
   /**
@@ -176,15 +182,16 @@ class StreamingExpressionBuilder extends Expression {
    *
    * @param array $search_api_field_names
    * @param string $delimiter
+   * @param string $language_id
    *
    * @return string
    *   A list of Solr field names.
    */
-  public function _field_list(array $search_api_field_names, string $delimiter = ',') {
+  public function _field_list(array $search_api_field_names, string $delimiter = ',', string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
     return trim(array_reduce(
       $search_api_field_names,
-      function ($carry, $search_api_field_name) use ($delimiter) {
-        return $carry . $this->_field($search_api_field_name) . $delimiter;
+      function ($carry, $search_api_field_name) use ($delimiter, $language_id) {
+        return $carry . $this->_field($search_api_field_name, $language_id) . $delimiter;
       },
       ''
     ), $delimiter);
@@ -196,13 +203,14 @@ class StreamingExpressionBuilder extends Expression {
    * @param string $delimiter
    * @param bool $include_sorts
    * @param array $blacklist
+   * @param string $language_id
    *
    * @return string
    *   A list of all Solr field names for the index.
    */
-  public function _all_fields_list(string $delimiter = ',', bool $include_sorts = TRUE, array $blacklist = []) {
+  public function _all_fields_list(string $delimiter = ',', bool $include_sorts = TRUE, array $blacklist = [], string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
     return implode($delimiter, array_diff_key(
-      ($include_sorts ? array_merge($this->all_fields_mapped, $this->sort_fields) : $this->all_fields_mapped),
+      ($include_sorts ? array_merge($this->all_fields_mapped[$language_id], $this->sort_fields_mapped[$language_id]) : $this->all_fields_mapped[$language_id]),
       array_flip($blacklist))
     );
   }
@@ -213,14 +221,15 @@ class StreamingExpressionBuilder extends Expression {
    * @param string $delimiter
    * @param bool $include_sorts
    * @param array $blacklist
+   * @param string $language_id
    *
    * @return string
    *   A list of all Solr field names for the index.
    */
-  public function _all_doc_value_fields_list(string $delimiter = ',', bool $include_sorts = TRUE, array $blacklist = []) {
+  public function _all_doc_value_fields_list(string $delimiter = ',', bool $include_sorts = TRUE, array $blacklist = [], string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
     return implode($delimiter, array_diff_key(
       // All sort fields have docValues.
-      ($include_sorts ? array_merge($this->all_doc_value_fields_mapped, $this->sort_fields) : $this->all_doc_value_fields_mapped),
+      ($include_sorts ? array_merge($this->all_doc_value_fields_mapped[$language_id], $this->sort_fields_mapped[$language_id]) : $this->all_doc_value_fields_mapped[$language_id]),
       array_flip($blacklist))
     );
   }
@@ -263,12 +272,13 @@ class StreamingExpressionBuilder extends Expression {
    *
    * @param string $search_api_field_name
    * @param string $value
+   * @param string $language_id
    *
    * @return string
    *   The Solr field name and the value as 'field:value'.
    */
-  public function _field_value(string $search_api_field_name, string $value) {
-    return $this->_field($search_api_field_name) . ':' . $value;
+  public function _field_value(string $search_api_field_name, string $value, string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
+    return $this->_field($search_api_field_name, $language_id) . ':' . $value;
   }
 
   /**
@@ -278,12 +288,13 @@ class StreamingExpressionBuilder extends Expression {
    * @param string $value
    * @param bool $single_term
    *   Escapes the value as single term if TRUE, otherwise as phrase.
+   * @param string $language_id
    *
    * @return string
    *   The Solr field name and the escaped value as 'field:value'.
    */
-  public function _field_escaped_value(string $search_api_field_name, string $value, bool $single_term = TRUE) {
-    return $this->_field($search_api_field_name) . ':' . $this->_escaped_value($value, $single_term, $search_api_field_name);
+  public function _field_escaped_value(string $search_api_field_name, string $value, bool $single_term = TRUE, string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
+    return $this->_field($search_api_field_name, $language_id) . ':' . $this->_escaped_value($value, $single_term, $search_api_field_name);
   }
 
   /**
@@ -296,13 +307,14 @@ class StreamingExpressionBuilder extends Expression {
    * @param bool $single_term Whether to escape as a single term or as a phrase.
    * @param string $search_api_field_name Passed on to _escaped_value();
    *   influences whether processors act on the values.
+   * @param string $language_id
    *
    * @return string The imploded string of escaped values.
    */
-  public function _escape_and_implode(string $glue, array $values, $single_term = TRUE, string $search_api_field_name = NULL) {
+  public function _escape_and_implode(string $glue, array $values, $single_term = TRUE, string $search_api_field_name = NULL, string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
     $escaped_values = [];
     foreach ($values as $value) {
-      $escaped_values[] = $this->_escaped_value($value, $single_term, $search_api_field_name);
+      $escaped_values[] = $this->_escaped_value($value, $single_term, $search_api_field_name, $language_id);
     }
     return implode($glue, $escaped_values);
   }
@@ -312,12 +324,13 @@ class StreamingExpressionBuilder extends Expression {
    *
    * @param string $search_api_field_name_source
    * @param string $search_api_field_name_target
+   * @param string $language_id
    *
    * @return string
    */
-  public function _select_renamed_field(string $search_api_field_name_source, string $search_api_field_name_target) {
+  public function _select_renamed_field(string $search_api_field_name_source, string $search_api_field_name_target, string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
     return
-      $this->_field($search_api_field_name_source) . ' as ' . $this->_field($search_api_field_name_target);
+      $this->_field($search_api_field_name_source, $language_id) . ' as ' . $this->_field($search_api_field_name_target, $language_id);
   }
 
   /**
@@ -325,16 +338,17 @@ class StreamingExpressionBuilder extends Expression {
    *
    * @param string $search_api_field_name_source
    * @param string $search_api_field_name_target
+   * @param string $language_id
    *
    * @return string
    */
-  public function _select_copied_field(string $search_api_field_name_source, string $search_api_field_name_target) {
+  public function _select_copied_field(string $search_api_field_name_source, string $search_api_field_name_target, string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
     return
       $this->concat(
-        'fields="' . $this->_field($search_api_field_name_source) . '"',
+        'fields="' . $this->_field($search_api_field_name_source, $language_id) . '"',
         // Delimiter must be set but is ignored if just one field is provided.
         'delim=","',
-        'as="'. $this->_field($search_api_field_name_target) .'"'
+        'as="'. $this->_field($search_api_field_name_target, $language_id) .'"'
       );
   }
 
@@ -348,12 +362,13 @@ class StreamingExpressionBuilder extends Expression {
    * @param string $field
    *  The Search API field name or Solr reserved field name to use for the
    *  intersection.
+   * @param string $language_id
    *
    * @return string
    *  A chainable streaming expression as string.
    */
-  public function _intersect(string $stream1, string $stream2, string $field) {
-    $solr_field = $this->_field($field);
+  public function _intersect(string $stream1, string $stream2, string $field, string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
+    $solr_field = $this->_field($field, $language_id);
     return
       $this->intersect(
         $this->sort(
@@ -378,12 +393,13 @@ class StreamingExpressionBuilder extends Expression {
    * @param string $field
    *  The Search API field name or Solr reserved field name to use for the
    *  intersection.
+   * @param string $language_id
    *
    * @return string
    *  A chainable streaming expression as string.
    */
-  public function _merge(string $stream1, string $stream2, string $field) {
-    $solr_field = $this->_field($field);
+  public function _merge(string $stream1, string $stream2, string $field, string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
+    $solr_field = $this->_field($field, $language_id);
     return
       $this->merge(
         $this->sort(

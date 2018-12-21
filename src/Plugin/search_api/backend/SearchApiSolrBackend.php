@@ -1581,7 +1581,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
               // Any field of this type will be indexed in the same Solr field.
               // The 'twm_suggest' is the backend for the suggester component.
               $field_ampping[$search_api_name] = 'twm_suggest';
-              continue;
+              break;
             }
             $type_info = Utility::getDataTypeInfo($type);
             $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
