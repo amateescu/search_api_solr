@@ -475,11 +475,11 @@ function search_api_solr_entity_operation(\Drupal\Core\Entity\EntityInterface $e
     if (
       $entity->isServerEnabled() &&
       $entity->getServerInstance()->getBackend() instanceof SolrBackendInterface &&
-      !($entity->getServerInstance()->getBackend() instanceof SearchApiSolrAnySchemaBackend)
+      !$entity->isValidDatasource('solr_multisite_document')
     ) {
       $operations['clone_for_multisite'] = [
         'title' => t('Clone for Multisite'),
-        'url' => \Drupal\Core\Url::fromRoute('entity.search_api_index.solr_multisite_datasource_clone_form', ['search_api_index' => $entity->id()]),
+        'url' => \Drupal\Core\Url::fromRoute('entity.search_api_index.solr_multisite_clone_form', ['search_api_index' => $entity->id()]),
         'weight' => 50,
       ];
     }
@@ -487,7 +487,7 @@ function search_api_solr_entity_operation(\Drupal\Core\Entity\EntityInterface $e
       $operations['update_for_multisite'] = [
         'title' => t('Update for Multisite'),
         // @todo
-        'url' => \Drupal\Core\Url::fromRoute('entity.search_api_index.solr_multisite_datasource_update_form', ['search_api_index' => $entity->id()]),
+        'url' => \Drupal\Core\Url::fromRoute('entity.search_api_index.solr_multisite_update_form', ['search_api_index' => $entity->id()]),
         'weight' => 50,
       ];
     }
