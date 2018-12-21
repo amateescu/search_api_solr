@@ -488,7 +488,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     return in_array($type, [
       'location',
       'rpt',
-      'solr_string_doc_values',
       'solr_string_ngram',
       'solr_string_storage',
       'solr_text_ngram',
@@ -632,10 +631,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                 \Drupal::messenger()->addError($this->t('Your schema.xml version is too old. Please replace all configuration files with the ones packaged with this module and re-index you data.'));
                 $status = 'error';
               }
-              elseif (!preg_match('/drupal-[' . SolrBackendInterface::SEARCH_API_SOLR_MIN_SCHEMA_VERSION . '-9]\./', $stats_summary['@schema_version'])) {
+              elseif (strpos($stats_summary['@schema_version'], 'drupal-' . SolrBackendInterface::SEARCH_API_SOLR_MIN_SCHEMA_VERSION) !== 0) {
                 $variables[':url'] = Url::fromUri('internal:/' . drupal_get_path('module', 'search_api_solr') . '/INSTALL.md')
                   ->toString();
-                \Drupal::messenger()->addError($this->t('You are using an incompatible schema.xml configuration file. Please follow the instructions in the <a href=":url">INSTALL.md</a> file for setting up Solr.', $variables));
+                \Drupal::messenger()->addError($this->t('You are using outdated Solr configuration files. Please follow the instructions in the <a href=":url">INSTALL.md</a> file for setting up Solr.', $variables));
                 $status = 'error';
               }
             }

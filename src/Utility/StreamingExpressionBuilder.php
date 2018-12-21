@@ -123,7 +123,7 @@ class StreamingExpressionBuilder extends Expression {
       }
 
       if (
-        strpos($solr_field, 'sd') === 0 ||
+        strpos($solr_field, 's') === 0 ||
         strpos($solr_field, 'i') === 0 ||
         strpos($solr_field, 'f') === 0 ||
         strpos($solr_field, 'p') === 0 ||
