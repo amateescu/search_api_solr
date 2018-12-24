@@ -154,6 +154,13 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
   public function setTextFiles($text_files);
 
   /**
+   * Indicates if the field type requires a managed Solr schema.
+   *
+   * @return bool
+   */
+  public function requiresManagedSchema();
+
+    /**
    * Gets the minimum Solr version that is supported by this Solr Field Type.
    *
    * @return string

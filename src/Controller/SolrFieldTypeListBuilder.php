@@ -60,7 +60,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       'label' => $solr_field_type->label(),
       'minimum_solr_version' => $solr_field_type->getMinimumSolrVersion(),
       // @todo format
-      'managed_schema' => $solr_field_type->isManagedSchema(),
+      'managed_schema' => $solr_field_type->requiresManagedSchema(),
       // @todo format
       'langcode' => $solr_field_type->getFieldTypeLanguageCode(),
       // @todo format
@@ -111,6 +111,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
         $version = $solr_field_type->getMinimumSolrVersion();
         $domains = $solr_field_type->getDomains();
         if (
+          $solr_field_type->requiresManagedSchema() != $this->getBackend()->isManagedSchema() ||
           version_compare($version, $solr_version, '>') ||
           (!in_array($domain, $domains) && !in_array('generic', $domains))
         ) {

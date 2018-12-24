@@ -395,6 +395,24 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   /**
    * {@inheritdoc}
    */
+  public function requiresManagedSchema() {
+    if (isset($this->field_type['analyzers'])) {
+      foreach ($this->field_type['analyzers'] as $analyzer) {
+        if (isset($analyzer['filters'])) {
+          foreach ($analyzer['filters'] as $filter) {
+            if (strpos($filter['class'], 'solr.Managed') === 0) {
+              return TRUE;
+            }
+          }
+        }
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getMinimumSolrVersion() {
     return $this->minimum_solr_version;
   }
