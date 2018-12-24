@@ -4,7 +4,7 @@ dist: trusty
 
 php:
   - 7.0
-  - 7.2
+  - 7.3
 
 env:
   - SOLR_VERSION=7.6.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.4.0
@@ -104,5 +104,5 @@ matrix:
       - php: 7.0
         env: SOLR_VERSION=7.6.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.4.0
   allow_failures:
-      - php: 7.2
+      - php: 7.3
         env: SOLR_VERSION=7.6.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.4.0
