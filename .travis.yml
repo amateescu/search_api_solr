@@ -30,7 +30,7 @@ services:
   - mysql
 
 before_install:
-  - phpenv config-rm xdebug.ini
+  - phpenv config-rm xdebug.ini || true
   - composer global require "hirak/prestissimo:^0.3"
   - mysql -e 'CREATE DATABASE drupal;'
   - ls solr_downloads/
