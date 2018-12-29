@@ -974,7 +974,6 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->insertMultilingualExampleContent();
     $this->indexItems($this->indexId);
 
-    // Tests language limiting via options.
     $server = $this->getIndex()->getServerInstance();
     $connector = $server->getBackend()->getSolrConnector();
 
@@ -1014,6 +1013,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $request = $connector->getRequest();
     $this->assertEquals('ss_search_api_language:"de-at"', $request->getParam('fq')[1]);
 
+    // Tests language limiting via options.
     $config = $server->getBackendConfig();
 
     $config['sasm_limit_search_page_to_content_language'] = FALSE;
