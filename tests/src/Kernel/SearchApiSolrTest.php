@@ -974,6 +974,10 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->insertMultilingualExampleContent();
     $this->indexItems($this->indexId);
 
+    // Tests language limiting via options.
+    $server = $this->getIndex()->getServerInstance();
+    $connector = $server->getBackend()->getSolrConnector();
+
     $results = $this->buildSearch()->execute();
     $this->assertEquals(6, $results->getResultCount(), 'Number of indexed entities is correct.');
 
@@ -988,6 +992,9 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->setLanguages(['en', 'de']);
     $results = $query->execute();
     $this->assertEquals(2, $results->getResultCount(), 'Two results for "Gen" in German entities. No results for "Gen" in English entities.');
+    /** @var \Solarium\Core\Client\Request $request */
+    $request = $connector->getRequest();
+    $this->assertEquals('(ss_search_api_language:"en" ss_search_api_language:"de")', $request->getParam('fq')[1]);
 
     $query = $this->buildSearch('Gene');
     $query->setLanguages(['en', 'de']);
@@ -1003,9 +1010,10 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->setLanguages(['de-at']);
     $results = $query->execute();
     $this->assertEquals(2, $results->getResultCount(), 'Two results for "Gene" in Austrian entities.');
+    /** @var \Solarium\Core\Client\Request $request */
+    $request = $connector->getRequest();
+    $this->assertEquals('ss_search_api_language:"de-at"', $request->getParam('fq')[1]);
 
-    // Tests language limiting via options.
-    $server = $this->getIndex()->getServerInstance();
     $config = $server->getBackendConfig();
 
     $config['sasm_limit_search_page_to_content_language'] = FALSE;

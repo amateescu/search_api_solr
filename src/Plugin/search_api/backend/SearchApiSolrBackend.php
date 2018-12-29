@@ -1148,6 +1148,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
       }
 
+      $unspecific_field_names = $this->getSolrFieldNames($index);
+      // For solr_document datasource, search_api_language might not be mapped.
+      if (!empty($unspecific_field_names['search_api_language'])) {
+        $solarium_query->createFilterQuery('language_filter')->setQuery(
+          $this->createFilterQuery($unspecific_field_names['search_api_language'], $language_ids, 'IN', new Field($index, 'search_api_language'), $options)
+        );
+      }
+
       // Set the list of fields to retrieve.
       $this->setFields($solarium_query, $query->getOption('search_api_retrieved_field_values', []), $query);
 
@@ -2219,28 +2227,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
-   * Adds item language conditions to the condition group, if applicable.
-   *
-   * @param \Drupal\search_api\Query\ConditionGroupInterface $condition_group
-   *   The condition group on which to set conditions.
-   * @param \Drupal\search_api\Query\QueryInterface $query
-   *   The query to inspect for language settings.
-   *
-   * @see \Drupal\search_api\Query\QueryInterface::getLanguages()
-   */
-  protected function addLanguageConditions(ConditionGroupInterface $condition_group, QueryInterface $query) {
-    $language_ids = $query->getLanguages();
-    if ($language_ids !== NULL) {
-      $index = $query->getIndex();
-      $field_names = $this->getSolrFieldNames($index);
-      // For solr_document datasource, search_api_language might not be mapped.
-      if (!empty($field_names['search_api_language'])) {
-        $condition_group->addCondition('search_api_language', $language_ids, 'IN');
-      }
-    }
-  }
-
-  /**
    * Serializes a query's conditions as Solr filter queries.
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
@@ -2254,13 +2240,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @throws \Drupal\search_api\SearchApiException
    */
   protected function getFilterQueries(QueryInterface $query, array &$options) {
-    $condition_group = $query->getConditionGroup();
-    $conditions = $condition_group->getConditions();
-    if (empty($conditions)) {
-      $this->addLanguageConditions($condition_group, $query);
-    }
-
-    return $this->createFilterQueries($condition_group, $options, $query);
+    return $this->createFilterQueries($query->getConditionGroup(), $options, $query);
   }
 
   /**
@@ -3600,6 +3580,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
   /**
    * Sets sorting for the query.
+   *
+   * @param \Solarium\QueryType\Select\Query\Query $solarium_query
+   * @param \Drupal\search_api\Query\QueryInterface $query
    */
   protected function setSorts(Query $solarium_query, QueryInterface $query) {
     $field_names = $this->getSolrFieldNamesKeyedByLanguage($query->getLanguages(), $query->getIndex());

@@ -114,7 +114,7 @@ trait BasicAuthTrait {
       $request->setAuthentication($this->configuration['username'], $this->configuration['password']);
     }
 
-    return $this->solr->executeRequest($request, $endpoint);
+    return $this->executeRequest($request, $endpoint);
   }
 
   /**
