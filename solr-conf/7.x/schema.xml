@@ -238,10 +238,6 @@
   <dynamicField name="rpts_*" type="location_rpt" indexed="true" stored="true" multiValued="false" />
   <dynamicField name="rptm_*" type="location_rpt" indexed="true" stored="true" multiValued="true" />
 
-  <!-- Special fields for Solr 5 functionality. -->
-  <dynamicField name="phons_*" type="phonetic" indexed="true" stored="true" multiValued="false" />
-  <dynamicField name="phonm_*" type="phonetic" indexed="true" stored="true" multiValued="true" />
-
   <!-- External file fields -->
   <dynamicField name="eff_*" type="file"/>
 
