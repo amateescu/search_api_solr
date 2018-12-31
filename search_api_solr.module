@@ -360,9 +360,7 @@ function search_api_solr_form_search_api_index_form_validate_server(&$element, F
  * @see _search_api_views_handler_mapping()
  */
 function search_api_solr_search_api_views_handler_mapping_alter(&$mapping) {
-  $mapping['solr_text_ngram'] =
   $mapping['solr_text_omit_norms'] =
-  $mapping['solr_text_phonetic'] =
   $mapping['solr_text_suggester'] =
   $mapping['solr_text_unstemmed'] =
   $mapping['solr_text_wstoken'] = [
@@ -371,18 +369,6 @@ function search_api_solr_search_api_views_handler_mapping_alter(&$mapping) {
     ],
     'filter' => [
       'id' => 'search_api_fulltext',
-    ],
-    'sort' => [
-      'id' => 'search_api',
-    ],
-  ];
-
-  $mapping['solr_string_ngram'] = [
-    'argument' => [
-      'id' => 'search_api',
-    ],
-    'filter' => [
-      'id' => 'search_api_string',
     ],
     'sort' => [
       'id' => 'search_api',

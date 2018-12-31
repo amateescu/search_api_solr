@@ -577,7 +577,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertArrayHasKey('name', $fulltext_fields);
     $this->assertArrayHasKey('body', $fulltext_fields);
     $this->assertArrayHasKey('body_unstemmed', $fulltext_fields);
-    $this->assertArrayHasKey('category_ngram', $fulltext_fields);
+    $this->assertArrayHasKey('category_edge', $fulltext_fields);
     // body_suggest should be removed by getQueryFulltextFields().
     $this->assertArrayNotHasKey('body_suggest', $fulltext_fields);
   }
@@ -913,21 +913,21 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     // @todo more suggester tests
 
     // Tests ngram search result.
-    $results = $this->buildSearch(['tre'], [], ['category_ngram'])
+    $results = $this->buildSearch(['tre'], [], ['category_edge'])
       ->execute();
     $this->assertResults([1, 2], $results, 'Ngram text "tre".');
 
     $results = $this->buildSearch([], [], [])
-      ->addCondition('category_ngram_string', 'tre')
+      ->addCondition('category_edge_string', 'tre')
       ->execute();
     $this->assertResults([2], $results, 'Ngram string "tre".');
 
-    $results = $this->buildSearch(['Dog'], [], ['category_ngram'])
+    $results = $this->buildSearch(['Dog'], [], ['category_edge'])
       ->execute();
     $this->assertResults([1], $results, 'Ngram text "Dog".');
 
     $results = $this->buildSearch([], [], [])
-      ->addCondition('category_ngram_string', 'Dog')
+      ->addCondition('category_edge_string', 'Dog')
       ->execute();
     $this->assertResults([1], $results, 'Ngram string "Dog".');
   }
