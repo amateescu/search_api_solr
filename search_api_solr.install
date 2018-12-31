@@ -232,14 +232,21 @@ function search_api_solr_update_helper_save_field_type_config($field_type_name, 
  * @param string $directory
  */
 function search_api_solr_update_helper_install_configs($directory = InstallStorage::CONFIG_OPTIONAL_DIRECTORY) {
+  /** @var \Drupal\Core\Config\ConfigInstallerInterface $config_installer */
+  $config_installer = \Drupal::service('config.installer');
+  $config_installer->installDefaultConfig('module', 'search_api_solr');
+
   $optional_install_path = \Drupal::moduleHandler()->getModule('search_api_solr')->getPath() . '/' . $directory;
   if (is_dir($optional_install_path)) {
     // Install any optional config the module provides.
     $storage = new FileStorage($optional_install_path, StorageInterface::DEFAULT_COLLECTION);
-    /** @var \Drupal\Core\Config\ConfigInstallerInterface $config_installer */
-    $config_installer = \Drupal::service('config.installer');
     $config_installer->installOptionalConfig($storage);
   }
+
+  $restrict_by_dependency = [
+    'module' => 'search_api_solr',
+  ];
+  $config_installer->installOptionalConfig(NULL, $restrict_by_dependency);
 }
 
 /**
@@ -617,30 +624,28 @@ function search_api_solr_update_8300() {
     $index->set('field_settings', $field_settings)
       ->save(TRUE);
   }
+}
 
-  /**
-   * Field types clean-up.
-   */
-  function search_api_solr_update_8301() {
-    search_api_solr_update_helper_install_configs(InstallStorage::CONFIG_INSTALL_DIRECTORY);
-    search_api_solr_update_helper_install_configs(InstallStorage::CONFIG_OPTIONAL_DIRECTORY);
+/**
+ * Field types clean-up.
+ */
+function search_api_solr_update_8301() {
+  search_api_solr_update_helper_install_configs();
 
-    $config_factory = \Drupal::configFactory();
-    foreach ($config_factory->listAll('search_api.index.') as $index_name) {
-      $index = $config_factory->getEditable($index_name);
-      $field_settings = $index->get('field_settings');
-      foreach ($field_settings as &$field_setting) {
-        if ('solr_text_ngram' == $field_setting['type']) {
-          $field_setting['type'] = 'solr_text_custom:edge';
-        }
-        if ('solr_text_phonetic' == $field_setting['type']) {
-          $field_setting['type'] = 'solr_text_custom:phonetic';
-        }
+  $config_factory = \Drupal::configFactory();
+  foreach ($config_factory->listAll('search_api.index.') as $index_name) {
+    $index = $config_factory->getEditable($index_name);
+    $field_settings = $index->get('field_settings');
+    foreach ($field_settings as &$field_setting) {
+      if ('solr_text_ngram' == $field_setting['type']) {
+        $field_setting['type'] = 'solr_text_custom:edge';
       }
-
-      $index->set('field_settings', $field_settings)
-        ->save(TRUE);
+      if ('solr_text_phonetic' == $field_setting['type']) {
+        $field_setting['type'] = 'solr_text_custom:phonetic';
+      }
     }
-  }
 
+    $index->set('field_settings', $field_settings)
+      ->save(TRUE);
+  }
 }
