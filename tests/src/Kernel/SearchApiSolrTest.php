@@ -1187,9 +1187,6 @@ class SearchApiSolrTest extends SolrBackendTestBase {
           'accents_en.txt' => [
             '"\u00C4" => "A"'
           ],
-          'mapping-ISOLatin1Accent.txt' => [
-            '"\u00c4" => "A"',
-          ],
           'solrcore.properties' => [],
           'elevate.xml' => [],
           'schema.xml' => [],
@@ -1231,9 +1228,6 @@ class SearchApiSolrTest extends SolrBackendTestBase {
           'protwords_de.txt' => [],
           'accents_de.txt' => [
             ' Not needed if German2 Porter stemmer is used.'
-          ],
-          'mapping-ISOLatin1Accent.txt' => [
-            '"\u00c4" => "A"',
           ],
           'solrcore.properties' => [],
           'elevate.xml' => [],
