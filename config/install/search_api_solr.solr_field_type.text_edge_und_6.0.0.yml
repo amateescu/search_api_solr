@@ -46,7 +46,7 @@ field_type:
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
         -
-          class: solr.edgeFilterFactory
+          class: solr.EdgeNGramFilterFactory
           minGramSize: 2
           maxGramSize: 25
     -
