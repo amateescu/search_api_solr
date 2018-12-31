@@ -916,29 +916,29 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     foreach (['category_ngram', 'category_edge'] as $field) {
       $results = $this->buildSearch(['tre'], [], [$field])
         ->execute();
-      $this->assertResults([1, 2], $results);
+      $this->assertResults([1, 2], $results, $field . ': tre');
 
       $results = $this->buildSearch(['Dog'], [], [$field])
         ->execute();
-      $this->assertResults([1], $results);
+      $this->assertResults([1], $results, $field . ': Dog');
 
       $results = $this->buildSearch([], [], [])
         ->addCondition($field, 'Dog')
         ->execute();
-      $this->assertResults([1], $results);
+      $this->assertResults([1], $results, $field . ': Dog as condition');
     }
 
     // Tests NGram search result.
     foreach (['category_ngram' => [1, 2], 'category_ngram_string' => [1, 2], 'category_edge' => [], 'category_edgestring' => []] as $field => $expected_results) {
       $results = $this->buildSearch(['re'], [], [$field])
         ->execute();
-      $this->assertResults($expected_results, $results);
+      $this->assertResults($expected_results, $results, $field . ': re');
     }
 
     foreach (['category_ngram_string' => [1, 2], 'category_edgestring' => [2]] as $field => $expected_results) {
       $results = $this->buildSearch(['tre'], [], [$field])
         ->execute();
-      $this->assertResults($expected_results, $results);
+      $this->assertResults($expected_results, $results, $field . ': tre');
     }
   }
 

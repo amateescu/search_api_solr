@@ -502,7 +502,7 @@ function search_api_solr_update_8209() {
  * Install missing configs for 8.x-2.0-beta1.
  */
 function search_api_solr_update_8210() {
-  search_api_solr_update_helper_install_configs(InstallStorage::CONFIG_OPTIONAL_DIRECTORY);
+  // search_api_solr_update_helper_install_configs(InstallStorage::CONFIG_OPTIONAL_DIRECTORY);
 }
 
 /**
@@ -622,6 +622,9 @@ function search_api_solr_update_8300() {
    * Field types clean-up.
    */
   function search_api_solr_update_8301() {
+    search_api_solr_update_helper_install_configs(InstallStorage::CONFIG_INSTALL_DIRECTORY);
+    search_api_solr_update_helper_install_configs(InstallStorage::CONFIG_OPTIONAL_DIRECTORY);
+
     $config_factory = \Drupal::configFactory();
     foreach ($config_factory->listAll('search_api.index.') as $index_name) {
       $index = $config_factory->getEditable($index_name);
