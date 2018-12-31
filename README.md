@@ -51,10 +51,10 @@ Regarding third-party features, the following are supported:
     a "More like this" block for node pages build with Views.
 - multisite
   - Introduced by module: search_api_solr
-  - Currently WIP for 8.x-2.x
+  - Currently WIP for 8.x-3.x
 - spellcheck
   - Introduced by module: search_api_solr
-  - Currently WIP for 8.x-2.x
+  - Currently WIP for 8.x-3.x
 - attachments
   - Introduced by module: search_api_attachments
 - location
