@@ -333,8 +333,9 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
           'termVectors' => TRUE,
           'omitNorms' => strpos($prefix, 'to') === 0,
         ];
-        if ($this->custom_code && LanguageInterface::LANGCODE_NOT_SPECIFIED == $this->field_type_language_code) {
-          // Add a language-unspecific default dynamic field for that custom code.
+        if (LanguageInterface::LANGCODE_NOT_SPECIFIED == $this->field_type_language_code) {
+          // Add a language-unspecific default dynamic field as fallback for
+          // languages we don't have a dedicated config for.
           $dynamic_field['name'] = SearchApiSolrUtility::encodeSolrName($prefix) . '_*';
           $dynamic_fields[] = $dynamic_field;
         }

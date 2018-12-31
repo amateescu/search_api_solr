@@ -56,12 +56,12 @@ field_settings:
     property_path: category
   category_ngram:
     label: Category Ngram
-    type: solr_text_ngram
+    type: 'solr_text_custom:edge'
     datasource_id: 'entity:entity_test_mulrev_changed'
     property_path: category
   category_ngram_string:
     label: Category Ngram String
-    type: solr_string_ngram
+    type: 'solr_text_custom:edgestring'
     datasource_id: 'entity:entity_test_mulrev_changed'
     property_path: category
   width:

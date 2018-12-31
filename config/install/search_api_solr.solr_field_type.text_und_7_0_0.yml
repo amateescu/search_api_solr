@@ -19,19 +19,19 @@ field_type:
       charFilters:
         -
           class: solr.MappingCharFilterFactory
-          mapping: mapping-ISOLatin1Accent.txt
+          mapping: accents_und.txt
       tokenizer:
         class: solr.WhitespaceTokenizerFactory
       filters:
         -
           class: solr.StopFilterFactory
           ignoreCase: true
-          words: stopwords.txt
+          words: stopwords_und.txt
         -
           class: solr.WordDelimiterGraphFilterFactory
           catenateNumbers: 1
           generateNumberParts: 1
-          protected: protwords.txt
+          protected: protwords_und.txt
           splitOnCaseChange: 0
           generateWordParts: 1
           preserveOriginal: 1
@@ -50,24 +50,24 @@ field_type:
       charFilters:
         -
           class: solr.MappingCharFilterFactory
-          mapping: mapping-ISOLatin1Accent.txt
+          mapping: accents_und.txt
       tokenizer:
         class: solr.WhitespaceTokenizerFactory
       filters:
         -
           class: solr.SynonymGraphFilterFactory
-          synonyms: synonyms.txt
+          synonyms: synonyms_und.txt
           expand: true
           ignoreCase: true
         -
           class: solr.StopFilterFactory
           ignoreCase: true
-          words: stopwords.txt
+          words: stopwords_und.txt
         -
           class: solr.WordDelimiterGraphFilterFactory
           catenateNumbers: 0
           generateNumberParts: 1
-          protected: protwords.txt
+          protected: protwords_und.txt
           splitOnCaseChange: 0
           generateWordParts: 1
           preserveOriginal: 1

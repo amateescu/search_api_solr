@@ -208,11 +208,10 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    *
    */
   public function getSchemaExtraFieldsXml() {
-    $multilingual = ($this->getBackend() instanceof SolrMultilingualBackendInterface);
     $xml = '';
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
     foreach ($this->load() as $solr_field_type) {
-      foreach ($solr_field_type->getDynamicFields($multilingual) as $dynamic_field) {
+      foreach ($solr_field_type->getDynamicFields() as $dynamic_field) {
         $xml .= '<dynamicField ';
         foreach ($dynamic_field as $attribute => $value) {
           $xml .= $attribute . '="' . (is_bool($value) ? ($value ? 'true' : 'false') : $value) . '" ';

@@ -169,11 +169,11 @@ search_api_solr.solr_field_type.*:
                       nullable: true
                     minGramSize:
                       type: integer
-                      label: 'EdgeNGramFilterFactory::minGramSize'
+                      label: 'NGramFilter:: EdgeNGramFilter::minGramSize'
                       nullable: true
                     maxGramSize:
                       type: integer
-                      label: 'EdgeNGramFilterFactory::maxGramSize'
+                      label: 'NGramFilter:: EdgeNGramFilter::maxGramSize'
                       nullable: true
                     languageSet:
                       type: string
