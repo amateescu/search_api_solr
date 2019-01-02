@@ -71,6 +71,13 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   protected $field_type;
 
   /**
+   * Solr Spellcheck Field Type definition.
+   *
+   * @var array
+   */
+  protected $spellcheck_field_type = NULL;
+
+  /**
    * The cutom code targeted by this Solr Field Type.
    *
    * @var string
@@ -109,6 +116,13 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    * {@inheritdoc}
    */
   public function getFieldType() {
+    return $this->field_type;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSpellcheckFieldType() {
     return $this->field_type;
   }
 
@@ -235,6 +249,47 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getSpellcheckFieldTypeAsJson(bool $pretty = FALSE) {
+    if ($this->spellcheck_field_type) {
+      return $pretty ?
+        json_encode($this->spellcheck_field_type, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) : Json::encode($this->spellcheck_field_type);
+    }
+
+    return '';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setSpellcheckFieldTypeAsJson($spellcheck_field_type) {
+    $this->spellcheck_field_type = Json::decode($spellcheck_field_type);
+
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSpellcheckFieldTypeAsXml($add_commment = TRUE) {
+    if ($this->spellcheck_field_type) {
+      $formatted_xml_string = $this->buildXmlFromArray('fieldType', $this->spellcheck_field_type);
+
+      $comment = '';
+      if ($add_commment) {
+        $comment = "<!--\n  " . $this->label() . " Spellcheck\n  " .
+          $this->getMinimumSolrVersion() .
+          "\n-->\n";
+      }
+
+      return $comment . $formatted_xml_string;
+    }
+
+    return '';
+  }
+
+  /**
    *
    */
   protected function buildXmlFromArray($root_element_name, array $attributes) {
@@ -319,6 +374,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   public function getDynamicFields() {
     $dynamic_fields = [];
+
     $prefixes = $this->custom_code ? ['tc' . $this->custom_code, 'toc' . $this->custom_code] : ['t', 'to'];
     foreach ($prefixes as $prefix_without_cardinality) {
       foreach (['s', 'm'] as $cardinality) {
@@ -341,7 +397,49 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
         }
       }
     }
+
+    if ($spellcheck_field = $this->getSpellcheckField()) {
+      // Spellcheck fields need to be dynamic to have a language fallback, for
+      // example de-at => de.
+      $dynamic_fields[] = $spellcheck_field;
+
+      if (LanguageInterface::LANGCODE_NOT_SPECIFIED == $this->field_type_language_code) {
+        // Add a language-unspecific default dynamic spellcheck field as
+        // fallback for languages we don't have a dedicated config for.
+        $spellcheck_field['name'] = 'spellcheck_*';
+        $static_fields[] = $spellcheck_field;
+      }
+    }
+
     return $dynamic_fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getStaticFields() {
+    return [];
+  }
+
+  /**
+   * @return array|null
+   */
+  protected function getSpellcheckField() {
+    $spellcheck_field = NULL;
+
+    if ($this->spellcheck_field_type) {
+      $spellcheck_field = [
+        'name' => 'spellcheck_' . SearchApiSolrUtility::encodeSolrName($this->field_type_language_code) . '*',
+        'type' => $this->spellcheck_field_type['name'],
+        'stored' => TRUE,
+        'indexed' => TRUE,
+        'multiValued' => TRUE,
+        'termVectors' => TRUE,
+        'omitNorms' => TRUE,
+      ];
+    }
+
+    return $spellcheck_field;
   }
 
   /**

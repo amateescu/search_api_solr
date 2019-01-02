@@ -1582,12 +1582,20 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             // Generate a field name; this corresponds with naming conventions in
             // our schema.xml.
             $type = $field->getType();
+
             if ('solr_text_suggester' == $type) {
               // Any field of this type will be indexed in the same Solr field.
               // The 'twm_suggest' is the backend for the suggester component.
               $field_ampping[$search_api_name] = 'twm_suggest';
               break;
             }
+
+            if ('solr_text_spellcheck' == $type) {
+              // Any field of this type will be indexed in the same Solr field.
+              $field_ampping[$search_api_name] = 'spellcheck_' . Utility::encodeSolrName($language_id);
+              break;
+            }
+
             $type_info = Utility::getDataTypeInfo($type);
             $pref = isset($type_info['prefix']) ? $type_info['prefix'] : '';
             if (strpos($pref, 't') === 0) {
@@ -2814,26 +2822,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
-  public function alterTermsAutocompleteQuery(QueryInterface $query) {
+  public function getTermsSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input) {
     // Allow modules to alter the solarium autocomplete query.
     $this->moduleHandler->alter('search_api_solr_terms_autocomplete_query', $query);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getTermsSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input) {
-    // Call an object oriented equivalent to hook_search_api_solr_query_alter().
-    $this->alterTermsAutocompleteQuery($query);
     return $this->getAutocompleteSuggestions($query, $search, $incomplete_key, $user_input);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function alterSpellcheckAutocompleteQuery(AutocompleteQuery $solarium_query, QueryInterface $query) {
-    // Allow modules to alter the solarium autocomplete query.
-    $this->moduleHandler->alter('search_api_solr_spellcheck_autocomplete_query', $solarium_query, $query);
   }
 
   /**
@@ -2845,8 +2837,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       try {
         $suggestion_factory = new SuggestionFactory($user_input);
         $this->setAutocompleteSpellCheckQuery($query, $solarium_query, $user_input);
-        // Call an object oriented equivalent to hook_search_api_solr_query_alter().
-        $this->alterSpellcheckAutocompleteQuery($solarium_query, $query);
+        // Allow modules to alter the solarium autocomplete query.
+        $this->moduleHandler->alter('search_api_solr_spellcheck_autocomplete_query', $solarium_query, $query);
         $result = $this->getSolrConnector()->execute($solarium_query);
         $suggestions = $this->getAutocompleteSpellCheckSuggestions($result, $suggestion_factory);
         // Filter out duplicate suggestions.
@@ -2862,22 +2854,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
-  public function alterSuggesterAutocompleteQuery(AutocompleteQuery $solarium_query, QueryInterface $query) {
-    // Allow modules to alter the solarium autocomplete query.
-    $this->moduleHandler->alter('search_api_solr_suggester_autocomplete_query', $solarium_query, $query);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getSuggesterSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input, $options = []) {
     $suggestions = [];
     if ($solarium_query = $this->getAutocompleteQuery($incomplete_key, $user_input)) {
       try {
         $suggestion_factory = new SuggestionFactory($user_input);
         $this->setAutocompleteSuggesterQuery($query, $solarium_query, $user_input, $options);
-        // Call an object oriented equivalent to hook_search_api_solr_query_alter().
-        $this->alterSuggesterAutocompleteQuery($solarium_query, $query);
+        // Allow modules to alter the solarium autocomplete query.
+        $this->moduleHandler->alter('search_api_solr_suggester_autocomplete_query', $solarium_query, $query);
         $result = $this->getSolrConnector()->execute($solarium_query);
         $suggestions = $this->getAutocompleteSuggesterSuggestions($result, $suggestion_factory);
         // Filter out duplicate suggestions.
@@ -2903,7 +2887,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   The user input.
    */
   protected function setAutocompleteSpellCheckQuery(QueryInterface $query, AutocompleteQuery $solarium_query, $user_input) {
+    /** @var \Solarium\Component\Spellcheck $spellcheck_component */
     $spellcheck_component = $solarium_query->getSpellcheck();
+    if ($languages = $query->getLanguages()) {
+      foreach ($languages as $language) {
+        // @todo set multiple dictionaries
+        $spellcheck_component->setDictionary($language);
+      }
+    }
+    else {
+      $spellcheck_component->setDictionary(LanguageInterface::LANGCODE_NOT_SPECIFIED);
+    }
     $spellcheck_component->setQuery($user_input);
     $spellcheck_component->setCount($query->getOption('limit', 1));
   }
@@ -2940,7 +2934,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   'dictionary' as string, 'context_filter_tags' as array of strings.
    */
   protected function setAutocompleteSuggesterQuery(QueryInterface $query, AutocompleteQuery $solarium_query, $user_input, $options = []) {
-    /*
     if (isset($options['context_filter_tags']) && in_array('drupal/langcode:multilingual', $options['context_filter_tags'])) {
       $langcodes = $query->getLanguages();
       if (count($langcodes) == 1) {
@@ -2957,11 +2950,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
       }
     }
-    */
 
     $suggester_component = $solarium_query->getSuggester();
     $suggester_component->setQuery($user_input);
-    $suggester_component->setDictionary(!empty($options['dictionary']) ? $options['dictionary'] : /* language undefined suggestions */ 'und');
+    $suggester_component->setDictionary(!empty($options['dictionary']) ? $options['dictionary'] : LanguageInterface::LANGCODE_NOT_SPECIFIED);
     if (!empty($options['context_filter_tags'])) {
       $suggester_component->setContextFilterQuery(
         Utility::buildSuggesterContextFilterQuery($options['context_filter_tags']));

@@ -7,11 +7,9 @@ use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Plugin\PluginFormTrait;
 use Drupal\search_api\Query\QueryInterface;
-use Drupal\search_api_autocomplete\AutocompleteBackendInterface;
 use Drupal\search_api_autocomplete\SearchInterface;
 use Drupal\search_api_autocomplete\Suggester\SuggesterPluginBase;
 use Drupal\search_api_solr\SolrAutocompleteInterface;
-use Drupal\search_api_solr\SolrMultilingualBackendInterface;
 use Drupal\search_api_solr\Utility\Utility;
 
 /**

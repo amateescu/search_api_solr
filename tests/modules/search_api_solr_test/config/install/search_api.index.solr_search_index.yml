@@ -34,6 +34,11 @@ field_settings:
     type: solr_text_unstemmed
     datasource_id: 'entity:entity_test_mulrev_changed'
     property_path: body
+  body_spellcheck:
+    label: Body
+    type: solr_text_spellcheck
+    datasource_id: 'entity:entity_test_mulrev_changed'
+    property_path: body
   body_suggest:
     label: Body
     type: solr_text_suggester

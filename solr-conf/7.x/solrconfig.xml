@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
 <!DOCTYPE config [
-  <!ENTITY spellcheck SYSTEM "solrconfig_spellcheck.xml">
   <!ENTITY extra SYSTEM "solrconfig_extra.xml">
   <!ENTITY index SYSTEM "solrconfig_index.xml">
 ]>
@@ -983,16 +982,8 @@
 
      -->
 
-  <!-- Spell Check
-
-      The spell check component can return a list of alternative spelling
-      suggestions. This component must be defined in
-      solrconfig_extra.xml if present, since it's used in the search handler.
-
-      http://wiki.apache.org/solr/SpellCheckComponent
-   -->
   <!-- Following is a dynamic way to include other components or any customized solrconfig.xml stuff, added by other contrib modules -->
-  &spellcheck;
+  &extra;
 
   <!-- A request handler for demonstrating the spellcheck component.
 
@@ -1010,12 +1001,7 @@
   <requestHandler name="/spell" class="solr.SearchHandler" startup="lazy">
     <lst name="defaults">
       <str name="df">spell</str>
-      <!-- Solr will use suggestions from both the 'default' spellchecker
-           and from the 'wordbreak' spellchecker and combine them.
-           collations (re-written queries) can include a combination of
-           corrections from both spellcheckers -->
-      <str name="spellcheck.dictionary">default</str>
-      <str name="spellcheck.dictionary">wordbreak</str>
+      <str name="spellcheck.dictionary">und</str>
       <str name="spellcheck">on</str>
       <str name="spellcheck.onlyMorePopular">false</str>
       <str name="spellcheck.extendedResults">false</str>
@@ -1031,9 +1017,6 @@
       <str>spellcheck</str>
     </arr>
   </requestHandler>
-
-  <!-- Following is a dynamic way to include other components or any customized solrconfig.xml stuff, added by other contrib modules -->
-  &extra;
 
   <requestHandler name="/suggest" class="solr.SearchHandler" startup="lazy">
     <lst name="defaults">

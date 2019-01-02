@@ -90,6 +90,58 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
   public function getFieldTypeAsXml($add_commment = TRUE);
 
   /**
+   * Gets the Solr Spellcheck Field Type definition as nested associative array.
+   *
+   * @return array|NULL
+   *   The Solr SpellcheckField Type definition as nested associative array or
+   *   NULL if it doesn't exist.
+   */
+  public function getSpellcheckFieldType();
+
+  /**
+   * Gets the Solr Spellcheck Field Type definition as JSON.
+   *
+   * The JSON format is used to interact with a managed Solr schema.
+   *
+   * @param bool $pretty
+   *   Return pretty printed JSON.
+   *
+   * @return string
+   *   The Solr Spellcheck Field Type definition as JSON.
+   */
+  public function getSpellcheckFieldTypeAsJson(bool $pretty = FALSE);
+
+  /**
+   * Sets the Solr Spellcheck Field Type definition as JSON.
+   *
+   * Decodes the Solr Field Type definition encoded as JSON and stores an
+   * nested associative array internally. This method in useful to import a
+   * field type from an existing Solr server.
+   *
+   * @param string $spellcheck_field_type
+   *   The Solr Spellcheck Field Type definition as JSON, might be empty if it
+   *   doesn't exist.
+   *
+   * @return $this
+   */
+  public function setSpellcheckFieldTypeAsJson($spellcheck_field_type);
+
+  /**
+   * Gets the Solr Spellcheck Spellcheck Field Type definition as XML fragment.
+   *
+   * The XML format is used as part of a classic Solr schema.
+   *
+   * @param bool $add_commment
+   *   Wether to add a comment to the XML or not to explain the purpose of this
+   *   Solr Field Type.
+   *
+   * @return string
+   *   The Solr Spellcheck Field Type definition as XML, might be empty if it
+   *   doesn't exist.
+   */
+  public function getSpellcheckFieldTypeAsXml($add_commment = TRUE);
+
+  /**
    * Gets a list of dynamic Solr fields that will use this Solr Field Type.
    *
    * @return array
@@ -97,7 +149,14 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
   public function getDynamicFields();
 
   /**
-   * Gets a list of copy fields that will use this Solr Field Type.
+   * Gets a list of static fields that will use this Solr Field Type.
+   *
+   * @return array
+   */
+  public function getStaticFields();
+
+  /**
+   * Gets a list of copy fields.
    *
    * @return array
    */

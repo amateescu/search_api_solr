@@ -7,7 +7,6 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
-use Drupal\search_api_solr\SolrMultilingualBackendInterface;
 use Drupal\search_api_solr\Utility\Utility;
 use ZipStream\ZipStream;
 
@@ -17,7 +16,7 @@ use ZipStream\ZipStream;
 class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
   /**
-   * @var \Drupal\search_api_solr\SolrMultilingualBackendInterface
+   * @var \Drupal\search_api_solr\SolrBackendInterface
    */
   protected $backend;
 
@@ -200,6 +199,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
     foreach ($this->load() as $solr_field_type) {
       $xml .= $solr_field_type->getFieldTypeAsXml();
+      $xml .= $solr_field_type->getSpellcheckFieldTypeAsXml();
     }
     return $xml;
   }
@@ -211,6 +211,13 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     $xml = '';
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
     foreach ($this->load() as $solr_field_type) {
+      foreach ($solr_field_type->getStaticFields() as $static_field) {
+        $xml .= '<field ';
+        foreach ($static_field as $attribute => $value) {
+          $xml .= $attribute . '="' . (is_bool($value) ? ($value ? 'true' : 'false') : $value) . '" ';
+        }
+        $xml .= "/>\n";
+      }
       foreach ($solr_field_type->getDynamicFields() as $dynamic_field) {
         $xml .= '<dynamicField ';
         foreach ($dynamic_field as $attribute => $value) {
