@@ -126,25 +126,25 @@ solr_configs:
               VALUE: internal
             -
               name: accuracy
-              VALUE: 0.5
+              VALUE: '0.5'
             -
               name: maxEdits
-              VALUE: 2
+              VALUE: '2'
             -
               name: minPrefix
-              VALUE: 1
+              VALUE: '1'
             -
               name: maxInspections
-              VALUE: 5
+              VALUE: '5'
             -
               name: minQueryLength
-              VALUE: 4
+              VALUE: '4'
             -
               name: maxQueryFrequency
-              VALUE: 0.01
+              VALUE: '0.01'
             -
               name: thresholdTokenFrequency
-              VALUE: .01
+              VALUE: '.01'
     -
       name: suggest
       class: solr.SuggestComponent
