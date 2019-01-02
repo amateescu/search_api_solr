@@ -123,6 +123,7 @@ spellcheck_field_type:
     tokenizer:
       class: solr.WhitespaceTokenizerFactory
     filters:
+      -
         class: solr.LengthFilterFactory
         min: 2
         max: 100

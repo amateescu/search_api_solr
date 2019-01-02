@@ -93,15 +93,16 @@ spellcheck_field_type:
     tokenizer:
       class: solr.WhitespaceTokenizerFactory
     filters:
-      class: solr.LengthFilterFactory
-      min: 2
-      max: 100
-        -
+      -
+        class: solr.LengthFilterFactory
+        min: 2
+        max: 100
+      -
         class: solr.StopFilterFactory
         ignoreCase: true
         words: stopwords_und.txt
-        -
-          class: solr.RemoveDuplicatesTokenFilterFactory
+      -
+        class: solr.RemoveDuplicatesTokenFilterFactory
 solr_configs:
   searchComponents:
     -
@@ -177,41 +178,6 @@ solr_configs:
               VALUE: 'false'
 text_files:
   stopwords: |
-    a
-    an
-    and
-    are
-    as
-    at
-    be
-    but
-    by
-    for
-    if
-    in
-    into
-    is
-    it
-    no
-    not
-    of
-    on
-    or
-    s
-    such
-    t
-    that
-    the
-    their
-    then
-    there
-    these
-    they
-    this
-    to
-    was
-    will
-    with
   synonyms: |
     drupal, durpal
   protwords: |
