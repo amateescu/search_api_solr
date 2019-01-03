@@ -48,5 +48,55 @@ field_type:
           katakana: false
           hangul: false
           outputUnigrams: false
-solr_configs: { }
+spellcheck_field_type:
+  name: text_spell_zh_hans
+  class: solr.TextField
+  positionIncrementGap: 100
+  analyzer:
+    tokenizer:
+      class: solr.StandardTokenizerFactory
+    filters:
+      -
+        class: solr.CJKWidthFilterFactory
+        min: 2
+        max: 100
+solr_configs:
+  searchComponents:
+    -
+      name: spellcheck
+      class: solr.SpellCheckComponent
+      lst:
+        -
+          name: spellchecker
+          str:
+            -
+              name: name
+              VALUE: zh_hans
+            -
+              name: field
+              VALUE: spellcheck_zh_hans
+            -
+              name: classname
+              VALUE: solr.DirectSolrSpellChecker
+            -
+              name: distanceMeasure
+              VALUE: internal
+            -
+              name: accuracy
+              VALUE: '0.5'
+            -
+              name: maxEdits
+              VALUE: '1'
+            -
+              name: minPrefix
+              VALUE: '1'
+            -
+              name: maxInspections
+              VALUE: '5'
+            -
+              name: minQueryLength
+              VALUE: '1'
+            -
+              name: maxQueryFrequency
+              VALUE: '0.01'
 text_files: { }

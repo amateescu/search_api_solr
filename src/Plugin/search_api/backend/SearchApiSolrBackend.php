@@ -2892,7 +2892,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     if ($languages = $query->getLanguages()) {
       foreach ($languages as $language) {
         // @todo set multiple dictionaries
-        $spellcheck_component->setDictionary($language);
+        // Convert zk-hans to zk_hans.
+        $spellcheck_component->setDictionary(str_replace('-', '_', $language));
       }
     }
     else {

@@ -649,3 +649,17 @@ function search_api_solr_update_8301() {
       ->save(TRUE);
   }
 }
+
+/**
+ * Re-install language-specific filed types to enable the new spellcheckers.
+ */
+function search_api_solr_update_8302() {
+  $config_factory = \Drupal::configFactory();
+  foreach ($config_factory->listAll('search_api_solr.solr_field_type.text_') as $field_type_name) {
+    if (preg_match('/^search_api_solr\.solr_field_type\.text_[a-z]{2}[_-]{1}/', $field_type_name)) {
+      $config_factory->getEditable($field_type_name)->delete();
+    }
+  }
+
+  search_api_solr_update_helper_install_configs();
+}
