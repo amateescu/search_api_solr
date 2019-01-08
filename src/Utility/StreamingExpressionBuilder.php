@@ -172,7 +172,7 @@ class StreamingExpressionBuilder extends Expression {
    */
   public function _field(string $search_api_field_name, string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
     if (!isset($this->all_fields_including_graph_fields_mapped[$language_id][$search_api_field_name])) {
-      if (isset($this->sort_fields[$language_id][$search_api_field_name])) {
+      if (isset($this->sort_fields_mapped[$language_id][$search_api_field_name])) {
         return $this->sort_fields_mapped[$language_id][$search_api_field_name];
       }
       else {

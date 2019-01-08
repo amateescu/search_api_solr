@@ -143,9 +143,10 @@ function hook_search_api_solr_converted_query_alter(\Solarium\Core\Query\QueryIn
  *   An associative array containing the index field names mapped to their Solr
  *   counterparts. The special fields 'search_api_id' and 'search_api_relevance'
  *   are also included.
+ * @param string $language_id
  */
-function hook_search_api_solr_field_mapping_alter(\Drupal\search_api\IndexInterface $index, array &$fields) {
-  $fields['body'] = 'ts_body';
+function hook_search_api_solr_field_mapping_alter(\Drupal\search_api\IndexInterface $index, array &$fields, string $language_id) {
+  $fields['fieldname'] = 'ss_fieldname';
 }
 
 /**
