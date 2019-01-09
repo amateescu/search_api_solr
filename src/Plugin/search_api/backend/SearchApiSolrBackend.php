@@ -1961,10 +1961,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // We can find the item ID and the score in the special 'search_api_*'
     // properties. Mappings are provided for these properties in
     // SearchApiSolrBackend::getSolrFieldNames().
-    $field_names = $this->getSolrFieldNames($index);
-    $id_field = $field_names['search_api_id'];
-    $score_field = $field_names['search_api_relevance'];
-    $language_field = $field_names['search_api_language'];
+    $language_unspecific_field_names = $this->getSolrFieldNames($index);
+    $id_field = $language_unspecific_field_names['search_api_id'];
+    $score_field = $language_unspecific_field_names['search_api_relevance'];
+    $language_field = $language_unspecific_field_names['search_api_language'];
 
     // Set up the results array.
     $result_set = $query->getResults();
@@ -2036,14 +2036,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
          $result_item = $this->fieldsHelper->createItem($index, $item_id);
       }
 
-      $field_names = [];
-      if ($language_field) {
+      if ($language_field && isset($doc_fields[$language_field])) {
         $language_id = $doc_fields[$language_field];
         $result_item->setLanguage($language_id);
         $field_names = $this->getLanguageSpecificSolrFieldNames($language_id, $index);
       }
       else {
-        $field_names = $this->getSolrFieldNames($index);
+        $field_names = $language_unspecific_field_names;
       }
 
       $result_item->setExtraData('search_api_solr_document', $doc);
