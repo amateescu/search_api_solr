@@ -640,6 +640,9 @@ function search_api_solr_update_8301() {
       if ('solr_text_ngram' == $field_setting['type']) {
         $field_setting['type'] = 'solr_text_custom:edge';
       }
+      if ('solr_string_ngram' == $field_setting['type']) {
+        $field_setting['type'] = 'solr_text_custom:edgestring';
+      }
       if ('solr_text_phonetic' == $field_setting['type']) {
         $field_setting['type'] = 'solr_text_custom:phonetic';
       }
