@@ -1094,17 +1094,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
         $edismax->setQueryFields(implode(' ', $query_fields_boosted));
 
-        try {
-          $highlight_config = $index->getProcessor('highlight')->getConfiguration();
-          if ($highlight_config['highlight'] != 'never') {
-            $this->setHighlighting($solarium_query, $query, $query_fields);
-          }
-        }
-        catch (SearchApiException $exception) {
-          // Highlighting processor is not enabled for this index. Just use the
-          // the index configuration.
-          $this->setHighlighting($solarium_query, $query, $query_fields);
-        }
       }
 
       $options = $query->getOptions();
@@ -1367,6 +1356,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected function setFields(Query $solarium_query, array $fields_to_be_retrieved, QueryInterface $query) {
     $required_fields = $this->getRequiredFields($query);
     $returned_fields = [];
+    $highlight_fields = ['*'];
 
     if (!empty($this->configuration['retrieve_data'])) {
       $field_names = $this->getSolrFieldNamesKeyedByLanguage($query->getLanguages(), $query->getIndex());
@@ -1379,6 +1369,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
       }
       if ($returned_fields) {
+        $highlight_fields = $returned_fields;
         $returned_fields = array_merge($returned_fields, $required_fields);
       }
       // ... Otherwise return all fields and score.
@@ -1391,6 +1382,18 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     $solarium_query->setFields(array_unique($returned_fields));
+
+    try {
+      $highlight_config = $query->getIndex()->getProcessor('highlight')->getConfiguration();
+      if ($highlight_config['highlight'] != 'never') {
+        $this->setHighlighting($solarium_query, $query, $highlight_fields);
+      }
+    }
+    catch (SearchApiException $exception) {
+      // Highlighting processor is not enabled for this index. Just use the
+      // the index configuration.
+      $this->setHighlighting($solarium_query, $query, $highlight_fields);
+    }
   }
 
   /**
