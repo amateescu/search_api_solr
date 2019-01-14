@@ -11,7 +11,7 @@
         },
         {
             "name": "Other contributors",
-            "homepage":"https://www.drupal.org/node/982682/committers"
+            "homepage": "https://www.drupal.org/node/982682/committers"
         }
     ],
     "support": {
@@ -41,5 +41,12 @@
         "drupal/facets": "Provides facetted search.",
         "drupal/search_api_autocomplete": "Provides auto complete for search boxes.",
         "drupal/search_api_location": "Provides location searches."
+    },
+    "extra": {
+        "drush": {
+            "services": {
+                "drush.services.yml": "^9"
+            }
+        }
     }
 }
