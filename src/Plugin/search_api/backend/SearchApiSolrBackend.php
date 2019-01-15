@@ -491,6 +491,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'solr_string_storage',
       'solr_text_omit_norms',
       'solr_text_suggester',
+      'solr_text_spelling',
       'solr_text_unstemmed',
       'solr_text_wstoken',
       'solr_date_range',
