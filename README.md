@@ -90,12 +90,10 @@ use the configuration of the Highlighting processor.
 Hidden variables
 ----------------
 
-- search_api_solr.settings.cron_action (default: "spellcheck")
+- search_api_solr.settings.cron_action (default: "none")
   The Search API Solr Search module can automatically execute some upkeep
   operations daily during cron runs. This variable determines what particular
   operation is carried out.
-  - spellcheck: The "default" spellcheck dictionary used by Solr will be rebuilt
-  so that spellchecking reflects the latest index state.
   - optimize: An "optimize" operation [9] is executed on the Solr server. As a
   result of this, all spellcheck dictionaries (that have "buildOnOptimize" set
   to "true") will be rebuilt, too.
