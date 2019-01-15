@@ -666,3 +666,15 @@ function search_api_solr_update_8302() {
 
   search_api_solr_update_helper_install_configs();
 }
+
+/**
+ * Remove obsolete setting in config.
+ */
+function search_api_solr_update_8303() {
+  $config_factory = \Drupal::configFactory();
+  $settings = $config_factory->getEditable('search_api_solr.settings');
+  $action = $settings->get('cron_action');
+  if ($action == 'spellcheck') {
+    $settings->set('cron_action', 'none')->save(TRUE);
+  }
+}
