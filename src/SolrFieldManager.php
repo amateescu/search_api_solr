@@ -92,6 +92,10 @@ class SolrFieldManager implements SolrFieldManagerInterface {
       throw new \InvalidArgumentException('The Search API server could not be loaded.');
     }
 
+    // In case the targeted Solr index may not have fields (yet) we'll return an
+    // empty list.
+    $fields = [];
+
     // Don't attempt to connect to server if config is disabled. Cache will
     // clear itself when server config is enabled again.
     if ($server->status()) {
