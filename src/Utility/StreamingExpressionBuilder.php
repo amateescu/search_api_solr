@@ -458,8 +458,13 @@ class StreamingExpressionBuilder extends Expression {
     static $rows = 0;
 
     if (!$rows) {
+      // The _search_all() streaming expression needs a row limit that much higher
+      // then the real number of rows. Therefore we set the max 32bit integer as
+      // default. To maximize the number of query result cache hits it is
+      // important to not vary this number (often). But to enable you to fine
+      // tune your setting, the number is stored as a state.
       $rows = \Drupal::state()
-        ->get('search_api_solr.' . $this->targeted_index_id . '.search_all_rows', 0);
+        ->get('search_api_solr.' . $this->targeted_index_id . '.search_all_rows', 2147483647);
     }
 
     return
