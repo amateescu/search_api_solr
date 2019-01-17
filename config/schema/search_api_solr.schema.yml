@@ -1,13 +1,5 @@
 # Schema for configuration files of the Search API Solr module.
 
-search_api_solr.settings:
-  type: config_object
-  label: 'Search API Solr settings'
-  mapping:
-    site_hash:
-      type: string
-      label: 'Site hash'
-
 search_api.index.*.third_party.search_api_solr:
   type: mapping
   label: 'Search API Solr index settings'

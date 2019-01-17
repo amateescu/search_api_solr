@@ -124,10 +124,10 @@ class Utility {
    */
   public static function getSiteHash() {
     // Copied from apachesolr_site_hash().
-    if (!($hash = \Drupal::config('search_api_solr.settings')->get('site_hash'))) {
+    if (!($hash = \Drupal::state()->get('search_api_solr.site_hash', FALSE))) {
       global $base_url;
       $hash = substr(base_convert(sha1(uniqid($base_url, TRUE)), 16, 36), 0, 6);
-      \Drupal::configFactory()->getEditable('search_api_solr.settings')->set('site_hash', $hash)->save();
+      \Drupal::state()->set('search_api_solr.site_hash', $hash);
     }
     return $hash;
   }

@@ -87,25 +87,6 @@ retrieved data` on the server edit page, the Highlighting processor will use
 this data directly and bypass it's own logic. To do the highlighting, Solr will
 use the configuration of the Highlighting processor.
 
-Hidden variables
-----------------
-
-- search_api_solr.settings.cron_action (default: "none")
-  The Search API Solr Search module can automatically execute some upkeep
-  operations daily during cron runs. This variable determines what particular
-  operation is carried out.
-  - optimize: An "optimize" operation [9] is executed on the Solr server. As a
-  result of this, all spellcheck dictionaries (that have "buildOnOptimize" set
-  to "true") will be rebuilt, too.
-  - none: No action is executed.
-  If an unknown setting is encountered, it is interpreted as "none".
-- search_api_solr.settings.site_hash (default: random)
-  A unique hash specific to the local site, created the first time it is needed.
-  Only change this if you want to display another server's results and you know
-  what you are doing. Old indexed items will be lost when the hash is changed
-  (without being automatically deleted from the Solr server!) and all items will
-  have to be reindexed. Should only contain alphanumeric characters.
-
 Connectors
 ----------
 

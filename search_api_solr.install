@@ -135,6 +135,7 @@ function search_api_solr_uninstall() {
       \Drupal::state()->delete('search_api_solr.' . $index->id() . '.last_update');
     }
   }
+  \Drupal::state()->delete('search_api_solr.site_hash');
 }
 
 /**
@@ -679,11 +680,17 @@ function search_api_solr_update_8302() {
  * Remove obsolete setting in config.
  */
 function search_api_solr_update_8303() {
+  // obsolete because of search_api_solr_update_8304().
+}
+
+/**
+ * Convert site_hash from setting to state.
+ */
+function search_api_solr_update_8304() {
   $config_factory = \Drupal::configFactory();
   $settings = $config_factory->getEditable('search_api_solr.settings');
-  $settings->delete('last_optimize');
-  $settings->delete('cron_action');
-  $settings->save(TRUE);
+  \Drupal::state()->set('search_api_solr.site_hash', $settings->get('site_hash', ''));
+  $settings->delete();
 
   foreach ($config_factory->listAll('search_api.server.') as $server_name) {
     $server = $config_factory->getEditable($server_name);
