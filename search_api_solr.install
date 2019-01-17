@@ -663,7 +663,7 @@ function search_api_solr_update_8301() {
 }
 
 /**
- * Re-install language-specific filed types to enable the new spellcheckers.
+ * Re-install language-specific field types to enable the new spellcheckers.
  */
 function search_api_solr_update_8302() {
   $config_factory = \Drupal::configFactory();
