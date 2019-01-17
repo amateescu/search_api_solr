@@ -5,6 +5,7 @@ namespace Drupal\search_api_solr_devel\Logging;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\devel\DevelDumperManagerInterface;
 use Drupal\search_api\LoggerTrait;
+use Drupal\search_api_solr\Utility\Utility;
 use Solarium\Core\Event\Events;
 use Solarium\Core\Event\PreExecuteRequest;
 use Solarium\Core\Event\PostExecuteRequest;
@@ -53,30 +54,14 @@ class SolariumRequestLogger implements EventSubscriberInterface {
    */
   public function preExecuteRequest(PreExecuteRequest $event) {
     $request = $event->getRequest();
-    $method = $request->getMethod();
 
     $this->develDumperManager->message(
       $request->getUri(),
       $this->t('Try to send Solr request')
     );
-
-    $dump = [];
-    $parameters = ($method == 'GET') ? explode('&', $request->getQueryString()) : explode('&', $request->getRawData());
-    foreach ($parameters as $parameter) {
-      if ($parameter) {
-        if (strpos($parameter, '=')) {
-          list($name, $value) = explode('=', $parameter);
-          $dump[urldecode($name)][] = urldecode($value);
-        }
-        else {
-          $dump[urldecode($parameter)][] = '';
-        }
-      }
-    }
-
     $this->develDumperManager->message(
-      $dump,
-      $method
+      Utility::parseRequestParams($request),
+      $request->getMethod()
     );
   }
 

@@ -1195,17 +1195,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         // @see https://lucene.apache.org/solr/guide/7_2/solr-upgrade-notes.html#solr-7-2
         if ($edismax) {
           $parse_mode_id = $query->getParseMode()->getPluginId();
-          if ('terms' == $parse_mode_id) {
-            // Using the 'phrase' parse mode, Search API provides one big phrase
-            // as keys. Using the 'terms' parse mode, Search API provides chunks
-            // of single terms as keys. But these chunks might contain not just
-            // real terms but again a phrase if you enter something like this in
-            // the search box: term1 "term2 as phrase" term3. This will be
-            // converted in this keys array: ['term1', 'term2 as phrase',
-            // 'term3']. To have Solr behave like the database backend, these
-            // three "terms" should be handled like three phrases.
-            $parse_mode_id = 'phrase';
-          }
           /** @var Query $solarium_query */
           $params = $solarium_query->getParams();
           // Extract keys.
@@ -1228,10 +1217,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $solarium_query->setQuery($keys);
           }
 
-          if (!isset($params['defType']) || 'edismax' != $params['defType']) {
-            $solarium_query->removeComponent(ComponentAwareQueryInterface::COMPONENT_EDISMAX);
-          }
-        }
+         if (!isset($params['defType']) || 'edismax' != $params['defType']) {
+           $solarium_query->removeComponent(ComponentAwareQueryInterface::COMPONENT_EDISMAX);
+         }
+       }
 
         // Allow modules to alter the converted solarium query.
         $this->moduleHandler->alter('search_api_solr_converted_query', $solarium_query, $query);
@@ -1370,7 +1359,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
       }
       if ($returned_fields) {
-        $highlight_fields = $returned_fields;
+        $highlight_fields = array_unique($returned_fields);
         $returned_fields = array_merge($returned_fields, $required_fields);
       }
       // ... Otherwise return all fields and score.
@@ -2326,14 +2315,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
             // Fulltext fields.
             $parse_mode_id = $query->getParseMode()->getPluginId();
-            $keys['#conjunction'] = $query->getParseMode()->getConjunction();
-            $keys['#negation'] = $condition->getOperator() == '<>';
+            $keys = [
+              '#conjunction' => 'OR',
+              '#negation' => $condition->getOperator() == '<>',
+            ];
             switch ($parse_mode_id) {
               // This is a hack. We assume that phrase is what users want but this
               // prevents an explicit selection of terms.
               // @see https://www.drupal.org/project/search_api/issues/2991134
               case 'terms':
               case 'phrase':
+              case 'edismax':
                 $keys[] = $value;
                 break;
               case 'direct':
@@ -2353,7 +2345,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                 'tags' => $condition_group->getTags(),
               ];
             }
-            $fq = array_merge($fq, $this->reduceFilterQueries($nested_fqs,new ConditionGroup(
+            $fq = array_merge($fq, $this->reduceFilterQueries($nested_fqs, new ConditionGroup(
               '=' == $condition->getOperator() ? 'AND' : 'OR',
               $condition_group->getTags()
             )));
@@ -3158,6 +3150,39 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * Flattens keys and fields into a single search string.
    *
+   * Formatting the keys into a Solr query can be a bit complex. Keep in mind
+   * that the default operator is OR. For some combinations we had to take
+   * decisions because different interpretations are possible and we have to
+   * ensure that stop words in boolean combinations don't lead to zero results.
+   * Therfore this function will produce these queries:
+   *
+   * #conjunction | #negation | fields | parse mode     | return value
+   * ---------------------------------------------------------------------------
+   * AND          | FALSE     | []     | terms / phrase | +(+A +B)
+   * AND          | TRUE      | []     | terms / phrase | -(+A +B)
+   * OR           | FALSE     | []     | terms / phrase | +(A B)
+   * OR           | TRUE      | []     | terms / phrase | -(A B)
+   * AND          | FALSE     | [x]    | terms / phrase | +(x:(+A +B)^1)
+   * AND          | TRUE      | [x]    | terms / phrase | -(x:(+A +B)^1)
+   * OR           | FALSE     | [x]    | terms / phrase | +(x:(A B)^1)
+   * OR           | TRUE      | [x]    | terms / phrase | -(x:(A B)^1)
+   * AND          | FALSE     | [x,y]  | terms          | +((+(x:A^1 y:A^1) +(x:B^1 y:B^1)) x:(+A +B)^1 y:(+A +B)^1)
+   * AND          | FALSE     | [x,y]  | phrase         | +(x:(+A +B)^1 y:(+A +B)^1)
+   * AND          | TRUE      | [x,y]  | terms          | -((+(x:A^1 y:A^1) +(x:B^1 y:B^1)) x:(+A +B)^1 y:(+A +B)^1)
+   * AND          | TRUE      | [x,y]  | phrase         | -(x:(+A +B)^1 y:(+A +B)^1)
+   * OR           | FALSE     | [x,y]  | terms          | +(((x:A^1 y:A^1) (x:B^1 y:B^1)) x:(A B)^1 y:(A B)^1)
+   * OR           | FALSE     | [x,y]  | phrase         | +(x:(A B)^1 y:(A B)^1)
+   * OR           | TRUE      | [x,y]  | terms          | -(((x:A^1 y:A^1) (x:B^1 y:B^1)) x:(A B)^1 y:(A B)^1)
+   * OR           | TRUE      | [x,y]  | phrase         | -(x:(A B)^1 y:(A B)^1)
+   * AND          | FALSE     | [x,y]  | edismax        | +({!edismax qf=x^1,y^1}+A +B)
+   * AND          | TRUE      | [x,y]  | edismax        | -({!edismax qf=x^1,y^1}+A +B)
+   * OR           | FALSE     | [x,y]  | edismax        | +({!edismax qf=x^1,y^1}A B)
+   * OR           | TRUE      | [x,y]  | edismax        | -({!edismax qf=x^1,y^1}A B)
+   * AND / OR     | FALSE     | [x]    | direct         | +(x:(A)^1)
+   * AND / OR     | TRUE      | [x]    | direct         | -(x:(A)^1)
+   * AND / OR     | FALSE     | [x,y]  | direct         | +(x:(A)^1 y:(A)^1)
+   * AND / OR     | TRUE      | [x,y]  | direct         | -(x:(A)^1 y:(A)^1)
+   *
    * @param array|string $keys
    *   The keys array to flatten, formatted as specified by
    *   \Drupal\search_api\Query\QueryInterface::getKeys() or a phrase string.
@@ -3173,6 +3198,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $k = [];
     $pre = '+';
     $neg = '';
+    $query_parts = [];
 
     if (is_array($keys)) {
       if (isset($keys['#conjunction']) && $keys['#conjunction'] == 'OR') {
@@ -3192,8 +3218,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           continue;
         }
         if (is_array($key)) {
+          if ('edismax' == $parse_mode_id) {
+            throw new SearchApiSolrException('Incompatible parse mode.');
+          }
           if ($subkeys = $this->flattenKeys($key, $fields, $parse_mode_id)) {
-            $k[] = $subkeys;
+            $query_parts[] = $subkeys;
           }
         }
         elseif ($escaped) {
@@ -3201,11 +3230,18 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
         else {
           switch ($parse_mode_id) {
-            case 'phrase':
-              $k[] = $this->queryHelper->escapePhrase(trim($key));
-              break;
+            // Using the 'phrase' parse mode, Search API provides one big phrase
+            // as keys. Using the 'terms' parse mode, Search API provides chunks
+            // of single terms as keys. But these chunks might contain not just
+            // real terms but again a phrase if you enter something like this in
+            // the search box: term1 "term2 as phrase" term3. This will be
+            // converted in this keys array: ['term1', 'term2 as phrase',
+            // 'term3']. To have Solr behave like the database backend, these
+            // three "terms" should be handled like three phrases.
             case 'terms':
-              $k[] = $this->queryHelper->escapeTerm(trim($key));
+            case 'phrase':
+            case 'edismax':
+              $k[] = $this->queryHelper->escapePhrase(trim($key));
               break;
             default:
               throw new SearchApiSolrException('Incompatible parse mode.');
@@ -3216,6 +3252,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     elseif (is_string($keys)) {
       switch ($parse_mode_id) {
         case 'direct':
+          $pre = '';
           $k[] = '(' . trim($keys) .')';
           break;
         default:
@@ -3223,73 +3260,61 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
     }
 
-    if (!$k) {
-      return '';
-    }
+    if ($k) {
+      switch ($parse_mode_id) {
+        case 'edismax':
+          $query_parts[] = "({!edismax qf='" . implode(' ', $fields) . "'}" . $pre . implode(' ' . $pre, $k) . ')';
+          break;
 
-    // Formatting the keys into a Solr query can be a bit complex. Keep in mind
-    // that the default operator is OR. The following code will produce filters
-    // that look like this:
-    //
-    // #conjunction | #negation | fields | return value
-    // ----------------------------------------------------------------
-    // AND          | FALSE     | []     | (+A +B)
-    // AND          | TRUE      | []     | -(+A +B)
-    // OR           | FALSE     | []     | (A B)
-    // OR           | TRUE      | []     | -(A B)
-    // AND          | FALSE     | [x]    | (+x:A +x:B)
-    // AND          | TRUE      | [x]    | -(+x:A +x:B)
-    // OR           | FALSE     | [x]    | (x:A x:B)
-    // OR           | TRUE      | [x]    | -(x:A x:B)
-    // AND          | FALSE     | [x,y]  | (+(x:A y:A) +(x:B y:B))
-    // AND          | TRUE      | [x,y]  | -(+(x:A y:A) +(x:B y:B))
-    // OR           | FALSE     | [x,y]  | ((x:A y:A) (x:B y:B))
-    // OR           | TRUE      | [x,y]  | -((x:A y:A) (x:B y:B))
-
-    if ($fields) {
-      foreach($k as &$l) {
-        if (
-          'direct' == $parse_mode_id ||
-          strpos($l, '"') === 0 ||
-          (
-            // Already converted sub keys.
-            strpos($l, '(') !== 0 &&
-            strpos($l, '+') !== 0 &&
-            strpos($l, '-') !== 0 &&
-            !preg_match('/^[^:]+(?<!\\\\):/', $l) // field:value^2 but *not* escaped colons within the value: part1\:part2^2
-          )
-        ) {
-          $v = [];
-          foreach ($fields as $f) {
-            if (strpos($f, '^') !== FALSE) {
-              list($field, $boost) = explode('^', $f);
-              $v[] = $field . ':' . $l . '^' . $boost;
+        case "terms":
+          if (count($k) > 1 && count($fields) > 0) {
+            $key_parts = [];
+            foreach ($k as $l) {
+              $field_parts = [];
+              foreach ($fields as $f) {
+                $field = $f;
+                $boost_or_fuzzy = '';
+                // Split on operators for boost (^), fixed score (^=), fuzzy (~).
+                if ($split = preg_split('/([\^~])/', $f, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE)) {
+                  $field = array_shift($split);
+                  $boost_or_fuzzy = implode('', $split);
+                }
+                $field_parts[] = $field . ':' . $l . $boost_or_fuzzy;
+              }
+              $key_parts[] = $pre . '(' . implode(' ', $field_parts) . ')';
             }
-            else {
-              $v[] = $f . ':' . $l;
-            }
+            $query_parts[] = '(' . implode(' ', $key_parts) . ')';
           }
-          if (count($v) > 1) {
-            $l = '(' . implode(' ', $v) . ')';
+          // No break! Execute 'default', too.
+
+        default:
+          if (count($fields) > 0) {
+            foreach ($fields as $f) {
+              $field = $f;
+              $boost_or_fuzzy = '';
+              // Split on operators for boost (^), fixed score (^=), fuzzy (~).
+              if ($split = preg_split('/([\^~])/', $f, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE)) {
+                $field = array_shift($split);
+                $boost_or_fuzzy = implode('', $split);
+              }
+              $query_parts[] = $field . ':(' . $pre . implode(' ' . $pre, $k) . ')' . $boost_or_fuzzy;
+            }
           }
           else {
-            $l = reset($v);
+            $query_parts[] = '(' . $pre . implode(' ' . $pre, $k) . ')';
           }
-        }
       }
     }
 
-    if (count($k) == 1) {
-      return $neg . reset($k);
+    if (count($query_parts) == 1) {
+      return $neg . reset($query_parts);
     }
-
-    foreach ($k as &$j) {
-      if (strpos($j, '-') !== 0) {
-        $j = $pre . $j;
-      }
+    elseif (count($query_parts) > 1) {
+      return $neg . '(' . implode(' ', $query_parts) . ')';
     }
-
-    return $neg . '(' . implode(' ', $k) . ')';
+    else {
+      return '';
+    }
   }
 
   /**
@@ -3749,7 +3774,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $fulltext_fields = parent::getQueryFulltextFields($query);
     $solr_field_names = $this->getSolrFieldNames($query->getIndex());
     return array_filter($fulltext_fields, function ($value) use ($solr_field_names) {
-      return 'twm_suggest' != $solr_field_names[$value];
+      return 'twm_suggest' != $solr_field_names[$value] & strpos($solr_field_names[$value], 'spellcheck_') !== 0;
     });
   }
 

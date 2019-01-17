@@ -237,7 +237,14 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       [],
       'terms',
     ]);
-    $this->assertEquals('(+foo +apple\ pie +bar)', $flat);
+    $this->assertEquals('(+"foo" +"apple pie" +"bar")', $flat);
+
+    $flat = $this->invokeMethod($backend, 'flattenKeys', [
+      $query->getKeys(),
+      [],
+      'edismax',
+    ]);
+    $this->assertEquals('({!edismax qf=\'\'}+"foo" +"apple pie" +"bar")', $flat);
 
     $exception = FALSE;
     try {
@@ -257,28 +264,42 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       ['solr_field'],
       'phrase',
     ]);
-    $this->assertEquals('(+solr_field:"foo" +solr_field:"apple pie" +solr_field:"bar")', $flat);
+    $this->assertEquals('solr_field:(+"foo" +"apple pie" +"bar")', $flat);
 
     $flat = $this->invokeMethod($backend, 'flattenKeys', [
       $query->getKeys(),
       ['solr_field'],
       'terms',
     ]);
-    $this->assertEquals('(+solr_field:foo +solr_field:apple\ pie +solr_field:bar)', $flat);
+    $this->assertEquals('((+(solr_field:"foo") +(solr_field:"apple pie") +(solr_field:"bar")) solr_field:(+"foo" +"apple pie" +"bar"))', $flat);
+
+    $flat = $this->invokeMethod($backend, 'flattenKeys', [
+      $query->getKeys(),
+      ['solr_field'],
+      'edismax',
+    ]);
+    $this->assertEquals('({!edismax qf=\'solr_field\'}+"foo" +"apple pie" +"bar")', $flat);
 
     $flat = $this->invokeMethod($backend, 'flattenKeys', [
       $query->getKeys(),
       ['solr_field_1', 'solr_field_2'],
       'phrase',
     ]);
-    $this->assertEquals('(+(solr_field_1:"foo" solr_field_2:"foo") +(solr_field_1:"apple pie" solr_field_2:"apple pie") +(solr_field_1:"bar" solr_field_2:"bar"))', $flat);
+    $this->assertEquals('(solr_field_1:(+"foo" +"apple pie" +"bar") solr_field_2:(+"foo" +"apple pie" +"bar"))', $flat);
 
     $flat = $this->invokeMethod($backend, 'flattenKeys', [
       $query->getKeys(),
       ['solr_field_1', 'solr_field_2'],
       'terms',
     ]);
-    $this->assertEquals('(+(solr_field_1:foo solr_field_2:foo) +(solr_field_1:apple\ pie solr_field_2:apple\ pie) +(solr_field_1:bar solr_field_2:bar))', $flat);
+    $this->assertEquals('((+(solr_field_1:"foo" solr_field_2:"foo") +(solr_field_1:"apple pie" solr_field_2:"apple pie") +(solr_field_1:"bar" solr_field_2:"bar")) solr_field_1:(+"foo" +"apple pie" +"bar") solr_field_2:(+"foo" +"apple pie" +"bar"))', $flat);
+
+    $flat = $this->invokeMethod($backend, 'flattenKeys', [
+      $query->getKeys(),
+      ['solr_field_1', 'solr_field_2'],
+      'edismax',
+    ]);
+    $this->assertEquals('({!edismax qf=\'solr_field_1 solr_field_2\'}+"foo" +"apple pie" +"bar")', $flat);
   }
 
   /**
@@ -481,7 +502,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->setLanguages(['en']);
     $query->addCondition('body', 'some text', '=');
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
-    $this->assertEquals('tm_X3b_en_body:some\ text', $fq[0]['query']);
+    $this->assertEquals('tm_X3b_en_body:("some text")', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
     $parse_mode_manager = \Drupal::service('plugin.manager.search_api.parse_mode');
@@ -492,7 +513,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->setParseMode($parse_mode_phrase);
     $query->addCondition('body', 'some text', '=');
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
-    $this->assertEquals('tm_X3b_en_body:"some text"', $fq[0]['query']);
+    $this->assertEquals('tm_X3b_en_body:("some text")', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
 
     $query = $this->buildSearch();
@@ -500,7 +521,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->setParseMode($parse_mode_phrase);
     $query->addCondition('body', ['some', 'text'], '=');
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
-    $this->assertEquals('(+tm_X3b_en_body:"some" +tm_X3b_en_body:"text")', $fq[0]['query']);
+    $this->assertEquals('tm_X3b_en_body:(+"some" +"text")', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
   }
 
@@ -883,12 +904,14 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertEquals(1, $suggestions[3]->getResultsCount());
 
     // @todo spellcheck tests
-    #$query = $this->buildSearch(['articel doks'], [], ['body'], FALSE);
+    #$query = $this->buildSearch(['articel cats doks'], [], ['body'], FALSE);
+    #$query->setLanguages(['en']);
     #$suggestions = $backend->getSpellcheckSuggestions($query, $autocompleteSearch, 'doks', 'articel doks');
     #$this->assertEquals(1, count($suggestions));
     #$this->assertEquals('article dogs', $suggestions[0]->getSuggestedKeys());
 
     #$query = $this->buildSearch(['articel tre'], [], ['body'], FALSE);
+    #$query->setLanguages(['en']);
     #$suggestions = $backend->getAutocompleteSuggestions($query, $autocompleteSearch, 'tre', 'articel tre');
     #$this->assertEquals(5, count($suggestions));
     #$this->assertEquals('e', $suggestions[0]->getSuggestionSuffix());
@@ -1001,9 +1024,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->setLanguages(['en', 'de']);
     $results = $query->execute();
     $this->assertEquals(2, $results->getResultCount(), 'Two results for "Gen" in German entities. No results for "Gen" in English entities.');
-    /** @var \Solarium\Core\Client\Request $request */
-    $request = $connector->getRequest();
-    $this->assertEquals('(ss_search_api_language:"en" ss_search_api_language:"de")', $request->getParam('fq')[1]);
+    $params = $connector->getRequestParams();
+    $this->assertEquals('(ss_search_api_language:"en" ss_search_api_language:"de")', $params['fq'][1]);
 
     $query = $this->buildSearch('Gene');
     $query->setLanguages(['en', 'de']);
@@ -1019,9 +1041,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->setLanguages(['de-at']);
     $results = $query->execute();
     $this->assertEquals(2, $results->getResultCount(), 'Two results for "Gene" in Austrian entities.');
-    /** @var \Solarium\Core\Client\Request $request */
-    $request = $connector->getRequest();
-    $this->assertEquals('ss_search_api_language:"de-at"', $request->getParam('fq')[1]);
+    $params = $connector->getRequestParams();
+    $this->assertEquals('ss_search_api_language:"de-at"', $params['fq'][1]);
 
     // Tests language limiting via options.
     $config = $server->getBackendConfig();

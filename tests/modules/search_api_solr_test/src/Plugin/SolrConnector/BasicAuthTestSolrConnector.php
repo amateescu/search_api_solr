@@ -3,6 +3,7 @@
 namespace Drupal\search_api_solr_test\Plugin\SolrConnector;
 
 use Drupal\search_api_solr\Plugin\SolrConnector\BasicAuthSolrConnector;
+use Drupal\search_api_solr\Utility\Utility;
 use Solarium\Core\Client\Endpoint;
 use Solarium\Core\Client\Request;
 use Solarium\Core\Client\Response;
@@ -61,6 +62,10 @@ class BasicAuthTestSolrConnector extends BasicAuthSolrConnector {
 
   public function getRequest() {
     return self::$request;
+  }
+
+  public function getRequestParams() {
+    return Utility::parseRequestParams(self::$request);
   }
 
   public function setIntercept(bool $intercept) {

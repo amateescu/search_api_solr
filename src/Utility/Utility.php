@@ -5,6 +5,7 @@ namespace Drupal\search_api_solr\Utility;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SolrFieldTypeInterface;
+use Solarium\Core\Client\Request;
 
 /**
  * Provides various helper functions for Solr backends.
@@ -314,4 +315,29 @@ class Utility {
     return $text_file_name . '_' . $solr_field_type->getFieldTypeLanguageCode() . '.txt';
   }
 
+  /**
+   * Parses the request params.
+   *
+   * In opposite to parse_str() the same param could occur multiple times.
+   *
+   * @param \Solarium\Core\Client\Request $request
+   *
+   * @return array
+   */
+  public static function parseRequestParams(Request $request) {
+    $params = [];
+    $parameters = ($request->getMethod() == 'GET') ? explode('&', $request->getQueryString()) : explode('&', $request->getRawData());
+    foreach ($parameters as $parameter) {
+      if ($parameter) {
+        if (strpos($parameter, '=')) {
+          list($name, $value) = explode('=', $parameter);
+          $params[urldecode($name)][] = urldecode($value);
+        }
+        else {
+          $params[urldecode($parameter)][] = '';
+        }
+      }
+    }
+    return $params;
+  }
 }
