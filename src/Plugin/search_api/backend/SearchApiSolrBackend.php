@@ -186,6 +186,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'connector_config' => [],
       'sasm_limit_search_page_to_content_language' => FALSE,
       'sasm_search_page_include_language_independent' => FALSE,
+      'optimize' => FALSE,
     ];
   }
 
@@ -257,6 +258,22 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#title' => $this->t('Targeted content domain'),
       '#description' => $this->t('For example "UltraBot3000" would be indexed as "Ultra" "Bot" "3000" in a generic domain, "CYP2D6" has to stay like it is in a scientific domain.'),
       '#default_value' => isset($this->configuration['domain']) ? $this->configuration['domain'] : 'generic',
+    ];
+
+    $form['advanced']['i_know_what_i_do'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Optimize the Solr index'),
+      '#description' => $this->t('Optimize the Solr index once a day. Even if this option "sounds good", think twice before activating it! For most Solr setups it\'s recommended to NOT enable this feature!'),
+      '#default_value' => $this->configuration['optimize'],
+    ];
+
+    $form['advanced']['optimize'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Yes, I know what I\'m doing and want to enable a daily optimization!'),
+      '#default_value' => $this->configuration['optimize'],
+      '#states' => [
+        'invisible' => [':input[name="advanced][i_know_what_i_do"]' => ['checked' => FALSE]]
+      ],
     ];
 
     $form['multisite'] = [
@@ -411,6 +428,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $values += $values['advanced'];
     $values += $values['multisite'];
     $values += $values['multilingual'];
+    $values['optimize'] &= $values['i_know_what_i_do'];
 
     foreach ($values as $key => $value) {
       $form_state->setValue($key, $value);
@@ -423,6 +441,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // The server description is a #type item element, which means it has a
     // value, do not save it.
     $form_state->unsetValue('server_description');
+    $form_state->unsetValue('i_know_what_i_do');
 
     $this->traitSubmitConfigurationForm($form, $form_state);
 
@@ -929,9 +948,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
-   * @param \Drupal\search_api\IndexInterface $index
-   *
-   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   * {@inheritdoc}
    */
   public function finalizeIndex(IndexInterface $index) {
     // Avoid endless loops if finalization hooks trigger searches or streaming
@@ -982,6 +999,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           }
           unset($finalization_in_progress[$index->id()]);
           $connector->adjustTimeout($previous_timeout);
+
+          return TRUE;
         }
         else {
           if ($lock->wait($lock_name)) {
@@ -996,6 +1015,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
       }
     }
+
+    return FALSE;
   }
 
   /**
@@ -3763,6 +3784,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function isManagedSchema() {
     return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isOptimizeEnabled() {
+    return isset($this->configuration['optimize']) ? $this->configuration['optimize'] : FALSE;
   }
 
   /**

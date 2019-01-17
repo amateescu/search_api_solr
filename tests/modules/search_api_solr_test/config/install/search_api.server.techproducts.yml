@@ -26,6 +26,7 @@ backend_config:
     jmx: false
   sasm_limit_search_page_to_content_language: false
   sasm_search_page_include_language_independent: false
+  optimize: false
 status: true
 langcode: en
 dependencies:

@@ -31,6 +31,9 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
     sasm_search_page_include_language_independent:
       type: boolean
       label: 'Include languages independent content in search results'
+    optimize:
+      type: boolean
+      label: 'Optimize this backend'
 
 plugin.plugin_configuration.search_api_backend.search_api_solr_any_schema:
   type: plugin.plugin_configuration.search_api_backend.search_api_solr

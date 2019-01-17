@@ -144,6 +144,14 @@ interface SolrBackendInterface extends BackendInterface {
   public function isManagedSchema();
 
   /**
+   * Indicates if the Solr index should be optimized daily.
+   *
+   * @return bool
+   *   True if the Solr index should be optimized daily, false otherwise.
+   */
+  public function isOptimizeEnabled();
+
+  /**
    * Returns a ready to use query string to filter results by index and site.
    *
    * @param \Drupal\search_api\IndexInterface $index
@@ -216,8 +224,15 @@ interface SolrBackendInterface extends BackendInterface {
    * Only if globally configured to do so and only the first time after changes
    * to the index from the drupal side.
    *
+  /**
    * @param \Drupal\search_api\IndexInterface $index
    *
+   * @return bool
+   *  True if a finalization run, false otherwise. False doesn't indicate an
+   *  error!
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   * @throws \Drupal\search_api\SearchApiException
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function finalizeIndex(IndexInterface $index);

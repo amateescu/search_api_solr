@@ -123,10 +123,18 @@ function search_api_solr_requirements($phase) {
 
 /**
  * Implements hook_uninstall().
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\search_api\SearchApiException
  */
 function search_api_solr_uninstall() {
   \Drupal::state()->delete('search_api_solr.last_optimize');
   \Drupal::state()->delete('search_api_solr.endpoint.data');
+  foreach (search_api_solr_get_servers() as $server) {
+    foreach ($server->getIndexes() as $index) {
+      \Drupal::state()->delete('search_api_solr.' . $index->id() . '.last_update');
+    }
+  }
 }
 
 /**
@@ -673,8 +681,14 @@ function search_api_solr_update_8302() {
 function search_api_solr_update_8303() {
   $config_factory = \Drupal::configFactory();
   $settings = $config_factory->getEditable('search_api_solr.settings');
-  $action = $settings->get('cron_action');
-  if ($action == 'spellcheck') {
-    $settings->set('cron_action', 'none')->save(TRUE);
+  $settings->delete('last_optimize');
+  $settings->delete('cron_action');
+  $settings->save(TRUE);
+
+  foreach ($config_factory->listAll('search_api.server.') as $server_name) {
+    $server = $config_factory->getEditable($server_name);
+    $backend_config = $server->get('backend_config');
+    $backend_config['optimize'] = FALSE;
+    $server->set('backend_config', $backend_config)->save(TRUE);
   }
 }

@@ -4,12 +4,6 @@ search_api_solr.settings:
   type: config_object
   label: 'Search API Solr settings'
   mapping:
-    last_optimize:
-      type: integer
-      label: 'Last time the indexes were optimized'
-    cron_action:
-      type: string
-      label: 'Cron action'
     site_hash:
       type: string
       label: 'Site hash'
