@@ -39,7 +39,7 @@ class IndexSolrMultisiteCloneForm extends IndexForm {
       $index = $this->entity->createDuplicate();
 
       $fields = $index->getFields();
-      $solr_field_names = $backend->getSolrFieldNames($index);
+      $solr_field_names = $backend->getSolrFieldNames($this->entity);
 
       foreach ($this->pluginHelper->createDatasourcePlugins($index, ['solr_multisite_document']) as $datasource_id => $datasource) {
         if ($datasource->isHidden()) {
