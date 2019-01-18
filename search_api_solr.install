@@ -1,5 +1,6 @@
 <?php
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Config\InstallStorage;
@@ -697,5 +698,26 @@ function search_api_solr_update_8304() {
     $backend_config = $server->get('backend_config');
     $backend_config['optimize'] = FALSE;
     $server->set('backend_config', $backend_config)->save(TRUE);
+  }
+}
+
+/**
+ * Add Dutch nouns.
+ */
+function search_api_solr_update_8305() {
+  $config_factory = \Drupal::configFactory();
+  $configs = [
+    'search_api_solr.solr_field_type.text_nl_6_0_0',
+    'search_api_solr.solr_field_type.text_nl_7_0_0',
+  ];
+  foreach ($configs as $config) {
+    $settings = $config_factory->getEditable($config);
+    $nouns = $settings->get('text_files.nouns');
+    if (empty($nouns) || $nouns == PHP_EOL) {
+      $filename = __DIR__ . '/config/optional/' . $config . '.yml';
+      $yaml = Yaml::decode(file_get_contents($filename));
+      $settings->set('text_files.nouns', $yaml['text_files']['nouns']);
+      $settings->save();
+    }
   }
 }
