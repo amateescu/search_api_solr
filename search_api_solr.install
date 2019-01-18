@@ -736,3 +736,33 @@ function search_api_solr_update_8305() {
     }
   }
 }
+
+/**
+ * Replace deprecated Solr filters by their successors for Solr 7.
+ */
+function search_api_solr_update_8306() {
+  foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+    if (
+      version_compare($field_type_config['field_type'], '7.0.0', '>=') &&
+      !empty($field_type_config['field_type']) &&
+      !empty($field_type_config['field_type']['analyzers'])
+    ) {
+      foreach ($field_type_config['field_type']['analyzers'] as &$component) {
+        foreach ($component['filters'] as &$filter) {
+          switch ($filter['class']) {
+            case 'solr.WordDelimiterFilterFactory':
+              $filter['class'] = 'solr.WordDelimiterGraphFilterFactory';
+              break;
+            case 'solr.SynonymFilterFactory':
+              $filter['class'] = 'solr.SynonymGraphFilterFactory';
+              break;
+            case 'solr.StopFilterFactory':
+              unset($filter['enablePositionIncrements']);
+              break;
+          }
+        }
+      }
+    }
+    search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
+  }
+}
