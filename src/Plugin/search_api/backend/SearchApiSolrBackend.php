@@ -485,7 +485,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'search_api_mlt',
       'search_api_random_sort',
       'search_api_data_type_location',
-      // 'search_api_grouping',
+      'search_api_grouping',
       // 'search_api_data_type_geohash',.
     ];
   }
@@ -850,7 +850,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $first_value = $this->addIndexField($doc, $field_names[$name], $field->getValues(), $field->getType());
         // Enable sorts in some special cases.
         if ($first_value && !array_key_exists($name, $special_fields)) {
-          if (strpos($field_names[$name], 't') === 0 || strpos($field_names[$name], 's') === 0) {
+          if (
+            (strpos($field_names[$name], 't') === 0 && strpos($field_names[$name], 'twm_suggest') !== 0) ||
+            (strpos($field_names[$name], 's') === 0 && strpos($field_names[$name], 'spellcheck') !== 0)
+          ) {
             $key = 'sort_' . Utility::encodeSolrName($name);
             if (!$doc->{$key}) {
               // Truncate the string to avoid Solr string field limitation.
@@ -1184,9 +1187,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
 
       // Handle field collapsing / grouping.
-      $grouping_options = $query->getOption('search_api_grouping');
-      if (!empty($grouping_options['use_grouping'])) {
-        $this->setGrouping($solarium_query, $query, $grouping_options, $index_fields);
+      if (isset($options['search_api_grouping'])) {
+        $this->setGrouping($solarium_query, $query, $options['search_api_grouping'], $index_fields, $field_names);
       }
 
       if (isset($options['offset'])) {
@@ -1995,20 +1997,34 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // If field collapsing has been enabled for this query, we need to process
     // the results differently.
     $grouping = $query->getOption('search_api_grouping');
-    $docs = [];
-    if (!empty($grouping['use_grouping']) && $is_grouping) {
-      // $docs = array();
-      //      $result_set['result count'] = 0;
-      //      foreach ($grouping['fields'] as $field) {
-      //        if (!empty($response->grouped->{$fields[$field]})) {
-      //          $result_set['result count'] += $response->grouped->{$fields[$field]}->ngroups;
-      //          foreach ($response->grouped->{$fields[$field]}->groups as $group) {
-      //            foreach ($group->doclist->docs as $doc) {
-      //              $docs[] = $doc;
-      //            }
-      //          }
-      //        }
-      //      }.
+    if (!empty($grouping['use_grouping'])) {
+      $docs = [];
+      $resultCount = 0;
+      if ($result_set->hasExtraData('search_api_solr_response')) {
+        $response = $result_set->getExtraData('search_api_solr_response');
+        foreach ($grouping['fields'] as $field) {
+          // @todo handle languages
+          $solr_field_name = $language_unspecific_field_names[$field];
+          if (!empty($response['grouped'][$solr_field_name])) {
+            $resultCount = count($response['grouped'][$solr_field_name]);
+            foreach ($response['grouped'][$solr_field_name]['groups'] as $group) {
+              foreach ($group['doclist']['docs'] as $doc) {
+                $docs[] = $doc;
+              }
+            }
+          }
+        }
+        // Set a default number then get the groups number if possible.
+        $result_set->setResultCount($resultCount);
+        if (count($grouping['fields']) == 1) {
+          $field = reset($grouping['fields']);
+          // @todo handle languages
+          $solr_field_name = $language_unspecific_field_names[$field];
+          if (isset($response['grouped'][$solr_field_name]['ngroups'])) {
+            $result_set->setResultCount($response['grouped'][$solr_field_name]['ngroups']);
+          }
+        }
+      }
     }
     else {
       $result_set->setResultCount($result->getNumFound());
@@ -2018,7 +2034,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Add each search result to the results array.
     /** @var \Solarium\QueryType\Select\Result\Document $doc */
     foreach ($docs as $doc) {
-      $doc_fields = $doc->getFields();
+      if (is_array($doc)) {
+        $doc_fields = $doc;
+      }
+      else {
+        /** @var \Solarium\QueryType\Select\Result\Document $doc */
+        $doc_fields = $doc->getFields();
+      }
       if (empty($doc_fields[$id_field])) {
         throw new SearchApiSolrException(sprintf('The result does not contain the essential ID field "%s".', $id_field));
       }
@@ -3630,106 +3652,57 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected function setSorts(Query $solarium_query, QueryInterface $query) {
     $field_names = $this->getSolrFieldNamesKeyedByLanguage($query->getLanguages(), $query->getIndex());
     foreach ($query->getSorts() as $field => $order) {
-      $order = strtolower($order);
-      $first_name = reset($field_names[$field]);
-
-      // First wee need to handle special fields which are prefixed by
-      // 'search_api_'. Otherwise they will erroneously be treated as dynamic
-      // string fields by the next detection below because they start with an
-      // 's'. This way we for example ensure that search_api_relevance isn't
-      // modified at all.
-      if (strpos($field, 'search_api_') === 0) {
-        if ($field == 'search_api_random') {
-          // The default Solr schema provides a virtual field named "random_*"
-          // that can be used to randomly sort the results; the field is
-          // available only at query-time. See schema.xml for more details about
-          // how the "seed" works.
-          $params = $query->getOption('search_api_random_sort', []);
-          // Random seed: getting the value from parameters or computing a new
-          // one.
-          $seed = !empty($params['seed']) ? $params['seed'] : mt_rand();
-          $solarium_query->addSort($first_name . '_' . $seed, $order);
-          continue;
-        }
-      }
-      elseif (strpos($first_name, 's') === 0) {
-        // For strings use the dedicated sort field for faster sort on a
-        // normalized value.
-        $solarium_query->addSort('sort_' . Utility::encodeSolrName($field), $order);
-        continue;
-      }
-      elseif (strpos($first_name, 't') === 0) {
-        // For fulltext fields use the dedicated sort field for faster and
-        // language specific sorts.
-        // @todo languages.
-        $solarium_query->addSort('sort_' . Utility::encodeSolrName($field), $order);
-        continue;
-      }
-      elseif (preg_match('/^([a-z]+)m(_.*)/', $first_name, $matches)) {
-        // For other multi-valued fields (which aren't sortable by nature) we
-        // use the same hackish workaround like the DB backend: just copy the
-        // first value in a single value field for sorting.
-        $solarium_query->addSort($matches[1] . 's' . $matches[2], $order);
-        continue;
-      }
-
-      // We could not simply put this into an else condition because that would
-      // miss fields like search_api_relevance.
-      $solarium_query->addSort($first_name, $order);
+      $solarium_query->addSort(Utility::getSortableSolrField($field, $field_names, $query), strtolower($order));
     }
   }
 
   /**
    * Sets grouping for the query.
-   *
-   * @todo This code is outdated and needs to be reviewed and refactored.
    */
   protected function setGrouping(Query $solarium_query, QueryInterface $query, $grouping_options = [], $index_fields = [], $field_names = []) {
-    $group_params['group'] = 'true';
-    // We always want the number of groups returned so that we get pagers done
-    // right.
-    $group_params['group.ngroups'] = 'true';
-    if (!empty($grouping_options['truncate'])) {
-      $group_params['group.truncate'] = 'true';
-    }
-    if (!empty($grouping_options['group_facet'])) {
-      $group_params['group.facet'] = 'true';
-    }
-    foreach ($grouping_options['fields'] as $collapse_field) {
-      $type = $index_fields[$collapse_field]['type'];
-      // Only single-valued fields are supported.
-      if ($this->dataTypeHelper->isTextType($type)) {
-        $warnings[] = $this->t('Grouping is not supported for field @field. Only single-valued fields not indexed as "Fulltext" are supported.',
-          ['@field' => $index_fields[$collapse_field]['name']]);
-        continue;
+    if (!empty($grouping_options['use_grouping'])) {
+
+      $group_fields = [];
+
+      foreach ($grouping_options['fields'] as $collapse_field) {
+        // @todo languages
+        $first_name = reset($field_names[$collapse_field]);
+        /** @var $field Field $type */
+        $field = $index_fields[$collapse_field];
+        $type = $field->getType();
+        if ($this->dataTypeHelper->isTextType($type) || 's' != Utility::getSolrFieldCardinality($first_name)) {
+          $this->getLogger()->error('Grouping is not supported for field @field. Only single-valued fields not indexed as "Fulltext" are supported.',
+            ['@field' => $index_fields[$collapse_field]['name']]);
+        }
+        else {
+          $group_fields[] = $first_name;
+        }
       }
-      $group_params['group.field'][] = $field_names[$collapse_field];
-    }
-    if (empty($group_params['group.field'])) {
-      unset($group_params);
-    }
-    else {
-      if (!empty($grouping_options['group_sort'])) {
-        foreach ($grouping_options['group_sort'] as $group_sort_field => $order) {
-          if (isset($fields[$group_sort_field])) {
-            $f = $fields[$group_sort_field];
-            if (substr($f, 0, 3) == 'ss_') {
-              $f = 'sort_' . substr($f, 3);
-            }
-            $order = strtolower($order);
-            $group_params['group.sort'][] = $f . ' ' . $order;
+
+      if (!empty($group_fields)) {
+        // Activate grouping on the solarium query.
+        $grouping_component = $solarium_query->getGrouping();
+
+        $grouping_component->setFields($group_fields)
+          // We always want the number of groups returned so that we get pagers
+          // done right.
+          ->setNumberOfGroups(TRUE)
+          ->setTruncate(!empty($grouping_options['truncate']))
+          ->setFacet(!empty($grouping_options['group_facet']));
+
+        if (!empty($grouping_options['group_limit']) && ($grouping_options['group_limit'] != 1)) {
+          $grouping_component->setLimit($grouping_options['group_limit']);
+        }
+
+        if (!empty($grouping_options['group_sort'])) {
+          $sorts = [];
+          foreach ($grouping_options['group_sort'] as $group_sort_field => $order) {
+            $sorts[] = Utility::getSortableSolrField($group_sort_field, $field_names, $query) . ' ' . strtolower($order);
           }
-        }
-        if (!empty($group_params['group.sort'])) {
-          $group_params['group.sort'] = implode(', ', $group_params['group.sort']);
+
+          $grouping_component->setSort(implode(', ', $sorts));
         }
       }
-      if (!empty($grouping_options['group_limit']) && ($grouping_options['group_limit'] != 1)) {
-        $group_params['group.limit'] = $grouping_options['group_limit'];
-      }
-    }
-    foreach ($group_params as $param_id => $param_value) {
-      $solarium_query->addParam($param_id, $param_value);
     }
   }
 
