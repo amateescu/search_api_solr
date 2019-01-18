@@ -25,7 +25,7 @@ class SolrMultisiteDocument extends SolrDocument {
   public function defaultConfiguration() {
     $config = parent::defaultConfiguration();
     $config['id_field'] = 'id';
-    $config['language_field'] = 'ss_language';
+    $config['language_field'] = 'ss_search_api_language';
     $config['url_field'] = 'site';
 
     $config['target_index'] = '';
