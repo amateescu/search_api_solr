@@ -743,7 +743,7 @@ function search_api_solr_update_8305() {
 function search_api_solr_update_8306() {
   foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
     if (
-      version_compare($field_type_config['field_type'], '7.0.0', '>=') &&
+      version_compare($field_type_config['minimum_solr_version'], '7.0.0', '>=') &&
       !empty($field_type_config['field_type']) &&
       !empty($field_type_config['field_type']['analyzers'])
     ) {
