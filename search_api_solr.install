@@ -702,22 +702,37 @@ function search_api_solr_update_8304() {
 }
 
 /**
- * Add Dutch nouns.
+ * Add Dutch nouns and improve stemming for Dutch language.
  */
 function search_api_solr_update_8305() {
-  $config_factory = \Drupal::configFactory();
-  $configs = [
-    'search_api_solr.solr_field_type.text_nl_6_0_0',
-    'search_api_solr.solr_field_type.text_nl_7_0_0',
-  ];
-  foreach ($configs as $config) {
-    $settings = $config_factory->getEditable($config);
-    $nouns = $settings->get('text_files.nouns');
-    if (empty($nouns) || $nouns == PHP_EOL) {
-      $filename = __DIR__ . '/config/optional/' . $config . '.yml';
-      $yaml = Yaml::decode(file_get_contents($filename));
-      $settings->set('text_files.nouns', $yaml['text_files']['nouns']);
-      $settings->save();
+  static $nouns = '';
+
+  foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+    if (strpos($field_type_name, 'text_nl') !== FALSE) {
+      if (!empty($field_type_config['field_type']) && !empty($field_type_config['field_type']['analyzers'])) {
+        foreach ($field_type_config['field_type']['analyzers'] as &$component) {
+          foreach ($component['filters'] as &$filter) {
+            if ($filter['class'] == 'solr.SnowballPorterFilterFactory') {
+              if ($filter['language'] == 'Dutch') {
+                $filter['language'] = 'Kp';
+              }
+            }
+          }
+        }
+      }
+      if (!empty($field_type_config['text_files'])) {
+        if (empty($field_type_config['text_files']['nouns']) || $field_type_config['text_files']['nouns'] == PHP_EOL) {
+          if (!$nouns) {
+            // We always use this hardcoded source file to have valid one for
+            // different domains created by users, example:
+            // text_nl_scientific_6_0_0.
+            $filename = __DIR__ . '/config/optional/search_api_solr.solr_field_type.text_nl_7_0_0.yml';
+            $nouns = Yaml::decode(file_get_contents($filename));
+          }
+          $field_type_config['text_files']['nouns'] = $nouns;
+        }
+      }
+      search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
     }
   }
 }
