@@ -1586,7 +1586,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $field_mapping[$search_api_name] =
             Utility::encodeSolrName(
               preg_replace(
-                '/^(t[a-z]*m' . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . ')' . LanguageInterface::LANGCODE_NOT_SPECIFIED .'(.+)/',
+                '/^(t[a-z0-9]*[ms]' . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . ')' . LanguageInterface::LANGCODE_NOT_SPECIFIED .'(.+)/',
                 '$1' . $language_id . '$2',
                 Utility::decodeSolrName($field->getPropertyPath())
               )
