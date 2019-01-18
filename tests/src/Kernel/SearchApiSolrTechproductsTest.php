@@ -70,6 +70,35 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
       "solr_document/GB18030TEST",
       "solr_document/GBP",
     ], array_keys($result->getResultItems()), 'Search for all tech products');
+
+    $server = $this->getIndex()->getServerInstance();
+    $config = $server->getBackendConfig();
+
+    // Test processor based highlighting.
+    $query = $this->buildSearch('Technology', [], ['manu']);
+    $results = $query->execute();
+    $this->assertEquals(1, $results->getResultCount(), 'Search for »Technology« returned correct number of results.');
+    /** @var \Drupal\search_api\Item\ItemInterface $result */
+    foreach ($results as $result) {
+      $this->assertContains('<strong>Technology</strong>', (string) $result->getExtraData('highlighted_fields', ['manu' => ['']])['manu'][0]);
+      $this->assertEmpty($result->getExtraData('highlighted_keys', []));
+      $this->assertEquals('… A-DATA <strong>Technology</strong> Inc. …', $result->getExcerpt());
+    }
+
+    // Test server based highlighting.
+    $config['highlight_data'] = TRUE;
+    $server->setBackendConfig($config);
+    $server->save();
+
+    $query = $this->buildSearch('Technology', [], ['manu']);
+    $results = $query->execute();
+    $this->assertEquals(1, $results->getResultCount(), 'Search for »Technology« returned correct number of results.');
+    /** @var \Drupal\search_api\Item\ItemInterface $result */
+    foreach ($results as $result) {
+      $this->assertContains('<strong>Technology</strong>', (string) $result->getExtraData('highlighted_fields', ['manu' => ['']])['manu'][0]);
+      $this->assertEquals(['Technology'], $result->getExtraData('highlighted_keys', []));
+      $this->assertEquals('… A-DATA <strong>Technology</strong> Inc. …', $result->getExcerpt());
+    }
   }
 
 }

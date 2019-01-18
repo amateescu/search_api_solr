@@ -2118,7 +2118,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
       }
 
-      $solr_id = $this->createId($this->getTargetedSiteHash($index), $this->getTargetedIndexId($index), $result_item->getId());
+      $solr_id = $this->hasIndexJustSolrDatasources($index) ?
+        str_replace('solr_document/', '', $result_item->getId()) :
+        $this->createId($this->getTargetedSiteHash($index), $this->getTargetedIndexId($index), $result_item->getId());
       $this->getHighlighting($result->getData(), $solr_id, $result_item, $field_names);
 
       $result_set->addResultItem($result_item);
@@ -3474,13 +3476,15 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     if (!empty($ids)) {
-      $index_id = $this->getTargetedIndexId($query->getIndex());
-      $site_hash = $this->getTargetedSiteHash($query->getIndex());
-      array_walk($ids, function (&$id, $key) use ($site_hash, $index_id) {
-        $id = $this->createId($site_hash, $index_id, $id);
-        $id = $this->queryHelper->escapePhrase($id);
-      });
-
+      $index = $query->getIndex();
+      $index_id = $this->getTargetedIndexId($index);
+      $site_hash = $this->getTargetedSiteHash($index);
+      if (!$this->hasIndexJustSolrDatasources($index)) {
+        array_walk($ids, function (&$id, $key) use ($site_hash, $index_id) {
+          $id = $this->createId($site_hash, $index_id, $id);
+          $id = $this->queryHelper->escapePhrase($id);
+        });
+      }
       $solarium_query->setQuery('id:' . implode(' id:', $ids));
     }
 
