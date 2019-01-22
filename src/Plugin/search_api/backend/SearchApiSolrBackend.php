@@ -1240,9 +1240,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $flatten_keys = $this->flattenKeys($keys, explode(' ', $query_fields_boosted), $parse_mode_id);
           }
 
-          $solarium_query->setQuery('{!boost b=boost_document}' . ($flatten_keys ?: '*:*'));
+          $solarium_query->setQuery(
+            (!$this->hasIndexJustSolrDocumentDatasource() ? '{!boost b=boost_document}' : '') .
+            ($flatten_keys ?: '*:*')
+          );
 
-          if ($payload_score = $this->flattenKeysToPayloadScore($keys, $parse_mode_id)) {
+          if (!$this->hasIndexJustSolrDocumentDatasource() && $payload_score = $this->flattenKeysToPayloadScore($keys, $parse_mode_id)) {
             /** @var \Solarium\Component\ReRankQuery $rerank */
             $rerank = $solarium_query->getReRankQuery();
             $rerank->setQuery("'" . $payload_score . "'");
