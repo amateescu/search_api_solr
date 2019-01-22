@@ -1038,7 +1038,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @endcode
    */
   public function search(QueryInterface $query) {
-    $this->finalizeIndex($query->getIndex());
+    /** @var \Drupal\search_api\Entity\Index $index */
+    $index = $query->getIndex();
+
+    $this->finalizeIndex($index);
 
     if ($query->getOption('solr_streaming_expression', FALSE)) {
       $solarium_result = $this->executeStreamingExpression($query);
@@ -1055,9 +1058,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
 
       // Get field information.
-      /** @var \Drupal\search_api\Entity\Index $index */
-      $index = $query->getIndex();
-
       $connector = $this->getSolrConnector();
       $solarium_query = NULL;
       $edismax = NULL;
@@ -1241,11 +1241,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           }
 
           $solarium_query->setQuery(
-            (!$this->hasIndexJustSolrDocumentDatasource() ? '{!boost b=boost_document}' : '') .
+            (!$this->hasIndexJustSolrDocumentDatasource($index) ? '{!boost b=boost_document}' : '') .
             ($flatten_keys ?: '*:*')
           );
 
-          if (!$this->hasIndexJustSolrDocumentDatasource() && $payload_score = $this->flattenKeysToPayloadScore($keys, $parse_mode_id)) {
+          if (!$this->hasIndexJustSolrDocumentDatasource($index) && $payload_score = $this->flattenKeysToPayloadScore($keys, $parse_mode_id)) {
             /** @var \Solarium\Component\ReRankQuery $rerank */
             $rerank = $solarium_query->getReRankQuery();
             $rerank->setQuery("'" . $payload_score . "'");
