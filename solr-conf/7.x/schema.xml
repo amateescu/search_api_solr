@@ -49,7 +49,7 @@
     that avoids logging every request
 -->
 
-<schema name="drupal-8.3.0-solr-7.x" version="1.6">
+<schema name="drupal-8.3.1-solr-7.x" version="1.6">
   <!-- attribute "name" is the name of this schema and is only used for display purposes.
        version="x.y" is Solr's version number for the schema syntax and
        semantics.  It should not normally be changed by applications.
@@ -150,6 +150,9 @@
 
   <field name="site" type="string" indexed="true" stored="false" multiValued="false" docValues="true"/>
   <field name="hash" type="string" indexed="true" stored="false" multiValued="false" docValues="true"/>
+
+  <field name="boost_document" type="pfloat" indexed="true" stored="false" multiValued="false" docValues="true"/>
+  <field name="boost_term" type="boost_term_payload" indexed="true" stored="false" multiValued="true"/>
 
   <!-- Dynamic field definitions.  If a field name is not found, dynamicFields
        will be used if the name matches any of the patterns.
@@ -380,54 +383,24 @@
                strength="primary"
                caseLevel="false" />
 
-    <fieldType name="payloads" stored="false" indexed="true" class="solr.TextField" >
+    <fieldType name="boost_term_payload" stored="false" indexed="true" class="solr.TextField" >
       <analyzer>
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
         <!--
         The DelimitedPayloadTokenFilter can put payloads on tokens... for example,
         a token of "foo|1.4"  would be indexed as "foo" with a payload of 1.4f
         Attributes of the DelimitedPayloadTokenFilterFactory :
          "delimiter" - a one character delimiter. Default is | (pipe)
-   "encoder" - how to encode the following value into a playload
-      float -> org.apache.lucene.analysis.payloads.FloatEncoder,
-      integer -> o.a.l.a.p.IntegerEncoder
-      identity -> o.a.l.a.p.IdentityEncoder
-            Fully Qualified class name implementing PayloadEncoder, Encoder must have a no arg constructor.
+         "encoder" - how to encode the following value into a playload
+           float -> org.apache.lucene.analysis.payloads.FloatEncoder,
+           integer -> o.a.l.a.p.IntegerEncoder
+           identity -> o.a.l.a.p.IdentityEncoder
+             Fully Qualified class name implementing PayloadEncoder, Encoder must have a no arg constructor.
          -->
         <filter class="solr.DelimitedPayloadTokenFilterFactory" encoder="float"/>
-      </analyzer>
-    </fieldType>
-
-    <!-- lowercases the entire field value, keeping it as a single token.  -->
-    <fieldType name="lowercase" class="solr.TextField" positionIncrementGap="100">
-      <analyzer>
-        <tokenizer class="solr.KeywordTokenizerFactory"/>
-        <filter class="solr.LowerCaseFilterFactory" />
-      </analyzer>
-    </fieldType>
-
-    <!--
-      Example of using PathHierarchyTokenizerFactory at index time, so
-      queries for paths match documents at that path, or in descendent paths
-    -->
-    <fieldType name="descendent_path" class="solr.TextField">
-      <analyzer type="index">
-  <tokenizer class="solr.PathHierarchyTokenizerFactory" delimiter="/" />
-      </analyzer>
-      <analyzer type="query">
-  <tokenizer class="solr.KeywordTokenizerFactory" />
-      </analyzer>
-    </fieldType>
-    <!--
-      Example of using PathHierarchyTokenizerFactory at query time, so
-      queries for paths match documents at that path, or in ancestor paths
-    -->
-    <fieldType name="ancestor_path" class="solr.TextField">
-      <analyzer type="index">
-  <tokenizer class="solr.KeywordTokenizerFactory" />
-      </analyzer>
-      <analyzer type="query">
-  <tokenizer class="solr.PathHierarchyTokenizerFactory" delimiter="/" />
+        <filter class="solr.LengthFilterFactory" min="2" max="100"/>
       </analyzer>
     </fieldType>
 

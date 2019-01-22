@@ -810,6 +810,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $doc->setField('timestamp', $request_time);
       $doc->setField('id', $this->createId($site_hash, $index_id, $id));
       $doc->setField('index_id', $index_id);
+      // Some processors might add an absolute boost factor to the item. Since
+      // Solr doesn't support index time boosting anymore, we simply store that
+      // factor and include it in the boost calculation at query time.
+      // @see \Drupal\search_api\Plugin\search_api\processor\TypeBoost
+      $doc->setField('boost_document', $item->getBoost());
       // Suggester context boolean filter queries have issues with special
       // characters like '/' or ':' if not properly quoted (by solarium). We
       // avoid that by reusing our field name encoding.
@@ -1229,21 +1234,24 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           ) {
             // Edismax was forced via API or the query fields were removed via
             // API.
-            $keys = $this->flattenKeys($keys, [], $parse_mode_id);
+            $flatten_keys = $this->flattenKeys($keys, [], $parse_mode_id);
           }
           else {
-            $keys = $this->flattenKeys($keys, explode(' ', $query_fields_boosted), $parse_mode_id);
+            $flatten_keys = $this->flattenKeys($keys, explode(' ', $query_fields_boosted), $parse_mode_id);
           }
 
-          if (!empty($keys)) {
-            // Set them.
-            $solarium_query->setQuery($keys);
+          $solarium_query->setQuery('{!boost b=boost_document}' . ($flatten_keys ?: '*:*'));
+
+          if ($payload_score = $this->flattenKeysToPayloadScore($keys, $parse_mode_id)) {
+            /** @var \Solarium\Component\ReRankQuery $rerank */
+            $rerank = $solarium_query->getReRankQuery();
+            $rerank->setQuery("'" . $payload_score . "'");
           }
 
-         if (!isset($params['defType']) || 'edismax' != $params['defType']) {
+          if (!isset($params['defType']) || 'edismax' != $params['defType']) {
            $solarium_query->removeComponent(ComponentAwareQueryInterface::COMPONENT_EDISMAX);
-         }
-       }
+          }
+        }
 
         // Allow modules to alter the converted solarium query.
         $this->moduleHandler->alter('search_api_solr_converted_query', $solarium_query, $query);
@@ -1905,12 +1913,20 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $tokens = $value->getTokens();
             if (is_array($tokens) && !empty($tokens)) {
               foreach ($tokens as $token) {
-                // @todo handle token boosts broken?
-                // @see https://www.drupal.org/node/2746263
                 if ($value = $token->getText()) {
-                  $doc->addField($key, $value, $token->getBoost());
+                  $doc->addField($key, $value);
                   if (!$first_value) {
                     $first_value = $value;
+                  }
+                  $boost = $token->getBoost();
+                  if (0.0 != $boost && 1.0 != $boost) {
+                    // @todo These regexes are a first approach to isolate the
+                    //   terms to be boosted. We should consider to re-use the
+                    //   logic of the tokenizer processor. But this might
+                    //   require to turn some methods to public.
+                    $doc->addField('boost_term', preg_replace('/(\w{3,})/', '$1|' . $boost,
+                      preg_replace('/\W+/', ' ', $value)
+                    ));
                   }
                 }
               }
@@ -3360,6 +3376,69 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     else {
       return '';
     }
+  }
+
+  /**
+   * Flattens keys into payload_score queries.
+   *
+   * @param array|string $keys
+   *   The keys array to flatten, formatted as specified by
+   *   \Drupal\search_api\Query\QueryInterface::getKeys() or a phrase string.
+   * @param string $parse_mode_id
+   *
+   * @return string
+   *   A Solr query string representing the same keys.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   */
+  protected function flattenKeysToPayloadScore($keys, string $parse_mode_id = 'phrase') {
+    $k = [];
+    $payload_scores = [];
+
+    if (is_array($keys)) {
+
+      $escaped = isset($keys['#escaped']) ? $keys['#escaped'] : FALSE;
+
+      foreach ($keys as $key_nr => $key) {
+        if ($key_nr[0] === '#' || !$key) {
+          continue;
+        }
+        if (is_array($key)) {
+          if ($subkeys = $this->flattenKeysToPayloadScore($key, $parse_mode_id)) {
+            $payload_scores[] = $subkeys;
+          }
+        }
+        elseif ($escaped) {
+          $k[] = trim($key);
+        }
+        else {
+          switch ($parse_mode_id) {
+            case 'terms':
+            case 'phrase':
+            case 'edismax':
+              $k[] = $this->queryHelper->escapePhrase(trim($key));
+              break;
+            default:
+              throw new SearchApiSolrException('Incompatible parse mode.');
+          }
+        }
+      }
+    }
+    elseif (is_string($keys)) {
+      switch ($parse_mode_id) {
+        case 'direct':
+          // nop
+          break;
+        default:
+          throw new SearchApiSolrException('Incompatible parse mode.');
+      }
+    }
+
+    if ($k) {
+      $payload_scores[] = ' {!payload_score f=boost_term v=' . implode(' func=max} {!payload_score f=boost_term v=', $k) . ' func=max}';
+    }
+
+    return implode('', $payload_scores);
   }
 
   /**
