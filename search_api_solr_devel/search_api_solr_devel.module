@@ -11,3 +11,22 @@ function search_api_solr_devel_entity_type_alter(array &$entity_types) {
     }
   }
 }
+
+/**
+ * Implements hook_search_api_solr_query_alter().
+ */
+function search_api_solr_devel_search_api_solr_query_alter(\Solarium\Core\Query\QueryInterface $solarium_query, \Drupal\search_api\Query\QueryInterface $query) {
+  $solarium_query->getDebug();
+}
+
+/**
+ * Implements hook_search_api_solr_search_results_alter().
+ */
+function search_api_solr_devel_search_api_solr_search_results_alter(\Drupal\search_api\Query\ResultSetInterface $result_set, \Drupal\search_api\Query\QueryInterface $query, \Solarium\QueryType\Select\Result\Result $result) {
+  $result_data = $result->getData();
+  if (isset($result_data['debug'])) {
+    /** @var \Drupal\devel\DevelDumperManagerInterface $dumper */
+    $dumper = \Drupal::service('devel.dumper');
+    $dumper->message($result_data['debug'], 'Solr Debug Output');
+  }
+}
