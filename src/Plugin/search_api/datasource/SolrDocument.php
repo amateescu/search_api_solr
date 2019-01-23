@@ -246,13 +246,13 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
     $form['advanced']['language_field'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Language field'),
-      '#description' => $this->t('Enter the name of the field from your Solr schema that should be considered the label (if any).'),
+      '#description' => $this->t('Enter the name of the field from your Solr schema that should be considered the language (if any).'),
       '#default_value' => $this->configuration['language_field'],
     ];
     $form['advanced']['url_field'] = [
       '#type' => 'textfield',
       '#title' => $this->t('URL field'),
-      '#description' => $this->t('Enter the name of the field from your Solr schema that should be considered the label (if any).'),
+      '#description' => $this->t('Enter the name of the field from your Solr schema that should be considered the URL (if any).'),
       '#default_value' => $this->configuration['url_field'],
     ];
     // If there is already a valid server, we can transform the text fields into
