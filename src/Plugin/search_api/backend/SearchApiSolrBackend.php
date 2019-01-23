@@ -1245,7 +1245,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             ($flatten_keys ?: '*:*')
           );
 
-          if (!$this->hasIndexJustSolrDocumentDatasource($index) && $payload_score = $this->flattenKeysToPayloadScore($keys, $parse_mode_id)) {
+          // Apply term boosts if configured via a Search API processor and no
+          // sort is present.
+          if (
+            !$solarium_query->getSorts() &&
+            !$this->hasIndexJustSolrDocumentDatasource($index) &&
+            $payload_score = $this->flattenKeysToPayloadScore($keys, $parse_mode_id)
+          ) {
             /** @var \Solarium\Component\ReRankQuery $rerank */
             $rerank = $solarium_query->getReRankQuery();
             $rerank->setQuery("'" . $payload_score . "'");
