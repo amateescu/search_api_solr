@@ -123,7 +123,7 @@ class SearchApiBackendUnitTest extends UnitTestCase {
       [1.3, 'decimal', 1.3],
       ['foo', 'string', 'foo'],
       [new TextValue('foo bar'), 'text', 'foo bar'],
-      [(new TextValue(''))->setTokens([new TextToken('bar')]), 'text', ['bar', 1]],
+      [(new TextValue(''))->setTokens([new TextToken('bar')]), 'text', 'bar'],
       // addIndexField() should not be called.
       [NULL, 'boolean', NULL],
       [NULL, 'date', NULL],
