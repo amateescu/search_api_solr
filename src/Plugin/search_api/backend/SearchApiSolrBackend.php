@@ -1240,6 +1240,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $flatten_keys = $this->flattenKeys($keys, explode(' ', $query_fields_boosted), $parse_mode_id);
           }
 
+          if (strpos($flatten_keys, '-(') === 0) {
+            // flattenKeys() always wraps the query in parenthesis. If the query
+            // is negated we need to extend it by *:* which logically means 'all
+            // documents' except the ones that match the flatten keys.
+            $flatten_keys = '*:* ' . $flatten_keys;
+          }
+
           $solarium_query->setQuery(
             (!$this->hasIndexJustSolrDocumentDatasource($index) ? '{!boost b=boost_document}' : '') .
             ($flatten_keys ?: '*:*')
