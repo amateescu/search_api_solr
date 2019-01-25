@@ -49,6 +49,16 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
   public function getFieldType();
 
   /**
+   * Sets the Solr Field Type definition as nested associative array.
+   *
+   * @param array $field_type
+   *   The Solr Field Type definition as nested associative array.
+   *
+   * @return array
+   */
+  public function setFieldType(array $field_type);
+
+  /**
    * Gets the Solr Field Type definition as JSON.
    *
    * The JSON format is used to interact with a managed Solr schema.

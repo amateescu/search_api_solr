@@ -122,6 +122,13 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   /**
    * {@inheritdoc}
    */
+  public function setFieldType(array $field_type) {
+    $this->field_type = $field_type;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getSpellcheckFieldType() {
     return $this->field_type;
   }

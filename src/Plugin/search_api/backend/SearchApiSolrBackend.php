@@ -193,6 +193,25 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
+  public function setConfiguration(array $configuration) {
+    $configuration['retrieve_data'] = (bool) $configuration['retrieve_data'];
+    $configuration['highlight_data'] = (bool) $configuration['highlight_data'];
+    $configuration['skip_schema_check'] = (bool) $configuration['skip_schema_check'];
+    $configuration['site_hash'] = (bool) $configuration['site_hash'];
+    $configuration['sasm_limit_search_page_to_content_language'] = (bool) $configuration['sasm_limit_search_page_to_content_language'];
+    $configuration['sasm_search_page_include_language_independent'] = (bool) $configuration['sasm_search_page_include_language_independent'];
+    $configuration['optimize'] = (bool) $configuration['optimize'];
+
+    parent::setConfiguration($configuration);
+
+    // Update the configuration of the Solr connector as well by replacing it by
+    // a new instance with the latest configuration.
+    $this->solrConnector = NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     if (!$this->server->isNew()) {
       // Editing this server.
@@ -419,6 +438,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     if ($connector instanceof PluginFormInterface) {
       $connector_form_state = SubformState::createForSubform($form['connector_config'], $form, $form_state);
       $connector->submitConfigurationForm($form['connector_config'], $connector_form_state);
+      // Overwrite the form values with type casted values.
+      // @see \Drupal\search_api_solr\SolrConnector\SolrConnectorPluginBase::setConfiguration()
+      $form_state->setValue('connector_config', $connector->getConfiguration());
     }
 
     $values = $form_state->getValues();
@@ -3120,17 +3142,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
     }
     return $suggestions;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setConfiguration(array $configuration) {
-    parent::setConfiguration($configuration);
-
-    // Update the configuration of the Solr connector as well by replacing it by
-    // a new instance with the latest configuration.
-    $this->solrConnector = NULL;
   }
 
   /**

@@ -87,7 +87,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     return [
       'scheme' => 'http',
       'host' => 'localhost',
-      'port' => '8983',
+      'port' => 8983,
       'path' => '/solr',
       'core' => '',
       'timeout' => 5,
@@ -99,6 +99,21 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       'commit_within' => 1000,
       'jmx' => FALSE,
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setConfiguration(array $configuration) {
+    $configuration['port'] = (int) $configuration['port'];
+    $configuration['timeout'] = (int) $configuration['timeout'];
+    $configuration['index_timeout'] = (int) $configuration['index_timeout'];
+    $configuration['optimize_timeout'] = (int) $configuration['optimize_timeout'];
+    $configuration['finalize_timeout'] = (int) $configuration['finalize_timeout'];
+    $configuration['commit_within'] = (int) $configuration['commit_within'];
+    $configuration['jmx'] = (bool) $configuration['jmx'];
+
+    parent::setConfiguration($configuration);
   }
 
   /**

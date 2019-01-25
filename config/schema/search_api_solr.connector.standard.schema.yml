@@ -9,7 +9,7 @@ plugin.plugin_configuration.search_api_solr_connector.standard:
       type: string
       label: 'The host name or IP of the Solr server'
     port:
-      type: string
+      type: integer
       label: 'The port of the Solr server'
     path:
       type: string
