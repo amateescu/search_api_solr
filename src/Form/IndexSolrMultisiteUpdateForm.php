@@ -8,7 +8,7 @@ use Drupal\search_api\Form\IndexForm;
 /**
  * Provides a form for the Index entity.
  */
-class IndexSolrMultisiteUpdateForm extends IndexForm {
+class IndexSolrMultisiteUpdateForm extends IndexSolrMultisiteCloneForm {
 
   /**
    * {@inheritdoc}
