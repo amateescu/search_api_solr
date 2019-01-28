@@ -777,9 +777,9 @@ function search_api_solr_update_8307() {
       strpos($field_type_name, 'text_edge_und') !== FALSE ||
       strpos($field_type_name, 'text_ngram_und') !== FALSE
     ) {
-      $dependeny = str_replace(['text_phonetic', 'text_edge_und', 'text_ngram_und'], ['text', 'text_und', 'text_und'], $field_type_name);
-      if (!isset($field_type_config['dependencies']['config']) || !in_array($dependeny, $field_type_config['dependencies']['config'])) {
-        $field_type_config['dependencies']['config'][] = $dependeny;
+      $dependency = str_replace(['text_phonetic', 'text_edge_und', 'text_ngram_und'], ['text', 'text_und', 'text_und'], $field_type_name);
+      if (!isset($field_type_config['dependencies']['config']) || !in_array($dependency, $field_type_config['dependencies']['config'])) {
+        $field_type_config['dependencies']['config'][] = $dependency;
       }
       if (!empty($field_type_config['field_type']) && !empty($field_type_config['field_type']['analyzers'])) {
         foreach ($field_type_config['field_type']['analyzers'] as &$component) {
@@ -801,13 +801,13 @@ function search_api_solr_update_8307() {
               $filter['dictionary'] = 'nouns_' . $field_type_config['field_type_language_code'] . '.txt';
             }
             elseif ($filter['class'] == 'solr.StopFilterFactory') {
-              $filter['dictionary'] = 'stopwords_' . $field_type_config['field_type_language_code'] . '.txt';
+              $filter['words'] = 'stopwords_' . $field_type_config['field_type_language_code'] . '.txt';
             }
             elseif (
               $filter['class'] == 'solr.SynonymFilterFactory' ||
               $filter['class'] == 'solr.SynonymGraphFilterFactory'
             ) {
-              $filter['dictionary'] = 'synonyms_' . $field_type_config['field_type_language_code'] . '.txt';
+              $filter['synonyms'] = 'synonyms_' . $field_type_config['field_type_language_code'] . '.txt';
             }
           }
         }
