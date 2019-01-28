@@ -38,7 +38,7 @@ class SearchApiSolrCommands extends DrushCommands {
   }
 
   /**
-   * Lists all search indexes.
+   * Re-install Solr Field Types from their yml files.
    *
    * @command search-api-solr:reinstall-fieldtypes
    *

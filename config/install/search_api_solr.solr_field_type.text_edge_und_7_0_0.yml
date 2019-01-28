@@ -4,10 +4,10 @@ dependencies:
   module:
     - search_api_solr
   config:
-    - search_api_solr.solr_field_type.text_und_6_0_0
-id: text_edge_und_6_0_0
+    - search_api_solr.solr_field_type.text_und_7_0_0
+id: text_edge_und_7_0_0
 label: 'Edge NGram Text Field'
-minimum_solr_version: 6.0.0
+minimum_solr_version: 7.0.0
 custom_code: 'edge'
 field_type_language_code: und
 domains: {}
@@ -30,7 +30,7 @@ field_type:
           ignoreCase: true
           words: stopwords_und.txt
         -
-          class: solr.WordDelimiterFilterFactory
+          class: solr.WordDelimiterGraphFilterFactory
           catenateNumbers: 1
           generateNumberParts: 1
           protected: protwords_und.txt

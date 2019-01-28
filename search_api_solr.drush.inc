@@ -6,17 +6,17 @@
 function search_api_solr_drush_command() {
   $items = [];
 
-  $items['search-api-solr-delete-and-reinstall-all-field-types'] = [
-    'description' => 'Deletes all Solr Field Type and re-installs them from their yml files.',
+  $items['search-api-solr-reinstall-all-field-types'] = [
+    'description' => 'Re-install all Solr Field Types from their yml files.',
     'examples' => [
       'drush search-api-solr-delete-and-reinstall-all-field-types' => dt('Deletes all Solr Field Type and re-installs them from their yml files.'),
       'drush solr-reinstall-ft' => dt('Alias to delete all Solr Field Type and to re-install them from their yml files.'),
     ],
     'aliases' => [
       'solr-reinstall-ft',
-    // Backward compatibility.
+      // Backward compatibility.
       'sasm-reinstall-ft',
-    // Backward compatibility.
+      // Backward compatibility.
       'search-api-solr-multilingual-delete-and-reinstall-all-field-types',
     ],
   ];
@@ -34,9 +34,9 @@ function search_api_solr_drush_command() {
     ],
     'aliases' => [
       'solr-gsc',
-    // Backward compatibility.
+      // Backward compatibility.
       'sasm-gsc',
-    // Backward compatibility.
+      // Backward compatibility.
       'search-api-solr-multilingual-get-server-config',
     ],
   ];
@@ -45,9 +45,9 @@ function search_api_solr_drush_command() {
 }
 
 /**
- * Deletes all Solr Field Type and re-installs them from their yml files.
+ * Re-install all Solr Field Types from their yml files.
  */
-function drush_search_api_solr_delete_and_reinstall_all_field_types() {
+function drush_search_api_solr_reinstall_all_field_types() {
   $command_helper = _search_api_solr_drush_command_helper();
   $command_helper->reinstallFieldtypesCommand();
 }

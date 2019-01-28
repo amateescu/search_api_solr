@@ -427,7 +427,7 @@ class Utility {
   }
 
   /**
->>>>>>> Stashed changes
+   *
    * @param array $tags
    *
    * @return string

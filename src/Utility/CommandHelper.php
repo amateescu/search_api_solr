@@ -36,10 +36,10 @@ class CommandHelper implements LoggerAwareInterface {
   }
 
   /**
-   * Deletes all Solr Field Type and re-installs them from their yml files.
+   * Re-install all Solr Field Types from their yml files.
    */
   public function reinstallFieldtypesCommand() {
-    search_api_solr_delete_and_reinstall_all_field_types();
+    search_api_solr_reinstall_all_field_types();
   }
 
   /**

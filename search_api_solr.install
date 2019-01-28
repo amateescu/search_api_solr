@@ -4,8 +4,8 @@ use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Config\InstallStorage;
-use Drupal\search_api_solr\SolrMultilingualBackendInterface;
 use Drupal\Core\Url;
+use Drupal\search_api_solr\Entity\SolrFieldType;
 
 /**
  * Implements hook_requirements().
@@ -81,9 +81,8 @@ function search_api_solr_requirements($phase) {
 
     foreach ($servers as $server) {
       $backend = $server->getBackend();
-      $key = 'search_api_solr_multilingual_' . $server->id();
-      $requirements[$key] = [
-        'title' => t('Multilingual Solr Server'),
+      $requirements['search_api_solr'][$server->id()] = [
+        'title' => t('Solr Server %server_id', ['%server_id' => $server->id()]),
         'value' => t('Schema complete'),
         'severity' => REQUIREMENT_OK,
         'description' => t('Schema on server <a href=":url">@server</a> contains all required language-specific fields.', [
@@ -97,9 +96,9 @@ function search_api_solr_requirements($phase) {
         if ($missing_languages = array_filter($stats, function ($state) {
           return !$state;
         })) {
-          $requirements[$key]['value'] = t('Schema incomplete');
-          $requirements[$key]['severity'] = REQUIREMENT_WARNING;
-          $requirements[$key]['description'] = t(
+          $requirements['search_api_solr'][$server->id()]['value'] = t('Schema incomplete');
+          $requirements['search_api_solr'][$server->id()]['severity'] = REQUIREMENT_WARNING;
+          $requirements['search_api_solr'][$server->id()]['description'] = t(
             'There are some language-specific field types missing in schema of Solr server <a href=":url">@server</a>: @languages.', [
             ':url' => $server->toUrl('canonical')->toString(),
             '@server' => $server->label(),
@@ -108,9 +107,9 @@ function search_api_solr_requirements($phase) {
         }
       }
       else {
-        $requirements[$key]['value'] = t('Not reachable');
-        $requirements[$key]['severity'] = REQUIREMENT_ERROR;
-        $requirements[$key]['description'] = t(
+        $requirements['search_api_solr'][$server->id()]['value'] = t('Not reachable');
+        $requirements['search_api_solr'][$server->id()]['severity'] = REQUIREMENT_ERROR;
+        $requirements['search_api_solr'][$server->id()]['description'] = t(
           'Solr server <a href=":url">@server</a> is not reachable.', [
           ':url' => $server->toUrl('canonical')->toString(),
           '@server' => $server->label(),
@@ -705,7 +704,7 @@ function search_api_solr_update_8304() {
  * Add Dutch nouns and improve stemming for Dutch language.
  */
 function search_api_solr_update_8305() {
-  static $nouns = '';
+  $nouns = '';
 
   foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
     if (strpos($field_type_name, 'text_nl') !== FALSE) {
@@ -729,7 +728,7 @@ function search_api_solr_update_8305() {
             $filename = __DIR__ . '/config/optional/search_api_solr.solr_field_type.text_nl_7_0_0.yml';
             $nouns = Yaml::decode(file_get_contents($filename));
           }
-          $field_type_config['text_files']['nouns'] = $nouns;
+          $field_type_config['text_files']['nouns'] = $nouns['text_files']['nouns'];
         }
       }
       search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
@@ -764,5 +763,75 @@ function search_api_solr_update_8306() {
       }
     }
     search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
+  }
+}
+
+/**
+ * Avoid redundant text files in generated Solr config files.
+ */
+function search_api_solr_update_8307() {
+  $edge_7 = $ngram_7 = FALSE;
+  foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+    if (
+      strpos($field_type_name, 'text_phonetic') !== FALSE ||
+      strpos($field_type_name, 'text_edge_und') !== FALSE ||
+      strpos($field_type_name, 'text_ngram_und') !== FALSE
+    ) {
+      $dependeny = str_replace(['text_phonetic', 'text_edge_und', 'text_ngram_und'], ['text', 'text_und', 'text_und'], $field_type_name);
+      if (!in_array($dependeny, $field_type_config['dependencies']['config'])) {
+        $field_type_config['dependencies']['config'][] = $dependeny;
+      }
+      if (!empty($field_type_config['field_type']) && !empty($field_type_config['field_type']['analyzers'])) {
+        foreach ($field_type_config['field_type']['analyzers'] as &$component) {
+          if (!empty($component['charFilters'])) {
+            foreach ($component['charFilters'] as &$charFilter) {
+              if ($charFilter['class'] == 'solr.MappingCharFilterFactory') {
+                $charFilter['mapping'] = 'accents_' . $field_type_config['field_type_language_code'] . '.txt';
+              }
+            }
+          }
+          foreach ($component['filters'] as &$filter) {
+            if (
+              $filter['class'] == 'solr.WordDelimiterFilterFactory' ||
+              $filter['class'] == 'solr.WordDelimiterGraphFilterFactory'
+            ) {
+              $filter['protected'] = 'protwords_' . $field_type_config['field_type_language_code'] . '.txt';
+            }
+            elseif ($filter['class'] == 'solr.DictionaryCompoundWordTokenFilterFactory') {
+              $filter['dictionary'] = 'nouns_' . $field_type_config['field_type_language_code'] . '.txt';
+            }
+            elseif ($filter['class'] == 'solr.StopFilterFactory') {
+              $filter['dictionary'] = 'stopwords_' . $field_type_config['field_type_language_code'] . '.txt';
+            }
+            elseif (
+              $filter['class'] == 'solr.SynonymFilterFactory' ||
+              $filter['class'] == 'solr.SynonymGraphFilterFactory'
+            ) {
+              $filter['dictionary'] = 'synonyms_' . $field_type_config['field_type_language_code'] . '.txt';
+            }
+          }
+        }
+      }
+      if (!empty($field_type_config['text_files'])) {
+        $field_type_config['text_files'] = [];
+      }
+      search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
+      if (strpos($field_type_name, 'text_edge_und_7') !== FALSE) {
+        $edge_7 = TRUE;
+      }
+      elseif (strpos($field_type_name, 'text_ngram_und_7') !== FALSE) {
+        $ngram_7 = TRUE;
+      }
+    }
+  }
+  if (!$edge_7) {
+    $filename = __DIR__ . '/config/install/search_api_solr.solr_field_type.text_edge_und_7_0_0.yml';
+    $config = SolrFieldType::create(Yaml::decode(file_get_contents($filename)));
+    $config->save();
+  }
+  if (!$ngram_7) {
+    $filename = __DIR__ . '/config/install/search_api_solr.solr_field_type.text_ngram_und_7_0_0.yml';
+    $config = SolrFieldType::create(Yaml::decode(file_get_contents($filename)));
+    $config->save();
   }
 }
