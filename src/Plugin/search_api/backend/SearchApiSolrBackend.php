@@ -1271,7 +1271,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           }
 
           $solarium_query->setQuery(
-            (!$this->hasIndexJustSolrDocumentDatasource($index) ? '{!boost b=boost_document}' : '') .
+            ((!$this->hasIndexJustSolrDocumentDatasource($index) && (!isset($params['defType']) || 'edismax' != $params['defType'])) ? '{!boost b=boost_document}' : '') .
             ($flatten_keys ?: '*:*')
           );
 
@@ -3464,6 +3464,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           throw new SearchApiSolrException('Incompatible parse mode.');
       }
     }
+
+    // See the boost_term_payload field type in schema.xml. If we send shorter
+    // or larger keys then defined by solr.LengthFilterFactory we'll trigger a
+    // "SpanQuery is null" exception.
+    $k = array_filter($k, function ($v) {
+      $v = trim($v, '"');
+      return (mb_strlen($v) >= 2) && (mb_strlen($v) <= 100);
+    });
 
     if ($k) {
       $payload_scores[] = ' {!payload_score f=boost_term v=' . implode(' func=max} {!payload_score f=boost_term v=', $k) . ' func=max}';
