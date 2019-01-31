@@ -522,7 +522,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->setParseMode($parse_mode_phrase);
     $query->addCondition('body', ['some', 'text'], '=');
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
-    $this->assertEquals('tm_X3b_en_body:(+"some" +"text")', $fq[0]['query']);
+    $this->assertEquals('tm_X3b_en_body:("some" "text")', $fq[0]['query']);
     $this->assertFalse(isset($fq[1]));
   }
 
