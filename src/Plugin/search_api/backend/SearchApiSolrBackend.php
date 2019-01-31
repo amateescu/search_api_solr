@@ -2423,13 +2423,18 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
               '#negation' => $condition->getOperator() == '<>',
             ];
             switch ($parse_mode_id) {
-              // This is a hack. We assume that phrase is what users want but this
-              // prevents an explicit selection of terms.
+              // This is a hack. We assume that the user filters for any term /
+              // phrase. But this prevents an explicit selection of all terms.
               // @see https://www.drupal.org/project/search_api/issues/2991134
               case 'terms':
               case 'phrase':
               case 'edismax':
-                $keys[] = $value;
+                if (is_array($value)) {
+                  $keys += $value;
+                }
+                else {
+                  $keys[] = $value;
+                }
                 break;
               case 'direct':
                 $keys = $value;
