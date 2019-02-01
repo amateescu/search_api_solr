@@ -896,10 +896,10 @@ function search_api_solr_update_8308() {
   $indexes = search_api_solr_update_helper_get_indexes();
   foreach (search_api_solr_update_helper_get_index_third_party_settings() as $index_id => $third_party_settings) {
     if (!isset($third_party_settings['multilingual']) || !isset($third_party_settings['multilingual']['limit_to_content_language'])) {
-      $third_party_settings['multilingual']['limit_to_content_language'] = $settings[$indexes[$index_id]->get('server')]['limit_to_content_language'];
+      $third_party_settings['multilingual']['limit_to_content_language'] = $settings['search_api.server.' . $indexes[$index_id]->get('server')]['limit_to_content_language'];
     }
     if (!isset($third_party_settings['multilingual']) || !isset($third_party_settings['multilingual']['include_language_independent'])) {
-      $third_party_settings['multilingual']['include_language_independent'] = $settings[$indexes[$index_id]->get('server')]['include_language_independent'];
+      $third_party_settings['multilingual']['include_language_independent'] = $settings['search_api.server.' . $indexes[$index_id]->get('server')]['include_language_independent'];
     }
     search_api_solr_update_helper_save_index_third_party_settings($index_id, $third_party_settings);
   }
