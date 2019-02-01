@@ -185,8 +185,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       // radios. @see https://www.drupal.org/node/2820244
       'connector' => NULL,
       'connector_config' => [],
-      'sasm_limit_search_page_to_content_language' => FALSE,
-      'sasm_search_page_include_language_independent' => FALSE,
       'optimize' => FALSE,
     ];
   }
@@ -199,8 +197,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $configuration['highlight_data'] = (bool) $configuration['highlight_data'];
     $configuration['skip_schema_check'] = (bool) $configuration['skip_schema_check'];
     $configuration['site_hash'] = (bool) $configuration['site_hash'];
-    $configuration['sasm_limit_search_page_to_content_language'] = (bool) $configuration['sasm_limit_search_page_to_content_language'];
-    $configuration['sasm_search_page_include_language_independent'] = (bool) $configuration['sasm_search_page_include_language_independent'];
     $configuration['optimize'] = (bool) $configuration['optimize'];
 
     parent::setConfiguration($configuration);
@@ -307,23 +303,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#title' => $this->t('Retrieve results for this site only'),
       '#description' => $description,
       '#default_value' => $this->configuration['site_hash'],
-    ];
-
-    $form['multilingual'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Multilingual'),
-    ];
-    $form['multilingual']['sasm_limit_search_page_to_content_language'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Limit to current content language.'),
-      '#description' => $this->t('Limit all search results for custom queries or search pages not managed by Views to current content language if no language is specified in the query.'),
-      '#default_value' => isset($this->configuration['sasm_limit_search_page_to_content_language']) ? $this->configuration['sasm_limit_search_page_to_content_language'] : FALSE,
-    ];
-    $form['multilingual']['sasm_search_page_include_language_independent'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Include language independent content in search results.'),
-      '#description' => $this->t('This option will include content without a language assigned in the results of custom queries or search pages not managed by Views. For example, if you search for English content, but have an article with languague of "undefined", you will see those results as well. If you disable this option, you will only see content that matches the language.'),
-      '#default_value' => isset($this->configuration['sasm_search_page_include_language_independent']) ? $this->configuration['sasm_search_page_include_language_independent'] : FALSE,
     ];
 
     return $form;
@@ -450,7 +429,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // unnecessary dependency on internal implementation.)
     $values += $values['advanced'];
     $values += $values['multisite'];
-    $values += $values['multilingual'];
     $values['optimize'] &= $values['i_know_what_i_do'];
 
     foreach ($values as $key => $value) {
@@ -460,7 +438,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Clean-up the form to avoid redundant entries in the stored configuration.
     $form_state->unsetValue('advanced');
     $form_state->unsetValue('multisite');
-    $form_state->unsetValue('multilingual');
     // The server description is a #type item element, which means it has a
     // value, do not save it.
     $form_state->unsetValue('server_description');
@@ -987,7 +964,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     static $finalization_in_progress = [];
 
     if (!isset($finalization_in_progress[$index->id()]) && !$index->isReadOnly()) {
-      $settings = $index->getThirdPartySettings('search_api_solr') + search_api_solr_default_index_third_party_settings();
+      $settings = $this->getIndexSolrSettings($index);
       if (
         // Not empty reflects the default FALSE for outdated index configs, too.
         !empty($settings['finalize']) &&
@@ -1086,13 +1063,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $edismax = NULL;
       $index_fields = $index->getFields();
       $index_fields += $this->getSpecialFields($index);
-
+      $settings = $this->getIndexSolrSettings($index);
       $language_ids = $query->getLanguages();
 
       // If there are no languages set, we need to set them. As an example, a
       // language might be set by a filter in a search view.
       if (empty($language_ids)) {
-        if (!$query->hasTag('views') && $this->configuration['sasm_limit_search_page_to_content_language']) {
+        if (!$query->hasTag('views') && $settings['multilingual']['limit_to_content_language']) {
           // Limit the language to the current language being used.
           $language_ids[] = \Drupal::languageManager()
             ->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)
@@ -1106,7 +1083,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
       }
 
-      if ($this->configuration['sasm_search_page_include_language_independent']) {
+      if ($settings['multilingual']['include_language_independent']) {
         $language_ids[] = LanguageInterface::LANGCODE_NOT_SPECIFIED;
         $language_ids[] = LanguageInterface::LANGCODE_NOT_APPLICABLE;
       }
@@ -2613,16 +2590,17 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         foreach ($value as $v) {
           if (is_null($v)) {
             $null = TRUE;
+            break;
           }
           else {
-            $parts[] = $field . ':' . $this->queryHelper->escapePhrase($v);
+            $parts[] = $this->queryHelper->escapePhrase($v);
           }
         }
         if ($null) {
           // @see https://stackoverflow.com/questions/4238609/how-to-query-solr-for-empty-fields/28859224#28859224
           return '(*:* -' . $this->queryHelper->rangeQuery($field, NULL, NULL) . ')';
         }
-        return '(' . implode(" ", $parts) . ')';
+        return $field . ':(' . implode(' ', $parts) . ')';
 
       case 'NOT IN':
         $parts = [];
@@ -2632,10 +2610,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $null = TRUE;
           }
           else {
-            $parts[] = '-' . $field . ':' . $this->queryHelper->escapePhrase($v);
+            $parts[] = $this->queryHelper->escapePhrase($v);
           }
         }
-        return '(' . ($null ? $this->queryHelper->rangeQuery($field, NULL, NULL) : '*:*') . ' ' . implode(" ", $parts) . ')';
+        return '(' . ($null ? $this->queryHelper->rangeQuery($field, NULL, NULL) : '*:*') . ($parts ? ' -' . $field . ':(' . implode(' ', $parts) . ')' : '') . ')';
 
       case '=':
       default:
@@ -3157,7 +3135,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getIndexId(IndexInterface $index) {
-    $settings = $index->getThirdPartySettings('search_api_solr') + search_api_solr_default_index_third_party_settings();
+    $settings = $this->getIndexSolrSettings($index);
     return $this->configuration['server_prefix'] . $settings['advanced']['index_prefix'] . $index->id();
   }
 
@@ -3500,7 +3478,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected function setHighlighting(Query $solarium_query, QueryInterface $query, $highlighted_fields = []) {
     if (!empty($this->configuration['highlight_data'])) {
-      $settings = $query->getIndex()->getThirdPartySettings('search_api_solr') + search_api_solr_default_index_third_party_settings();
+      $settings = $this->getIndexSolrSettings($query->getIndex());
       $highlighter = $settings['highlighter'];
 
       $hl = $solarium_query->getHighlighting();
@@ -3936,7 +3914,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected function isPartOfSchema($kind, $name) {
     static $previous_calls;
 
-    $state_key = 'sasm.' . $this->getServer()->id() . '.schema_parts';
+    $state_key = 'search_api_solr.' . $this->getServer()->id() . '.schema_parts';
     $state = \Drupal::state();
     $schema_parts = $state->get($state_key);
     // @todo reset that drupal state from time to time
@@ -3962,4 +3940,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     return in_array($name, $schema_parts[$kind]);
   }
 
+  /**
+   * @param \Drupal\search_api\IndexInterface $index
+   *
+   * @return array
+   */
+  protected function getIndexSolrSettings(IndexInterface $index) {
+    return $index->getThirdPartySettings('search_api_solr') + search_api_solr_default_index_third_party_settings();
+  }
 }

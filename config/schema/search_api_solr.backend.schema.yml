@@ -25,12 +25,6 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
       label: 'The connector plugin ID'
     connector_config:
       type: plugin.plugin_configuration.search_api_solr_connector.[%parent.connector]
-    sasm_limit_search_page_to_content_language:
-      type: boolean
-      label: 'Limit to current content language'
-    sasm_search_page_include_language_independent:
-      type: boolean
-      label: 'Include languages independent content in search results'
     optimize:
       type: boolean
       label: 'Optimize this backend'

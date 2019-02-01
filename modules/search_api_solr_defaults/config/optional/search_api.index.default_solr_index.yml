@@ -32,6 +32,9 @@ third_party_settings:
         fragsize: 0
     advanced:
       index_prefix: ''
+    multilingual:
+      limit_to_content_language: false
+      include_language_independent: true
 id: default_solr_index
 name: 'Default Solr content index'
 description: 'Default content index created by the Solr Search Defaults module'

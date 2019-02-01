@@ -108,6 +108,10 @@ function search_api_solr_default_index_third_party_settings() {
     'advanced' => [
       'index_prefix' => '',
     ],
+    'multilingual' => [
+      'limit_to_content_language' => FALSE,
+      'include_language_independent' => TRUE,
+    ],
   ];
 }
 
@@ -171,6 +175,26 @@ function search_api_solr_form_search_api_index_form_alter(&$form, FormStateInter
           ],
         ],
       ],
+    ];
+
+    $form['third_party_settings']['search_api_solr']['multilingual'] = [
+      '#type' => 'details',
+      '#title' => t('Multilingual'),
+      '#tree' => TRUE,
+    ];
+
+    $form['third_party_settings']['search_api_solr']['multilingual']['limit_to_content_language'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Limit to current content language.'),
+      '#description' => t('Limit all search results for custom queries or search pages not managed by Views to current content language if no language is specified in the query.'),
+      '#default_value' => $settings['multilingual']['limit_to_content_language'],
+    ];
+
+    $form['third_party_settings']['search_api_solr']['multilingual']['include_language_independent'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Include language independent content in search results.'),
+      '#description' => t('This option will include content without a language assigned in the results of custom queries or search pages not managed by Views. For example, if you search for English content, but have an article with languague of "undefined", you will see those results as well. If you disable this option, you will only see content that matches the language.'),
+      '#default_value' => $settings['multilingual']['include_language_independent'],
     ];
 
     $form['third_party_settings']['search_api_solr']['highlighter'] = [

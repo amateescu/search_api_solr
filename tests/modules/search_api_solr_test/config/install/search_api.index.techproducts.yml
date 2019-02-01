@@ -26,6 +26,9 @@ third_party_settings:
         requireFieldMatch: false
         snippets: 3
         fragsize: 0
+    multilingual:
+      limit_to_content_language: false
+      include_language_independent: true
 id: techproducts
 name: techproducts
 description: ''

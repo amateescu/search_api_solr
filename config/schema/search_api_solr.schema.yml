@@ -66,3 +66,13 @@ search_api.index.*.third_party.search_api_solr:
         index_prefix:
           type: string
           label: 'The prefix for the Solr index'
+    multilingual:
+      type: mapping
+      label: 'multilingual settings'
+      mapping:
+        limit_to_content_language:
+          type: boolean
+          label: 'Limit to current content language'
+        include_language_independent:
+          type: boolean
+          label: 'Include languages independent content in search results'

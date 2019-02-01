@@ -134,6 +134,7 @@ function search_api_solr_uninstall() {
     foreach ($server->getIndexes() as $index) {
       \Drupal::state()->delete('search_api_solr.' . $index->id() . '.last_update');
     }
+    \Drupal::state()->delete('search_api_solr.' . $server->id() . '.schema_parts');
   }
   \Drupal::state()->delete('search_api_solr.site_hash');
 }
@@ -173,7 +174,7 @@ function search_api_solr_update_helper_save_backend_config($server_name, array $
 }
 
 /**
- * Gets all index third party settings for active Solr servers.
+ * Gets all index third party settings for Solr servers.
  *
  * @param string $pattern
  *
@@ -181,10 +182,9 @@ function search_api_solr_update_helper_save_backend_config($server_name, array $
  *   All backend configs for active Solr servers keyed by server name.
  */
 function search_api_solr_update_helper_get_index_third_party_settings($pattern = 'solr') {
-  $config_factory = \Drupal::configFactory();
+  $indexes = search_api_solr_update_helper_get_indexes($pattern);
   $index_third_party_settings = [];
-  foreach ($config_factory->listAll('search_api.index.') as $index_id) {
-    $index = $config_factory->get($index_id);
+  foreach ($indexes as $index_id => $index) {
     $backend_configs = search_api_solr_update_helper_get_backend_configs($pattern);
     if (isset($backend_configs[$index->get('server')])) {
       // This index belongs to a Solr server.
@@ -204,6 +204,41 @@ function search_api_solr_update_helper_get_index_third_party_settings($pattern =
 function search_api_solr_update_helper_save_index_third_party_settings($index_id, array $third_party_settings, $trusted_data = TRUE) {
   \Drupal::configFactory()->getEditable($index_id)
     ->set('third_party_settings.search_api_solr', $third_party_settings)
+    ->save($trusted_data);
+}
+
+/**
+ * Gets all index settings for Solr servers.
+ *
+ * @param string $pattern
+ *
+ * @return array
+ *   All index configs for Solr servers keyed by index name.
+ */
+function search_api_solr_update_helper_get_indexes($pattern = 'solr') {
+  $config_factory = \Drupal::configFactory();
+  $indexes = [];
+  foreach ($config_factory->listAll('search_api.index.') as $index_id) {
+    $index = $config_factory->get($index_id);
+    $backend_configs = search_api_solr_update_helper_get_backend_configs($pattern);
+    if (isset($backend_configs[$index->get('server')])) {
+      // This index belongs to a Solr server.
+      $indexes[$index_id] = $index;
+    }
+  }
+  return $indexes;
+}
+
+/**
+ * Saves a modified index config.
+ *
+ * @param string $index_id
+ * @param array $third_party_settings
+ * @param bool $trusted_data
+ */
+function search_api_solr_update_helper_save_indexes($index_id, array $settings, $trusted_data = TRUE) {
+  \Drupal::configFactory()->getEditable($index_id)
+    ->setData($settings)
     ->save($trusted_data);
 }
 
@@ -599,7 +634,7 @@ function search_api_solr_update_8300() {
     switch ($server->get('backend')) {
       case 'search_api_solr':
         $backend_config['sasm_limit_search_page_to_content_language'] = FALSE;
-        $backend_config['sasm_search_page_include_language_independent'] = FALSE;
+        $backend_config['sasm_search_page_include_language_independent'] = TRUE;
         break;
 
       case 'search_api_solr_multilingual':
@@ -610,7 +645,7 @@ function search_api_solr_update_8300() {
 
       case 'search_api_solr_any_schema':
         $backend_config['sasm_limit_search_page_to_content_language'] = FALSE;
-        $backend_config['sasm_search_page_include_language_independent'] = FALSE;
+        $backend_config['sasm_search_page_include_language_independent'] = TRUE;
         $server->set('backend', 'search_api_solr');
         break;
 
@@ -833,5 +868,39 @@ function search_api_solr_update_8307() {
     $filename = __DIR__ . '/config/install/search_api_solr.solr_field_type.text_ngram_und_7_0_0.yml';
     $config = SolrFieldType::create(Yaml::decode(file_get_contents($filename)));
     $config->save();
+  }
+}
+
+/**
+ * Configure multilingual features individually per index.
+ */
+function search_api_solr_update_8308() {
+  $settings = [];
+  foreach (search_api_solr_update_helper_get_backend_configs() as $server_name => $backend_config) {
+    \Drupal::state()->delete('sasm.' . $server_name . '.schema_parts');
+    $settings[$server_name] = [
+      'limit_to_content_language' => FALSE,
+      'include_language_independent' => TRUE,
+    ];
+    if (isset($backend_config['sasm_limit_search_page_to_content_language'])) {
+      $settings[$server_name]['limit_to_content_language'] = $backend_config['sasm_limit_search_page_to_content_language'];
+      unset($backend_config['sasm_limit_search_page_to_content_language']);
+    }
+    if (isset($backend_config['sasm_search_page_include_language_independent'])) {
+      $settings[$server_name]['include_language_independent'] = $backend_config['sasm_search_page_include_language_independent'];
+      unset($backend_config['sasm_search_page_include_language_independent']);
+    }
+    search_api_solr_update_helper_save_backend_config($server_name, $backend_config);
+  }
+
+  $indexes = search_api_solr_update_helper_get_indexes();
+  foreach (search_api_solr_update_helper_get_index_third_party_settings() as $index_id => $third_party_settings) {
+    if (!isset($third_party_settings['multilingual']) && !isset($third_party_settings['multilingual']['limit_to_content_language'])) {
+      $third_party_settings['multilingual']['limit_to_content_language'] = $settings[$indexes[$index_id]->get('server')]['limit_to_content_language'];
+    }
+    if (!isset($third_party_settings['multilingual']) && !isset($third_party_settings['multilingual']['include_language_independent'])) {
+      $third_party_settings['multilingual']['include_language_independent'] = $settings[$indexes[$index_id]->get('server')]['include_language_independent'];
+    }
+    search_api_solr_update_helper_save_index_third_party_settings($index_id, $third_party_settings);
   }
 }

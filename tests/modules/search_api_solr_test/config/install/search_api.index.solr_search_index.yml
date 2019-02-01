@@ -154,3 +154,6 @@ third_party_settings:
         fragsize: 0
     advanced:
       index_prefix: 'index_prefix'
+    multilingual:
+      limit_to_content_language: false
+      include_language_independent: false

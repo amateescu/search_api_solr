@@ -53,8 +53,7 @@ configuration files. They aren't always static but vary on your Drupal setup.
 But the Search API Solr Search module will create the correct configs for you!
 
 1. Create a Search API Server according to the search_api documentation using
-   "Solr" or "Multilingual Solr" as Backend and the "Standard" or "Basic Auth"
-   Connector.
+   "Solr" as Backend and the connector that meets your setup.
 2. Download the config.zip from the server's details page or by using
    `drush solr-gsc`
 3. Extract the config.zip to the conf directory of your new core.

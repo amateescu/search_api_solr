@@ -27,8 +27,6 @@ backend_config:
     commit_within: 1000
     jmx: false
     solr_install_dir: ../../..
-  sasm_limit_search_page_to_content_language: false
-  sasm_search_page_include_language_independent: false
   optimize: false
 status: true
 langcode: en
