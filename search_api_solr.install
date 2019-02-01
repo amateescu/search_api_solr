@@ -182,11 +182,11 @@ function search_api_solr_update_helper_save_backend_config($server_name, array $
  *   All backend configs for active Solr servers keyed by server name.
  */
 function search_api_solr_update_helper_get_index_third_party_settings($pattern = 'solr') {
+  $backend_configs = search_api_solr_update_helper_get_backend_configs($pattern);
   $indexes = search_api_solr_update_helper_get_indexes($pattern);
   $index_third_party_settings = [];
   foreach ($indexes as $index_id => $index) {
-    $backend_configs = search_api_solr_update_helper_get_backend_configs($pattern);
-    if (isset($backend_configs[$index->get('server')])) {
+    if (isset($backend_configs['search_api.server.' . $index->get('server')])) {
       // This index belongs to a Solr server.
       $index_third_party_settings[$index_id] = $index->get('third_party_settings.search_api_solr');
     }
@@ -216,12 +216,12 @@ function search_api_solr_update_helper_save_index_third_party_settings($index_id
  *   All index configs for Solr servers keyed by index name.
  */
 function search_api_solr_update_helper_get_indexes($pattern = 'solr') {
+  $backend_configs = search_api_solr_update_helper_get_backend_configs($pattern);
   $config_factory = \Drupal::configFactory();
   $indexes = [];
   foreach ($config_factory->listAll('search_api.index.') as $index_id) {
     $index = $config_factory->get($index_id);
-    $backend_configs = search_api_solr_update_helper_get_backend_configs($pattern);
-    if (isset($backend_configs[$index->get('server')])) {
+    if (isset($backend_configs['search_api.server.' . $index->get('server')])) {
       // This index belongs to a Solr server.
       $indexes[$index_id] = $index;
     }
@@ -595,7 +595,7 @@ function search_api_solr_update_8213() {
   $data = $config->getRawData();
 
   foreach (search_api_solr_update_helper_get_index_third_party_settings() as $index_id => $third_party_settings) {
-    if (!isset($third_party_settings['advanced']) && !isset($third_party_settings['advanced']['index_prefix'])) {
+    if (!isset($third_party_settings['advanced']) || !isset($third_party_settings['advanced']['index_prefix'])) {
       $third_party_settings['advanced']['index_prefix'] = isset($data['index_prefix_' . $index_id]) ? $data['index_prefix_' . $index_id] : '';
       unset($data['index_prefix_' . $index_id]);
     }
@@ -895,10 +895,10 @@ function search_api_solr_update_8308() {
 
   $indexes = search_api_solr_update_helper_get_indexes();
   foreach (search_api_solr_update_helper_get_index_third_party_settings() as $index_id => $third_party_settings) {
-    if (!isset($third_party_settings['multilingual']) && !isset($third_party_settings['multilingual']['limit_to_content_language'])) {
+    if (!isset($third_party_settings['multilingual']) || !isset($third_party_settings['multilingual']['limit_to_content_language'])) {
       $third_party_settings['multilingual']['limit_to_content_language'] = $settings[$indexes[$index_id]->get('server')]['limit_to_content_language'];
     }
-    if (!isset($third_party_settings['multilingual']) && !isset($third_party_settings['multilingual']['include_language_independent'])) {
+    if (!isset($third_party_settings['multilingual']) || !isset($third_party_settings['multilingual']['include_language_independent'])) {
       $third_party_settings['multilingual']['include_language_independent'] = $settings[$indexes[$index_id]->get('server')]['include_language_independent'];
     }
     search_api_solr_update_helper_save_index_third_party_settings($index_id, $third_party_settings);
