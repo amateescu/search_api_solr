@@ -91,7 +91,7 @@ before_script:
   - ls -lh $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf
   - $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr start -e techproducts -p 8983
   # Add the preconfigured d8 core to the running techproducts example.
-  - $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr create -c d8 -d $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8
+  - $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr create -c d8 -d $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf
 
 script:
   # Run the tests within the drupal directory.

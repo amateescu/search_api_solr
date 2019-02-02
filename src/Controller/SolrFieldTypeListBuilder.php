@@ -272,7 +272,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     $backend = $this->getBackend();
     $connector = $backend->getSolrConnector();
     $solr_branch = $connector->getSolrBranch($this->assumed_minimum_version);
-    $search_api_solr_conf_path = drupal_get_path('module', 'search_api_solr') . '/solr-conf/' . $solr_branch;
+    $search_api_solr_conf_path = drupal_get_path('module', 'search_api_solr') . '/solr-conf-templates/' . $solr_branch;
     $solrcore_properties = parse_ini_file($search_api_solr_conf_path . '/solrcore.properties', FALSE, INI_SCANNER_RAW);
 
     $files = [
