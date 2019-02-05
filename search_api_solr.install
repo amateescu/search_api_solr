@@ -904,3 +904,11 @@ function search_api_solr_update_8308() {
     search_api_solr_update_helper_save_index_third_party_settings($index_id, $third_party_settings);
   }
 }
+
+/**
+ * Use solarium 4.3
+ */
+function search_api_solr_update_8309() {
+  // Reset the states.
+  \Drupal::state()->delete('search_api_solr.endpoint.data');
+}

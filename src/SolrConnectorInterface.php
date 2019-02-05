@@ -118,6 +118,8 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    *
    * @return string
    *   The full schema version string.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function getSchemaVersionString($reset = FALSE);
 
@@ -129,17 +131,21 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    *
    * @return string
    *   The schema version number.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function getSchemaVersion($reset = FALSE);
 
   /**
    * Pings the Solr core to tell whether it can be accessed.
    *
+   * @param array $options
+   *
    * @return mixed
    *   The latency in milliseconds if the core can be accessed,
    *   otherwise FALSE.
    */
-  public function pingCore();
+  public function pingCore($options = []);
 
   /**
    * Pings the Solr server to tell whether it can be accessed.
@@ -147,6 +153,8 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    * @return mixed
    *   The latency in milliseconds if the core can be accessed,
    *   otherwise FALSE.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function pingServer();
 
@@ -290,6 +298,8 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    * @param \Solarium\Core\Client\Endpoint|null $endpoint
    *
    * @return \Solarium\Core\Client\Response
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function search(Query $query, Endpoint $endpoint = NULL);
 
@@ -310,6 +320,8 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    * @param \Solarium\Core\Client\Endpoint|null $endpoint
    *
    * @return \Solarium\Core\Query\Result\ResultInterface
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function update(UpdateQuery $query, Endpoint $endpoint = NULL);
 
@@ -341,6 +353,8 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    * Optimizes the Solr index.
    *
    * @param \Solarium\Core\Client\Endpoint|null $endpoint
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function optimize(Endpoint $endpoint = NULL);
 
@@ -351,6 +365,8 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    * @param \Solarium\Core\Client\Endpoint|null $endpoint
    *
    * @return \Solarium\QueryType\Extract\Result
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function extract(QueryInterface $query, Endpoint $endpoint = NULL);
 
@@ -375,7 +391,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    *
    * @return \Solarium\Core\Client\Endpoint
    */
-  public function getEndpoint($key = 'core');
+  public function getEndpoint($key = 'search_api_solr');
 
   /**
    * Retrieves a config file or file list from the Solr server.

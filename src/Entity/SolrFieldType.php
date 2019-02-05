@@ -130,7 +130,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    * {@inheritdoc}
    */
   public function getSpellcheckFieldType() {
-    return $this->field_type;
+    return $this->spellcheck_field_type;
   }
 
   /**

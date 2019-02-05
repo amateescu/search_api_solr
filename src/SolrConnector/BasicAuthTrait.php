@@ -87,7 +87,7 @@ trait BasicAuthTrait {
     $this->connect();
 
     if (!$endpoint) {
-      $endpoint = $this->solr->getEndpoint('core');
+      $endpoint = $this->solr->getEndpoint();
     }
 
     // Use the 'postbigrequest' plugin if no specific http method is
