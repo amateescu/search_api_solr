@@ -44,7 +44,7 @@ class Query extends AbstractQuery implements ComponentAwareQueryInterface {
    *
    * @return string
    */
-  public function getType() {
+  public function getType(): string {
     return 'autocomplete';
   }
 
