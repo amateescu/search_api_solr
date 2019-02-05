@@ -14,7 +14,7 @@ backend_config:
     scheme: http
     host: localhost
     port: 8983
-    path: /solr
+    path: /
     core: techproducts
     timeout: 5
     index_timeout: 5
