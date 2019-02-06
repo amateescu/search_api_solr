@@ -869,7 +869,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       default:
         $description = 'unreachable';
     }
-    throw new SearchApiSolrException('Solr endpoint ' . $endpoint->getBaseUri() . " $description.", $response_code, $e);
+    throw new SearchApiSolrException('Solr endpoint ' . $endpoint->getServerUri() . " $description.", $response_code, $e);
   }
 
   /**

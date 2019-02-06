@@ -569,7 +569,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     if ($this->server->status()) {
       // If the server is enabled, check whether Solr can be reached.
-      $ping_server = $connector->pingServer();
+      try {
+        $ping_server = $connector->pingServer();
+      }
+      catch (\Exception $e) {
+        $ping_server = FALSE;
+      }
       if ($ping_server) {
         $msg = $this->t('The Solr server could be reached.');
       }
@@ -582,7 +587,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         'status' => $ping_server ? 'ok' : 'error',
       ];
 
-      $ping = $connector->pingCore();
+      try {
+        $ping = $connector->pingCore();
+      }
+      catch (\Exception $e) {
+        $ping = FALSE;
+      }
       if ($ping) {
         $msg = $this->t('The Solr @core could be accessed (latency: @millisecs ms).', ['@core' => $cloud ? 'collection' : 'core', '@millisecs' => $ping * 1000]);
       }
