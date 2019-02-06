@@ -2,7 +2,6 @@
 
 namespace Drupal\search_api_solr\SolrConnector;
 
-use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Plugin\PluginFormInterface;
@@ -378,7 +377,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     try {
       $info = $this->getCoreInfo();
     }
-    catch (SearchApiSolrException $e) {
+    catch (\Exception $e) {
       try {
         $info = $this->getServerInfo();
       }
@@ -585,28 +584,28 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    * {@inheritdoc}
    */
   public function coreRestGet($path) {
-    return $this->restRequest('core', $path);
+    return $this->restRequest($this->configuration['core'] . $path);
   }
 
   /**
    * {@inheritdoc}
    */
   public function coreRestPost($path, $command_json = '') {
-    return $this->restRequest('core', $path, Request::METHOD_POST, $command_json);
+    return $this->restRequest($this->configuration['core'] . $path, Request::METHOD_POST, $command_json);
   }
 
   /**
    * {@inheritdoc}
    */
   public function serverRestGet($path) {
-    return $this->restRequest('server', $path);
+    return $this->restRequest($path);
   }
 
   /**
    * {@inheritdoc}
    */
   public function serverRestPost($path, $command_json = '') {
-    return $this->restRequest('server', $path, Request::METHOD_POST, $command_json);
+    return $this->restRequest($path, Request::METHOD_POST, $command_json);
   }
 
   /**
@@ -623,6 +622,8 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    *
    * @return string
    *   The decoded response.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   protected function restRequest($handler, $method = Request::METHOD_GET, $command_json = '') {
     $this->connect();

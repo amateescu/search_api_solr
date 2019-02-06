@@ -176,6 +176,8 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    *
    * @return string
    *   The decoded response.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function coreRestGet($path);
 
@@ -189,6 +191,8 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    *
    * @return string
    *   The decoded response.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function coreRestPost($path, $command_json = '');
 
@@ -200,6 +204,8 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    *
    * @return string
    *   The decoded response.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function serverRestGet($path);
 
@@ -213,6 +219,8 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    *
    * @return string
    *   The decoded response.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function serverRestPost($path, $command_json = '');
 
