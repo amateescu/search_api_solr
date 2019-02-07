@@ -469,6 +469,9 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
 
     $this->connect();
 
+    // We keep the results in a state instead of a cache because we want to
+    // access parts of this data even if Solr is temporarily not reachable and
+    // caches are cleared.
     $state_key = 'search_api_solr.endpoint.data';
     $state = \Drupal::state();
     $endpoint_data = $state->get($state_key);
@@ -584,14 +587,14 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    * {@inheritdoc}
    */
   public function coreRestGet($path) {
-    return $this->restRequest($this->configuration['core'] . $path);
+    return $this->restRequest($this->configuration['core'] . '/' . ltrim($path, '/'));
   }
 
   /**
    * {@inheritdoc}
    */
   public function coreRestPost($path, $command_json = '') {
-    return $this->restRequest($this->configuration['core'] . $path, Request::METHOD_POST, $command_json);
+    return $this->restRequest($this->configuration['core'] . '/' . ltrim($path, '/'), Request::METHOD_POST, $command_json);
   }
 
   /**
