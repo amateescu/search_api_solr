@@ -459,8 +459,8 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    * @param bool $reset
    *   If TRUE the server will be asked regardless if a previous call is cached.
    *
-   * @return object
-   *   A response object with system information.
+   * @return array
+   *   Response data with system information.
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
@@ -474,7 +474,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     $endpoint_data = $state->get($state_key);
     $server_uri = $this->getServerUri();
 
-    if (!isset($previous_calls[$server_uri][$handler]) || $reset) {
+    if (!isset($previous_calls[$server_uri][$handler]) || !isset($endpoint_data[$server_uri][$handler]) || $reset) {
       // Don't retry multiple times in case of an exception.
       $previous_calls[$server_uri][$handler] = TRUE;
 

@@ -911,7 +911,7 @@ function search_api_solr_update_8308() {
 function search_api_solr_update_8309() {
   // Remove the V1 API endpoint from the path.
   foreach (search_api_solr_update_helper_get_backend_configs() as $server_name => $backend_config) {
-    $backend_config['connector_config']['path'] = preg_replace('@/solr$@', '', $backend_config['connector_config']['path']);
+    $backend_config['connector_config']['path'] = preg_replace('@/solr$@', '/', $backend_config['connector_config']['path']);
     search_api_solr_update_helper_save_backend_config($server_name, $backend_config);
   }
 
