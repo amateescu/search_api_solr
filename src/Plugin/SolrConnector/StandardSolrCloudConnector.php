@@ -3,8 +3,10 @@
 namespace Drupal\search_api_solr\Plugin\SolrConnector;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrCloudConnectorInterface;
 use Solarium\Core\Client\Endpoint;
+use Solarium\Exception\HttpException;
 use Solarium\QueryType\Graph\Query as GraphQuery;
 use Solarium\QueryType\Ping\Query as PingQuery;
 use Solarium\QueryType\Stream\Query as StreamQuery;
@@ -126,6 +128,38 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
    */
   public function graph(GraphQuery $query, Endpoint $endpoint = NULL) {
     return $this->execute($query, $endpoint);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function reloadCore() {
+    return $this->reloadCollection();
+  }
+
+  /**
+   * Reloads collection.
+   *
+   * @return bool
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   */
+  public function reloadCollection() {
+    $this->connect();
+
+    try {
+      $collection = $this->configuration['core'];
+
+      $query = $this->solr->createCollections();
+      $action = $query->createReload(['name' => $collection]);
+      $query->setAction($action);
+
+      $response = $this->solr->collections($query);
+      return $response->getWasSuccessful();
+    }
+    catch (HttpException $e) {
+      throw new SearchApiSolrException("Reloading collection $collection failed with error code " . $e->getCode() . '.', $e->getCode(), $e);
+    }
   }
 
 }

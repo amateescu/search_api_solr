@@ -438,6 +438,8 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    * Reloads the Solr core.
    *
    * @return bool
+   *
+   * @throws SearchApiSolrException
    */
   public function reloadCore();
 

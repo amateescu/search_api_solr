@@ -63,11 +63,12 @@ class SolrReloadCoreForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $core = $this->search_api_server->getBackendConfig()['connector_config']['core'];
     try {
+      /** @var \Drupal\search_api_solr\SolrConnectorInterface $connector */
       $connector = $this->search_api_server->getBackend()->getSolrConnector();
       $result = $connector->reloadCore();
 
       if ($result) {
-        $this->messenger->addMessage($this->t('Core %core reloaded.', ['%core' => $core]));
+        $this->messenger->addMessage($this->t('Solr: %core reloaded.', ['%core' => $core]));
       }
     }
     catch (\Exception $e) {
