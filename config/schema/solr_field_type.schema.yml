@@ -65,6 +65,19 @@ search_api_solr.solr_field_type.*:
                     label: 'SimplePatternSplitTokenizer::'
               filters:
                 type: search_api_solr.solr_field_type_filters
+        similarity:
+          type: mapping
+          nullable: true
+          mapping:
+            class:
+              type: string
+              label: 'The similarity class'
+            str:
+              type: search_api_solr.solr_field_type_scalar_values
+            int:
+              type: search_api_solr.solr_field_type_scalar_values
+            float:
+              type: search_api_solr.solr_field_type_scalar_values
     spellcheck_field_type:
       type: mapping
       nullable: true
@@ -129,16 +142,7 @@ search_api_solr.solr_field_type.*:
                       type: string
                       label: 'name'
                     str:
-                      type: sequence
-                      sequence:
-                        type: mapping
-                        mapping:
-                          name:
-                            type: string
-                            label: 'property name'
-                          VALUE:
-                            type: string
-                            label: 'property value'
+                      type: search_api_solr.solr_field_type_scalar_values
     text_files:
       type: mapping
       mapping:
@@ -306,3 +310,15 @@ search_api_solr.solr_field_type_filters:
         type: boolean
         label: 'CJKBigramFilterFactory::outputUnigrams'
         nullable: true
+
+search_api_solr.solr_field_type_scalar_values:
+  type: sequence
+  sequence:
+    type: mapping
+    mapping:
+      name:
+        type: string
+        label: 'property name'
+      VALUE:
+        type: string
+        label: 'property value'
