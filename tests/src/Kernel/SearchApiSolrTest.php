@@ -1014,11 +1014,21 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertNotContains('<jmx />', $config_files['solrconfig_extra.xml']);
 
     $backend_config['connector_config']['jmx'] = TRUE;
+    // Relative path for official docker image.
+    $backend_config['connector_config']['solr_install_dir'] = '../../../..';
     $server->setBackendConfig($backend_config);
     $server->save();
 
     $config_files= $list_builder->getConfigFiles();
     $this->assertContains('<jmx />', $config_files['solrconfig_extra.xml']);
+    $this->assertContains('solr.install.dir=../../../..', $config_files['solrcore.properties']);
+
+    // Write files for docker to disk.
+    if ($solr_major_version = $server->getBackend()->getSolrConnector()->getSolrMajorVersion()) {
+      foreach ($config_files as $file_name => $content) {
+        file_put_contents(__DIR__ . '/../../solr-conf/' . $solr_major_version . '.x/' . $file_name, $content);
+      }
+    }
   }
 
   /**

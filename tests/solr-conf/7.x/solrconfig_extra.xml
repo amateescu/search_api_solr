@@ -75,3 +75,4 @@
       <str name="buildOnStartup">false</str>
     </lst>
   </searchComponent>
+<jmx />
