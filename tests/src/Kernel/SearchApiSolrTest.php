@@ -1024,7 +1024,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertContains('solr.install.dir=../../../..', $config_files['solrcore.properties']);
 
     // Write files for docker to disk.
-    if ($solr_major_version = $server->getBackend()->getSolrConnector()->getSolrMajorVersion()) {
+    $solr_major_version = $server->getBackend()->getSolrConnector()->getSolrMajorVersion();
+    if ('7' === $solr_major_version) {
       foreach ($config_files as $file_name => $content) {
         file_put_contents(__DIR__ . '/../../solr-conf/' . $solr_major_version . '.x/' . $file_name, $content);
       }
