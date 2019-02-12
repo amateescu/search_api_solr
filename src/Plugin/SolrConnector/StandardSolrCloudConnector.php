@@ -133,6 +133,38 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
   /**
    * {@inheritdoc}
    */
+  public function getTermsQuery() {
+    $query = parent::getTermsQuery();
+    return $query->addParam('distrib', TRUE);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSpellcheckQuery() {
+    $query = parent::getSpellcheckQuery();
+    return $query->addParam('distrib', TRUE);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSuggesterQuery() {
+    $query = parent::getSuggesterQuery();
+    return $query->addParam('distrib', TRUE);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAutocompleteQuery() {
+    $query = parent::getAutocompleteQuery();
+    return $query->addParam('distrib', TRUE);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function reloadCore() {
     return $this->reloadCollection();
   }
