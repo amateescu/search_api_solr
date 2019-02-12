@@ -37,7 +37,8 @@ class BasicAuthTestSolrConnector extends BasicAuthSolrConnector {
     self::$query = $query;
 
     if ($this->intercept) {
-      return new Result();
+      /** @var \Solarium\Core\Query\AbstractQuery $query */
+      return new Result($query, new Response(''));
     }
 
     return parent::execute($query, $endpoint);
@@ -50,7 +51,7 @@ class BasicAuthTestSolrConnector extends BasicAuthSolrConnector {
     self::$request = $request;
 
     if ($this->intercept) {
-      return new Response();
+      return new Response('');
     }
 
     return parent::executeRequest($request, $endpoint);
