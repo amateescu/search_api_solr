@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api_solr_test\TypedData;
+namespace Drupal\search_api_solr_cloud_test\TypedData;
 
 use Drupal\Core\TypedData\ComplexDataDefinitionBase;
 

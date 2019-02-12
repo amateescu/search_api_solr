@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api_solr_test\Plugin\SolrConnector;
+namespace Drupal\search_api_solr_cloud_test\Plugin\SolrConnector;
 
 use Drupal\search_api_solr\Plugin\SolrConnector\BasicAuthSolrCloudConnector;
 use Drupal\search_api_solr\Utility\Utility;
@@ -19,7 +19,7 @@ use Solarium\Core\Query\Result\Result;
  *   description = @Translation("A connector usable for Solr installations protected by basic authentication.")
  * )
  */
-class SolrCloudBasicAuthTestSolrConnector extends BasicAuthSolrCloudConnector {
+class BasicAuthTestSolrCloudConnector extends BasicAuthSolrCloudConnector {
 
   /** @var QueryInterface $query */
   protected static $query;

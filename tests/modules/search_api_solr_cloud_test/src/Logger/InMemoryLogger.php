@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api_solr_test\Logger;
+namespace Drupal\search_api_solr_cloud_test\Logger;
 
 use Psr\Log\AbstractLogger;
 
