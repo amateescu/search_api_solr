@@ -7,13 +7,10 @@ php:
   - 7.3
 
 env:
-  - SOLR_VERSION=7.6.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.4.0
-  - SOLR_VERSION=7.6.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.6.x DRUSH_VERSION=~9.4.0
-  - SOLR_VERSION=6.6.5 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=6.x DRUPAL_BRANCH=8.6.x DRUSH_VERSION=~9.4.0
-
-notifications:
-  irc:
-    - "chat.freenode.net#drupal-search-api"
+  - SOLR_VERSION=7.6.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.4.0 SOLR_CLOUD=true
+  - SOLR_VERSION=7.6.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.4.0 SOLR_CLOUD=false
+  - SOLR_VERSION=7.6.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.6.x DRUSH_VERSION=~9.4.0 SOLR_CLOUD=false
+  - SOLR_VERSION=6.6.5 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=6.x DRUPAL_BRANCH=8.6.x DRUSH_VERSION=~9.4.0 SOLR_CLOUD=false
 
 git:
   # The depth needs to be increased. The default of 50 leads to fatal: reference
@@ -32,10 +29,10 @@ services:
 before_install:
   - phpenv config-rm xdebug.ini || true
   - composer global require "hirak/prestissimo:^0.3"
-  - mysql -e 'CREATE DATABASE drupal;'
   - ls solr_downloads/
   - wget -nc --continue -v --tries=3 --directory-prefix=solr_downloads "http://archive.apache.org/dist/lucene/solr/${SOLR_VERSION}/solr-${SOLR_VERSION}.tgz"
   - tar -xzf solr_downloads/solr-${SOLR_VERSION}.tgz
+  - mysql -e 'CREATE DATABASE drupal;'
 
 install:
   - git tag 999.3.0
@@ -89,9 +86,17 @@ before_script:
   - unzip -o conf.zip -d $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf
   - echo "solr.install.dir=$TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}" >> $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf/solrcore.properties
   - ls -lh $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf
-  - $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr start -e techproducts -p 8983
-  # Add the preconfigured d8 core to the running techproducts example.
-  - $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr create -c d8 -d $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf
+  - |
+    if [ ${SOLR_CLOUD} == "true" ]; then
+       $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr start -e cloud -noprompt || travis_terminate 1;
+       $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr delete -c gettingstarted || travis_terminate 1;
+       $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr create -c techproducts -s 2 -rf 2 -d $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/configsets/sample_techproducts_configs/conf -n sample_techproducts_configs || travis_terminate 1;
+       $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/post -c techproducts $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/example/exampledocs/*.xml || travis_terminate 1;
+       $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr create -c d8 -s 2 -rf 2 -d $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf -n d8 || travis_terminate 1;
+     else
+       $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr start -e techproducts || travis_terminate 1;
+       $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr create -c d8 -d $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf || travis_terminate 1;
+    fi
 
 script:
   # Run the tests within the drupal directory.
@@ -101,7 +106,11 @@ script:
 matrix:
   exclude:
       - php: 7.1
-        env: SOLR_VERSION=7.6.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.4.0
+        env: SOLR_VERSION=7.6.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.4.0 SOLR_CLOUD=true
+      - php: 7.1
+        env: SOLR_VERSION=7.6.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.4.0 SOLR_CLOUD=false
   allow_failures:
       - php: 7.3
-        env: SOLR_VERSION=7.6.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.4.0
+        env: SOLR_VERSION=7.6.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.4.0 SOLR_CLOUD=true
+      - php: 7.3
+        env: SOLR_VERSION=7.6.0 SOLR_CORE=d8 SEARCH_API_SOLR_CONF=7.x DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.4.0 SOLR_CLOUD=false
