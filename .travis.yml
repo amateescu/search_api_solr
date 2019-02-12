@@ -101,7 +101,12 @@ before_script:
 script:
   # Run the tests within the drupal directory.
   - cd $TRAVIS_BUILD_DIR/../drupal
-  - ./vendor/bin/phpunit -c core --group search_api_solr --verbose --debug modules/contrib/search_api_solr/tests/src
+  - |
+    if [ ${SOLR_CLOUD} == "true" ]; then
+      vendor/bin/phpunit -c core --group search_api_solr --verbose --debug --exclude-group solr_no_cloud modules/contrib/search_api_solr/tests/src || travis_terminate 1;
+    else
+      vendor/bin/phpunit -c core --group search_api_solr --verbose --debug --exclude-group solr_cloud modules/contrib/search_api_solr/tests/src || travis_terminate 1;
+    fi
 
 matrix:
   exclude:

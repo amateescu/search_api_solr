@@ -1,0 +1,10 @@
+<?php
+
+/**
+ * Implements hook_search_api_solr_config_files_alter().
+ */
+function search_api_solr_test_search_api_solr_config_files_alter(array &$files, string $lucene_match_version, string $server_id = '') {
+  $files['test.txt'] =
+    "hook_search_api_solr_config_files_alter() works\n" .
+    $server_id . "\n";
+}
