@@ -326,6 +326,13 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function isCloud() {
+    return FALSE;
+  }
+
+  /**
    * Returns a the Solr server URI.
    */
   protected function getServerUri() {

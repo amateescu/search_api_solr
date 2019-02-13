@@ -477,7 +477,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getSupportedFeatures() {
-    return [
+    $features = [
       'search_api_autocomplete',
       'search_api_facets',
       'search_api_facets_operator_or',
@@ -485,9 +485,15 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'search_api_mlt',
       'search_api_random_sort',
       'search_api_data_type_location',
-      'search_api_grouping',
-      // 'search_api_data_type_geohash',.
+      // 'search_api_data_type_geohash',
     ];
+
+    // @see https://lucene.apache.org/solr/guide/7_6/result-grouping.html#distributed-result-grouping-caveats
+    if (!$this->getSolrConnector()->isCloud()) {
+      $features[] = 'search_api_grouping';
+    }
+
+    return $features;
   }
 
   /**

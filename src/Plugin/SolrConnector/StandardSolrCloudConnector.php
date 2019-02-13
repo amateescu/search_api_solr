@@ -45,6 +45,13 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
   /**
    * {@inheritdoc}
    */
+  public function isCloud() {
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getStatsSummary() {
     $summary = parent::getStatsSummary();
     $summary['@collection_name'] = '';

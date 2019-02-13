@@ -748,20 +748,25 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
    * Tests search result groping
    */
   public function checkSearchResultGrouping() {
-    $query = $this->buildSearch(NULL, [], [], FALSE);
-    $query->setOption('search_api_grouping', [
-      'use_grouping' => TRUE,
-      'fields' => [
-        'type',
-      ],
-    ]);
-    $results = $query->execute();
+    if (in_array('search_api_grouping', $this->getIndex()->getServerInstance()->getBackend()->getSupportedFeatures())) {
+      $query = $this->buildSearch(NULL, [], [], FALSE);
+      $query->setOption('search_api_grouping', [
+        'use_grouping' => TRUE,
+        'fields' => [
+          'type',
+        ],
+      ]);
+      $results = $query->execute();
 
-    $this->assertEquals(2, $results->getResultCount(), 'Get the results count grouping by type.');
-    $data = $results->getExtraData('search_api_solr_response');
-    $this->assertEquals(5, $data['grouped']['ss_type']['matches'], 'Get the total documents after grouping.');
-    $this->assertEquals(2, $data['grouped']['ss_type']['ngroups'], 'Get the number of groups after grouping.');
-    $this->assertResults([1, 4], $results, 'Grouping by type');
+      $this->assertEquals(2, $results->getResultCount(), 'Get the results count grouping by type.');
+      $data = $results->getExtraData('search_api_solr_response');
+      $this->assertEquals(5, $data['grouped']['ss_type']['matches'], 'Get the total documents after grouping.');
+      $this->assertEquals(2, $data['grouped']['ss_type']['ngroups'], 'Get the number of groups after grouping.');
+      $this->assertResults([1, 4], $results, 'Grouping by type');
+    }
+    else {
+      $this->markTestSkipped("The selected backend/connector doesn't support the *search_api_grouping* feature.");
+    }
   }
 
   /**
@@ -939,15 +944,20 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
     $suggestions = $backend->getSuggesterSuggestions($query, $autocompleteSearch, 'artic', 'artic');
     $this->assertEquals(2, count($suggestions));
 
-    $this->assertEquals('artic', $suggestions[0]->getUserInput());
-    $this->assertEquals('The test <b>', $suggestions[0]->getSuggestionPrefix());
-    $this->assertEquals('</b>le number 1 about cats, dogs and trees.', $suggestions[0]->getSuggestionSuffix());
-    $this->assertEquals('The test <b>artic</b>le number 1 about cats, dogs and trees.', $suggestions[0]->getSuggestedKeys());
+    // Since we don't specify the result weights explicitly for this suggester
+    // we need to deal with a random order and need predictable array keys.
+    foreach ($suggestions as $suggestion) {
+      $suggestions[$suggestion->getSuggestedKeys()] = $suggestion;
+    }
+    $this->assertEquals('artic', $suggestions['The test <b>artic</b>le number 1 about cats, dogs and trees.']->getUserInput());
+    $this->assertEquals('The test <b>', $suggestions['The test <b>artic</b>le number 1 about cats, dogs and trees.']->getSuggestionPrefix());
+    $this->assertEquals('</b>le number 1 about cats, dogs and trees.', $suggestions['The test <b>artic</b>le number 1 about cats, dogs and trees.']->getSuggestionSuffix());
+    $this->assertEquals('The test <b>artic</b>le number 1 about cats, dogs and trees.', $suggestions['The test <b>artic</b>le number 1 about cats, dogs and trees.']->getSuggestedKeys());
 
-    $this->assertEquals('artic', $suggestions[1]->getUserInput());
-    $this->assertEquals('The test <b>', $suggestions[1]->getSuggestionPrefix());
-    $this->assertEquals('</b>le number 2 about a tree.', $suggestions[1]->getSuggestionSuffix());
-    $this->assertEquals('The test <b>artic</b>le number 2 about a tree.', $suggestions[1]->getSuggestedKeys());
+    $this->assertEquals('artic', $suggestions['The test <b>artic</b>le number 2 about a tree.']->getUserInput());
+    $this->assertEquals('The test <b>', $suggestions['The test <b>artic</b>le number 2 about a tree.']->getSuggestionPrefix());
+    $this->assertEquals('</b>le number 2 about a tree.', $suggestions['The test <b>artic</b>le number 2 about a tree.']->getSuggestionSuffix());
+    $this->assertEquals('The test <b>artic</b>le number 2 about a tree.', $suggestions['The test <b>artic</b>le number 2 about a tree.']->getSuggestedKeys());
 
     // @todo more suggester tests
 

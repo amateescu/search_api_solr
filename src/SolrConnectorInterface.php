@@ -17,6 +17,13 @@ use Solarium\QueryType\Select\Query\Query;
 interface SolrConnectorInterface extends ConfigurablePluginInterface {
 
   /**
+   * Returns TRUE for Cloud.
+   *
+   * @return bool
+   */
+  public function isCloud();
+
+  /**
    * Returns a link to the Solr server.
    *
    * @return \Drupal\Core\Link
