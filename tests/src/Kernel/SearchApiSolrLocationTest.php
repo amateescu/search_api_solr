@@ -177,7 +177,7 @@ class SearchApiSolrLocationTest extends SolrBackendTestBase {
     $facets_options['location__distance'] = [
       'field' => 'location__distance',
       'limit' => 10,
-      'min_count' => 0,
+      'min_count' => 1,
       'missing' => TRUE,
     ];
 
@@ -206,18 +206,6 @@ class SearchApiSolrLocationTest extends SolrBackendTestBase {
       [
         'filter' => '[200 399]',
         'count' => 1,
-      ],
-      [
-        'filter' => '[400 599]',
-        'count' => 0,
-      ],
-      [
-        'filter' => '[600 799]',
-        'count' => 0,
-      ],
-      [
-        'filter' => '[800 999]',
-        'count' => 0,
       ],
     ];
 
