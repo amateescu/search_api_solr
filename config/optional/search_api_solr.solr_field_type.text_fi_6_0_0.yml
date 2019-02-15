@@ -125,6 +125,12 @@ spellcheck_field_type:
         words: stopwords_fi.txt
       -
         class: solr.RemoveDuplicatesTokenFilterFactory
+collated_field_type:
+  name: collated_fi
+  class: solr.ICUCollationField
+  locale: fi
+  strength: primary
+  caseLevel: false
 solr_configs:
   searchComponents:
     -

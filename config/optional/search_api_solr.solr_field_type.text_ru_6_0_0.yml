@@ -94,6 +94,12 @@ spellcheck_field_type:
         words: stopwords_ru.txt
       -
         class: solr.RemoveDuplicatesTokenFilterFactory
+collated_field_type:
+  name: collated_ru
+  class: solr.ICUCollationField
+  locale: ru
+  strength: primary
+  caseLevel: false
 solr_configs:
   searchComponents:
     -

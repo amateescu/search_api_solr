@@ -237,9 +237,6 @@
   <!-- External file fields -->
   <dynamicField name="eff_*" type="file"/>
 
-  <!-- Sortable version of the dynamic string field. We need to store it for streaming expressions. -->
-  <dynamicField name="sort_*" type="collated" indexed="false" stored="false" docValues="true"/>
-
   <!-- A random sort field -->
   <dynamicField name="random_*" type="random" indexed="true" stored="true"/>
 
@@ -377,11 +374,6 @@
         <filter class="solr.LowerCaseFilterFactory"/>
       </analyzer>
     </fieldType>
-
-    <fieldType name="collated" class="solr.ICUCollationField"
-               locale="en"
-               strength="primary"
-               caseLevel="false" />
 
     <fieldType name="boost_term_payload" stored="false" indexed="true" class="solr.TextField" >
       <analyzer>

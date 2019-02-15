@@ -94,6 +94,12 @@ spellcheck_field_type:
         words: stopwords_uk.txt
       -
         class: solr.RemoveDuplicatesTokenFilterFactory
+collated_field_type:
+  name: collated_uk
+  class: solr.ICUCollationField
+  locale: uk
+  strength: primary
+  caseLevel: false
 solr_configs:
   searchComponents:
     -

@@ -90,14 +90,14 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    *
    * The XML format is used as part of a classic Solr schema.
    *
-   * @param bool $add_commment
+   * @param bool $add_comment
    *   Wether to add a comment to the XML or not to explain the purpose of this
    *   Solr Field Type.
    *
    * @return string
    *   The Solr Field Type definition as XML.
    */
-  public function getFieldTypeAsXml($add_commment = TRUE);
+  public function getFieldTypeAsXml($add_comment = TRUE);
 
   /**
    * Gets the Solr Spellcheck Field Type definition as nested associative array.
@@ -141,7 +141,7 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    *
    * The XML format is used as part of a classic Solr schema.
    *
-   * @param bool $add_commment
+   * @param bool $add_comment
    *   Wether to add a comment to the XML or not to explain the purpose of this
    *   Solr Field Type.
    *
@@ -149,7 +149,63 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    *   The Solr Spellcheck Field Type definition as XML, might be empty if it
    *   doesn't exist.
    */
-  public function getSpellcheckFieldTypeAsXml($add_commment = TRUE);
+  public function getSpellcheckFieldTypeAsXml($add_comment = TRUE);
+
+  /**
+   * Gets the Solr Collated Field Type definition as nested associative array.
+   *
+   * @return array|NULL
+   *   The Solr Collated Type definition as nested associative array or
+   *   NULL if it doesn't exist.
+   */
+  public function getCollatedFieldType();
+
+
+  /**
+   * Gets the Solr Collated Field Type definition as JSON.
+   *
+   * The JSON format is used to interact with a managed Solr schema.
+   *
+   * @param bool $pretty
+   *   Return pretty printed JSON.
+   *
+   * @return string
+   *   The Solr Spellcheck Field Type definition as JSON.
+   */
+  public function getCollatedFieldTypeAsJson(bool $pretty = FALSE);
+
+
+  /**
+   * Sets the Solr Collated Field Type definition as JSON.
+   *
+   * Decodes the Solr Field Type definition encoded as JSON and stores an
+   * nested associative array internally. This method in useful to import a
+   * field type from an existing Solr server.
+   *
+   * @param string $collated_field_type
+   *   The Solr Spellcheck Field Type definition as JSON, might be empty if it
+   *   doesn't exist.
+   *
+   * @return $this
+   */
+  public function setCollatedFieldTypeAsJson($collated_field_type);
+
+
+  /**
+   * Gets the Solr Collated Field Type definition as XML fragment.
+   *
+   * The XML format is used as part of classic Solr schema.
+   *
+   * @param bool $add_comment
+   *   Wether to add a comment to the XML or not to explain the purpose of thid
+   *   Solr Field Type.
+   *
+   * @return string
+   *    The Solr Collated Field Type definition as XML, might be empty if it doesn't exist.
+   */
+  public function getCollatedFieldTypeAsXml($add_comment = TRUE);
+
+
 
   /**
    * Gets a list of dynamic Solr fields that will use this Solr Field Type.
@@ -186,14 +242,14 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    *
    * The XML format is used as part of a classic Solr solrconf.xml.
    *
-   * @param bool $add_commment
+   * @param bool $add_comment
    *   Wether to add a comment to the XML or not to explain the purpose of
    *   these configs.
    *
    * @return string
    *   The Solr Field Type specific additions to solrconfig.xml as XML.
    */
-  public function getSolrConfigsAsXml($add_commment = TRUE);
+  public function getSolrConfigsAsXml($add_comment = TRUE);
 
   /**
    * Gets all text files required by the Solr Field Type definition.

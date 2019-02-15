@@ -118,6 +118,25 @@ search_api_solr.solr_field_type.*:
                   label: 'SimplePatternSplitTokenizer::'
             filters:
               type: search_api_solr.solr_field_type_filters
+    collated_field_type:
+      type: mapping
+      nullable: true
+      mapping:
+        name:
+          type: string
+          label: 'The Solr collate field name'
+        class:
+          type: string
+          label: 'The Solr collate field type'
+        locale:
+          type: string
+          label: 'The Solr collate language'
+        strength:
+          type: string
+          label: 'The Solr collate strength'
+        caseLevel:
+          type: boolean
+          label: 'The Solr collate caseLevel'
     solr_configs:
       type: mapping
       mapping:

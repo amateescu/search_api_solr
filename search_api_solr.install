@@ -918,3 +918,38 @@ function search_api_solr_update_8309() {
   // Reset the states.
   \Drupal::state()->delete('search_api_solr.endpoint.data');
 }
+
+/**
+ * Enable language-specific collations
+ */
+function search_api_solr_update_8310()
+{
+  $valid_icu_locales = [
+    'ar', 'cs', 'da', 'de', 'el', 'en', 'es', 'fi', 'fr', 'it', 'ja', 'nl',
+    'pl', 'ru', 'sk', 'uk', 'br', 'be', 'zh', 'tr', 'th', 'sl', 'ro', 'pt',
+    'mk', 'is', 'hr', 'bg', 'af', 'yi', 'vi', 'sv', 'sr', 'sq', 'si', 'pa',
+    'or', 'nn', 'ne', 'my', 'mt', 'lt', 'ln', 'ko', 'id', 'hu', 'hi', 'he',
+    'fa', 'et', 'am',
+    ];
+
+  foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+    if (empty($field_type_config['collated_field_type'])) {
+      if (
+        !in_array($field_type_config['field_type_language_code'], $valid_icu_locales) ||
+        empty($field_type_config['spellcheck_field_type'])
+      ) {
+        continue;
+      }
+
+      $field_type_config['collated_field_type'] = [
+        'name' => 'collated_' . $field_type_config['field_type_language_code'],
+        'class' => 'solr.ICUCollationField',
+        'locale' => $field_type_config['field_type_language_code'],
+        'strength' => 'primary',
+        'caseLevel' => FALSE,
+      ];
+    }
+
+    search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
+  }
+}

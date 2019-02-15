@@ -133,6 +133,12 @@ spellcheck_field_type:
         words: stopwords_de.txt
       -
         class: solr.RemoveDuplicatesTokenFilterFactory
+collated_field_type:
+  name: collated_de
+  class: solr.ICUCollationField
+  locale: de
+  strength: primary
+  caseLevel: false
 solr_configs:
   searchComponents:
     -

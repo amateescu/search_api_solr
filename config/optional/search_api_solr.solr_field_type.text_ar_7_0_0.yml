@@ -69,6 +69,12 @@ spellcheck_field_type:
         words: stopwords_ar.txt
       -
         class: solr.RemoveDuplicatesTokenFilterFactory
+collated_field_type:
+  name: collated_ar
+  class: solr.ICUCollationField
+  locale: ar
+  strength: primary
+  caseLevel: false
 solr_configs:
   searchComponents:
     -

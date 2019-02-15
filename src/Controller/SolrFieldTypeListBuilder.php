@@ -200,6 +200,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     foreach ($this->load() as $solr_field_type) {
       $xml .= $solr_field_type->getFieldTypeAsXml();
       $xml .= $solr_field_type->getSpellcheckFieldTypeAsXml();
+      $xml .= $solr_field_type->getCollatedFieldTypeAsXml();
     }
     return $xml;
   }

@@ -79,6 +79,11 @@
   </analyzer>
 </fieldType>
 <!--
+  English Text Field collated
+  7.0.0
+-->
+<fieldType name="collated_en" class="solr.ICUCollationField" locale="en" strength="primary" caseLevel="false"/>
+<!--
   Fulltext Foo English
   6.0.0
 -->
@@ -217,6 +222,11 @@
   </analyzer>
 </fieldType>
 <!--
+  German Text Field collated
+  7.0.0
+-->
+<fieldType name="collated_de" class="solr.ICUCollationField" locale="de" strength="primary" caseLevel="false"/>
+<!--
   Language Undefined Text Field
   7.0.0
 -->
@@ -254,6 +264,11 @@
     <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
   </analyzer>
 </fieldType>
+<!--
+  Language Undefined Text Field collated
+  7.0.0
+-->
+<fieldType name="collated_und" class="solr.ICUCollationField" locale="en" strength="primary" caseLevel="false"/>
 <!--
   NGram String Field
   6.0.0

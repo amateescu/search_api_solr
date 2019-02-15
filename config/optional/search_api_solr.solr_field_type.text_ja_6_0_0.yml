@@ -60,6 +60,12 @@ spellcheck_field_type:
         class: solr.CJKWidthFilterFactory
         min: 2
         max: 100
+collated_field_type:
+  name: collated_ja
+  class: solr.ICUCollationField
+  locale: ja
+  strength: primary
+  caseLevel: false
 solr_configs:
   searchComponents:
     -

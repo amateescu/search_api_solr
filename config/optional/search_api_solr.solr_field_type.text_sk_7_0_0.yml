@@ -112,6 +112,12 @@ spellcheck_field_type:
         words: stopwords_sk.txt
       -
         class: solr.RemoveDuplicatesTokenFilterFactory
+collated_field_type:
+  name: collated_sk
+  class: solr.ICUCollationField
+  locale: sk
+  strength: primary
+  caseLevel: false
 solr_configs:
   searchComponents:
     -

@@ -6,6 +6,7 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
+use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrCloudConnectorInterface;
 use Drupal\search_api_solr\SolrProcessorInterface;
 use Solarium\QueryType\Stream\Expression;
@@ -125,7 +126,7 @@ class StreamingExpressionBuilder extends Expression {
       $this->sort_fields_mapped[$language_id] = [];
       foreach ($this->all_fields_mapped[$language_id] as $search_api_field => $solr_field) {
         if (strpos($solr_field, 't') === 0 || strpos($solr_field, 's') === 0) {
-          $this->sort_fields_mapped[$language_id]['sort_' . $search_api_field] = 'sort_' . Utility::encodeSolrName($search_api_field);
+          $this->sort_fields_mapped[$language_id]['sort_' . $search_api_field] = Utility::encodeSolrName('sort' . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $language_id . '_' . $search_api_field);
         }
         elseif (preg_match('/^([a-z]+)m(_.*)/', $solr_field, $matches) && strpos($solr_field, 'random_') !== 0) {
           $this->sort_fields_mapped[$language_id]['sort' . Utility::decodeSolrName($matches[2])] = $matches[1] . 's' . $matches[2];
