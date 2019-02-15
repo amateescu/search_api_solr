@@ -1231,12 +1231,7 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
             # phonetic is currently not available vor Solr 6.x.
             #'fieldType name="text_phonetic_en" class="solr.TextField"',
             'fieldType name="text_en" class="solr.TextField"',
-'<!--
-  Language Undefined Text Field collated
-  7.0.0
--->
-<fieldType name="collated_und" class="solr.ICUCollationField" locale="en" strength="primary" caseLevel="false"/>
-',
+            '<fieldType name="collated_und" class="solr.ICUCollationField" locale="en" strength="primary" caseLevel="false"/>',
 '<!--
   Fulltext Foo English
   6.0.0
