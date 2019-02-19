@@ -1911,7 +1911,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected function addIndexField(Document $doc, $key, array $values, $type) {
     // Don't index empty values (i.e., when field is missing).
-    if (!isset($values)) {
+    if (empty($values)) {
       return '';
     }
 
