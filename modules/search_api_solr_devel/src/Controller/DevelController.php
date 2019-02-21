@@ -156,7 +156,8 @@ class DevelController extends ControllerBase {
 
                     // @TODO: Run a timer on this process and report it?
                     $items[$item_id] = $this->fieldsHelper->createItemFromObject($index, $entity->getTranslation($langcode)->getTypedData(), $item_id);
-                    // Preprocess the indexed items.
+                    // Alter and preprocess the items to indexed.
+                    $index->alterIndexedItems($items);
                     \Drupal::moduleHandler()->alter('search_api_index_items', $index, $items);
                     $index->preprocessIndexItems($items);
 
