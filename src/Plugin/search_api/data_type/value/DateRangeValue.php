@@ -24,8 +24,10 @@ class DateRangeValue implements DateRangeValueInterface {
   /**
    * Constructs a DateRangeValue object.
    *
-   * @param $start
-   * @param $end
+   * @param string $start
+   *   The start date.
+   * @param string $end
+   *   The end date.
    */
   public function __construct($start, $end) {
     $this->start = $start;
