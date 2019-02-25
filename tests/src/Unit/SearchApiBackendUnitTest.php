@@ -98,10 +98,7 @@ class SearchApiBackendUnitTest extends UnitTestCase {
   }
 
   /**
-   * Data provider for testIndexField method. Set of values can be extended to
-   * check other field types and values.
-   *
-   * @return array
+   * Data provider for testIndexField method.
    */
   public function addIndexFieldDataProvider() {
     return [
@@ -114,7 +111,11 @@ class SearchApiBackendUnitTest extends UnitTestCase {
       [TRUE, 'boolean', 'true'],
       ['2016-05-25T14:00:00+10', 'date', '2016-05-25T04:00:00Z'],
       ['1465819200', 'date', '2016-06-13T12:00:00Z'],
-      [new DateRangeValue('2016-05-25T14:00:00+10', '2017-05-25T14:00:00+10'), 'solr_date_range', '[2016-05-25T04:00:00Z TO 2017-05-25T04:00:00Z]'],
+      [
+        new DateRangeValue('2016-05-25T14:00:00+10', '2017-05-25T14:00:00+10'),
+        'solr_date_range',
+        '[2016-05-25T04:00:00Z TO 2017-05-25T04:00:00Z]',
+      ],
       [-1, 'integer', -1],
       [0, 'integer', 0],
       [1, 'integer', 1],
@@ -128,7 +129,7 @@ class SearchApiBackendUnitTest extends UnitTestCase {
       [NULL, 'boolean', NULL],
       [NULL, 'date', NULL],
       [NULL, 'solr_date_range', NULL],
-      [NULL, 'integer',NULL],
+      [NULL, 'integer', NULL],
       [NULL, 'decimal', NULL],
       [NULL, 'string', NULL],
       ['', 'string', NULL],
@@ -136,4 +137,5 @@ class SearchApiBackendUnitTest extends UnitTestCase {
       [(new TextValue(''))->setTokens([new TextToken('')]), 'text', NULL],
     ];
   }
+
 }
