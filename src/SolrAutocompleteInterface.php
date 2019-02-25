@@ -3,6 +3,7 @@
 namespace Drupal\search_api_solr;
 
 use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api_autocomplete\SearchInterface;
 
 /**
  * Defines an autocomplete interface for Solr search backend plugins.
