@@ -3,7 +3,6 @@
 namespace Drupal\search_api_solr;
 
 use Drupal\search_api\Query\QueryInterface;
-use Drupal\search_api_solr\Solarium\Autocomplete\Query as AutocompleteQuery;
 
 /**
  * Defines an autocomplete interface for Solr search backend plugins.
@@ -32,7 +31,7 @@ interface SolrAutocompleteInterface {
    * @return \Drupal\search_api_autocomplete\Suggestion\SuggestionInterface[]
    *   An array of autocomplete suggestions.
    */
-  public function getTermsSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input);
+  public function getTermsSuggestions(QueryInterface $query, SearchInterface $search, $incomplete_key, $user_input);
 
   /**
    * Autocompletion suggestions for some user input using Spellcheck component.
@@ -56,7 +55,7 @@ interface SolrAutocompleteInterface {
    * @return \Drupal\search_api_autocomplete\Suggestion\SuggestionInterface[]
    *   An array of autocomplete suggestions.
    */
-  public function getSpellcheckSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input);
+  public function getSpellcheckSuggestions(QueryInterface $query, SearchInterface $search, $incomplete_key, $user_input);
 
   /**
    * Autocompletion suggestions for some user input using Suggester component.
@@ -77,11 +76,12 @@ interface SolrAutocompleteInterface {
    * @param string $user_input
    *   The complete user input for the fulltext search keywords so far.
    * @param array $options
-   *   'dictionary' as string, 'context_filter_tags' as array of strings.
+   *   (optional) An associative array of options with 'dictionary' as string,
+   *   'context_filter_tags' as array of strings.
    *
    * @return \Drupal\search_api_autocomplete\Suggestion\SuggestionInterface[]
    *   An array of autocomplete suggestions.
    */
-  public function getSuggesterSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input, $options = []);
+  public function getSuggesterSuggestions(QueryInterface $query, SearchInterface $search, $incomplete_key, $user_input, array $options = []);
 
 }
