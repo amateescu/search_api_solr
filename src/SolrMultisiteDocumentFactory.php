@@ -2,8 +2,6 @@
 
 namespace Drupal\search_api_solr;
 
-use Drupal\search_api\Item\ItemInterface;
-
 /**
  * Defines a class for a Solr Document factory.
  */
