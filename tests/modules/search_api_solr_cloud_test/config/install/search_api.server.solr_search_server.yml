@@ -27,6 +27,7 @@ backend_config:
     commit_within: 1000
     jmx: false
     solr_install_dir: ../../..
+    checkpoints_collection: checkpoints
   optimize: false
 status: true
 langcode: en

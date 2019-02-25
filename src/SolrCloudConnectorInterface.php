@@ -19,6 +19,13 @@ interface SolrCloudConnectorInterface extends SolrConnectorInterface {
   public function getCollectionName();
 
   /**
+   * Returns the Solr collection name used to store topic checkpoints.
+   *
+   * @return string
+   */
+  public function getCheckpointsCollectionName();
+
+  /**
    * Returns a link to the Solr collection, if the necessary options are set.
    *
    * @return \Drupal\Core\Link

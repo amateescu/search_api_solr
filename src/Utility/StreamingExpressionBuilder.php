@@ -24,6 +24,11 @@ class StreamingExpressionBuilder extends Expression {
   /**
    * @var string
    */
+  protected $checkpoints_collection;
+
+  /**
+   * @var string
+   */
   protected $index_filter_query;
 
   /**
@@ -72,6 +77,16 @@ class StreamingExpressionBuilder extends Expression {
   protected $query_helper;
 
   /**
+   * The _search_all() and _topic() streaming expressions need a row limit that
+   * is much higher then the real number of rows. Therefore we set the max 32bit
+   * integer as default. To maximize the number of query result cache hits it is
+   * important to not vary this number.
+   *
+   * @var int
+   */
+  protected $search_all_rows = 2147483647;
+
+  /**
    * StreamingExpressionBuilder constructor.
    *
    * @param \Drupal\search_api\IndexInterface $index
@@ -91,6 +106,7 @@ class StreamingExpressionBuilder extends Expression {
 
     $language_ids = array_merge(array_keys(\Drupal::languageManager()->getLanguages()), [LanguageInterface::LANGCODE_NOT_SPECIFIED]);
     $this->collection = $connector->getCollectionName();
+    $this->checkpoints_collection = $connector->getCheckpointsCollectionName();
     $this->index_filter_query = $backend->getIndexFilterQueryString($index);
     $this->targeted_index_id = $backend->getTargetedIndexId($index);
     $this->targeted_site_hash = $backend->getTargetedSiteHash($index);
@@ -151,13 +167,21 @@ class StreamingExpressionBuilder extends Expression {
   /**
    * Returns the Solr Cloud collection name for the current index.
    *
-   * @param string $search_api_field_name
-   *
    * @return string
    *   The collection name.
    */
   public function _collection() {
     return $this->collection;
+  }
+
+  /**
+   * Returns the Solr Cloud collection name for storing topic checkpoints.
+   *
+   * @return string
+   *   The checkpoints collection name.
+   */
+  public function _checkpoints_collection() {
+    return $this->checkpoints_collection;
   }
 
   /**
@@ -456,23 +480,11 @@ class StreamingExpressionBuilder extends Expression {
    * @throws \Drupal\search_api\SearchApiException
    */
   public function _search_all() {
-    static $rows = 0;
-
-    if (!$rows) {
-      // The _search_all() streaming expression needs a row limit that much higher
-      // then the real number of rows. Therefore we set the max 32bit integer as
-      // default. To maximize the number of query result cache hits it is
-      // important to not vary this number (often). But to enable you to fine
-      // tune your setting, the number is stored as a state.
-      $rows = \Drupal::state()
-        ->get('search_api_solr.' . $this->targeted_index_id . '.search_all_rows', 2147483647);
-    }
-
     return
       $this->search(
         $this->_collection(),
         implode(', ', func_get_args()),
-        'rows=' . $rows
+        'rows=' . $this->search_all_rows
       );
   }
 
@@ -584,5 +596,36 @@ class StreamingExpressionBuilder extends Expression {
 
   public function _timestamp_value() {
     return 'val(' . $this->request_time . ') as timestamp';
+  }
+
+  /**
+   * Eases topic() expressions if there's no specific checkpoint collection.
+   *
+   * @return string
+   *  A chainable streaming expression as string.
+   */
+  public function _topic() {
+    return
+      $this->topic(
+        $this->_checkpoints_collection(),
+        $this->_collection(),
+        'initialCheckpoint=0',
+        'rows=' . $this->search_all_rows,
+        implode(', ', func_get_args())
+      );
+  }
+
+  /**
+   * Formats a checkpoint parameter for topic() or _topic().
+   *
+   * The checkpoint name gets suffixed by targeted index and site hash to avoid
+   * collisions.
+   *
+   * @param $checkpoint
+   *
+   * @return string
+   */
+  public function _checkpoint($checkpoint) {
+    return 'id="' . $checkpoint . '-' . $this->targeted_index_id . '-' . $this->targeted_site_hash . '"';
   }
 }

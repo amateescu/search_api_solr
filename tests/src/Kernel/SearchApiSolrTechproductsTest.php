@@ -60,7 +60,8 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
       $this->markTestSkipped('Techproducts example not reachable.');
     }
 
-    $server = $this->getIndex()->getServerInstance();
+    $index = $this->getIndex();
+    $server = $index->getServerInstance();
     $config = $server->getBackendConfig();
 
     // Test processor based highlighting.
@@ -96,6 +97,23 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
     $this->ensureCommit($server);
     $server->addIndex($this->getIndex());
     $this->firstSearch();
+
+    /** @var \Drupal\search_api_solr\Utility\StreamingExpressionQueryHelper $queryHelper */
+    $queryHelper = \Drupal::service('search_api_solr.streaming_expression_query_helper');
+    $query = $queryHelper->createQuery($index);
+    $exp = $queryHelper->getStreamingExpressionBuilder($query);
+
+    $topic_expression = $exp->_topic(
+      $exp->_checkpoint('new_documents'),
+      'q="*:*"',
+      'fl="' . $exp->_field('search_api_id') . '"'
+    );
+
+    $queryHelper->setStreamingExpression($query, $topic_expression);
+    $results = $query->execute();
+    $this->assertEquals(32, $results->getResultCount());
+    $results = $query->execute();
+    $this->assertEquals(0, $results->getResultCount());
   }
 
   protected function firstSearch() {

@@ -22,6 +22,15 @@ use Solarium\QueryType\Stream\Query as StreamQuery;
  */
 class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCloudConnectorInterface {
 
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    return [
+      'checkpoints_collection' => '',
+    ] + parent::defaultConfiguration();
+  }
+
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
@@ -38,6 +47,13 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
     $form['index_timeout']['#description'] = $this->t('The timeout in seconds for indexing requests to the Solr collection.');
 
     $form['optimize_timeout']['#description'] = $this->t('The timeout in seconds for background index optimization queries on the Solr collection.');
+
+    $form['advanced']['checkpoints_collection'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('checkpoints_collection'),
+      '#description' => $this->t("The collection where topic checkpoints are stored. Not required if you don't work with topic() streaming expressions."),
+      '#default_value' => isset($this->configuration['checkpoints_collection']) ? $this->configuration['checkpoints_collection'] : '',
+    ];
 
     return $form;
   }
@@ -78,6 +94,13 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
    */
   public function getCollectionName() {
     return $this->configuration['core'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCheckpointsCollectionName() {
+    return $this->configuration['checkpoints_collection'];
   }
 
   /**
