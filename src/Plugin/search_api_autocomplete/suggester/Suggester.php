@@ -128,7 +128,7 @@ class Suggester extends SuggesterPluginBase implements PluginFormInterface {
    * @param \Drupal\search_api\IndexInterface $index
    *   The search index.
    *
-   * @return SolrAutocompleteInterface|null
+   * @return \Drupal\search_api_solr\SolrAutocompleteInterface|null
    *   The backend plugin of the index's server, if it exists and supports
    *   autocomplete; NULL otherwise.
    *
