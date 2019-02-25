@@ -54,22 +54,22 @@ class CommandHelper implements LoggerAwareInterface {
    *
    * @throws \Drupal\search_api\SearchApiException
    */
- public function getServerConfigCommand($server_id, $file_name, $solr_version = NULL) {
-   /** @var \Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
-   $list_builder = $this->entityTypeManager->getListBuilder('solr_field_type');
-   $server = Server::load($server_id);
-   if ($solr_version) {
-     $config = $server->getBackendConfig();
-     // Temporarily switch the Solr version but don't save!
-     $config['connector_config']['solr_version'] = $solr_version;
-     $server->setBackendConfig($config);
-   }
-   $list_builder->setServer($server);
-   @ob_end_clean();
-   ob_start();
-   $zip = $list_builder->getConfigZip();
-   $zip->finish();
-   file_put_contents($file_name, ob_get_clean());
+  public function getServerConfigCommand($server_id, $file_name, $solr_version = NULL) {
+    /** @var \Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
+    $list_builder = $this->entityTypeManager->getListBuilder('solr_field_type');
+    $server = Server::load($server_id);
+    if ($solr_version) {
+      $config = $server->getBackendConfig();
+      // Temporarily switch the Solr version but don't save!
+      $config['connector_config']['solr_version'] = $solr_version;
+      $server->setBackendConfig($config);
+    }
+    $list_builder->setServer($server);
+    @ob_end_clean();
+    ob_start();
+    $zip = $list_builder->getConfigZip();
+    $zip->finish();
+    file_put_contents($file_name, ob_get_clean());
   }
 
 }
