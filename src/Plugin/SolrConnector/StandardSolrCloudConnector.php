@@ -107,7 +107,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
   /**
    * {@inheritdoc}
    */
-  public function pingCore($options = []) {
+  public function pingCore(array $options = []) {
     return parent::pingCore(['distrib' => TRUE]);
   }
 

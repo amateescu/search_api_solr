@@ -505,7 +505,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function pingCore($options = []) {
+  public function pingCore(array $options = []) {
     $this->connect();
     $query = $this->solr->createPing();
 

@@ -3000,7 +3000,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
-  public function getTermsSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input) {
+  public function getTermsSuggestions(QueryInterface $query, SearchInterface $search, $incomplete_key, $user_input) {
     // Allow modules to alter the solarium autocomplete query.
     $this->moduleHandler->alter('search_api_solr_terms_autocomplete_query', $query);
     return $this->getAutocompleteSuggestions($query, $search, $incomplete_key, $user_input);
@@ -3009,7 +3009,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
-  public function getSpellcheckSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input) {
+  public function getSpellcheckSuggestions(QueryInterface $query, SearchInterface $search, $incomplete_key, $user_input) {
     $suggestions = [];
     if ($solarium_query = $this->getAutocompleteQuery($incomplete_key, $user_input)) {
       try {
@@ -3033,7 +3033,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
-  public function getSuggesterSuggestions(QueryInterface $query, $search, $incomplete_key, $user_input, $options = []) {
+  public function getSuggesterSuggestions(QueryInterface $query, SearchInterface $search, $incomplete_key, $user_input, array $options = []) {
     $suggestions = [];
     if ($solarium_query = $this->getAutocompleteQuery($incomplete_key, $user_input)) {
       try {

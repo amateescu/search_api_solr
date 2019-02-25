@@ -598,7 +598,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   /**
    * {@inheritdoc}
    */
-  public function setTextFiles($text_files) {
+  public function setTextFiles(array $text_files) {
     $this->text_files = [];
     foreach ($text_files as $name => $content) {
       $this->addTextFile($name, $content);
