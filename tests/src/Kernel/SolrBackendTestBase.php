@@ -41,6 +41,8 @@ abstract class SolrBackendTestBase extends BackendTestBase {
   protected $indexId = 'solr_search_index';
 
   /**
+   * The in-memory logger.
+   *
    * @var \Drupal\search_api_solr_test\Logger\InMemoryLogger
    */
   protected $logger;
@@ -81,7 +83,7 @@ abstract class SolrBackendTestBase extends BackendTestBase {
   }
 
   /**
-   *
+   * Tests the last logged level and message.
    */
   protected function assertLogMessage($level, $message) {
     $last_message = $this->logger->getLastMessage();
@@ -120,6 +122,7 @@ abstract class SolrBackendTestBase extends BackendTestBase {
    *   The query to be executed.
    *
    * @return \Drupal\search_api\Query\ResultSetInterface
+   *   The results of the search.
    */
   protected function executeQueryWithoutPostProcessing(QueryInterface $query) {
     /** @var \Drupal\search_api\IndexInterface $index */
@@ -159,6 +162,8 @@ abstract class SolrBackendTestBase extends BackendTestBase {
   protected function checkModuleUninstall() {}
 
   /**
+   * Gets the Solr version.
+   *
    * @throws \Drupal\search_api\SearchApiException
    */
   protected function getSolrVersion() {
@@ -173,4 +178,5 @@ abstract class SolrBackendTestBase extends BackendTestBase {
 
     return $solr_version;
   }
+
 }
