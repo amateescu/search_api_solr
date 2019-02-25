@@ -27,4 +27,5 @@ class SearchApiSolrTest extends AbstractSearchApiSolrTest {
 
     $this->installConfig(['search_api_solr_test']);
   }
+
 }
