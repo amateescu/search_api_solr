@@ -2,11 +2,9 @@
 
 namespace Drupal\search_api_solr_admin\Form;
 
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\ServerInterface;
-use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -18,7 +16,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class SolrReloadCoreForm extends FormBase {
 
   /**
-   * @var ServerInterface
+   * @var \Drupal\search_api\ServerInterface
    */
   private $search_api_server;
 
@@ -26,6 +24,7 @@ class SolrReloadCoreForm extends FormBase {
    * SolrReloadCoreForm constructor.
    *
    * @param \Drupal\search_api_solr\Form\MessengerInterface $messenger
+   *   The messenger.
    */
   public function __construct(MessengerInterface $messenger) {
     $this->messenger = $messenger;
