@@ -194,7 +194,8 @@ class SolrFieldManager implements SolrFieldManagerInterface {
           }
           $fields[$name] = $field;
         }
-      } catch (SearchApiSolrException $e) {
+      }
+      catch (SearchApiSolrException $e) {
         $this->getLogger()
           ->error('Could not connect to server %server, %message', [
             '%server' => $server->id(),
