@@ -60,7 +60,7 @@ class DoubleQuoteWorkaroundTest extends ProcessorTestBase {
       $replacement
     );
 
-    // Set fields to process
+    // Set fields to process.
     $configuration['fields'] = ['title'];
     $processor->setConfiguration($configuration);
     $this->index->setProcessors(['double_quote_workaround' => $processor]);
@@ -86,4 +86,5 @@ class DoubleQuoteWorkaroundTest extends ProcessorTestBase {
       $this->processor->decodeStreamingExpressionValue('double ' . $replacement . 'quotes' . $replacement . ' within the text')
     );
   }
+
 }
