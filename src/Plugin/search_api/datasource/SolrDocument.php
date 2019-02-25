@@ -12,7 +12,6 @@ use Drupal\search_api\Plugin\PluginFormTrait;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api_solr\SolrDocumentFactoryInterface;
 use Drupal\search_api_solr\SolrFieldManagerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Represents a datasource which exposes external Solr Documents.
