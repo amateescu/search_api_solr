@@ -36,6 +36,7 @@ use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Utility\DataTypeHelperInterface;
 use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility as SearchApiUtility;
+use Drupal\search_api_autocomplete\SearchInterface;
 use Drupal\search_api_autocomplete\Suggestion\SuggestionFactory;
 use Drupal\search_api_solr\Entity\SolrFieldType;
 use Drupal\search_api_solr\SearchApiSolrException;
