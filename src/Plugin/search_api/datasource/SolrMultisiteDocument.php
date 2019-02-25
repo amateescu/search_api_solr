@@ -3,7 +3,6 @@
 namespace Drupal\search_api_solr\Plugin\search_api\datasource;
 
 use Drupal\Core\Form\FormStateInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Represents a datasource which exposes external Solr Documents.
@@ -87,4 +86,5 @@ class SolrMultisiteDocument extends SolrDocument {
 
     return $form;
   }
+
 }
