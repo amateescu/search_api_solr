@@ -15,7 +15,7 @@ class SolrFieldTypeExportForm extends EntityForm {
    * {@inheritdoc}
    */
   public function form(array $form, FormStateInterface $form_state) {
-    \Drupal::messenger()->addWarning($this->t('In the future, this form will be used to export and push specific parts of the current SolrFieldType configuration to a Solr server based on a manged schema. But at the moment you can only see in which parts the SolrFiledType is split and how they\'re serialized.'));
+    \Drupal::messenger()->addWarning($this->t("In the future, this form will be used to export and push specific parts of the current SolrFieldType configuration to a Solr server based on a manged schema. But at the moment you can only see in which parts the SolrFiledType is split and how they're serialized."));
 
     /** @var \Drupal\search_api_solr\Entity\SolrFieldType $solr_field_type */
     $solr_field_type = $this->entity;
@@ -86,13 +86,6 @@ class SolrFieldTypeExportForm extends EntityForm {
   public function actions(array $form, FormStateInterface $form_state) {
     // @todo add actions like 'push stopwords to Solr'
     return [];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    parent::validateForm($form, $form_state);
   }
 
   /**
