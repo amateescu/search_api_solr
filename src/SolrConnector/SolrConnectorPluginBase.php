@@ -462,7 +462,8 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * Gets data from a Solr endpoint using a given handler.
    *
-   * @param $handler
+   * @param string $handler
+   *   The handler used for the API query.
    * @param bool $reset
    *   If TRUE the server will be asked regardless if a previous call is cached.
    *
@@ -621,10 +622,8 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * Sends a REST request to the Solr server endpoint and returns the result.
    *
-   * @param string $endpoint_key
-   *   The endpoint that refelcts the base URI.
-   * @param string $path
-   *   The path to append to the base URI.
+   * @param string $handler
+   *   The handler used for the API query.
    * @param string $method
    *   The HTTP request method.
    * @param string $command_json
@@ -737,7 +736,10 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   }
 
   /**
+   * Creates a CustomizeRequest object.
+   *
    * @return \Solarium\Plugin\CustomizeRequest\CustomizeRequest|\Solarium\Core\Plugin\PluginInterface
+   *   The Solarium CustomizeRequest object.
    */
   protected function customizeRequest() {
     $this->connect();
@@ -860,7 +862,9 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    * Converts a HttpException in an easier to read SearchApiSolrException.
    *
    * @param \Solarium\Exception\HttpException $e
+   *   The HttpException object.
    * @param \Solarium\Core\Client\Endpoint $endpoint
+   *   The Solarium endpoint.
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
@@ -1028,4 +1032,5 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       $files['solrcore.properties'] = preg_replace("/solr\.install\.dir.*$/", 'solr.install.dir=' . $this->configuration['solr_install_dir'], $files['solrcore.properties']);
     }
   }
+
 }
