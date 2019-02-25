@@ -9,6 +9,8 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
 use Drupal\devel\DevelDumperManagerInterface;
 use Drupal\search_api\Backend\BackendPluginManager;
+use Drupal\search_api\IndexInterface;
+use Drupal\search_api\ServerInterface;
 use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility;
 use Solarium\Exception\HttpException;
@@ -324,7 +326,7 @@ class DevelController extends ControllerBase {
    *   The Search API index entity.
    * @param string $datasource_id
    *   The ID of the datasource.
-   * @param Entity $entity
+   * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity for which to return the base row.
    * @param string $langcode
    *   The language code.
@@ -334,7 +336,7 @@ class DevelController extends ControllerBase {
    * @return string[]
    *   An associative array of strings for the base row.
    */
-  protected function getBaseRow(ServerInterface $server, IndexInterface $index, $datasource_id, Entity $entity, $langcode, $item_id) {
+  protected function getBaseRow(ServerInterface $server, IndexInterface $index, $datasource_id, EntityInterface $entity, $langcode, $item_id) {
     // Build table row.
     $base_row = [
       'num' => 0,
