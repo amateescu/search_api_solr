@@ -7,7 +7,7 @@ use Solarium\QueryType\Graph\Query as GraphQuery;
 use Solarium\QueryType\Stream\Query as StreamQuery;
 
 /**
- *
+ * The Solr Cloud connector interface.
  */
 interface SolrCloudConnectorInterface extends SolrConnectorInterface {
 
@@ -15,6 +15,7 @@ interface SolrCloudConnectorInterface extends SolrConnectorInterface {
    * Returns the Solr collection name.
    *
    * @return string
+   *   The Solr collection name.
    */
   public function getCollectionName();
 
@@ -22,6 +23,7 @@ interface SolrCloudConnectorInterface extends SolrConnectorInterface {
    * Returns a link to the Solr collection, if the necessary options are set.
    *
    * @return \Drupal\Core\Link
+   *   The link to the Solr collection.
    */
   public function getCollectionLink();
 
@@ -67,19 +69,25 @@ interface SolrCloudConnectorInterface extends SolrConnectorInterface {
    * Executes a stream query.
    *
    * @param \Solarium\QueryType\Stream\Query $query
+   *   The Solarium stream query.
    * @param \Solarium\Core\Client\Endpoint|null $endpoint
+   *   (optional) The Solarium endpoint.
    *
    * @return \Solarium\QueryType\Stream\Result
+   *   The Solarium stream result.
    */
   public function stream(StreamQuery $query, Endpoint $endpoint = NULL);
 
   /**
-   * Executes a stream query.
+   * Executes a graph query.
    *
    * @param \Solarium\QueryType\Graph\Query $query
+   *   The Solarium graph query.
    * @param \Solarium\Core\Client\Endpoint|null $endpoint
+   *   (optional) The Solarium endpoint.
    *
    * @return \Solarium\QueryType\Graph\Result
+   *   The Solarium graph result.
    */
   public function graph(GraphQuery $query, Endpoint $endpoint = NULL);
 
