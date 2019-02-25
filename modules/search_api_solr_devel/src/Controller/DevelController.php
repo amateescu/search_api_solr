@@ -41,6 +41,8 @@ class DevelController extends ControllerBase {
   protected $develDumperManager;
 
   /**
+   * The fields helper.
+   *
    * @var \Drupal\search_api\Utility\FieldsHelperInterface
    */
   protected $fieldsHelper;
@@ -272,9 +274,11 @@ class DevelController extends ControllerBase {
   /**
    * Given a timestamp it returns both a human-readable date + "time ago".
    *
-   * @param $timestamp
+   * @param int $timestamp
+   *   A UNIX timestamp to display.
    *
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   *   The formatted timestamp.
    */
   protected function showTimeAndTimeAgo($timestamp) {
     return $this->t(
@@ -291,6 +295,7 @@ class DevelController extends ControllerBase {
    * Returns header for summary table.
    *
    * @return string[]
+   *   An array of table headers.
    */
   protected function summaryTableHeader() {
     return [
@@ -314,15 +319,22 @@ class DevelController extends ControllerBase {
    * Return a base row for the summary table, which will be modified later on.
    *
    * @param \Drupal\search_api\ServerInterface $server
+   *   The Search API server entity.
    * @param \Drupal\search_api\IndexInterface $index
+   *   The Search API index entity.
    * @param string $datasource_id
+   *   The ID of the datasource.
    * @param Entity $entity
+   *   The entity for which to return the base row.
    * @param string $langcode
+   *   The language code.
    * @param string $item_id
+   *   The internal item ID of the entity.
    *
    * @return string[]
+   *   An associative array of strings for the base row.
    */
-  protected function getBaseRow($server, $index, $datasource_id, $entity, $langcode, $item_id) {
+  protected function getBaseRow(ServerInterface $server, IndexInterface $index, $datasource_id, Entity $entity, $langcode, $item_id) {
     // Build table row.
     $base_row = [
       'num' => 0,
