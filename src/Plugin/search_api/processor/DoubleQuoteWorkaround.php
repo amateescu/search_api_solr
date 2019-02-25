@@ -9,8 +9,9 @@ use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api_solr\SolrProcessorInterface;
 
 /**
- * Replaces double quotes in field values and query to work around a bug in Solr
- * streaming expressions.
+ * Replaces double quotes in field values and query.
+ *
+ * Workaround for a bug in Solr streaming expressions.
  *
  * (see https://issues.apache.org/jira/browse/SOLR-10894 and
  * https://mail-archives.apache.org/mod_mbox/lucene-solr-user/201805.mbox/%3cCAE4tqLPXMDA8y3hzXXkJUtTm6jvUX8XZ0H6P5itcFPgmr1bQZA@mail.gmail.com%3e)
@@ -36,7 +37,7 @@ class DoubleQuoteWorkaround extends FieldsProcessorPluginBase implements SolrPro
 
     $configuration += [
       // The replacement for a double quote in the input string.
-      'replacement' =>  '|9999999998|',
+      'replacement' => '|9999999998|',
     ];
 
     return $configuration;
@@ -74,12 +75,15 @@ class DoubleQuoteWorkaround extends FieldsProcessorPluginBase implements SolrPro
    * {@inheritdoc}
    */
   protected function process(&$value) {
-    // do *not* turn a value of null into an empty string!
+    // Do *not* turn a value of null into an empty string!
     if (is_string($value)) {
       $value = preg_replace('/"/u', $this->configuration['replacement'], $value);
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function postprocessSearchResults(ResultSetInterface $results) {
     foreach ($results->getResultItems() as $resultItem) {
       foreach ($resultItem->getFields(FALSE) as $field) {
@@ -87,7 +91,8 @@ class DoubleQuoteWorkaround extends FieldsProcessorPluginBase implements SolrPro
         foreach ($values as $key => $value) {
           if (is_string($value)) {
             $values[$key] = $this->decodeStreamingExpressionValue($value);
-          } elseif ($value instanceof TextValueInterface) {
+          }
+          elseif ($value instanceof TextValueInterface) {
             $value->setText($this->decodeStreamingExpressionValue($value->getText()));
           }
         }
