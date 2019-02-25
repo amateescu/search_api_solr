@@ -12,7 +12,7 @@ trait InvokeMethodTrait {
    *
    * @param object &$object
    *   Instantiated object that we will run method on.
-   * @param string
+   * @param string $methodName
    *   Method name to call.
    * @param array $parameters
    *   Array of parameters to pass into method.
@@ -27,7 +27,7 @@ trait InvokeMethodTrait {
 
     foreach ($protectedProperties as $property => $value) {
       $property = $reflection->getProperty($property);
-      $property->setAccessible(true);
+      $property->setAccessible(TRUE);
       $property->setValue($object, $value);
     }
 
