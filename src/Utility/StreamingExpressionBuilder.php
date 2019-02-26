@@ -610,6 +610,22 @@ class StreamingExpressionBuilder extends Expression {
         $this->_checkpoints_collection(),
         $this->_collection(),
         'initialCheckpoint=0',
+        implode(', ', func_get_args())
+      );
+  }
+
+  /**
+   * Eases topic() expressions if there's no specific checkpoint collection.
+   *
+   * @return string
+   *  A chainable streaming expression as string.
+   */
+  public function _topic_all() {
+    return
+      $this->topic(
+        $this->_checkpoints_collection(),
+        $this->_collection(),
+        'initialCheckpoint=0',
         'rows=' . $this->search_all_rows,
         implode(', ', func_get_args())
       );
