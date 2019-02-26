@@ -41,19 +41,22 @@ class SearchApiSolrTechproductsCloudTest extends AbstractSearchApiSolrTechproduc
 
     /** @var \Drupal\search_api_solr\Utility\StreamingExpressionQueryHelper $queryHelper */
     $queryHelper = \Drupal::service('search_api_solr.streaming_expression_query_helper');
-    $query = $queryHelper->createQuery($index);
-    $exp = $queryHelper->getStreamingExpressionBuilder($query);
+    $query1 = $queryHelper->createQuery($index);
+    $query2 = $queryHelper->createQuery($index);
+    $exp = $queryHelper->getStreamingExpressionBuilder($query1);
 
     $topic_expression = $exp->_topic(
-      $exp->_checkpoint('new_documents'),
+      $exp->_checkpoint('all_products'),
       'q="*:*"',
       'fl="' . $exp->_field('search_api_id') . '"'
     );
 
-    $queryHelper->setStreamingExpression($query, $topic_expression);
-    $results = $query->execute();
+    $queryHelper->setStreamingExpression($query1, $topic_expression);
+    $results = $query1->execute();
     $this->assertEquals(32, $results->getResultCount());
-    $results = $query->execute();
+
+    $queryHelper->setStreamingExpression($query2, $topic_expression);
+    $results = $query2->execute();
     $this->assertEquals(0, $results->getResultCount());
   }
 }
