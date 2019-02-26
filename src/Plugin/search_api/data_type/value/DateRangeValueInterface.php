@@ -11,6 +11,7 @@ interface DateRangeValueInterface {
    * Retrieves the start date.
    *
    * @return string
+   *   The start date.
    */
   public function getStart();
 
@@ -18,6 +19,7 @@ interface DateRangeValueInterface {
    * Retrieves the end date.
    *
    * @return string
+   *   The end date.
    */
   public function getEnd();
 

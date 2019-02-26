@@ -4,13 +4,14 @@ namespace Drupal\Tests\search_api_solr\Functional;
 
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api_solr\Utility\SolrCommitTrait;
+use Drupal\Tests\search_api\Functional\IntegrationTest as SearchApiIntegrationTest;
 
 /**
  * Tests the overall functionality of the Search API framework and admin UI.
  *
  * @group search_api_solr
  */
-class IntegrationTest extends \Drupal\Tests\search_api\Functional\IntegrationTest {
+class IntegrationTest extends SearchApiIntegrationTest {
 
   use SolrCommitTrait;
   /**

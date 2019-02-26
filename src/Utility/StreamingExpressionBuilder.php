@@ -90,6 +90,7 @@ class StreamingExpressionBuilder extends Expression {
    * StreamingExpressionBuilder constructor.
    *
    * @param \Drupal\search_api\IndexInterface $index
+   *   The Search API index entity.
    *
    * @throws \Drupal\search_api\SearchApiException
    * @throws \Drupal\search_api_solr\SearchApiSolrException
@@ -131,8 +132,8 @@ class StreamingExpressionBuilder extends Expression {
         'spell' => 'spell',
       ];
       $this->all_fields_including_graph_fields_mapped[$language_id] = $this->all_fields_mapped[$language_id] + [
-        // Graph traversal reserved names. We can't get a conflict here since all
-        // dynamic fields are prefixed.
+        // Graph traversal reserved names. We can't get a conflict here since
+        // all dynamic fields are prefixed.
         'node' => 'node',
         'collection' => 'collection',
         'field' => 'field',
@@ -188,10 +189,12 @@ class StreamingExpressionBuilder extends Expression {
    * Converts a Search API field name into a Solr field name.
    *
    * @param string $search_api_field_name
+   *   The Search API field name.
+   * @param string $language_id
+   *   (optional) The language ID. Defaults to "und".
    *
    * @return string
    *   The Solr field name.
-   * @param string $language_id
    *
    * @throws \InvalidArgumentException
    */
@@ -211,8 +214,11 @@ class StreamingExpressionBuilder extends Expression {
    * Formats a list of Search API field names into a string of Solr field names.
    *
    * @param array $search_api_field_names
+   *   The array of Search API field names.
    * @param string $delimiter
+   *   (optional) The delimiter to use. Defaults to ",".
    * @param string $language_id
+   *   (optional) The language ID. Defaults to "und".
    *
    * @return string
    *   A list of Solr field names.
@@ -231,9 +237,13 @@ class StreamingExpressionBuilder extends Expression {
    * Formats the list of all Search API fields as a string of Solr field names.
    *
    * @param string $delimiter
+   *   (optional) The delimiter to use. Defaults to ",".
    * @param bool $include_sorts
+   *   (optional) Whether to include sort fields. Defaults to TRUE.
    * @param array $blacklist
+   *   (optional) An array of field names to exclude.
    * @param string $language_id
+   *   (optional) The language ID. Defaults to "und".
    *
    * @return string
    *   A list of all Solr field names for the index.
@@ -249,9 +259,13 @@ class StreamingExpressionBuilder extends Expression {
    * Formats the list of all Search API fields as a string of Solr field names.
    *
    * @param string $delimiter
+   *   (optional) The delimiter to use. Defaults to ",".
    * @param bool $include_sorts
+   *   (optional) Whether to include sort fields. Defaults to TRUE.
    * @param array $blacklist
+   *   (optional) An array of field names to exclude.
    * @param string $language_id
+   *   (optional) The language ID. Defaults to "und".
    *
    * @return string
    *   A list of all Solr field names for the index.
@@ -268,10 +282,14 @@ class StreamingExpressionBuilder extends Expression {
    * Escapes a value to be used in a Solr streaming expression.
    *
    * @param string $value
+   *   The string to escape.
    * @param bool $single_term
-   *   Escapes the value as single term if TRUE, otherwise as phrase.
-   * @param string $search_api_field_name If provided the method will use it to check for each processor whether the
-   *  it is supposed to be run on the value.  If the the name is not provided no processor will act on the value.
+   *   (optional) Escapes the value as single term if TRUE, otherwise as phrase.
+   *   Defaults to TRUE.
+   * @param string $search_api_field_name
+   *   (optional) If provided the method will use it to check for each processor
+   *   whether it is supposed to be run on the value. If the the name is not
+   *   provided no processor will act on the value.
    *
    * @return string
    *   The escaped value.
@@ -290,7 +308,8 @@ class StreamingExpressionBuilder extends Expression {
     $escaped_string = $single_term ?
       $this->query_helper->escapeTerm($value) :
       $this->query_helper->escapePhrase($value);
-    // If the escaped strings are to be used inside a streaming expression double quotes need to be escaped once more
+    // If the escaped strings are to be used inside a streaming expression
+    // double quotes need to be escaped once more.
     // (e.g. q="field:\"word1 word2\"").
     // See also https://issues.apache.org/jira/browse/SOLR-8409
     $escaped_string = str_replace('"', '\\"', $escaped_string);
@@ -301,8 +320,11 @@ class StreamingExpressionBuilder extends Expression {
    * Formats a field and its value to be used in a Solr streaming expression.
    *
    * @param string $search_api_field_name
+   *   The Search API field name.
    * @param string $value
+   *   The field value.
    * @param string $language_id
+   *   (optional) The language ID. Defaults to "und".
    *
    * @return string
    *   The Solr field name and the value as 'field:value'.
@@ -312,13 +334,17 @@ class StreamingExpressionBuilder extends Expression {
   }
 
   /**
-   * Formats a field and its escaped value to be used in a Solr streaming expression.
+   * Formats a field and its escaped value for a Solr streaming expression.
    *
    * @param string $search_api_field_name
+   *   The Search API field name.
    * @param string $value
+   *   The field value.
    * @param bool $single_term
-   *   Escapes the value as single term if TRUE, otherwise as phrase.
+   *   (optional) Escapes the value as single term if TRUE, otherwise as phrase.
+   *   Defaults to TRUE.
    * @param string $language_id
+   *   (optional) The language ID. Defaults to "und".
    *
    * @return string
    *   The Solr field name and the escaped value as 'field:value'.
@@ -330,16 +356,23 @@ class StreamingExpressionBuilder extends Expression {
   /**
    * Calls _escaped_value on each array element and returns the imploded result.
    *
-   * @param string $glue The string to put between the escaped values.
+   * @param string $glue
+   *   The string to put between the escaped values.
    *   This can be used to create an "or" condition from the array of values,
    *   for example, by passing the string ' || ' as glue.
-   * @param array $values The array of values to escape
-   * @param bool $single_term Whether to escape as a single term or as a phrase.
-   * @param string $search_api_field_name Passed on to _escaped_value();
-   *   influences whether processors act on the values.
+   * @param array $values
+   *   The array of values to escape.
+   * @param bool $single_term
+   *   (optional) Escapes the value as single term if TRUE, otherwise as phrase.
+   *   Defaults to TRUE.
+   * @param string $search_api_field_name
+   *   (optional) Passed on to _escaped_value();
+   *   Influences whether processors act on the values.
    * @param string $language_id
+   *   (optional) The language ID. Defaults to "und".
    *
-   * @return string The imploded string of escaped values.
+   * @return string
+   *   The imploded string of escaped values.
    */
   public function _escape_and_implode(string $glue, array $values, $single_term = TRUE, string $search_api_field_name = NULL, string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
     $escaped_values = [];
@@ -353,95 +386,101 @@ class StreamingExpressionBuilder extends Expression {
    * Rename a field within select().
    *
    * @param string $search_api_field_name_source
+   *   The Search API field name to rename.
    * @param string $search_api_field_name_target
+   *   The target field name.
    * @param string $language_id
+   *   (optional) The language ID. Defaults to "und".
    *
    * @return string
+   *   The expression as string.
    */
   public function _select_renamed_field(string $search_api_field_name_source, string $search_api_field_name_target, string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
-    return
-      $this->_field($search_api_field_name_source, $language_id) . ' as ' . $this->_field($search_api_field_name_target, $language_id);
+    return $this->_field($search_api_field_name_source, $language_id) . ' as ' . $this->_field($search_api_field_name_target, $language_id);
   }
 
   /**
    * Copy a field's value to a different field within select().
    *
    * @param string $search_api_field_name_source
+   *   The Search API field name to copy.
    * @param string $search_api_field_name_target
+   *   The target field name.
    * @param string $language_id
+   *   (optional) The language ID. Defaults to "und".
    *
    * @return string
+   *   The expression as string.
    */
   public function _select_copied_field(string $search_api_field_name_source, string $search_api_field_name_target, string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
-    return
-      $this->concat(
-        'fields="' . $this->_field($search_api_field_name_source, $language_id) . '"',
-        // Delimiter must be set but is ignored if just one field is provided.
-        'delim=","',
-        'as="'. $this->_field($search_api_field_name_target, $language_id) .'"'
-      );
+    return $this->concat(
+      'fields="' . $this->_field($search_api_field_name_source, $language_id) . '"',
+      // Delimiter must be set but is ignored if just one field is provided.
+      'delim=","',
+      'as="' . $this->_field($search_api_field_name_target, $language_id) . '"'
+    );
   }
 
   /**
    * Eases intersect() streaming expressions by applying required sorts.
    *
    * @param string $stream1
-   *  A streaming expression as string.
+   *   A streaming expression as string.
    * @param string $stream2
-   *  A streaming expression as string.
+   *   A streaming expression as string.
    * @param string $field
-   *  The Search API field name or Solr reserved field name to use for the
-   *  intersection.
+   *   The Search API field name or Solr reserved field name to use for the
+   *   intersection.
    * @param string $language_id
+   *   (optional) The language ID. Defaults to "und".
    *
    * @return string
-   *  A chainable streaming expression as string.
+   *   A chainable streaming expression as string.
    */
   public function _intersect(string $stream1, string $stream2, string $field, string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
     $solr_field = $this->_field($field, $language_id);
-    return
-      $this->intersect(
-        $this->sort(
-          $stream1,
-          'by="' . $solr_field . ' ASC"'
-        ),
-        $this->sort(
-          $stream2,
-          'by="' . $solr_field . ' ASC"'
-        ),
-        'on=' . $solr_field
-      );
+    return $this->intersect(
+      $this->sort(
+        $stream1,
+        'by="' . $solr_field . ' ASC"'
+      ),
+      $this->sort(
+        $stream2,
+        'by="' . $solr_field . ' ASC"'
+      ),
+      'on=' . $solr_field
+    );
   }
 
   /**
    * Eases merge() streaming expressions by applying required sorts.
    *
    * @param string $stream1
-   *  A streaming expression as string.
+   *   A streaming expression as string.
    * @param string $stream2
-   *  A streaming expression as string.
+   *   A streaming expression as string.
    * @param string $field
-   *  The Search API field name or Solr reserved field name to use for the
-   *  intersection.
+   *   The Search API field name or Solr reserved field name to use for the
+   *   intersection.
    * @param string $language_id
+   *   (optional) The language ID. Defaults to "und".
    *
    * @return string
-   *  A chainable streaming expression as string.
+   *   A chainable streaming expression as string.
    */
   public function _merge(string $stream1, string $stream2, string $field, string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
     $solr_field = $this->_field($field, $language_id);
-    return
-      $this->merge(
-        $this->sort(
-          $stream1,
-          'by="' . $solr_field . ' ASC"'
-        ),
-        $this->sort(
-          $stream2,
-          'by="' . $solr_field . ' ASC"'
-        ),
-        'on="' . $solr_field . ' ASC"'
-      );
+    return $this->merge(
+      $this->sort(
+        $stream1,
+        'by="' . $solr_field . ' ASC"'
+      ),
+      $this->sort(
+        $stream2,
+        'by="' . $solr_field . ' ASC"'
+      ),
+      'on="' . $solr_field . ' ASC"'
+    );
   }
 
   /**
@@ -452,17 +491,16 @@ class StreamingExpressionBuilder extends Expression {
    * _search_all().
    *
    * @return string
-   *  A chainable streaming expression as string.
+   *   A chainable streaming expression as string.
    */
   public function _export_all() {
-    return
-      $this->search(
-        $this->_collection(),
-        implode(', ', func_get_args()),
-        // Compared to the default query handler, the export query handler
-        // doesn't limit the number of results.
-        'qt="/export"'
-      );
+    return $this->search(
+      $this->_collection(),
+      implode(', ', func_get_args()),
+      // Compared to the default query handler, the export query handler
+      // doesn't limit the number of results.
+      'qt="/export"'
+    );
   }
 
   /**
@@ -471,34 +509,36 @@ class StreamingExpressionBuilder extends Expression {
    * Internally this function uses the default /select query type and sets the
    * rows parameter "to be 10000000 or some other ridiculously large value that
    * is higher than the possible number of rows that are expected".
+   *
    * @see https://wiki.apache.org/solr/CommonQueryParameters
    * @see https://lucene.apache.org/solr/guide/7_3/stream-source-reference.html
    *
    * @return string
-   *  A chainable streaming expression as string.
+   *   A chainable streaming expression as string.
    *
    * @throws \Drupal\search_api\SearchApiException
    */
   public function _search_all() {
-    return
-      $this->search(
-        $this->_collection(),
-        implode(', ', func_get_args()),
-        'rows=' . $this->search_all_rows
-      );
+    return $this->search(
+      $this->_collection(),
+      implode(', ', func_get_args()),
+      'rows=' . $this->search_all_rows
+    );
   }
 
   /**
    * Applies the update decorator to the incoming stream.
    *
    * @param string $stream
+   *   The stream value.
    * @param array $options
    *   The option keys are the ones from the Solr documentation, prefixed with
    *   "update.".
+   *
    * @see https://lucene.apache.org/solr/guide/7_3/stream-decorator-reference.html#update
    *
    * @return string
-   *  A chainable streaming expression as string.
+   *   A chainable streaming expression as string.
    */
   public function _update(string $stream, array $options = []) {
     $options += [
@@ -515,13 +555,15 @@ class StreamingExpressionBuilder extends Expression {
    * Applies the commit decorator to the incoming stream.
    *
    * @param string $stream
+   *   The stream value.
    * @param array $options
    *   The option keys are the ones from the Solr documentation, prefixed with
    *   "commit.".
+   *
    * @see https://lucene.apache.org/solr/guide/7_3/stream-decorator-reference.html#commit
    *
    * @return string
-   *  A chainable streaming expression as string.
+   *   A chainable streaming expression as string.
    */
   public function _commit(string $stream, array $options = []) {
     $options += [
@@ -532,7 +574,7 @@ class StreamingExpressionBuilder extends Expression {
     ];
     return $this->commit(
       $this->_collection(),
-      'batchSize=' .  $options['commit.batchSize'],
+      'batchSize=' . $options['commit.batchSize'],
       'waitFlush=' . ($options['commit.waitFlush'] ? 'true' : 'false'),
       'waitSearcher=' . ($options['commit.waitSearcher'] ? 'true' : 'false'),
       'softCommit=' . ($options['commit.softCommit'] ? 'true' : 'false'),
@@ -542,11 +584,14 @@ class StreamingExpressionBuilder extends Expression {
 
   /**
    * A shorthand for _update() and _commit().
+   *
    * @param string $stream
+   *   The stream value.
    * @param array $options
+   *   (optional) An array of options.
    *
    * @return string
-   *  A chainable streaming expression as string.
+   *   A chainable streaming expression as string.
    */
   public function _commit_update(string $stream, array $options = []) {
     return $this->_commit(
@@ -588,12 +633,21 @@ class StreamingExpressionBuilder extends Expression {
   }
 
   /**
+   * Returns the formatted date for the current request.
+   *
    * @return string
+   *   The formatted date.
    */
   public function _request_time() {
     return $this->request_time;
   }
 
+  /**
+   * Returns the timestamp expression for the current request.
+   *
+   * @return string
+   *   The timestamp expression.
+   */
   public function _timestamp_value() {
     return 'val(' . $this->request_time . ') as timestamp';
   }
@@ -605,13 +659,12 @@ class StreamingExpressionBuilder extends Expression {
    *  A chainable streaming expression as string.
    */
   public function _topic() {
-    return
-      $this->topic(
-        $this->_checkpoints_collection(),
-        $this->_collection(),
-        'initialCheckpoint=0',
-        implode(', ', func_get_args())
-      );
+    return $this->topic(
+      $this->_checkpoints_collection(),
+      $this->_collection(),
+      'initialCheckpoint=0',
+      implode(', ', func_get_args())
+    );
   }
 
   /**
@@ -621,14 +674,13 @@ class StreamingExpressionBuilder extends Expression {
    *  A chainable streaming expression as string.
    */
   public function _topic_all() {
-    return
-      $this->topic(
-        $this->_checkpoints_collection(),
-        $this->_collection(),
-        'initialCheckpoint=0',
-        'rows=' . $this->search_all_rows,
-        implode(', ', func_get_args())
-      );
+    return $this->topic(
+      $this->_checkpoints_collection(),
+      $this->_collection(),
+      'initialCheckpoint=0',
+      'rows=' . $this->search_all_rows,
+      implode(', ', func_get_args())
+    );
   }
 
   /**
@@ -644,4 +696,5 @@ class StreamingExpressionBuilder extends Expression {
   public function _checkpoint($checkpoint) {
     return 'id="' . $checkpoint . '-' . $this->targeted_index_id . '-' . $this->targeted_site_hash . '"';
   }
+
 }

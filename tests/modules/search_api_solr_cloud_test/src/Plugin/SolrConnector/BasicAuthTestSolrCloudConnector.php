@@ -21,13 +21,25 @@ use Solarium\Core\Query\Result\Result;
  */
 class BasicAuthTestSolrCloudConnector extends BasicAuthSolrCloudConnector {
 
-  /** @var QueryInterface $query */
+  /**
+   * The Solarium query.
+   *
+   * @var \Solarium\Core\Query\QueryInterface
+   */
   protected static $query;
 
-  /** @var \Solarium\Core\Client\Request $request */
+  /**
+   * The Solarium request.
+   *
+   * @var \Solarium\Core\Client\Request
+   */
   protected static $request;
 
-  /** @var bool $intercept */
+  /**
+   * Whether to intercept the query/request or not.
+   *
+   * @var bool
+   */
   protected $intercept = FALSE;
 
   /**
@@ -57,18 +69,30 @@ class BasicAuthTestSolrCloudConnector extends BasicAuthSolrCloudConnector {
     return parent::executeRequest($request, $endpoint);
   }
 
+  /**
+   * Gets the Solarium query.
+   */
   public function getQuery() {
     return self::$query;
   }
 
+  /**
+   * Gets the Solarium request.
+   */
   public function getRequest() {
     return self::$request;
   }
 
+  /**
+   * Gets the Solarium request parameters.
+   */
   public function getRequestParams() {
     return Utility::parseRequestParams(self::$request);
   }
 
+  /**
+   * Sets the intercept property.
+   */
   public function setIntercept(bool $intercept) {
     $this->intercept = $intercept;
   }

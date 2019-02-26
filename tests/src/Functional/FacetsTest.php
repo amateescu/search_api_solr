@@ -147,7 +147,12 @@ class FacetsTest extends SearchApiBrowserTestBase {
       /** @var \Behat\Mink\Element\NodeElement $url */
       $url = $urls[$index];
       $url_target = $this->getAbsoluteUrl($url->getAttribute('href'));
-      $this->assertTrue(TRUE, new FormattableMarkup('Clicked link %label (@url_target) from @url_before', ['%label' => $label, '@url_target' => $url_target, '@url_before' => $url_before]));
+      $message = new FormattableMarkup('Clicked link %label (@url_target) from @url_before', [
+        '%label' => $label,
+        '@url_target' => $url_target,
+        '@url_before' => $url_before,
+      ]);
+      $this->assertTrue(TRUE, $message);
       return $this->drupalGet($url_target);
     }
     $this->assertTrue(FALSE, new FormattableMarkup('Link %label does not exist on @url_before', ['%label' => $label, '@url_before' => $url_before]));

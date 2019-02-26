@@ -11,14 +11,7 @@ use Solarium\Core\Query\ResponseParserInterface;
 class ResponseParser extends AbstractResponseParser implements ResponseParserInterface {
 
   /**
-   * Get result data for the response.
-   *
-   *
-   * @param Result $result
-   *
-   * @throws \RuntimeException
-   *
-   * @return array
+   * {@inheritdoc}
    */
   public function parse($result) {
     $data = $result->getData();
@@ -40,4 +33,5 @@ class ResponseParser extends AbstractResponseParser implements ResponseParserInt
       ]
     );
   }
+
 }

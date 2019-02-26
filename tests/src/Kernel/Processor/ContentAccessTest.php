@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\search_api_solr\Kernel\Processor;
 
+use Drupal\Tests\search_api\Kernel\Processor\ContentAccessTest as SearchApiContentAccessTest;
+
 /**
  * Tests the "Content access" processor.
  *
@@ -9,7 +11,7 @@ namespace Drupal\Tests\search_api_solr\Kernel\Processor;
  *
  * @see \Drupal\search_api\Plugin\search_api\processor\ContentAccess
  */
-class ContentAccessTest extends \Drupal\Tests\search_api\Kernel\Processor\ContentAccessTest  {
+class ContentAccessTest extends SearchApiContentAccessTest {
 
   use SolrBackendTrait;
 

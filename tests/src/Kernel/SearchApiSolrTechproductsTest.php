@@ -3,7 +3,7 @@
 namespace Drupal\Tests\search_api_solr\Kernel;
 
 /**
- * Tests the 'Any Schema' Solr search backend.
+ * Tests the document datasources using the solr techproducts example.
  *
  * @group search_api_solr
  * @group solr_no_cloud
@@ -29,4 +29,5 @@ class SearchApiSolrTechproductsTest extends AbstractSearchApiSolrTechproductsTes
       'search_api_solr_test',
     ]);
   }
+
 }

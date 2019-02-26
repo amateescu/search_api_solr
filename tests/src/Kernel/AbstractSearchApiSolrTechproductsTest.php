@@ -3,7 +3,7 @@
 namespace Drupal\Tests\search_api_solr\Kernel;
 
 /**
- * Tests the document datasources.
+ * Tests the document datasources using the solr techproducts example.
  */
 abstract class AbstractSearchApiSolrTechproductsTest extends SolrBackendTestBase {
 
@@ -22,6 +22,13 @@ abstract class AbstractSearchApiSolrTechproductsTest extends SolrBackendTestBase
   protected $indexId = 'techproducts';
 
   /**
+   * {@inheritdoc}
+   */
+  protected function getItemIds(array $result_ids) {
+    return $result_ids;
+  }
+
+  /**
    * Tests location searches and distance facets.
    */
   public function testBackend() {
@@ -31,8 +38,7 @@ abstract class AbstractSearchApiSolrTechproductsTest extends SolrBackendTestBase
       $this->markTestSkipped('Techproducts example not reachable.');
     }
 
-    $index = $this->getIndex();
-    $server = $index->getServerInstance();
+    $server = $this->getIndex()->getServerInstance();
     $config = $server->getBackendConfig();
 
     // Test processor based highlighting.
@@ -70,6 +76,9 @@ abstract class AbstractSearchApiSolrTechproductsTest extends SolrBackendTestBase
     $this->firstSearch();
   }
 
+  /**
+   * Executes a test search on the Solr server and assert the response data.
+   */
   protected function firstSearch() {
     /** @var \Drupal\search_api\Query\ResultSet $result */
     $query = $this->buildSearch(NULL, [], NULL, FALSE)

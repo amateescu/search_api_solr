@@ -23,7 +23,7 @@ class InMemoryLogger extends AbstractLogger {
   }
 
   /**
-   *
+   * Gets the last log message.
    */
   public function getLastMessage() {
     return end($this->messages);

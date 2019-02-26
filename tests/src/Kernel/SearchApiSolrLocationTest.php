@@ -155,7 +155,7 @@ class SearchApiSolrLocationTest extends SolrBackendTestBase {
 
     // We get different precisions from Solr 6 and 7. Therefore we treat the
     // decimal as string and compare the first 9 characters.
-    $this->assertEquals('42.526337', substr($distance, 0 , 9), 'The distance is correctly returned');
+    $this->assertEquals('42.526337', substr($distance, 0, 9), 'The distance is correctly returned');
 
     // Search between 100km and 6000km from Antwerp.
     $location_options = [
@@ -267,6 +267,7 @@ class SearchApiSolrLocationTest extends SolrBackendTestBase {
       'format' => 'ints2D',
     ];
     $result = $query->execute();
+    // @codingStandardsIgnoreLine
     $heatmap = [NULL, NULL, NULL, NULL, NULL, NULL, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], NULL, [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL];
     $filter = [];
     if (version_compare($this->getSolrVersion(), '7.5', '>=')) {
@@ -330,6 +331,7 @@ class SearchApiSolrLocationTest extends SolrBackendTestBase {
       'format' => 'ints2D',
     ];
     $result = $query->execute();
+    // @codingStandardsIgnoreLine
     $heatmap = [NULL, NULL, NULL, [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL];
     $filter = [];
     if (version_compare($this->getSolrVersion(), '7.5', '>=')) {

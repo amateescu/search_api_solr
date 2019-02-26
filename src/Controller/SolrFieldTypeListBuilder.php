@@ -16,18 +16,23 @@ use ZipStream\ZipStream;
 class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
   /**
+   * The Search API server backend.
+   *
    * @var \Drupal\search_api_solr\SolrBackendInterface
    */
   protected $backend;
 
   /**
+   * The Search API server ID.
+   *
    * @var string
    */
   protected $serverId = '';
 
   /**
+   * The Solr minimum version string.
+   *
    * @var string
-   *   A Solr version string.
    */
   protected $assumed_minimum_version = '';
 
@@ -94,16 +99,17 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
         $operator = '<=';
         $warning = TRUE;
       }
-      // We need the whole list to work on
+
+      // We need the whole list to work on.
       $this->limit = FALSE;
       $entity_ids = $this->getEntityIds();
       /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $storage */
       $storage = $this->getStorage();
       $entities = $storage->loadMultipleOverrideFree($entity_ids);
 
-      // We filter to those field types that are relevant for the current server.
-      // There are multiple entities having the same field_type.name but different
-      // values for minimum_solr_version and domains.
+      // We filter those field types that are relevant for the current server.
+      // There are multiple entities having the same field_type.name but
+      // different values for minimum_solr_version and domains.
       $selection = [];
       foreach ($entities as $key => $solr_field_type) {
         /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
@@ -158,9 +164,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
         \Drupal::messenger()->addWarning(
           $this->t(
-            'Unable to reach the Solr server (yet). Therefore the lowest supported Solr version %version is assumed.' .
-            ' Once the connection works and the real Solr version could be detected it might be necessary to deploy an adjusted config to the server to get the best search results.' .
-            ' If the server does not start using the downloadable config, you should edit the server and manually set the Solr version override temporarily that fits your server best and download the config again. But it is recommended to remove this override once the server is running.',
+            'Unable to reach the Solr server (yet). Therefore the lowest supported Solr version %version is assumed. Once the connection works and the real Solr version could be detected it might be necessary to deploy an adjusted config to the server to get the best search results. If the server does not start using the downloadable config, you should edit the server and manually set the Solr version override temporarily that fits your server best and download the config again. But it is recommended to remove this override once the server is running.',
             ['%version' => $this->assumed_minimum_version])
         );
       }
@@ -174,7 +178,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   }
 
   /**
-   * @inheritdoc
+   * {@inheritdoc}
    */
   public function getDefaultOperations(EntityInterface $solr_field_type) {
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
@@ -192,7 +196,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   }
 
   /**
-   *
+   * Returns the formatted XML for schema_extra_types.xml.
    */
   public function getSchemaExtraTypesXml() {
     $xml = '';
@@ -206,7 +210,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   }
 
   /**
-   *
+   * Returns the formatted XML for solrconfig_extra.xml.
    */
   public function getSchemaExtraFieldsXml() {
     $xml = '';
@@ -238,7 +242,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   }
 
   /**
-   *
+   * Returns the formatted XML for schema_extra_fields.xml.
    */
   public function getSolrconfigExtraXml() {
     $search_components = [];
@@ -264,7 +268,10 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   }
 
   /**
+   * Returns the configuration files names and content.
+   *
    * @return array
+   *   An associative array of files names and content.
    *
    * @throws \Drupal\search_api\SearchApiException
    */
@@ -278,7 +285,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
     $files = [
       'schema_extra_types.xml' => $this->getSchemaExtraTypesXml(),
-      'schema_extra_fields.xml'=> $this->getSchemaExtraFieldsXml(),
+      'schema_extra_fields.xml' => $this->getSchemaExtraFieldsXml(),
       'solrconfig_extra.xml' => $this->getSolrconfigExtraXml(),
     ];
 
@@ -322,7 +329,10 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   }
 
   /**
+   * Returns a ZipStream of all configuration files.
+   *
    * @return \ZipStream\ZipStream
+   *   The ZipStream that contains all configuration files.
    *
    * @throws \Drupal\search_api\SearchApiException
    * @throws \ZipStream\Exception\FileNotFoundException
@@ -349,6 +359,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    * Sets the Search API server and calls setBackend() afterwards.
    *
    * @param \Drupal\search_api\ServerInterface $server
+   *   The Search API server entity.
    *
    * @throws \Drupal\search_api\SearchApiException
    */
@@ -361,13 +372,17 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    * Sets the Search API server backend.
    *
    * @param \Drupal\search_api_solr\SolrBackendInterface $backend
+   *   The Search API server backend.
    */
   public function setBackend(SolrBackendInterface $backend) {
     $this->backend = $backend;
   }
 
   /**
+   * Returns the Search API server backend.
+   *
    * @return \Drupal\search_api_solr\SolrBackendInterface
+   *   The Search API server backend.
    */
   protected function getBackend() {
     return $this->backend;

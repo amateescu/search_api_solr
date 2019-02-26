@@ -21,20 +21,24 @@ use Drupal\search_api\Processor\ProcessorInterface;
 interface SolrProcessorInterface extends ProcessorInterface {
 
   /**
-   * Encode a streaming expression value.
+   * Encodes a streaming expression value.
    *
    * @param string $value
+   *   The string to be encoded.
    *
-   * @return string|NULL
+   * @return string|null
+   *   The encoded string.
    */
   public function encodeStreamingExpressionValue(string $value);
 
   /**
-   * Decode a streaming expression value.
+   * Decodes a streaming expression value.
    *
    * @param string $value
+   *   The string to be decoded.
    *
-   * @return string|NULL
+   * @return string|null
+   *   The decoded string.
    */
   public function decodeStreamingExpressionValue(string $value);
 

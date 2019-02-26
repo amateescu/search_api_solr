@@ -2,11 +2,8 @@
 
 namespace Drupal\search_api_solr_admin\Form;
 
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\search_api\ServerInterface;
-use Drupal\search_api_solr\SolrBackendInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

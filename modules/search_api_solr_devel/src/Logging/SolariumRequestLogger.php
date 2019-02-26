@@ -84,7 +84,7 @@ class SolariumRequestLogger implements EventSubscriberInterface {
   }
 
   /**
-   *
+   * Helper function for postExecuteRequest().
    */
   protected function showLoggerHint() {
     static $hint = FALSE;

@@ -29,7 +29,10 @@ class Query extends AbstractQuery implements ComponentAwareQueryInterface {
     'resultclass' => 'Drupal\search_api_solr\Solarium\Autocomplete\Result',
   ];
 
-  public function __construct($options = null) {
+  /**
+   * Constructs a Query object.
+   */
+  public function __construct($options = NULL) {
     $this->componentTypes = [
       ComponentAwareQueryInterface::COMPONENT_SPELLCHECK => 'Solarium\Component\Spellcheck',
       ComponentAwareQueryInterface::COMPONENT_SUGGESTER => 'Solarium\Component\Suggester',
@@ -40,29 +43,24 @@ class Query extends AbstractQuery implements ComponentAwareQueryInterface {
   }
 
   /**
-   * Get type for this query.
-   *
-   * @return string
+   * {@inheritdoc}
    */
   public function getType(): string {
     return 'autocomplete';
   }
 
   /**
-   * Get a requestbuilder for this query.
-   *
-   * @return RequestBuilder
+   * {@inheritdoc}
    */
   public function getRequestBuilder() {
     return new RequestBuilder();
   }
 
   /**
-   * Get a response parser for this query.
-   *
-   * @return ResponseParser
+   * {@inheritdoc}
    */
   public function getResponseParser() {
     return new ResponseParser();
   }
+
 }

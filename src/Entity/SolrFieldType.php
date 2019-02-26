@@ -8,7 +8,6 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 use Drupal\search_api_solr\SolrFieldTypeInterface;
-use Drupal\search_api_solr\Utility\Utility;
 
 /**
  * Defines the SolrFieldType entity.
@@ -80,7 +79,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   /**
    * Solr Collated Field Type definition.
    *
-   * @var  array
+   * @var array
    */
   protected $collated_field_type = NULL;
 
@@ -130,7 +129,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    * {@inheritdoc}
    */
   public function setFieldType(array $field_type) {
-    $this->field_type = $field_type;
+    return $this->field_type = $field_type;
   }
 
   /**
@@ -172,6 +171,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    * Get all available domains form solr filed type configs.
    *
    * @return string[]
+   *   An array of domains as strings.
    */
   public static function getAvailableDomains() {
     $domains = ['generic'];
@@ -187,7 +187,8 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   /**
    * Get all available custom codes.
    *
-   * @return array
+   * @return string[]
+   *   An array of custom codes as strings.
    */
   public static function getAvailableCustomCodes() {
     $custom_codes = [];
@@ -240,7 +241,13 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     // element names "indexAnalyzer", "queryAnalyzer" and "multiTermAnalyzer"
     // which are deprecated in the XML format. Therefore we need to add some
     // conversion logic.
-    foreach (['index' => 'indexAnalyzer', 'query' => 'queryAnalyzer', 'multiterm' => 'multiTermAnalyzer', 'analyzer' => 'analyzer'] as $type => $analyzer) {
+    $analyzers = [
+      'index' => 'indexAnalyzer',
+      'query' => 'queryAnalyzer',
+      'multiterm' => 'multiTermAnalyzer',
+      'analyzer' => 'analyzer',
+    ];
+    foreach ($analyzers as $type => $analyzer) {
       if (!empty($field_type[$analyzer])) {
         unset($this->field_type[$analyzer]);
         if ($type != $analyzer) {
@@ -352,7 +359,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   }
 
   /**
-   *
+   * Formats a given array to an XML string.
    */
   protected function buildXmlFromArray($root_element_name, array $attributes) {
     $root = new \SimpleXMLElement('<' . $root_element_name . '/>');
@@ -495,7 +502,11 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   }
 
   /**
+   * Returns the spellcheck field definition.
+   *
    * @return array|null
+   *   The array containing the spellcheck field definition or null if is
+   *   not configured for this field type.
    */
   protected function getSpellcheckField() {
     $spellcheck_field = NULL;
@@ -520,7 +531,11 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   }
 
   /**
+   * Returns the collated field definition.
+   *
    * @return array|null
+   *   The array containing the collated field definition or null if is
+   *   not configured for this field type.
    */
   protected function getCollatedField() {
     $collated_field = NULL;
@@ -531,7 +546,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
         'type' => $this->collated_field_type['name'],
         'stored' => FALSE,
         'indexed' => FALSE,
-        'docValues'=> TRUE,
+        'docValues' => TRUE,
       ];
     }
 
@@ -543,6 +558,8 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   public function getCopyFields() {
     $copy_fields = [];
+    // @codingStandardsIgnoreStart
+    // @todo Update or remove this.
     // Foreach (array('ts' => 'terms_ts', 'tm' => 'terms_tm', 'tos' => 'terms_ts', 'tom' => 'terms_tm') as $src_prefix => $dest_prefix) {
     // $copy_fields[] = [
     // 'source' => SearchApiSolrUtility::encodeSolrName(
@@ -553,6 +570,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     // ) . '*',
     // ];
     // }.
+    // @codingStandardsIgnoreStart
     return $copy_fields;
   }
 
@@ -580,7 +598,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   /**
    * {@inheritdoc}
    */
-  public function setTextFiles($text_files) {
+  public function setTextFiles(array $text_files) {
     $this->text_files = [];
     foreach ($text_files as $name => $content) {
       $this->addTextFile($name, $content);

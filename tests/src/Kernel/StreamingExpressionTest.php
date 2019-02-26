@@ -28,16 +28,22 @@ class StreamingExpressionTest extends KernelTestBase {
   ];
 
   /**
+   * The streaming expression query helper.
+   *
    * @var \Drupal\search_api_solr\Utility\StreamingExpressionQueryHelper
    */
   protected $queryHelper;
 
   /**
+   * The Search API query.
+   *
    * @var \Drupal\search_api\Query\Query
    */
   protected $query;
 
   /**
+   * The streaming expression builder.
+   *
    * @var \Drupal\search_api_solr\Utility\StreamingExpressionBuilder
    */
   protected $exp;
@@ -94,4 +100,5 @@ class StreamingExpressionTest extends KernelTestBase {
       $streaming_expression
     );
   }
+
 }

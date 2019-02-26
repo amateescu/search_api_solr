@@ -17,11 +17,15 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class ConfigSubscriber implements EventSubscriberInterface {
 
   /**
+   * The Config Installer.
+   *
    * @var \Drupal\Core\Config\ConfigInstallerInterface
    */
   protected $configInstaller;
 
   /**
+   * Constructs a ConfigSubscriber object.
+   *
    * @param \Drupal\Core\Config\ConfigInstallerInterface $configInstaller
    *   The Config Installer.
    */
@@ -41,6 +45,7 @@ class ConfigSubscriber implements EventSubscriberInterface {
    * Installs all available Solr Field Types for a new language.
    *
    * @param \Drupal\Core\Config\ConfigCrudEvent $event
+   *   The configuration event.
    */
   public function onConfigSave(ConfigCrudEvent $event) {
     $saved_config = $event->getConfig();
