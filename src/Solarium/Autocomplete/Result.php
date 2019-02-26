@@ -3,9 +3,6 @@
 namespace Drupal\search_api_solr\Solarium\Autocomplete;
 
 use Solarium\Component\ComponentAwareQueryInterface;
-use Solarium\Component\Result\Spellcheck\Result as SpellcheckResult;
-use Solarium\Component\Result\Suggester\Result as SuggesterResult;
-use Solarium\Component\Result\Terms\Result as TermsResult;
 use Solarium\Core\Query\Result\QueryType as BaseResult;
 
 /**
@@ -15,6 +12,8 @@ class Result extends BaseResult {
 
   /**
    * Component results.
+   *
+   * @var array
    */
   protected $components;
 
@@ -22,6 +21,7 @@ class Result extends BaseResult {
    * Get all component results.
    *
    * @return array
+   *   The component results.
    */
   public function getComponents() {
     $this->parseResponse();
@@ -33,8 +33,10 @@ class Result extends BaseResult {
    * Get a component result by key.
    *
    * @param string $key
+   *   The component key.
    *
    * @return mixed
+   *   The component value.
    */
   public function getComponent($key) {
     $this->parseResponse();
@@ -43,15 +45,16 @@ class Result extends BaseResult {
       return $this->components[$key];
     }
 
-    return null;
+    return NULL;
   }
 
   /**
    * Get spellcheck component result.
    *
-   * This is a convenience method that maps presets to getComponent
+   * This is a convenience method that maps presets to getComponent.
    *
-   * @return SpellcheckResult|null
+   * @return \Solarium\Component\Result\Spellcheck\Result|null
+   *   The spellcheck component result.
    */
   public function getSpellcheck() {
     return $this->getComponent(ComponentAwareQueryInterface::COMPONENT_SPELLCHECK);
@@ -60,9 +63,10 @@ class Result extends BaseResult {
   /**
    * Get suggester component result.
    *
-   * This is a convenience method that maps presets to getComponent
+   * This is a convenience method that maps presets to getComponent.
    *
-   * @return SuggesterResult|null
+   * @return \Solarium\Component\Result\Suggester\Result|null
+   *   The suggester component result.
    */
   public function getSuggester() {
     return $this->getComponent(ComponentAwareQueryInterface::COMPONENT_SUGGESTER);
@@ -71,11 +75,13 @@ class Result extends BaseResult {
   /**
    * Get terms component result.
    *
-   * This is a convenience method that maps presets to getComponent
+   * This is a convenience method that maps presets to getComponent.
    *
-   * @return TermsResult|null
+   * @return \Solarium\Component\Result\Terms\Result|null
+   *   The terms component result.
    */
   public function getTerms() {
     return $this->getComponent(ComponentAwareQueryInterface::COMPONENT_TERMS);
   }
+
 }

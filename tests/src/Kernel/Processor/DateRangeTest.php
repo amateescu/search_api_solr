@@ -85,7 +85,6 @@ class DateRangeTest extends ProcessorTestBase {
     ]);
     $rangesField->save();
 
-
     // Create a node.
     $values = [
       'status' => NodeInterface::PUBLISHED,
@@ -200,10 +199,7 @@ class DateRangeTest extends ProcessorTestBase {
   }
 
   /**
-   * Data provider for testIndexField method. Set of values can be extended to
-   * check other field types and values.
-   *
-   * @return array
+   * Data provider for testIndexField method.
    */
   public function rangeQueryDataProvider() {
     return [
@@ -212,4 +208,5 @@ class DateRangeTest extends ProcessorTestBase {
       ['field_date_ranges', '2014-11-12', '2014-10-20'],
     ];
   }
+
 }

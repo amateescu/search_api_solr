@@ -23,7 +23,7 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
   use SolrCommitTrait;
   use InvokeMethodTrait;
 
-  protected $language_ids = ['en', 'de', 'de-at'];
+  protected $languageIds = ['en', 'de', 'de-at'];
 
   /**
    * Modules to enable for this test.
@@ -37,6 +37,8 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
   ];
 
   /**
+   * The fields helper.
+   *
    * @var \Drupal\search_api\Utility\FieldsHelperInterface
    */
   protected $fieldsHelper;
@@ -45,7 +47,7 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
    * {@inheritdoc}
    */
   protected function installConfigs() {
-    foreach ($this->language_ids as $language_id) {
+    foreach ($this->languageIds as $language_id) {
       ConfigurableLanguage::createFromLangcode($language_id)->save();
     }
 
@@ -53,7 +55,7 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   protected function commonSolrBackendSetUp() {
     parent::commonSolrBackendSetUp();
@@ -70,6 +72,9 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
     $this->indexPrefixTest();
   }
 
+  /**
+   * Tests index prefix.
+   */
   protected function indexPrefixTest() {
     $backend = Server::load($this->serverId)->getBackend();
     $index = $this->getIndex();
@@ -84,7 +89,7 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
     return;
 
     // @todo
-
+    // @codingStandardsIgnoreStart
     $query = $this->buildSearch();
     $facets = [];
     $facets['body'] = [
@@ -103,6 +108,7 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
     $facets = $results->getExtraData('search_api_facets', [])['body'];
     usort($facets, [$this, 'facetCompare']);
     $this->assertEquals($expected, $facets, 'Correct facets were returned for a fulltext field.');
+    // @codingStandardsIgnoreEnd
   }
 
   /**
@@ -132,6 +138,9 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
     $this->assertResults([1, 2], $results, 'group comparing against body NOT NULL AND category NOT article_category AND category NOT NULL');
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function searchSuccess() {
     parent::searchSuccess();
 
@@ -160,6 +169,7 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
    * The facets differ for Solr backends because of case-insensitive filters.
    *
    * @return array
+   *   An array of facet results.
    */
   protected function getExpectedFacetsOfRegressionTest2469547() {
     return [
@@ -730,6 +740,7 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
    *   Length of the string.
    *
    * @return string
+   *   A random string of the specified length.
    */
   protected function getLongText($length) {
     $sequence = 'abcdefghijklmnopqrstuwxyz1234567890,./;\'[]\\<>?:"{}|~!@#$%^&*()_+`1234567890-=ööążźćęółńABCDEFGHIJKLMNOPQRSTUWXYZ';
@@ -745,7 +756,7 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
   }
 
   /**
-   * Tests search result groping
+   * Tests search result grouping.
    */
   public function checkSearchResultGrouping() {
     if (in_array('search_api_grouping', $this->getIndex()->getServerInstance()->getBackend()->getSupportedFeatures())) {
@@ -925,19 +936,21 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
     $this->assertEquals(1, $suggestions[3]->getResultsCount());
 
     // @todo spellcheck tests
-    #$query = $this->buildSearch(['articel cats doks'], [], ['body'], FALSE);
-    #$query->setLanguages(['en']);
-    #$suggestions = $backend->getSpellcheckSuggestions($query, $autocompleteSearch, 'doks', 'articel doks');
-    #$this->assertEquals(1, count($suggestions));
-    #$this->assertEquals('article dogs', $suggestions[0]->getSuggestedKeys());
+    // @codingStandardsIgnoreStart
+    // $query = $this->buildSearch(['articel cats doks'], [], ['body'], FALSE);
+    // $query->setLanguages(['en']);
+    // $suggestions = $backend->getSpellcheckSuggestions($query, $autocompleteSearch, 'doks', 'articel doks');
+    // $this->assertEquals(1, count($suggestions));
+    // $this->assertEquals('article dogs', $suggestions[0]->getSuggestedKeys());
 
-    #$query = $this->buildSearch(['articel tre'], [], ['body'], FALSE);
-    #$query->setLanguages(['en']);
-    #$suggestions = $backend->getAutocompleteSuggestions($query, $autocompleteSearch, 'tre', 'articel tre');
-    #$this->assertEquals(5, count($suggestions));
-    #$this->assertEquals('e', $suggestions[0]->getSuggestionSuffix());
-    #$this->assertEquals(1, $suggestions[0]->getResultsCount());
-    #$this->assertEquals('es', $suggestions[1]->getSuggestionSuffix());
+    // $query = $this->buildSearch(['articel tre'], [], ['body'], FALSE);
+    // $query->setLanguages(['en']);
+    // $suggestions = $backend->getAutocompleteSuggestions($query, $autocompleteSearch, 'tre', 'articel tre');
+    // $this->assertEquals(5, count($suggestions));
+    // $this->assertEquals('e', $suggestions[0]->getSuggestionSuffix());
+    // $this->assertEquals(1, $suggestions[0]->getResultsCount());
+    // $this->assertEquals('es', $suggestions[1]->getSuggestionSuffix());
+    // @codingStandardsIgnoreEnd
 
     $query = $this->buildSearch(['artic'], [], ['body'], FALSE);
     $query->setLanguages(['en']);
@@ -978,7 +991,13 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
     }
 
     // Tests NGram search result.
-    foreach (['category_ngram' => [1, 2], 'category_ngram_string' => [1, 2], 'category_edge' => [], 'category_edge_string' => []] as $field => $expected_results) {
+    $result_set = [
+      'category_ngram' => [1, 2],
+      'category_ngram_string' => [1, 2],
+      'category_edge' => [],
+      'category_edge_string' => [],
+    ];
+    foreach ($result_set as $field => $expected_results) {
       $results = $this->buildSearch(['re'], [], [$field])
         ->execute();
       $this->assertResults($expected_results, $results, $field . ': re');
@@ -1024,7 +1043,7 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
     $server->setBackendConfig($backend_config);
     $server->save();
 
-    $config_files= $list_builder->getConfigFiles();
+    $config_files = $list_builder->getConfigFiles();
     $this->assertContains('<jmx />', $config_files['solrconfig_extra.xml']);
     $this->assertContains('solr.install.dir=../../../..', $config_files['solrcore.properties']);
 
@@ -1099,7 +1118,15 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
     // Gen => gen
     // Gene => gen.
     $results = $this->buildSearch('gene', [], ['body'])->execute();
-    $this->assertResults([1 => 'en', 2 => 'en', 3 => 'de', 4 => 'de', 5 => 'de-at', 6 => 'de-at'], $results, 'Search all languages for "gene".');
+    $expected_results = [
+      1 => 'en',
+      2 => 'en',
+      3 => 'de',
+      4 => 'de',
+      5 => 'de-at',
+      6 => 'de-at',
+    ];
+    $this->assertResults($expected_results, $results, 'Search all languages for "gene".');
 
     $settings['multilingual']['limit_to_content_language'] = TRUE;
     $index->setThirdPartySetting('search_api_solr', 'multilingual', $settings['multilingual']);
@@ -1108,11 +1135,23 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
 
     // Current content language is "en".
     $results = $this->buildSearch('gene', [], ['body'])->execute();
-    $this->assertResults([1 => 'en', 2 => 'en'], $results, 'Search content language for "gene".');
+    $expected_results = [
+      1 => 'en',
+      2 => 'en',
+    ];
+    $this->assertResults($expected_results, $results, 'Search content language for "gene".');
 
     // A query created by Views must not be overruled.
     $results = $this->buildSearch('gene', [], ['body'])->addTag('views')->execute();
-    $this->assertResults([1 => 'en', 2 => 'en', 3 => 'de', 4 => 'de', 5 => 'de-at', 6 => 'de-at'], $results, 'Search all languages for "gene".');
+    $expected_results = [
+      1 => 'en',
+      2 => 'en',
+      3 => 'de',
+      4 => 'de',
+      5 => 'de-at',
+      6 => 'de-at',
+    ];
+    $this->assertResults($expected_results, $results, 'Search all languages for "gene".');
 
     $settings['multilingual']['include_language_independent'] = TRUE;
     $index->setThirdPartySetting('search_api_solr', 'multilingual', $settings['multilingual']);
@@ -1120,7 +1159,13 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
     $this->assertTrue($this->getIndex()->getThirdPartySetting('search_api_solr', 'multilingual')['include_language_independent']);
 
     $results = $this->buildSearch('gene', [], ['body'])->execute();
-    $this->assertResults([1 => 'en', 2 => 'en', 7 => LanguageInterface::LANGCODE_NOT_SPECIFIED, 8 => LanguageInterface::LANGCODE_NOT_APPLICABLE], $results, 'Search content and unspecified language for "gene".');
+    $expected_results = [
+      1 => 'en',
+      2 => 'en',
+      7 => LanguageInterface::LANGCODE_NOT_SPECIFIED,
+      8 => LanguageInterface::LANGCODE_NOT_APPLICABLE,
+    ];
+    $this->assertResults($expected_results, $results, 'Search content and unspecified language for "gene".');
 
     $settings['multilingual']['limit_to_content_language'] = FALSE;
     $index->setThirdPartySetting('search_api_solr', 'multilingual', $settings['multilingual']);
@@ -1128,7 +1173,17 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
     $this->assertFalse($this->getIndex()->getThirdPartySetting('search_api_solr', 'multilingual')['limit_to_content_language']);
 
     $results = $this->buildSearch('gene', [], ['body'])->execute();
-    $this->assertResults([1 => 'en', 2 => 'en', 3 => 'de', 4 => 'de', 5 => 'de-at', 6 => 'de-at', 7 => LanguageInterface::LANGCODE_NOT_SPECIFIED, 8 => LanguageInterface::LANGCODE_NOT_APPLICABLE], $results, 'Search all and unspecified languages for "gene".');
+    $expected_results = [
+      1 => 'en',
+      2 => 'en',
+      3 => 'de',
+      4 => 'de',
+      5 => 'de-at',
+      6 => 'de-at',
+      7 => LanguageInterface::LANGCODE_NOT_SPECIFIED,
+      8 => LanguageInterface::LANGCODE_NOT_APPLICABLE,
+    ];
+    $this->assertResults($expected_results, $results, 'Search all and unspecified languages for "gene".');
   }
 
   /**
@@ -1219,10 +1274,9 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
 
   /**
    * Data provider for testConfigGeneration method.
-   *
-   * @return array
    */
   public function configGenerationDataProvider() {
+    // @codingStandardsIgnoreStart
     return [
       'en' => [
         'en',
@@ -1338,5 +1392,7 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
         ],
       ],
     ];
+    // @codingStandardsIgnoreEnd
   }
+
 }

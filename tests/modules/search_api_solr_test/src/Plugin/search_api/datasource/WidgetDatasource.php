@@ -14,6 +14,7 @@ use Drupal\search_api\Datasource\DatasourcePluginBase;
  * )
  */
 class WidgetDatasource extends DatasourcePluginBase {
+
   /**
    * {@inheritdoc}
    */
@@ -27,4 +28,5 @@ class WidgetDatasource extends DatasourcePluginBase {
   public function getItemId(ComplexDataInterface $item) {
     return 0;
   }
+
 }

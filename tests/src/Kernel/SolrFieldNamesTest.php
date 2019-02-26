@@ -115,8 +115,8 @@ class SolrFieldNamesTest extends KernelTestBase {
           'label' => 'Widget Types',
           'type' => 'string',
           'datasource_id' => 'search_api_solr_test_widget',
-          'property_path' => 'widget_types'
-        ]
+          'property_path' => 'widget_types',
+        ],
       ],
     ]);
 

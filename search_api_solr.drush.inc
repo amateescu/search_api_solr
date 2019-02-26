@@ -1,6 +1,13 @@
 <?php
 
 /**
+ * @file
+ * Drush commands for Search API Solr.
+ */
+
+use Drupal\search_api_solr\Utility\CommandHelper;
+
+/**
  * Implements hook_drush_command().
  */
 function search_api_solr_drush_command() {
@@ -74,7 +81,7 @@ function drush_search_api_solr_get_server_config($server_id, $file_name, $solr_v
  *   An instance of the command helper class.
  */
 function _search_api_solr_drush_command_helper() {
-  $command_helper = new \Drupal\search_api_solr\Utility\CommandHelper(\Drupal::entityTypeManager());
+  $command_helper = new CommandHelper(\Drupal::entityTypeManager());
   $command_helper->setLogger(\Drupal::logger('search_api'));
   return $command_helper;
 }

@@ -23,22 +23,19 @@
  * different parser like edismax you must set the 'defType' parameter
  * accordingly.
  *
- * To get a list of solrium events,
- * @see http://solarium.readthedocs.io/en/stable/customizing-solarium/#plugin-system
- *
  * @param \Solarium\Core\Query\QueryInterface $solarium_query
  *   The Solarium query object, as generated from the Search API query.
  * @param \Drupal\search_api\Query\QueryInterface $query
  *   The Search API query object representing the executed search query.
  */
 function hook_search_api_solr_query_alter(\Solarium\Core\Query\QueryInterface $solarium_query, \Drupal\search_api\Query\QueryInterface $query) {
+  // To get a list of solrium events:
+  // @see http://solarium.readthedocs.io/en/stable/customizing-solarium/#plugin-system
+  // If the Search API query has a 'my_custom_boost' option, use the edsimax
+  // query handler and add some boost queries.
   if ($query->getOption('my_custom_boost')) {
-    // If the Search API query has a 'my_custom_boost' option, use the edsimax
-    // query handler and add some boost queries.
-
-    /** @var array $solr_field_names
-          maps search_api field names to real field names in the Solr index
-     */
+    // $solr_field_names maps search_api field names to real field names in
+    // the Solr index.
     $solr_field_names = $query->getIndex()->getServerInstance()->getBackend()->getSolrFieldNames($query->getIndex());
 
     /** @var \Solarium\Component\EdisMax $edismax */
@@ -119,14 +116,12 @@ function hook_search_api_solr_suggester_autocomplete_query_alter(\Drupal\search_
  *   The Search API query object representing the executed search query.
  */
 function hook_search_api_solr_converted_query_alter(\Solarium\Core\Query\QueryInterface $solarium_query, \Drupal\search_api\Query\QueryInterface $query) {
+  // If the Search API query has a 'I_know_what_I_am_doing' option set to
+  // 'really!', overwrite the 'q' parameter, query handler and add some boost
+  // queries.
   if ($query->getOption('I_know_what_I_am_doing') == 'really!') {
-    // If the Search API query has a 'I_know_what_I_am_doing' option set to
-    // 'really!', overwrite the 'q' parameter.
-    // query handler and add some boost queries.
-
-    /** @var array $solr_field_names
-          maps search_api field names to real field names in the Solr index
-     */
+    // $solr_field_names maps search_api field names to real field names in
+    // the Solr index.
     $solr_field_names = $query->getIndex()->getServerInstance()->getBackend()->getSolrFieldNames($query->getIndex());
 
     /** @var \Solarium\Component\EdisMax $edismax */
@@ -144,6 +139,7 @@ function hook_search_api_solr_converted_query_alter(\Solarium\Core\Query\QueryIn
  *   counterparts. The special fields 'search_api_id' and 'search_api_relevance'
  *   are also included.
  * @param string $language_id
+ *   The language ID that applies for this field mapping.
  */
 function hook_search_api_solr_field_mapping_alter(\Drupal\search_api\IndexInterface $index, array &$fields, string $language_id) {
   $fields['fieldname'] = 'ss_fieldname';
@@ -160,7 +156,7 @@ function hook_search_api_solr_field_mapping_alter(\Drupal\search_api\IndexInterf
  * @param \Drupal\search_api\Item\ItemInterface[] $items
  *   An array of items to be indexed, keyed by their item IDs.
  */
-function hook_search_api_solr_documents_alter(&$documents, \Drupal\search_api\IndexInterface $index, array $items) {
+function hook_search_api_solr_documents_alter(array &$documents, \Drupal\search_api\IndexInterface $index, array $items) {
   // Adds a "foo" field with value "bar" to all documents.
   foreach ($documents as $document) {
     $document->setField('foo', 'bar');
@@ -170,11 +166,11 @@ function hook_search_api_solr_documents_alter(&$documents, \Drupal\search_api\In
 /**
  * Lets modules alter the search results returned from a Solr search.
  *
- * @param \Drupal\search_api\Query\ResultSetInterface $results
+ * @param \Drupal\search_api\Query\ResultSetInterface $result_set
  *   The results array that will be returned for the search.
  * @param \Drupal\search_api\Query\QueryInterface $query
  *   The SearchApiQueryInterface object representing the executed search query.
- * @param \Solarium\QueryType\Select\Result\Result $resultset
+ * @param \Solarium\QueryType\Select\Result\Result $result
  *   The Solarium result object.
  */
 function hook_search_api_solr_search_results_alter(\Drupal\search_api\Query\ResultSetInterface $result_set, \Drupal\search_api\Query\QueryInterface $query, \Solarium\QueryType\Select\Result\Result $result) {
@@ -230,6 +226,7 @@ function search_api_solr_hook_search_api_data_type_info() {
  * themselves within Solr which is much more faster.
  *
  * @param \Drupal\search_api\IndexInterface $index
+ *   The search index.
  */
 function hook_search_api_solr_finalize_index(\Drupal\search_api\IndexInterface $index) {
 

@@ -22,6 +22,9 @@ use Solarium\QueryType\Stream\Query as StreamQuery;
  */
 class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCloudConnectorInterface {
 
+  /**
+   * {@inheritdoc}
+   */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
@@ -104,9 +107,10 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
   /**
    * {@inheritdoc}
    */
-  public function pingCore($options = []) {
+  public function pingCore(array $options = []) {
     return parent::pingCore(['distrib' => TRUE]);
   }
+
   /**
    * {@inheritdoc}
    */
@@ -180,6 +184,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
    * Reloads collection.
    *
    * @return bool
+   *   TRUE if successful, FALSE otherwise.
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */

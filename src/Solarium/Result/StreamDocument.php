@@ -14,19 +14,22 @@ class StreamDocument extends AbstractDocument implements DocumentInterface {
    * Constructor.
    *
    * @param array $fields
+   *   The array of fields.
    */
   public function __construct(array $fields) {
     $this->fields = $fields;
   }
 
   /**
-   * Set field value.
+   * Sets a field value.
    *
    * @param string $name
+   *   The field name.
    * @param mixed $value
+   *   The field value.
    */
-  public function __set($name, $value)
-  {
+  public function __set($name, $value) {
     $this->fields[$name] = $value;
   }
+
 }

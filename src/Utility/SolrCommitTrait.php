@@ -12,9 +12,10 @@ defined('SOLR_INDEX_WAIT') || define('SOLR_INDEX_WAIT', getenv('SOLR_INDEX_WAIT'
 trait SolrCommitTrait {
 
   /**
-   * Explicitly sent a commit command to a Solr server.
+   * Explicitly sends a commit command to a Solr server.
    *
    * @param \Drupal\search_api\ServerInterface $server
+   *   The Search API server entity.
    *
    * @throws \Drupal\search_api\SearchApiException
    */
@@ -29,4 +30,5 @@ trait SolrCommitTrait {
       sleep(SOLR_INDEX_WAIT);
     }
   }
+
 }

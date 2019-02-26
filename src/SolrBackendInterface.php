@@ -22,9 +22,11 @@ interface SolrBackendInterface extends BackendInterface {
   const SEARCH_API_SOLR_MIN_SCHEMA_VERSION = '8.3.1';
 
   /**
-   * The separator to indicate the start of a language ID. We must not use any
-   * character that has a special meaning within regular expressions. Additionally
-   * we have to avoid characters that are valid for Drupal machine names.
+   * The separator to indicate the start of a language ID.
+   *
+   * We must not use any character that has a special meaning within regular
+   * expressions. Additionally we have to avoid characters that are valid for
+   * Drupal machine names.
    * The end of a language ID is indicated by an underscore '_' which could not
    * occur within the language ID itself because Drupal uses lanague tags.
    *
@@ -54,8 +56,8 @@ interface SolrBackendInterface extends BackendInterface {
    *
    * @param string $language_id
    *   The language to get the mapping for.
-   * @param \Drupal\search_api\IndexInterface $index_fields
-   *   The fields handled by the curent index.
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The Search API index entity.
    * @param bool $reset
    *   (optional) Whether to reset the static cache.
    *
@@ -69,8 +71,8 @@ interface SolrBackendInterface extends BackendInterface {
    *
    * @param array $language_ids
    *   The language to get the mapping for.
-   * @param \Drupal\search_api\IndexInterface $index_fields
-   *   The fields handled by the curent index.
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The Search API index entity.
    * @param bool $reset
    *   (optional) Whether to reset the static cache.
    *
@@ -83,6 +85,7 @@ interface SolrBackendInterface extends BackendInterface {
    * Returns the Solr connector used for this backend.
    *
    * @return \Drupal\search_api_solr\SolrConnectorInterface
+   *   The Solr connector object.
    *
    * @throws \Drupal\search_api\SearchApiException
    */
@@ -92,7 +95,7 @@ interface SolrBackendInterface extends BackendInterface {
    * Retrieves a Solr document from an search api index item.
    *
    * @param \Drupal\search_api\IndexInterface $index
-   *   The search api index.
+   *   The Search API index entity.
    * @param \Drupal\search_api\Item\ItemInterface $item
    *   An item to get documents for.
    *
@@ -105,7 +108,7 @@ interface SolrBackendInterface extends BackendInterface {
    * Retrieves Solr documents from search api index items.
    *
    * @param \Drupal\search_api\IndexInterface $index
-   *   The search api index.
+   *   The Search API index.
    * @param \Drupal\search_api\Item\ItemInterface[] $items
    *   An array of items to get documents for.
    * @param \Solarium\QueryType\Update\Query\Query $update_query
@@ -131,6 +134,7 @@ interface SolrBackendInterface extends BackendInterface {
    * Returns the targeted content domain of the server.
    *
    * @return string
+   *   The content domain.
    */
   public function getDomain();
 
@@ -138,7 +142,7 @@ interface SolrBackendInterface extends BackendInterface {
    * Indicates if the Solr server uses a managed schema.
    *
    * @return bool
-   *   True if the Solr server uses a managed schema, false if the Solr server
+   *   TRUE if the Solr server uses a managed schema, FALSE if the Solr server
    *   uses a classic schema.
    */
   public function isManagedSchema();
@@ -147,7 +151,7 @@ interface SolrBackendInterface extends BackendInterface {
    * Indicates if the Solr index should be optimized daily.
    *
    * @return bool
-   *   True if the Solr index should be optimized daily, false otherwise.
+   *   TRUE if the Solr index should be optimized daily, FALSE otherwise.
    */
   public function isOptimizeEnabled();
 
@@ -155,8 +159,10 @@ interface SolrBackendInterface extends BackendInterface {
    * Returns a ready to use query string to filter results by index and site.
    *
    * @param \Drupal\search_api\IndexInterface $index
+   *   The Search API index entity.
    *
    * @return string
+   *   The query string filter.
    */
   public function getIndexFilterQueryString(IndexInterface $index);
 
@@ -169,7 +175,7 @@ interface SolrBackendInterface extends BackendInterface {
    * - The index's machine name.
    *
    * @param \Drupal\search_api\IndexInterface $index
-   *   The index.
+   *   The Search API index entity.
    *
    * @return string
    *   The prefixed machine name.
@@ -180,8 +186,10 @@ interface SolrBackendInterface extends BackendInterface {
    * Returns the targeted Index ID. In case of multisite it might differ.
    *
    * @param \Drupal\search_api\IndexInterface $index
+   *   The Search API index entity.
    *
    * @return string
+   *   The targeted Index ID.
    */
   public function getTargetedIndexId(IndexInterface $index);
 
@@ -189,8 +197,10 @@ interface SolrBackendInterface extends BackendInterface {
    * Returns the targeted site hash. In case of multisite it might differ.
    *
    * @param \Drupal\search_api\IndexInterface $index
+   *   The Search API index entity.
    *
    * @return string
+   *   The targeted site hash.
    */
   public function getTargetedSiteHash(IndexInterface $index);
 
@@ -198,8 +208,10 @@ interface SolrBackendInterface extends BackendInterface {
    * Executes a streaming expression.
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The query used for the streaming expression.
    *
    * @return \Solarium\QueryType\Stream\Result
+   *   The streaming expression result.
    *
    * @throws \Drupal\search_api\SearchApiException
    * @throws \Drupal\search_api_solr\SearchApiSolrException
@@ -210,8 +222,10 @@ interface SolrBackendInterface extends BackendInterface {
    * Executes a graph streaming expression.
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The query used for the graph streaming expression.
    *
    * @return \Solarium\QueryType\Graph\Result
+   *   The graph streaming expression result.
    *
    * @throws \Drupal\search_api\SearchApiException
    * @throws \Drupal\search_api_solr\SearchApiSolrException
@@ -224,12 +238,12 @@ interface SolrBackendInterface extends BackendInterface {
    * Only if globally configured to do so and only the first time after changes
    * to the index from the drupal side.
    *
-  /**
    * @param \Drupal\search_api\IndexInterface $index
+   *   The Search API index entity.
    *
    * @return bool
-   *  True if a finalization run, false otherwise. False doesn't indicate an
-   *  error!
+   *   TRUE if a finalization run, FALSE otherwise. FALSE doesn't indicate an
+   *   error!
    *
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    * @throws \Drupal\search_api\SearchApiException

@@ -37,6 +37,7 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    * Gets the domains the field type is suitable for.
    *
    * @return string[]
+   *   An array of domains as strings.
    */
   public function getDomains();
 
@@ -54,7 +55,7 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    * @param array $field_type
    *   The Solr Field Type definition as nested associative array.
    *
-   * @return array
+   * @return $this
    */
   public function setFieldType(array $field_type);
 
@@ -102,7 +103,7 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
   /**
    * Gets the Solr Spellcheck Field Type definition as nested associative array.
    *
-   * @return array|NULL
+   * @return array|null
    *   The Solr SpellcheckField Type definition as nested associative array or
    *   NULL if it doesn't exist.
    */
@@ -154,12 +155,11 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
   /**
    * Gets the Solr Collated Field Type definition as nested associative array.
    *
-   * @return array|NULL
+   * @return array|null
    *   The Solr Collated Type definition as nested associative array or
    *   NULL if it doesn't exist.
    */
   public function getCollatedFieldType();
-
 
   /**
    * Gets the Solr Collated Field Type definition as JSON.
@@ -173,7 +173,6 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    *   The Solr Spellcheck Field Type definition as JSON.
    */
   public function getCollatedFieldTypeAsJson(bool $pretty = FALSE);
-
 
   /**
    * Sets the Solr Collated Field Type definition as JSON.
@@ -190,7 +189,6 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    */
   public function setCollatedFieldTypeAsJson($collated_field_type);
 
-
   /**
    * Gets the Solr Collated Field Type definition as XML fragment.
    *
@@ -201,16 +199,16 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    *   Solr Field Type.
    *
    * @return string
-   *    The Solr Collated Field Type definition as XML, might be empty if it doesn't exist.
+   *   The Solr Collated Field Type definition as XML, might be empty
+   *   if it doesn't exist.
    */
   public function getCollatedFieldTypeAsXml($add_comment = TRUE);
-
-
 
   /**
    * Gets a list of dynamic Solr fields that will use this Solr Field Type.
    *
    * @return array
+   *   An array of dynamic field definitions.
    */
   public function getDynamicFields();
 
@@ -218,6 +216,7 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    * Gets a list of static fields that will use this Solr Field Type.
    *
    * @return array
+   *   An array of static field definitions.
    */
   public function getStaticFields();
 
@@ -225,6 +224,7 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    * Gets a list of copy fields.
    *
    * @return array
+   *   An array of copy field definitions.
    */
   public function getCopyFields();
 
@@ -255,6 +255,7 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    * Gets all text files required by the Solr Field Type definition.
    *
    * @return array
+   *   An array of text files required by the Solr Field Type definition.
    */
   public function getTextFiles();
 
@@ -263,7 +264,6 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    *
    * @param string $name
    *   The name of the text file.
-   *
    * @param string $content
    *   The content of the text file.
    */
@@ -276,16 +276,17 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    *   An associative array using the file names as keys and the file contents
    *   as values.
    */
-  public function setTextFiles($text_files);
+  public function setTextFiles(array $text_files);
 
   /**
    * Indicates if the field type requires a managed Solr schema.
    *
    * @return bool
+   *   Whether the field type requires a managed schema.
    */
   public function requiresManagedSchema();
 
-    /**
+  /**
    * Gets the minimum Solr version that is supported by this Solr Field Type.
    *
    * @return string

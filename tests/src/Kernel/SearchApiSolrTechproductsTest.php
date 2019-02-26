@@ -44,7 +44,7 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   protected function getItemIds(array $result_ids) {
     return $result_ids;
@@ -56,7 +56,8 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
   public function testBackend() {
     try {
       $this->firstSearch();
-    } catch (\Exception $e) {
+    }
+    catch (\Exception $e) {
       $this->markTestSkipped('Techproducts example not reachable.');
     }
 
@@ -98,6 +99,9 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
     $this->firstSearch();
   }
 
+  /**
+   * Executes a test search on the Solr server and assert the response data.
+   */
   protected function firstSearch() {
     /** @var \Drupal\search_api\Query\ResultSet $result */
     $query = $this->buildSearch(NULL, [], NULL, FALSE)
@@ -116,4 +120,5 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
       "solr_document/GBP",
     ], array_keys($result->getResultItems()), 'Search for all tech products');
   }
+
 }

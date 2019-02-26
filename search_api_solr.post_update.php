@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Helper functions for search_api_solr.install.
+ */
+
+/**
  * Installs the standard highlighter config.
  */
 function search_api_solr_post_update_install_standard_highlighter_config() {

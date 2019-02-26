@@ -13,9 +13,11 @@ class RequestBuilder extends AbstractRequestBuilder {
   /**
    * Build request for an autocomplete query.
    *
-   * @param \Solarium\Component\ComponentAwareQueryInterface $query
+   * @param Solarium\Core\Query\QueryInterface $query
+   *   The Solarium query.
    *
    * @return \Solarium\Core\Client\Request
+   *   The Solarium request.
    */
   public function build(QueryInterface $query) {
     $request = parent::build($query);
@@ -29,4 +31,5 @@ class RequestBuilder extends AbstractRequestBuilder {
 
     return $request;
   }
+
 }
