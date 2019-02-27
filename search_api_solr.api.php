@@ -124,8 +124,7 @@ function hook_search_api_solr_converted_query_alter(\Solarium\Core\Query\QueryIn
     // the Solr index.
     $solr_field_names = $query->getIndex()->getServerInstance()->getBackend()->getSolrFieldNames($query->getIndex());
 
-    /** @var \Solarium\Component\EdisMax $edismax */
-    $edismax = $solarium_query->setQuery($solr_field_names['title'] . ':' . $solarium_query->getHelper()->escapePhrase('foo') . '^11.0');
+    $solarium_query->setQuery($solr_field_names['title'] . ':' . $solarium_query->getHelper()->escapePhrase('foo') . '^11.0');
   }
 }
 

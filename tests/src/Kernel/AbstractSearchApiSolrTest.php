@@ -952,6 +952,7 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
     // $this->assertEquals('es', $suggestions[1]->getSuggestionSuffix());
     // @codingStandardsIgnoreEnd
 
+    // @todo Add more suggester tests.
     $query = $this->buildSearch(['artic'], [], ['body'], FALSE);
     $query->setLanguages(['en']);
     $suggestions = $backend->getSuggesterSuggestions($query, $autocompleteSearch, 'artic', 'artic');
@@ -971,8 +972,6 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
     $this->assertEquals('The test <b>', $suggestions['The test <b>artic</b>le number 2 about a tree.']->getSuggestionPrefix());
     $this->assertEquals('</b>le number 2 about a tree.', $suggestions['The test <b>artic</b>le number 2 about a tree.']->getSuggestionSuffix());
     $this->assertEquals('The test <b>artic</b>le number 2 about a tree.', $suggestions['The test <b>artic</b>le number 2 about a tree.']->getSuggestedKeys());
-
-    // @todo more suggester tests
 
     // Tests NGram and Edge NGram search result.
     foreach (['category_ngram', 'category_edge'] as $field) {

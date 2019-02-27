@@ -16,6 +16,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class SolrReloadCoreForm extends FormBase {
 
   /**
+   * The Search API server entity.
+   *
    * @var \Drupal\search_api\ServerInterface
    */
   private $search_api_server;

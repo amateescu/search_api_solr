@@ -4,7 +4,9 @@ namespace Drupal\search_api_solr\Form;
 
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\search_api_solr\Utility\Utility;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Class SolrFieldTypeForm.
@@ -14,10 +16,36 @@ use Drupal\search_api_solr\Utility\Utility;
 class SolrFieldTypeForm extends EntityForm {
 
   /**
+   * The messenger.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('messenger')
+    );
+  }
+
+  /**
+   * Constructs a SolrFieldTypeForm object.
+   *
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger.
+   */
+  public function __construct(MessengerInterface $messenger) {
+    $this->messenger = $messenger;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function form(array $form, FormStateInterface $form_state) {
-    \Drupal::messenger()->addWarning($this->t("Using this form you have limited options to edit the SolrFieldType, for example the text files like the stop word list. For editing all features you should use Drupal's configuration management and edit the YAML file of a SolrFieldType unless a full-featured UI exists."));
+    $this->messenger->addWarning($this->t("Using this form you have limited options to edit the SolrFieldType, for example the text files like the stop word list. For editing all features you should use Drupal's configuration management and edit the YAML file of a SolrFieldType unless a full-featured UI exists."));
 
     $form = parent::form($form, $form_state);
 
@@ -98,12 +126,12 @@ class SolrFieldTypeForm extends EntityForm {
     $status = $solr_field_type->save();
 
     if ($status) {
-      \Drupal::messenger()->addStatus($this->t('Saved the %label Solr Field Type.', [
+      $this->messenger->addStatus($this->t('Saved the %label Solr Field Type.', [
         '%label' => $solr_field_type->label(),
       ]));
     }
     else {
-      \Drupal::messenger()->addWarning($this->t('The %label Solr Field Type was not saved.', [
+      $this->messenger->addWarning($this->t('The %label Solr Field Type was not saved.', [
         '%label' => $solr_field_type->label(),
       ]));
     }

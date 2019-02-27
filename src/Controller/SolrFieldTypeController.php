@@ -3,13 +3,41 @@
 namespace Drupal\search_api_solr\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\search_api\ServerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Provides different listings of SolrFieldType.
  */
 class SolrFieldTypeController extends ControllerBase {
+
+  /**
+   * The messenger.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('messenger')
+    );
+  }
+
+  /**
+   * Constructs a SolrFieldTypeController object.
+   *
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger service.
+   */
+  public function __construct(MessengerInterface $messenger) {
+    $this->messenger = $messenger;
+  }
 
   /**
    * Provides the listing page.
@@ -92,7 +120,7 @@ class SolrFieldTypeController extends ControllerBase {
     }
     catch (\Exception $e) {
       watchdog_exception('search_api', $e);
-      \Drupal::messenger()->addError($this->t('An error occured during the creation of the config.zip. Look at the logs for details.'));
+      $this->messenger->addError($this->t('An error occured during the creation of the config.zip. Look at the logs for details.'));
     }
 
     return [];

@@ -363,47 +363,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   protected function buildXmlFromArray($root_element_name, array $attributes) {
     $root = new \SimpleXMLElement('<' . $root_element_name . '/>');
-
-    $f = function (\SimpleXMLElement $element, array $attributes) use (&$f) {
-      foreach ($attributes as $key => $value) {
-        if (is_scalar($value)) {
-          if (is_bool($value) === TRUE) {
-            // SimpleXMLElement::addAtribute() converts booleans to integers 0
-            // and 1. But Solr requires the strings 'false' and 'true'.
-            $value = $value ? 'true' : 'false';
-          }
-
-          switch ($key) {
-            case 'VALUE':
-              // @see https://stackoverflow.com/questions/3153477
-              $element[0] = $value;
-              break;
-
-            case 'CDATA':
-              $element[0] = '<![CDATA[' . $value . ']]>';
-              break;
-
-            default:
-              $element->addAttribute($key, $value);
-          }
-        }
-        elseif (is_array($value)) {
-          if (array_key_exists(0, $value)) {
-            $key = rtrim($key, 's');
-            foreach ($value as $inner_attributes) {
-              $child = $element->addChild($key);
-              $f($child, $inner_attributes);
-            }
-          }
-          else {
-            $child = $element->addChild($key);
-            $f($child, $value);
-          }
-        }
-      }
-    };
-
-    $f($root, $attributes);
+    self::buildXmlFromArrayRecursive($root, $attributes);
 
     // Create formatted string.
     $dom = dom_import_simplexml($root)->ownerDocument;
@@ -412,6 +372,53 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
 
     // Remove the XML declaration before returning the XML fragment.
     return preg_replace('/<\?.*?\?>\s*\n?/', '', $formatted_xml_string);
+  }
+
+  /**
+   * Builds a SimpleXMLElement recursively from an array of attributes.
+   *
+   * @param \SimpleXMLElement $element
+   *   The root SimpleXMLElement.
+   * @param array $attributes
+   *   An associative array of key/value attributes. Can be multi-level.
+   */
+  protected static function buildXmlFromArrayRecursive(\SimpleXMLElement $element, array $attributes) {
+    foreach ($attributes as $key => $value) {
+      if (is_scalar($value)) {
+        if (is_bool($value) === TRUE) {
+          // SimpleXMLElement::addAtribute() converts booleans to integers 0
+          // and 1. But Solr requires the strings 'false' and 'true'.
+          $value = $value ? 'true' : 'false';
+        }
+
+        switch ($key) {
+          case 'VALUE':
+            // @see https://stackoverflow.com/questions/3153477
+            $element[0] = $value;
+            break;
+
+          case 'CDATA':
+            $element[0] = '<![CDATA[' . $value . ']]>';
+            break;
+
+          default:
+            $element->addAttribute($key, $value);
+        }
+      }
+      elseif (is_array($value)) {
+        if (array_key_exists(0, $value)) {
+          $key = rtrim($key, 's');
+          foreach ($value as $inner_attributes) {
+            $child = $element->addChild($key);
+            self::buildXmlFromArrayRecursive($child, $inner_attributes);
+          }
+        }
+        else {
+          $child = $element->addChild($key);
+          self::buildXmlFromArrayRecursive($child, $value);
+        }
+      }
+    }
   }
 
   /**

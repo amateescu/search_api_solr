@@ -3,6 +3,7 @@
 namespace Drupal\search_api_solr\Plugin\search_api_autocomplete\suggester;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Plugin\PluginFormTrait;
@@ -78,7 +79,7 @@ class Suggester extends SuggesterPluginBase implements PluginFormInterface {
     foreach (\Drupal::languageManager()->getLanguages() as $language) {
       $langcode_options[$language->getId()] = $language->getName();
     }
-    $langcode_options['und'] = $this->t('Undefined');
+    $langcode_options[LanguageInterface::LANGCODE_NOT_SPECIFIED] = $this->t('Undefined');
 
     $form['drupal/langcode'] = [
       '#type' => 'radios',

@@ -2,9 +2,12 @@
 
 namespace Drupal\search_api_solr_devel\Controller;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
 use Drupal\devel\DevelDumperManagerInterface;
@@ -50,6 +53,27 @@ class DevelController extends ControllerBase {
   protected $fieldsHelper;
 
   /**
+   * The module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
+   * The date formatter service.
+   *
+   * @var \Drupal\Core\Datetime\DateFormatterInterface
+   */
+  protected $dateFormatter;
+
+  /**
+   * The time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $time;
+
+  /**
    * Constructs a DevelController object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -60,12 +84,21 @@ class DevelController extends ControllerBase {
    *   The Devel dumper manager.
    * @param \Drupal\search_api\Utility\FieldsHelperInterface $fields_helper
    *   The Search API Fields Helper.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler.
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
+   *   The date formatter service.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, BackendPluginManager $backend_plugin_manager, DevelDumperManagerInterface $devel_dumper_manager, FieldsHelperInterface $fields_helper) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, BackendPluginManager $backend_plugin_manager, DevelDumperManagerInterface $devel_dumper_manager, FieldsHelperInterface $fields_helper, ModuleHandlerInterface $module_handler, DateFormatterInterface $date_formatter, TimeInterface $time) {
     $this->storage = $entity_type_manager->getStorage('search_api_server');
     $this->backendPluginManager = $backend_plugin_manager;
     $this->develDumperManager = $devel_dumper_manager;
     $this->fieldsHelper = $fields_helper;
+    $this->moduleHandler = $module_handler;
+    $this->dateFormatter = $date_formatter;
+    $this->time = $time;
   }
 
   /**
@@ -76,28 +109,11 @@ class DevelController extends ControllerBase {
       $container->get('entity_type.manager'),
       $container->get('plugin.manager.search_api.backend'),
       $container->get('devel.dumper'),
-      $container->get('search_api.fields_helper')
+      $container->get('search_api.fields_helper'),
+      $container->get('module_handler'),
+      $container->get('date.formatter'),
+      $container->get('datetime.time')
     );
-  }
-
-  /**
-   * Retrieves the server storage controller.
-   *
-   * @return \Drupal\Core\Entity\EntityStorageInterface
-   *   The server storage controller.
-   */
-  protected function getStorage() {
-    return $this->storage ?: \Drupal::service('entity_type.manager')->getStorage('search_api_server');
-  }
-
-  /**
-   * Retrieves the backend plugin manager.
-   *
-   * @return \Drupal\search_api\Backend\BackendPluginManager
-   *   The backend plugin manager.
-   */
-  protected function getBackendPluginManager() {
-    return $this->backendPluginManager ?: \Drupal::service('plugin.manager.search_api.backend');
   }
 
   /**
@@ -109,7 +125,7 @@ class DevelController extends ControllerBase {
    */
   protected function getBackends() {
     $backends = [];
-    $plugin_definitions = $this->getBackendPluginManager()->getDefinitions();
+    $plugin_definitions = $this->backendPluginManager->getDefinitions();
     foreach ($plugin_definitions as $plugin_id => $plugin_definition) {
       if (is_a($plugin_definition['class'], $plugin_definitions['search_api_solr']['class'], TRUE)) {
         $backends[] = $plugin_id;
@@ -138,7 +154,7 @@ class DevelController extends ControllerBase {
     if ($entity && $entity instanceof EntityInterface) {
       foreach ($this->getBackends() as $backend_id) {
         /** @var \Drupal\search_api\ServerInterface[] $servers */
-        $servers = $this->getStorage()->loadByProperties(['backend' => $backend_id, 'status' => TRUE]);
+        $servers = $this->storage->loadByProperties(['backend' => $backend_id, 'status' => TRUE]);
         foreach ($servers as $server) {
           /** @var \Drupal\search_api\ServerInterface $server */
           /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
@@ -162,7 +178,7 @@ class DevelController extends ControllerBase {
                     $items[$item_id] = $this->fieldsHelper->createItemFromObject($index, $entity->getTranslation($langcode)->getTypedData(), $item_id);
                     // Alter and preprocess the items to indexed.
                     $index->alterIndexedItems($items);
-                    \Drupal::moduleHandler()->alter('search_api_index_items', $index, $items);
+                    $this->moduleHandler->alter('search_api_index_items', $index, $items);
                     $index->preprocessIndexItems($items);
 
                     // Gather documents generated by Search API.
@@ -284,14 +300,10 @@ class DevelController extends ControllerBase {
    *   The formatted timestamp.
    */
   protected function showTimeAndTimeAgo($timestamp) {
-    return $this->t(
-      '%time (%time_ago ago)',
-      [
-        '%time' => \Drupal::service('date.formatter')->format($timestamp),
-        '%time_ago' => \Drupal::service('date.formatter')
-          ->formatDiff($timestamp, \Drupal::time()->getRequestTime()),
-      ]
-    );
+    return $this->t('%time (%time_ago ago)', [
+      '%time' => $this->dateFormatter->format($timestamp),
+      '%time_ago' => $this->dateFormatter->formatDiff($timestamp, $this->time->getRequestTime()),
+    ]);
   }
 
   /**

@@ -4,7 +4,9 @@ namespace Drupal\search_api_solr\Form;
 
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\search_api_solr\Utility\Utility;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Builds the form to export a SolrFieldType.
@@ -12,10 +14,36 @@ use Drupal\search_api_solr\Utility\Utility;
 class SolrFieldTypeExportForm extends EntityForm {
 
   /**
+   * The messenger.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('messenger')
+    );
+  }
+
+  /**
+   * Constructs a SolrFieldTypeExportForm object.
+   *
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger.
+   */
+  public function __construct(MessengerInterface $messenger) {
+    $this->messenger = $messenger;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function form(array $form, FormStateInterface $form_state) {
-    \Drupal::messenger()->addWarning($this->t("In the future, this form will be used to export and push specific parts of the current SolrFieldType configuration to a Solr server based on a manged schema. But at the moment you can only see in which parts the SolrFiledType is split and how they're serialized."));
+    $this->messenger->addWarning($this->t("In the future, this form will be used to export and push specific parts of the current SolrFieldType configuration to a Solr server based on a manged schema. But at the moment you can only see in which parts the SolrFiledType is split and how they're serialized."));
 
     /** @var \Drupal\search_api_solr\Entity\SolrFieldType $solr_field_type */
     $solr_field_type = $this->entity;

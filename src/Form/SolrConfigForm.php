@@ -4,17 +4,45 @@ namespace Drupal\search_api_solr\Form;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * A basic form with a passed entity with an interface.
  */
 class SolrConfigForm extends FormBase {
+
+  /**
+   * The date formatter service.
+   *
+   * @var \Drupal\Core\Datetime\DateFormatterInterface
+   */
+  protected $dateFormatter;
+
+  /**
+   * Constructs a SolrConfigForm object.
+   *
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
+   *   The date formatter service.
+   */
+  public function __construct(DateFormatterInterface $date_formatter) {
+    $this->dateFormatter = $date_formatter;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('date.formatter')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -54,7 +82,7 @@ class SolrConfigForm extends FormBase {
 
         $data = '<h3>' . $escaped_file_name . '</h3>';
         if (isset($file_info['modified'])) {
-          $data .= '<p><em>' . $this->t('Last modified: @time.', ['@time' => \Drupal::service('date.formatter')->format(strtotime($file_info['modified']))]) . '</em></p>';
+          $data .= '<p><em>' . $this->t('Last modified: @time.', ['@time' => $this->dateFormatter->format(strtotime($file_info['modified']))]) . '</em></p>';
         }
 
         if ($file_info['size'] > 0) {

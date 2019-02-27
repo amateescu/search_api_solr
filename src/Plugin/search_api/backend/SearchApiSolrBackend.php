@@ -410,7 +410,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     // @todo If any Solr Document datasource is selected, retrieve_data must be set.
-
     // @todo If solr_document is the only datasource, skip_schema_check must be set.
   }
 
@@ -1133,7 +1132,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
         // Set searched fields.
         $search_fields = $this->getQueryFulltextFields($query);
-        $query_fields = [];
         $query_fields_boosted = [];
         foreach ($search_fields as $search_field) {
           /** @var \Drupal\search_api\Item\FieldInterface $field */
@@ -1149,7 +1147,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           }
 
           foreach ($names as $name) {
-            $query_fields[] = $name;
             $query_fields_boosted[] = $name . $boost;
           }
         }
@@ -1315,13 +1312,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
         // Extract results.
         $search_api_result_set = $this->extractResults($query, $solarium_result);
-
-        // Add warnings, if present.
-        if (!empty($warnings)) {
-          foreach ($warnings as $warning) {
-            $search_api_result_set->addWarning($warning);
-          }
-        }
 
         // Extract facets.
         if ($solarium_result instanceof Result) {
@@ -1959,7 +1949,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Check properties for potential hierarchy. Check two levels down, since
     // Core's entity references all have an additional "entity" sub-property for
     // accessing the actual entity reference, which we'd otherwise miss.
-    foreach ($this->fieldsHelper->getNestedProperties($property) as $name_2 => $property_2) {
+    foreach ($this->fieldsHelper->getNestedProperties($property) as $property_2) {
       $property_2 = $this->fieldsHelper->getInnerProperty($property_2);
       if ($property_2 instanceof EntityDataDefinitionInterface) {
         if ($property_2->getEntityTypeId() == $entity_type_id) {
@@ -2365,7 +2355,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     $result_data = $resultset->getData();
     if (isset($result_data['facet_counts']['facet_queries'])) {
-      if ($spatials = $query->getOption('search_api_location')) {
+      $spatials = $query->getOption('search_api_location');
+      if ($spatials !== NULL) {
         foreach ($result_data['facet_counts']['facet_queries'] as $key => $count) {
           // This special key is defined in setSpatial().
           if (!preg_match('/^spatial-(.*)-(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)$/', $key, $matches)) {
@@ -2386,7 +2377,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
     // Extract heatmaps.
     if (isset($result_data['facet_counts']['facet_heatmaps'])) {
-      if ($spatials = $query->getOption('search_api_rpt')) {
+      $spatials = $query->getOption('search_api_rpt');
+      if ($spatials !== NULL) {
         foreach ($result_data['facet_counts']['facet_heatmaps'] as $key => $value) {
           if (!preg_match('/^rpts_(.*)$/', $key, $matches)) {
             continue;
@@ -2401,6 +2393,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           else {
             $heatmaps = array_slice($value, 15);
           }
+
+          $heatmap = [];
           array_walk_recursive($heatmaps, function ($heatmaps) use (&$heatmap) {
             $heatmap[] = $heatmaps;
           });
@@ -4074,8 +4068,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     $state_key = 'search_api_solr.' . $this->getServer()->id() . '.schema_parts';
     $state = \Drupal::state();
+    // @todo Reset that drupal state from time to time.
     $schema_parts = $state->get($state_key);
-    // @todo reset that drupal state from time to time
 
     if (
       !is_array($schema_parts) || empty($schema_parts[$kind]) ||

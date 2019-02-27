@@ -17,11 +17,15 @@ use Solarium\QueryType\Stream\Expression;
 class StreamingExpressionBuilder extends Expression {
 
   /**
+   * The Solr collection name.
+   *
    * @var string
    */
   protected $collection;
 
   /**
+   * The query string to filter results by index and site.
+   *
    * @var string
    */
   protected $checkpoints_collection;
@@ -32,46 +36,64 @@ class StreamingExpressionBuilder extends Expression {
   protected $index_filter_query;
 
   /**
+   * The targeted Index ID.
+   *
    * @var string
    */
   protected $targeted_index_id;
 
   /**
+   * The targeted site hash.
+   *
    * @var string
    */
   protected $targeted_site_hash;
 
   /**
-   * @var IndexInterface
+   * The Search API index entity.
+   *
+   * @var \Drupal\search_api\IndexInterface
    */
   protected $index;
 
   /**
+   * The formatted request time.
+   *
    * @var string
    */
   protected $request_time;
 
   /**
+   * The array of all mapped fields including graph fields.
+   *
    * @var string[][]
    */
   protected $all_fields_including_graph_fields_mapped;
 
   /**
+   * The array of all mapped fields.
+   *
    * @var string[][]
    */
   protected $all_fields_mapped;
 
   /**
+   * The array of all mapped fields that have docValues.
+   *
    * @var string[][]
    */
   protected $all_doc_value_fields_mapped;
 
   /**
+   * The array of all mapped sorting fields.
+   *
    * @var string[][]
    */
   protected $sort_fields_mapped;
 
   /**
+   * The Solarium query helper.
+   *
    * @var \Solarium\Core\Query\Helper
    */
   protected $query_helper;

@@ -439,7 +439,7 @@ class Utility {
    *   The resulting filter query.
    */
   public static function buildSuggesterContextFilterQuery(array $tags) {
-    $cfq = [];
+    $cfg = [];
     foreach ($tags as $tag) {
       $cfg[] = '+' . self::encodeSolrName($tag);
     }
