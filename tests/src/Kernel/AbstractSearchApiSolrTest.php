@@ -1183,6 +1183,10 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
       8 => LanguageInterface::LANGCODE_NOT_APPLICABLE,
     ];
     $this->assertResults($expected_results, $results, 'Search all and unspecified languages for "gene".');
+
+    $this->assertFalse($this->getIndex()->isReindexing());
+    ConfigurableLanguage::createFromLangcode('de-ch')->save();
+    $this->assertTrue($this->getIndex()->isReindexing());
   }
 
   /**

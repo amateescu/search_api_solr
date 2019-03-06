@@ -43,7 +43,7 @@ class CommandHelper implements LoggerAwareInterface {
   }
 
   /**
-   * Gets the config far a Solr search server.
+   * Gets the config for a Solr search server.
    *
    * @param string $server_id
    *   The ID of the server.

@@ -55,7 +55,7 @@ class SearchApiSolrCommands extends DrushCommands {
   }
 
   /**
-   * Enables one disabled search index.
+   * Gets the config for a Solr search server.
    *
    * @param string $server_id
    *   The ID of the server.

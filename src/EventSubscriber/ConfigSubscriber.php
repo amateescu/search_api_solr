@@ -58,6 +58,16 @@ class ConfigSubscriber implements EventSubscriberInterface {
       // installOptionalConfig will not replace existing configs and it contains
       // a dependency check so we need not perform any checks ourselves.
       $this->configInstaller->installOptionalConfig(NULL, $restrict_by_dependency);
+
+      // If a new language is added, the existing indexes must be re-indexed to
+      // fill the language-specific sort fields for the new language.
+      foreach (search_api_solr_get_servers() as $server) {
+        foreach ($server->getIndexes() as $index) {
+          if (!$index->isReadOnly() && !$index->isReindexing()) {
+            $index->reindex();
+          }
+        }
+      }
     }
 
     // @todo alert to trigger new config when an index is added => context
