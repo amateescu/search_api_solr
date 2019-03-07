@@ -199,7 +199,7 @@ search_api_solr.solr_field_type_filters:
         nullable: true
       protected:
         type: string
-        label: 'WordDelimiterGraphFilter:: WordDelimiterFilter:: SnowballPorterFilter::protected'
+        label: 'ProtectedTermFilter:: WordDelimiterGraphFilter:: WordDelimiterFilter:: SnowballPorterFilter::protected'
         nullable: true
       splitOnCaseChange:
         type: integer
@@ -214,8 +214,9 @@ search_api_solr.solr_field_type_filters:
         label: 'WordDelimiterGraphFilter:: WordDelimiterFilter::generateWordParts'
         nullable: true
       preserveOriginal:
+        # @todo ASCIIFoldingFilter expects a boolean
         type: integer
-        label: 'WordDelimiterGraphFilter:: WordDelimiterFilter::preserveOriginal'
+        label: 'WordDelimiterGraphFilter:: ASCIIFoldingFilter:: WordDelimiterFilter::preserveOriginal'
         nullable: true
       catenateAll:
         type: integer
@@ -239,7 +240,19 @@ search_api_solr.solr_field_type_filters:
         nullable: true
       dictionary:
         type: string
-        label: 'DictionaryCompoundWordTokenFilter::dictionary'
+        label: 'OpenNLPLemmatizerFilter:: HunspellStemFilter:: DictionaryCompoundWordTokenFilter::dictionary'
+        nullable: true
+      lemmatizerModel:
+        type: string
+        label: 'OpenNLPLemmatizerFilter::lemmatizerModel'
+        nullable: true
+      affix:
+        type: string
+        label: 'HunspellStemFilter::affix'
+        nullable: true
+      strictAffixParsing:
+        type: boolean
+        label: 'HunspellStemFilter::strictAffixParsing'
         nullable: true
       minWordSize:
         type: integer
@@ -259,11 +272,39 @@ search_api_solr.solr_field_type_filters:
         nullable: true
       ignoreCase:
         type: boolean
-        label: 'StopFilter:: SynonymFilter::ignoreCase'
+        label: 'ElisionFilter:: SynonymGraphFilter:: SuggestStopFilter:: StopFilter:: ProtectedTermFilter:: HunspellStemFilter:: KeepWordFilter:: StopFilter:: CommonGramsFilter:: SynonymFilter::ignoreCase'
+        nullable: true
+      wrappedFilters:
+        type: string
+        label: 'ProtectedTermFilter::wrappedFilters'
+        nullable: true
+      types:
+        type: string
+        label: 'WordDelimiterGraphFilter:: TypeTokenFilter::types'
+        nullable: true
+      useWhitelist:
+        type: boolean
+        label: 'TypeTokenFilter::useWhitelist'
+        nullable: true
+      enablePositionIncrements:
+        type: boolean
+        label: 'JapanesePartOfSpeechStopFilter:: TypeTokenFilter:: StopFilter:: LengthFilter:: KeepWordFilter::enablePositionIncrements'
         nullable: true
       words:
         type: string
-        label: 'StopFilter::words'
+        label: 'SuggestStopFilter:: KeepWordFilter:: CommonGramsFilter:: StopFilter::words'
+        nullable: true
+      format:
+        type: string
+        label: 'SynonymGraphFilter:: SuggestStopFilter:: StopFilter:: CommonGramsFilter::format'
+        nullable: true
+      wordset:
+        type: string
+        label: 'SuggestStopFilter::wordset'
+        nullable: true
+      snowball:
+        type: string
+        label: 'SuggestStopFilter::snowball'
         nullable: true
       language:
         type: string
@@ -271,15 +312,23 @@ search_api_solr.solr_field_type_filters:
         nullable: true
       synonyms:
         type: string
-        label: 'SynonymFilter::synonyms'
+        label: 'SynonymGraphFilter:: SynonymFilter::synonyms'
         nullable: true
       expand:
         type: boolean
-        label: 'SynonymFilter:: ManagedSynonymFilter::expand'
+        label: 'SynonymGraphFilter:: SynonymFilter:: ManagedSynonymFilter::expand'
+        nullable: true
+      tokenizerFactory:
+        type: string
+        label: 'SynonymGraphFilter::tokenizerFactory'
+        nullable: true
+      analyzer:
+        type: string
+        label: 'SynonymGraphFilter::analyzer'
         nullable: true
       managed:
         type: string
-        label: 'ManagedStopFilter::managed'
+        label: 'ManagedSynonymGraphFilter:: ManagedStopFilter::managed'
         nullable: true
       articles:
         type: string
@@ -327,7 +376,151 @@ search_api_solr.solr_field_type_filters:
         nullable: true
       outputUnigrams:
         type: boolean
-        label: 'CJKBigramFilterFactory::outputUnigrams'
+        label: 'ShingleFilter:: CJKBigramFilterFactory::outputUnigrams'
+        nullable: true
+      outputUnigramsIfNoShingles:
+        type: boolean
+        label: 'ShingleFilter::outputUnigramsIfNoShingles'
+        nullable: true
+      inject:
+        type: boolean
+        label: 'PhoneticFilter:: DoubleMetaphoneFilter:: DaitchMokotoffSoundexFilter::inject'
+        nullable: true
+      maxCodeLength:
+        type: integer
+        label: 'PhoneticFilter:: DoubleMetaphoneFilter::maxCodeLength'
+        nullable: true
+      encoder:
+        type: string
+        label: 'PhoneticFilter::encoder'
+        nullable: true
+      separator:
+        type: string
+        label: 'FingerprintFilter::separator'
+        nullable: true
+      maxOutputTokenSize:
+        type: integer
+        label: 'FingerprintFilter::maxOutputTokenSize'
+        nullable: true
+      filter:
+        type: string
+        label: 'ICUNormalizer2Filter:: ICUFoldingFilter::filter'
+        nullable: true
+      name:
+        type: string
+        label: 'ICUNormalizer2Filter::name'
+        nullable: true
+      mode:
+        type: string
+        label: 'ICUNormalizer2Filter::mode'
+        nullable: true
+      id:
+        type: string
+        label: 'ICUTransformFilter::id'
+        nullable: true
+      maxTokenCount:
+        type: integer
+        label: 'LimitTokenCountFilter::maxTokenCount'
+        nullable: true
+      consumeAllTokens:
+        type: boolean
+        label: 'LimitTokenPositionFilter:: LimitTokenOffsetFilter:: LimitTokenCountFilter::consumeAllTokens'
+        nullable: true
+      maxStartOffset:
+        type: integer
+        label: 'LimitTokenOffsetFilter::maxStartOffset'
+        nullable: true
+      maxTokenPosition:
+        type: integer
+        label: 'LimitTokenPositionFilter::maxTokenPosition'
+        nullable: true
+      payload:
+        type: float
+        label: 'NumericPayloadTokenFilter::payload'
+        nullable: true
+      typeMatch:
+        type: string
+        label: 'NumericPayloadTokenFilter::typeMatch'
+        nullable: true
+      pattern:
+        type: string
+        label: 'PatternReplaceFilter::pattern'
+        nullable: true
+      replacement:
+        type: string
+        label: 'PatternReplaceFilter::replacement'
+        nullable: true
+      replace:
+        type: string
+        label: 'PatternReplaceFilter::replace'
+        nullable: true
+      withOriginal:
+        type: boolean
+        label: 'ReversedWildcardFilter::withOriginal'
+        nullable: true
+      maxPosAsterisk:
+        type: integer
+        label: 'ReversedWildcardFilter::maxPosAsterisk'
+        nullable: true
+      maxPosQuestion:
+        type: integer
+        label: 'ReversedWildcardFilter::maxPosQuestion'
+        nullable: true
+      maxFractionAsterisk:
+        type: float
+        label: 'ReversedWildcardFilter::maxFractionAsterisk'
+        nullable: true
+      minTrailing:
+        type: integer
+        label: 'ReversedWildcardFilter::minTrailing'
+        nullable: true
+      minShingleSize:
+        type: integer
+        label: 'ShingleFilter::minShingleSize'
+        nullable: true
+      maxShingleSize:
+        type: integer
+        label: 'ShingleFilter::maxShingleSize'
+        nullable: true
+      tokenSeparator:
+        type: string
+        label: 'ShingleFilter::tokenSeparator'
+        nullable: true
+      updateOffsets:
+        type: boolean
+        label: 'TrimFilter::updateOffsets'
+        nullable: true
+      prefix:
+        type: string
+        label: 'TypeAsSynonymFilter::prefix'
+        nullable: true
+      posTaggerModel:
+        type: string
+        label: 'OpenNLPPOSFilter::posTaggerModel'
+        nullable: true
+      normalizeKanji:
+        type: boolean
+        label: 'JapaneseIterationMarkCharFilter::normalizeKanji'
+        nullable: true
+      normalizeKana:
+        type: boolean
+        label: 'JapaneseIterationMarkCharFilter::normalizeKana'
+        nullable: true
+      tags:
+        type: string
+        label: 'JapanesePartOfSpeechStopFilter::tags'
+        nullable: true
+      minimumLength:
+        type: integer
+        label: 'JapaneseKatakanaStemFilter::minimumLength'
+        nullable: true
+      variant:
+        type: string
+        label: 'NorwegianLightStemFilter:: NorwegianMinimalStemFilter::variant'
+        nullable: true
+      haircut:
+        type: string
+        label: 'SerbianNormalizationFilter::haircut'
         nullable: true
 
 search_api_solr.solr_field_type_scalar_values:
