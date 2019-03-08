@@ -991,7 +991,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // expressions themselves.
     static $finalization_in_progress = [];
 
-    if (!isset($finalization_in_progress[$index->id()]) && !$index->isReadOnly()) {
+    if ($index->status() && !isset($finalization_in_progress[$index->id()]) && !$index->isReadOnly()) {
       $settings = $this->getIndexSolrSettings($index);
       if (
         // Not empty reflects the default FALSE for outdated index configs, too.
