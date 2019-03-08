@@ -53,6 +53,8 @@ class CommandHelper implements LoggerAwareInterface {
    *   The targeted Solr version.
    *
    * @throws \Drupal\search_api\SearchApiException
+   * @throws \ZipStream\Exception\FileNotFoundException
+   * @throws \ZipStream\Exception\FileNotReadableException
    */
   public function getServerConfigCommand($server_id, $file_name, $solr_version = NULL) {
     /** @var \Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
@@ -70,6 +72,49 @@ class CommandHelper implements LoggerAwareInterface {
     $zip = $list_builder->getConfigZip();
     $zip->finish();
     file_put_contents($file_name, ob_get_clean());
+  }
+
+  /**
+   * Finalizes one ore more indexes.
+   *
+   * @param string[]|null $indexIds
+   *   (optional) An array of index IDs, or NULL if we should finalize all
+   *   enabled indexes.
+   * @param bool $force
+   *   (optional) Force the finalization, even if the index isn't "dirty".
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   * @throws \Drupal\search_api\SearchApiException
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   */
+  public function finalizeIndexCommand(array $indexIds = NULL, $force = FALSE) {
+    $servers = search_api_solr_get_servers();
+
+    if ($force) {
+      // It's important to mark all indexes as "dirty" before the first
+      // finalization runs because there might be dependencies between the
+      // indexes. Therefor we do the loop two times.
+      foreach ($servers as $server) {
+        /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
+        $backend = $server->getBackend();
+        foreach ($server->getIndexes() as $index) {
+          if ($index->status() && !$index->isReadOnly() && (!$indexIds || in_array($index->id(), $indexIds))) {
+            \Drupal::state()->set('search_api_solr.' . $index->id() . '.last_update', \Drupal::time()->getRequestTime());
+          }
+        }
+      }
+    }
+
+    foreach ($servers as $server) {
+      /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
+      $backend = $server->getBackend();
+      foreach ($server->getIndexes() as $index) {
+        var_dump($index->id());
+        if ($index->status() && !$index->isReadOnly() && (!$indexIds || in_array($index->id(), $indexIds))) {
+          $backend->finalizeIndex($index);
+        }
+      }
+    }
   }
 
 }

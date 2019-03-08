@@ -78,4 +78,34 @@ class SearchApiSolrCommands extends DrushCommands {
     $this->commandHelper->getServerConfigCommand($server_id, $file_name, $solr_version);
   }
 
+
+  /**
+   * Indexes items for one or all enabled search indexes.
+   *
+   * @param string $indexId
+   *   (optional) A search index ID, or NULL to index items for all enabled
+   *   indexes.
+   *
+   * @command search-api-solr:finalize-index
+   *
+   * @option force
+   *   Force the finalization, even if the index isn't "dirty".
+   *   Defaults to FALSE.
+   *
+   * @usage drush search-api-solr:finalize-index
+   *   Finalize all enabled indexes.
+   * @usage drush search-api-solr:finalize-index node_index
+   *   Finalize the index with the ID node_index.
+   * @usage drush search-api-solr:finalize-index node_index force
+   *   Index a maximum number of 100 items for the index with the ID node_index.
+   *
+   * @aliases solr-finalize
+   *
+   * @throws \Exception
+   *   If a batch process could not be created.
+   */
+  public function finalizeIndex($indexId = NULL, array $options = ['force' => FALSE]) {
+    $force = (bool) $options['force'];
+    $this->commandHelper->finalizeIndexCommand($indexId ? [$indexId] : $indexId, $force);
+  }
 }
