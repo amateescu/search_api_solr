@@ -63,7 +63,7 @@ class ConfigSubscriber implements EventSubscriberInterface {
       // fill the language-specific sort fields for the new language.
       foreach (search_api_solr_get_servers() as $server) {
         foreach ($server->getIndexes() as $index) {
-          if (!$index->isReadOnly() && !$index->isReindexing()) {
+          if ($index->status() && !$index->isReadOnly() && !$index->isReindexing()) {
             $index->reindex();
           }
         }
