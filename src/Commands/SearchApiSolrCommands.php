@@ -106,7 +106,7 @@ class SearchApiSolrCommands extends DrushCommands implements StdinAwareInterface
    *   Finalize all enabled indexes.
    * @usage drush search-api-solr:finalize-index node_index
    *   Finalize the index with the ID node_index.
-   * @usage drush search-api-solr:finalize-index node_index force
+   * @usage drush search-api-solr:finalize-index node_index --force
    *   Index a maximum number of 100 items for the index with the ID node_index.
    *
    * @aliases solr-finalize
