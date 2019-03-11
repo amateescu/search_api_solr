@@ -33,7 +33,7 @@ class CommandHelper extends \Drupal\search_api\Utility\CommandHelper {
   public function getServerConfigCommand($server_id, $file_name, $solr_version = NULL) {
     /** @var \Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
     $list_builder = $this->entityTypeManager->getListBuilder('solr_field_type');
-    $server = $this->loadServers([$server_id]);
+    $server = reset($this->loadServers([$server_id]));
     if ($solr_version) {
       $config = $server->getBackendConfig();
       // Temporarily switch the Solr version but don't save!
@@ -69,8 +69,6 @@ class CommandHelper extends \Drupal\search_api\Utility\CommandHelper {
       // finalization runs because there might be dependencies between the
       // indexes. Therefor we do the loop two times.
       foreach ($servers as $server) {
-        /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
-        $backend = $server->getBackend();
         foreach ($server->getIndexes() as $index) {
           if ($index->status() && !$index->isReadOnly() && (!$indexIds || in_array($index->id(), $indexIds))) {
             \Drupal::state()->set('search_api_solr.' . $index->id() . '.last_update', \Drupal::time()->getRequestTime());
