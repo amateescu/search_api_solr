@@ -3,5 +3,6 @@ services:
     class: \Drupal\search_api_solr\Commands\SearchApiSolrCommands
     arguments:
       - '@entity_type.manager'
+      - '@module_handler'
     tags:
       - { name: drush.command }

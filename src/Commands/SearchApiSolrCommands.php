@@ -6,6 +6,9 @@ use Consolidation\AnnotatedCommand\Input\StdinAwareInterface;
 use Consolidation\AnnotatedCommand\Input\StdinAwareTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\search_api_solr\SearchApiSolrException;
+use Drupal\search_api_solr\SolrBackendInterface;
+use Drupal\search_api_solr\SolrCloudConnectorInterface;
 use Drupal\search_api_solr\Utility\CommandHelper;
 use Drush\Commands\DrushCommands;
 use Psr\Log\LoggerInterface;
@@ -130,7 +133,10 @@ class SearchApiSolrCommands extends DrushCommands implements StdinAwareInterface
    *
    * @aliases solr-erse
    *
-   * @return void
+   * @return string
+   *   The JSON encoded raw streaming expression result
+   *
+   * @throws
    */
   public function executeRawStreamingExpression($indexId, $expression)
   {
@@ -139,16 +145,37 @@ class SearchApiSolrCommands extends DrushCommands implements StdinAwareInterface
       $expression = $this->stdin()->contents();
     }
 
-    $index = $this->commandHelper->loadIndexes([$indexId]);
+    if (!$expression) {
+      throw new SearchApiSolrException('No streaming expression provided.');
+    }
+
+    /** @var \Drupal\search_api\IndexInterface $index */
+    $index = reset($this->commandHelper->loadIndexes([$indexId]));
+
+    if (!$index) {
+      throw new SearchApiSolrException('Failed to load index.');
+    }
+
+    if (!$index->status()) {
+      throw new SearchApiSolrException('Index is not enabled.');
+    }
+
+    /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
     $backend = $index->getServerInstance()->getBackend();
-    $queryHelper = $backend->getStreamingExpressionQueryHelper();
+
+    if (!($backend instanceof SolrBackendInterface) || !($backend->getSolrConnector() instanceof SolrCloudConnectorInterface)) {
+      throw new SearchApiSolrException('The index must be located on Solr Cloud to execute streaming expressions.');
+    }
+
+    $queryHelper = \Drupal::service('search_api_solr.streaming_expression_query_helper');
     $query = $queryHelper->createQuery($index);
     $queryHelper->setStreamingExpression($query,
       $expression,
       basename(__FILE__) . ':' . __LINE__
     );
     $result = $backend->executeStreamingExpression($query);
-    dump($result);
+
+    return $result->getBody();
   }
 
 }

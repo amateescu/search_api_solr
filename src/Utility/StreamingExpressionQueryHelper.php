@@ -36,9 +36,9 @@ class StreamingExpressionQueryHelper extends QueryHelper {
    */
   public function setStreamingExpression(QueryInterface $query, string $streaming_expression, string $comment = '') {
     if ($comment) {
-      $comment = ' /* ' . $comment . ' */';
+      $query->setOption('solr_streaming_expression_comment', $comment);
     }
-    $query->setOption('solr_streaming_expression', $streaming_expression . $comment);
+    $query->setOption('solr_streaming_expression', $streaming_expression);
   }
 
 }

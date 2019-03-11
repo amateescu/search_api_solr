@@ -2,38 +2,12 @@
 
 namespace Drupal\search_api_solr\Utility;
 
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\search_api\Entity\Server;
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
 
 /**
  * Provides functionality to be used by CLI tools.
  */
-class CommandHelper implements LoggerAwareInterface {
-
-  use LoggerAwareTrait;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * Constructs a CommandHelper object.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
-   *   Thrown if the "search_api_index" or "search_api_server" entity types are
-   *   unknown.
-   */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
-    $this->entityTypeManager = $entity_type_manager;
-  }
+class CommandHelper extends \Drupal\search_api\Utility\CommandHelper {
 
   /**
    * Re-install all Solr Field Types from their yml files.
@@ -59,7 +33,7 @@ class CommandHelper implements LoggerAwareInterface {
   public function getServerConfigCommand($server_id, $file_name, $solr_version = NULL) {
     /** @var \Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
     $list_builder = $this->entityTypeManager->getListBuilder('solr_field_type');
-    $server = Server::load($server_id);
+    $server = $this->loadServers([$server_id]);
     if ($solr_version) {
       $config = $server->getBackendConfig();
       // Temporarily switch the Solr version but don't save!

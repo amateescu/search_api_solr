@@ -1557,7 +1557,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
     }
     catch (StreamException $e) {
-      throw new SearchApiSolrException($e->getMessage() . "\n" . Expression::indent($e->getExpression()), $e->getCode(), $e);
+      $message = $e->getMessage() . "\n" . Expression::indent($e->getExpression());
+      if ($comment = $query->getOption('solr_streaming_expression_comment', FALSE)) {
+        $message .= "\nComment: " . $comment;
+      }
+      throw new SearchApiSolrException($message, $e->getCode(), $e);
     }
     catch (\Exception $e) {
       throw new SearchApiSolrException('An error occurred while trying execute a streaming expression on Solr: ' . $e->getMessage(), $e->getCode(), $e);
