@@ -136,7 +136,8 @@ class SearchApiSolrCommands extends DrushCommands implements StdinAwareInterface
    * @return string
    *   The JSON encoded raw streaming expression result
    *
-   * @throws
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function executeRawStreamingExpression($indexId, $expression)
   {
