@@ -2,7 +2,10 @@
 
 namespace Drupal\search_api_solr\Commands;
 
+use Consolidation\AnnotatedCommand\Input\StdinAwareInterface;
+use Consolidation\AnnotatedCommand\Input\StdinAwareTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\search_api_solr\Utility\CommandHelper;
 use Drush\Commands\DrushCommands;
 use Psr\Log\LoggerInterface;
@@ -10,7 +13,9 @@ use Psr\Log\LoggerInterface;
 /**
  * Defines Drush commands for the Search API Solr.
  */
-class SearchApiSolrCommands extends DrushCommands {
+class SearchApiSolrCommands extends DrushCommands implements StdinAwareInterface {
+
+  use StdinAwareTrait;
 
   /**
    * The command helper.
@@ -20,13 +25,15 @@ class SearchApiSolrCommands extends DrushCommands {
   protected $commandHelper;
 
   /**
-   * Constructs a SearchApiCommands object.
+   * Constructs a SearchApiSolrCommands object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
+   *   The module handler.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager) {
-    $this->commandHelper = new CommandHelper($entityTypeManager);
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, ModuleHandlerInterface $moduleHandler) {
+    $this->commandHelper = new CommandHelper($entityTypeManager, $moduleHandler, 'dt');
   }
 
   /**
@@ -108,4 +115,40 @@ class SearchApiSolrCommands extends DrushCommands {
     $force = (bool) $options['force'];
     $this->commandHelper->finalizeIndexCommand($indexId ? [$indexId] : $indexId, $force);
   }
+
+  /**
+   * Executes a streaming expression from STDIN.
+   *
+   * @command search-api-solr:execute-raw-streaming-expression
+   *
+   * @param string $indexId
+   *   A search index ID.
+   * @param mixed $expression
+   *   The streaming expression. Use '-' to read from STDIN.
+   * @usage drush search-api-solr:execute-streaming-expression node_index - < streaming_expression.txt
+   *  Execute the raw streaming expression in streaming_expression.txt
+   *
+   * @aliases solr-erse
+   *
+   * @return void
+   */
+  public function executeRawStreamingExpression($indexId, $expression)
+  {
+    // Special flag indicating that the value has been passed via STDIN.
+    if ($expression === '-') {
+      $expression = $this->stdin()->contents();
+    }
+
+    $index = $this->commandHelper->loadIndexes([$indexId]);
+    $backend = $index->getServerInstance()->getBackend();
+    $queryHelper = $backend->getStreamingExpressionQueryHelper();
+    $query = $queryHelper->createQuery($index);
+    $queryHelper->setStreamingExpression($query,
+      $expression,
+      basename(__FILE__) . ':' . __LINE__
+    );
+    $result = $backend->executeStreamingExpression($query);
+    dump($result);
+  }
+
 }
