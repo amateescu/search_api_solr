@@ -81,7 +81,6 @@ class CommandHelper extends \Drupal\search_api\Utility\CommandHelper {
       /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
       $backend = $server->getBackend();
       foreach ($server->getIndexes() as $index) {
-        var_dump($index->id());
         if ($index->status() && !$index->isReadOnly() && (!$indexIds || in_array($index->id(), $indexIds))) {
           $backend->finalizeIndex($index);
         }
