@@ -1691,6 +1691,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $field_mapping = [
       'search_api_relevance' => 'score',
       'search_api_random' => 'random',
+      'boost_document' => 'boost_document',
     ];
 
     // Add the names of any fields configured on the index.
