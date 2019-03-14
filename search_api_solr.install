@@ -920,7 +920,7 @@ function search_api_solr_update_8309() {
 }
 
 /**
- * Enable language-specific collations
+ * Enable language-specific collations.
  */
 function search_api_solr_update_8310()
 {
@@ -952,4 +952,44 @@ function search_api_solr_update_8310()
 
     search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
   }
+}
+
+/**
+ * Add the Polish diacritics to the language configs.
+ */
+function search_api_solr_update_8311() {
+  $accents = <<<ACCENTS
+    # Ą => A
+    "\u0104" => "A"
+    # Ć => C
+    "\u0106" => "C"
+    # Ę => E
+    "\u0118" => "E"
+    # Ł => L
+    "\u0141" => "L"
+    # Ń => N
+    "\u0143" => "N"
+    # Ś => S
+    "\u015a" => "S"
+    # Ź => Z
+    "\u0179" => "Z"
+    # Ż => Z
+    "\u017b" => "Z"
+
+ACCENTS;
+
+  foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+    if (!empty($field_type_config['text_files']['accents'])) {
+      if ('pl' == $field_type_config['field_type_language_code']) {
+        continue;
+      }
+      if (strpos($field_type_config['text_files']['accents'], '\u0104') !== FALSE) {
+        continue;
+      }
+      $field_type_config['text_files']['accents'] = $field_type_config['text_files']['accents'] . $accents;
+    }
+
+    search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
+  }
+
 }

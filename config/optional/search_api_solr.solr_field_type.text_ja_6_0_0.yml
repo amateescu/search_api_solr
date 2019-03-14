@@ -58,8 +58,6 @@ spellcheck_field_type:
     filters:
       -
         class: solr.CJKWidthFilterFactory
-        min: 2
-        max: 100
 collated_field_type:
   name: collated_ja
   class: solr.ICUCollationField
