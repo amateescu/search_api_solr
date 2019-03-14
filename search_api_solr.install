@@ -955,7 +955,9 @@ function search_api_solr_update_8310()
 }
 
 /**
- * Add the Polish diacritics to the language configs.
+ * Add the Polish diacritics to the language configs. Unset the obsolete min and
+ * max parameters from the CJKWidthFilter of the spellchecker (mainly for
+ * Japanese).
  */
 function search_api_solr_update_8311() {
   $accents = <<<ACCENTS
@@ -987,6 +989,23 @@ ACCENTS;
         continue;
       }
       $field_type_config['text_files']['accents'] = $field_type_config['text_files']['accents'] . $accents;
+    }
+
+    if (!empty($field_type_config['spellcheck_field_type'])) {
+      foreach ($field_type_config['spellcheck_field_type'] as &$components) {
+        if (is_array($components)) {
+          foreach ($components as &$analyzer) {
+            if (is_array($analyzer)) {
+              foreach ($analyzer as &$filters) {
+                if (is_array($filters) && 'solr.CJKWidthFilterFactory' == $filters['class']) {
+                  unset($filters['min']);
+                  unset($filters['max']);
+                }
+              }
+            }
+          }
+        }
+      }
     }
 
     search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
