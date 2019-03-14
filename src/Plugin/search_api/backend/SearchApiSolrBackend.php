@@ -3691,7 +3691,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $solarium_query = $connector->getMoreLikeThisQuery();
     $mlt_options = $query->getOption('search_api_mlt');
     $language_ids = $query->getLanguages();
-    $field_names = $this->getSolrFieldNamesKeyedByLanguage($language_ids);
+    $field_names = $this->getSolrFieldNamesKeyedByLanguage($language_ids, $query->getIndex());
 
     $ids = [];
     foreach ($query->getIndex()->getDatasources() as $datasource) {
