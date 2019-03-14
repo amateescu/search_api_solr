@@ -6,6 +6,7 @@ use Drupal\Core\Config\ConfigCrudEvent;
 use Drupal\Core\Config\ConfigEvents;
 use Drupal\Core\Config\ConfigInstallerInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -69,8 +70,10 @@ class ConfigSubscriber implements EventSubscriberInterface {
         }
       }
     }
-
-    // @todo alert to trigger new config when an index is added => context
+    elseif (preg_match('@^search_api_solr\.solr_field_type\..+@', $saved_config->getName(), $matches)) {
+      \Drupal::messenger()
+        ->addMessage(t("A new Solr field type has been installed due to configuration changes. It is advisable to download and deploy an updated config.zip to your Solr server."), MessengerInterface::TYPE_WARNING);
+    }
   }
 
 }
