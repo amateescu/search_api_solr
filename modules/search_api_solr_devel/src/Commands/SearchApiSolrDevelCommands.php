@@ -57,7 +57,7 @@ class SearchApiSolrDevelCommands extends DrushCommands {
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    * @throws \Drupal\search_api\SearchApiException
    */
-  public function getServerConfig($server_id) {
+  public function deleteAll($server_id) {
     if ($server = reset($this->commandHelper->loadServers([$server_id]))) {
       $backend = $server->getBackend();
       if ($backend instanceof SolrBackendInterface) {
@@ -71,7 +71,7 @@ class SearchApiSolrDevelCommands extends DrushCommands {
       }
     }
     else {
-      throw new SearchApiException("The given server ID doesn't exists.");
+      throw new SearchApiException("The given server ID doesn't exist.");
     }
   }
 
