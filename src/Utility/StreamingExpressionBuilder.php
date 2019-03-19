@@ -294,6 +294,7 @@ class StreamingExpressionBuilder extends Expression {
    *   A list of all Solr field names for the index.
    */
   public function _all_doc_value_fields_list(string $delimiter = ',', bool $include_sorts = TRUE, array $blacklist = [], string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
+    $blacklist = array_merge($blacklist, ['search_api_relevance', 'search_api_random']);
     return implode($delimiter, array_diff_key(
       // All sort fields have docValues.
       ($include_sorts ? array_merge($this->all_doc_value_fields_mapped[$language_id], $this->sort_fields_mapped[$language_id]) : $this->all_doc_value_fields_mapped[$language_id]),
