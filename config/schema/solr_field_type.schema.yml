@@ -1,4 +1,4 @@
- search_api_solr.solr_field_type.*:
+search_api_solr.solr_field_type.*:
   type: config_entity
   label: 'Solr Field Type Config'
   mapping:
