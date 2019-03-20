@@ -205,6 +205,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       $xml .= $solr_field_type->getFieldTypeAsXml();
       $xml .= $solr_field_type->getSpellcheckFieldTypeAsXml();
       $xml .= $solr_field_type->getCollatedFieldTypeAsXml();
+      $xml .= $solr_field_type->getUnstemmedFieldTypeAsXml();
     }
     return $xml;
   }
@@ -230,6 +231,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
         }
         $xml .= "/>\n";
       }
+
       foreach ($solr_field_type->getCopyFields() as $copy_field) {
         $xml .= '<copyField ';
         foreach ($copy_field as $attribute => $value) {

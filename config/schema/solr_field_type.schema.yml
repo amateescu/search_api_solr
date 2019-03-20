@@ -1,4 +1,4 @@
-search_api_solr.solr_field_type.*:
+ search_api_solr.solr_field_type.*:
   type: config_entity
   label: 'Solr Field Type Config'
   mapping:
@@ -22,62 +22,9 @@ search_api_solr.solr_field_type.*:
       sequence:
         type: string
     field_type:
-      type: mapping
-      mapping:
-        name:
-          type: string
-          label: 'The Solr field name'
-        class:
-          type: string
-          label: 'The Solr field type'
-        positionIncrementGap:
-          type: integer
-          label: 'Solr field attribute positionIncrementGap'
-        analyzers:
-          type: sequence
-          sequence:
-            type: mapping
-            mapping:
-              type:
-                type: string
-                label: 'The analyzer type'
-              charFilters:
-                type: sequence
-                nullable : true
-                sequence:
-                  type: mapping
-                  mapping:
-                    class:
-                      type: string
-                      label: 'The char filter class'
-                    mapping:
-                      type: string
-                      label: 'The char filter mapping file name'
-                      nullable: true
-              tokenizer:
-                type: mapping
-                mapping:
-                  class:
-                    type: string
-                    label: 'The tokenizer class'
-                  pattern:
-                    type: string
-                    label: 'SimplePatternSplitTokenizer::'
-              filters:
-                type: search_api_solr.solr_field_type_filters
-        similarity:
-          type: mapping
-          nullable: true
-          mapping:
-            class:
-              type: string
-              label: 'The similarity class'
-            str:
-              type: search_api_solr.solr_field_type_scalar_values
-            int:
-              type: search_api_solr.solr_field_type_scalar_values
-            float:
-              type: search_api_solr.solr_field_type_scalar_values
+      type: search_api_solr.solr_common_field_type
+    unstemmed_field_type:
+      type: search_api_solr.solr_common_field_type
     spellcheck_field_type:
       type: mapping
       nullable: true
@@ -180,6 +127,64 @@ search_api_solr.solr_field_type.*:
         nouns:
           type: string
           label: 'Nouns'
+
+search_api_solr.solr_common_field_type:
+  type: mapping
+  mapping:
+    name:
+      type: string
+      label: 'The Solr field name'
+    class:
+      type: string
+      label: 'The Solr field type'
+    positionIncrementGap:
+      type: integer
+      label: 'Solr field attribute positionIncrementGap'
+    analyzers:
+      type: sequence
+      sequence:
+        type: mapping
+        mapping:
+          type:
+            type: string
+            label: 'The analyzer type'
+          charFilters:
+            type: sequence
+            nullable : true
+            sequence:
+              type: mapping
+              mapping:
+                class:
+                  type: string
+                  label: 'The char filter class'
+                mapping:
+                  type: string
+                  label: 'The char filter mapping file name'
+                  nullable: true
+          tokenizer:
+            type: mapping
+            mapping:
+              class:
+                type: string
+                label: 'The tokenizer class'
+              pattern:
+                type: string
+                label: 'SimplePatternSplitTokenizer::'
+          filters:
+            type: search_api_solr.solr_field_type_filters
+    similarity:
+      type: mapping
+      nullable: true
+      mapping:
+        class:
+          type: string
+          label: 'The similarity class'
+        str:
+          type: search_api_solr.solr_field_type_scalar_values
+        int:
+          type: search_api_solr.solr_field_type_scalar_values
+        float:
+          type: search_api_solr.solr_field_type_scalar_values
 
 search_api_solr.solr_field_type_filters:
   type: sequence

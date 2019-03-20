@@ -84,6 +84,13 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   protected $collated_field_type = NULL;
 
   /**
+   * Solr Unstemmed Field Type definition.
+   *
+   * @var  array
+   */
+  protected $unstemmed_field_type = NULL;
+
+  /**
    * The custom code targeted by this Solr Field Type.
    *
    * @var string
@@ -144,6 +151,13 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   public function getCollatedFieldType() {
     return $this->collated_field_type;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getUnstemmedFieldType() {
+    return $this->unstemmed_field_type;
   }
 
   /**
@@ -263,22 +277,6 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFieldTypeAsXml($add_comment = TRUE) {
-    $formatted_xml_string = $this->buildXmlFromArray('fieldType', $this->field_type);
-
-    $comment = '';
-    if ($add_comment) {
-      $comment = "<!--\n  " . $this->label() . "\n  " .
-        $this->getMinimumSolrVersion() .
-        "\n-->\n";
-    }
-
-    return $comment . $formatted_xml_string;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getSpellcheckFieldTypeAsJson(bool $pretty = FALSE) {
     if ($this->spellcheck_field_type) {
       return $pretty ?
@@ -321,18 +319,10 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   /**
    * {@inheritdoc}
    */
-  public function getSpellcheckFieldTypeAsXml($add_comment = TRUE) {
-    if ($this->spellcheck_field_type) {
-      $formatted_xml_string = $this->buildXmlFromArray('fieldType', $this->spellcheck_field_type);
-
-      $comment = '';
-      if ($add_comment) {
-        $comment = "<!--\n  " . $this->label() . " Spellcheck\n  " .
-          $this->getMinimumSolrVersion() .
-          "\n-->\n";
-      }
-
-      return $comment . $formatted_xml_string;
+  public function getUnstemmedFieldTypeAsJson(bool $pretty = FALSE) {
+    if ($this->unstemmed_field_type) {
+      return $pretty ?
+        json_encode($this->unstemmed_field_type, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) : Json::encode($this->unstemmed_field_type);
     }
 
     return '';
@@ -341,22 +331,65 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   /**
    * {@inheritdoc}
    */
+  public function setUnstemmedFieldTypeAsJson($unstemmed_field_type) {
+    $this->unstemmed_field_type = Json::decode($unstemmed_field_type);
+
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldTypeAsXml($add_comment = TRUE) {
+    return $this->getSubFieldTypeAsXml($this->field_type);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSpellcheckFieldTypeAsXml($add_comment = TRUE) {
+    return $this->spellcheck_field_type ?
+      $this->getSubFieldTypeAsXml($this->spellcheck_field_type, ' Spellcheck') : '';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCollatedFieldTypeAsXml($add_comment = TRUE) {
-    if ($this->collated_field_type) {
-      $formatted_xml_string = $this->buildXmlFromArray('fieldType', $this->collated_field_type);
+    return $this->collated_field_type ?
+      $this->getSubFieldTypeAsXml($this->collated_field_type, 'c ollated') : '';
+  }
 
-      $comment = '';
-      if ($add_comment) {
-        $comment = "<!--\n  " . $this->label() . " collated\n  " .
-          $this->getMinimumSolrVersion() .
-          "\n-->\n";
-      }
+  /**
+   * {@inheritdoc}
+   */
+  public function getUnstemmedFieldTypeAsXml($add_comment = TRUE) {
+    return $this->unstemmed_field_type ?
+      $this->getSubFieldTypeAsXml($this->unstemmed_field_type, ' unstemmed') : '';
+  }
 
-      return $comment . $formatted_xml_string;
+  /**
+   * Serializes a filed type as XML fragment as required by Solr.
+   *
+   * @param array $field_type
+   * @param string $additional_label
+   * @param bool $add_comment
+   *
+   * @return string
+   */
+  protected function getSubFieldTypeAsXml(array $field_type, string $additional_label = '', bool $add_comment = TRUE) {
+    $formatted_xml_string = $this->buildXmlFromArray('fieldType', $field_type);
+
+    $comment = '';
+    if ($add_comment) {
+      $comment = "<!--\n  " . $this->label() . ' ' . $additional_label . "\n  " .
+        $this->getMinimumSolrVersion() .
+        "\n-->\n";
     }
 
-    return '';
+    return $comment . $formatted_xml_string;
   }
+
 
   /**
    * Formats a given array to an XML string.
@@ -451,14 +484,18 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   public function getDynamicFields() {
     $dynamic_fields = [];
 
-    $prefixes = $this->custom_code ? ['tc' . $this->custom_code, 'toc' . $this->custom_code] : ['t', 'to'];
+    $prefixes = $this->custom_code ? [
+      'tc' . $this->custom_code,
+      'toc' . $this->custom_code,
+      'tuc' . $this->custom_code,
+    ] : ['t', 'to', 'tu'];
     foreach ($prefixes as $prefix_without_cardinality) {
       foreach (['s', 'm'] as $cardinality) {
         $prefix = $prefix_without_cardinality . $cardinality;
         $name = $prefix . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $this->field_type_language_code . '_';
         $dynamic_fields[] = $dynamic_field = [
           'name' => SearchApiSolrUtility::encodeSolrName($name) . '*',
-          'type' => $this->field_type['name'],
+          'type' => ((strpos($prefix, 'tu') === 0 && !empty($this->unstemmed_field_type)) ? $this->unstemmed_field_type['name'] : $this->field_type['name']),
           'stored' => TRUE,
           'indexed' => TRUE,
           'multiValued' => ('m' === $cardinality),

@@ -91,6 +91,82 @@ field_type:
         -
           class: solr.CzechStemFilterFactory
         -
+          class: solr.RemoveDuplicatesTokenFilterFactor
+unstemmed_field_type:
+  name: text_unstemmed_cs
+  class: solr.TextField
+  positionIncrementGap: 100
+  analyzers:
+    -
+      type: index
+      charFilters:
+        -
+          class: solr.MappingCharFilterFactory
+          mapping: accents_cs.txt
+      tokenizer:
+        class: solr.WhitespaceTokenizerFactory
+      filters:
+        -
+          class: solr.WordDelimiterFilterFactory
+          protected: protwords_cs.txt
+          # If non-zero, splits words at delimiters. For example:"CamelCase", "hot-spot" -> "Camel", "Case", "hot", "spot"
+          generateWordParts: 1
+          # If non-zero, splits numeric strings at delimiters:"1947-32" -> "1947", "32"
+          generateNumberParts: 1
+          splitOnCaseChange: 0
+          splitOnNumerics: 1
+          catenateWords: 1
+          catenateNumbers: 1
+          catenateAll: 0
+          stemEnglishPossessive: 0
+          preserveOriginal: 1
+        -
+          class: solr.LengthFilterFactory
+          min: 2
+          max: 100
+        -
+          class: solr.LowerCaseFilterFactory
+        -
+          class: solr.StopFilterFactory
+          ignoreCase: true
+          words: stopwords_cs.txt
+        -
+          class: solr.RemoveDuplicatesTokenFilterFactory
+    -
+      type: query
+      charFilters:
+        -
+          class: solr.MappingCharFilterFactory
+          mapping: accents_cs.txt
+      tokenizer:
+        class: solr.WhitespaceTokenizerFactory
+      filters:
+        -
+          class: solr.WordDelimiterFilterFactory
+          catenateNumbers: 0
+          generateNumberParts: 1
+          protected: protwords_cs.txt
+          splitOnCaseChange: 0
+          generateWordParts: 1
+          preserveOriginal: 1
+          catenateAll: 0
+          catenateWords: 0
+        -
+          class: solr.LengthFilterFactory
+          min: 2
+          max: 100
+        -
+          class: solr.LowerCaseFilterFactory
+        -
+          class: solr.SynonymFilterFactory
+          synonyms: synonyms_cs.txt
+          expand: true
+          ignoreCase: true
+        -
+          class: solr.StopFilterFactory
+          ignoreCase: true
+          words: stopwords_cs.txt
+        -
           class: solr.RemoveDuplicatesTokenFilterFactory
 spellcheck_field_type:
   name: text_spell_cs

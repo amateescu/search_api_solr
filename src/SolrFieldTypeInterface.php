@@ -205,6 +205,58 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
   public function getCollatedFieldTypeAsXml($add_comment = TRUE);
 
   /**
+   * Gets the Solr Unstemmed Field Type definition as nested associative array.
+   *
+   * @return array|NULL
+   *   The Solr Unstemmed Field Type definition as nested associative array or
+   *   NULL if it doesn't exist.
+   */
+  public function getUnstemmedFieldType();
+
+  /**
+   * Gets the Solr Unstemmed Field Type definition as JSON.
+   *
+   * The JSON format is used to interact with a managed Solr schema.
+   *
+   * @param bool $pretty
+   *   Return pretty printed JSON.
+   *
+   * @return string
+   *   The Solr Unstemmed Field Type definition as JSON.
+   */
+  public function getUnstemmedFieldTypeAsJson(bool $pretty = FALSE);
+
+  /**
+   * Sets the Solr Unstemmed Field Type definition as JSON.
+   *
+   * Decodes the Solr Field Type definition encoded as JSON and stores an
+   * nested associative array internally. This method in useful to import a
+   * field type from an existing Solr server.
+   *
+   * @param string $unstemmed_field_type
+   *   The Solr Unstemmed Field Type definition as JSON, might be empty if it
+   *   doesn't exist.
+   *
+   * @return $this
+   */
+  public function setUnstemmedFieldTypeAsJson($unstemmed_field_type);
+
+  /**
+   * Gets the Solr Unstemmed Field Type definition as XML fragment.
+   *
+   * The XML format is used as part of classic Solr schema.
+   *
+   * @param bool $add_comment
+   *   Wether to add a comment to the XML or not to explain the purpose of this
+   *   Solr Field Type.
+   *
+   * @return string
+   *    The Solr Unstemmed Field Type definition as XML, might be empty if it
+   *    doesn't exist.
+   */
+  public function getUnstemmedFieldTypeAsXml($add_comment = TRUE);
+
+  /**
    * Gets a list of dynamic Solr fields that will use this Solr Field Type.
    *
    * @return array

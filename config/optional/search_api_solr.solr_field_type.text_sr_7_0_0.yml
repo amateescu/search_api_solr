@@ -96,6 +96,80 @@ field_type:
           haircut: bald
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
+unstemmed_field_type:
+  name: text_unstemmed_sr
+  class: solr.TextField
+  positionIncrementGap: 100
+  analyzers:
+    -
+      type: index
+      charFilters:
+        -
+          class: solr.MappingCharFilterFactory
+          mapping: accents_sr.txt
+      tokenizer:
+        class: solr.WhitespaceTokenizerFactory
+      filters:
+        -
+          class: solr.WordDelimiterGraphFilterFactory
+          catenateNumbers: 0
+          generateNumberParts: 0
+          protected: protwords_sr.txt
+          splitOnCaseChange: 1
+          generateWordParts: 1
+          preserveOriginal: 1
+          catenateAll: 0
+          catenateWords: 0
+        -
+          class: solr.LowerCaseFilterFactory
+        -
+          class: solr.StopFilterFactory
+          ignoreCase: true
+          words: stopwords_sr.txt
+        -
+          class: solr.SerbianNormalizationFilterFactory
+          haircut: bald
+        -
+          class: solr.RemoveDuplicatesTokenFilterFactory
+    -
+      type: query
+      charFilters:
+        -
+          class: solr.MappingCharFilterFactory
+          mapping: accents_sr.txt
+      tokenizer:
+        class: solr.WhitespaceTokenizerFactory
+      filters:
+        -
+          class: solr.WordDelimiterGraphFilterFactory
+          catenateNumbers: 0
+          generateNumberParts: 0
+          protected: protwords_sr.txt
+          splitOnCaseChange: 0
+          generateWordParts: 1
+          preserveOriginal: 1
+          catenateAll: 0
+          catenateWords: 0
+        -
+          class: solr.LengthFilterFactory
+          min: 2
+          max: 100
+        -
+          class: solr.LowerCaseFilterFactory
+        -
+          class: solr.StopFilterFactory
+          ignoreCase: true
+          words: stopwords_sr.txt
+        -
+          class: solr.SynonymGraphFilterFactory
+          synonyms: synonyms_sr.txt
+          expand: true
+          ignoreCase: true
+        -
+          class: solr.SerbianNormalizationFilterFactory
+          haircut: bald
+        -
+          class: solr.RemoveDuplicatesTokenFilterFactory
 spellcheck_field_type:
   name: text_spell_sr
   class: solr.TextField
