@@ -25,6 +25,7 @@ search_api_solr.solr_field_type.*:
       type: search_api_solr.solr_common_field_type
     unstemmed_field_type:
       type: search_api_solr.solr_common_field_type
+      nullable: true
     spellcheck_field_type:
       type: mapping
       nullable: true
@@ -43,7 +44,7 @@ search_api_solr.solr_field_type.*:
           mapping:
             charFilters:
               type: sequence
-              nullable : true
+              nullable: true
               sequence:
                 type: mapping
                 mapping:
@@ -150,7 +151,7 @@ search_api_solr.solr_common_field_type:
             label: 'The analyzer type'
           charFilters:
             type: sequence
-            nullable : true
+            nullable: true
             sequence:
               type: mapping
               mapping:
