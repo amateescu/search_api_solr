@@ -349,7 +349,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   public function getSpellcheckFieldTypeAsXml($add_comment = TRUE) {
     return $this->spellcheck_field_type ?
-      $this->getSubFieldTypeAsXml($this->spellcheck_field_type, ' Spellcheck') : '';
+      $this->getSubFieldTypeAsXml($this->spellcheck_field_type, ' spellcheck') : '';
   }
 
   /**
@@ -357,7 +357,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   public function getCollatedFieldTypeAsXml($add_comment = TRUE) {
     return $this->collated_field_type ?
-      $this->getSubFieldTypeAsXml($this->collated_field_type, 'c ollated') : '';
+      $this->getSubFieldTypeAsXml($this->collated_field_type, ' collated') : '';
   }
 
   /**
@@ -382,7 +382,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
 
     $comment = '';
     if ($add_comment) {
-      $comment = "<!--\n  " . $this->label() . ' ' . $additional_label . "\n  " .
+      $comment = "<!--\n  " . $this->label() . $additional_label . "\n  " .
         $this->getMinimumSolrVersion() .
         "\n-->\n";
     }

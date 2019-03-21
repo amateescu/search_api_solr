@@ -1010,52 +1010,6 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
   }
 
   /**
-   * Test generation of Solr configuration files.
-   *
-   * @dataProvider configGenerationDataProvider
-   */
-  public function testConfigGeneration(string $language, array $files) {
-    $server = $this->getServer();
-    $backend_config = $server->getBackendConfig();
-
-    /** @var \Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
-    $list_builder = \Drupal::entityTypeManager()
-      ->getListBuilder('solr_field_type');
-
-    $list_builder->setServer($server);
-
-    $config_files = $list_builder->getConfigFiles();
-
-    foreach ($files as $file_name => $expected_strings) {
-      $this->assertArrayHasKey($file_name, $config_files);
-      foreach ($expected_strings as $string) {
-        $this->assertContains($string, $config_files[$file_name]);
-      }
-    }
-
-    $this->assertContains($server->id(), $config_files['test.txt']);
-    $this->assertNotContains('<jmx />', $config_files['solrconfig_extra.xml']);
-
-    $backend_config['connector_config']['jmx'] = TRUE;
-    // Relative path for official docker image.
-    $backend_config['connector_config']['solr_install_dir'] = '../../../..';
-    $server->setBackendConfig($backend_config);
-    $server->save();
-
-    $config_files = $list_builder->getConfigFiles();
-    $this->assertContains('<jmx />', $config_files['solrconfig_extra.xml']);
-    $this->assertContains('solr.install.dir=../../../..', $config_files['solrcore.properties']);
-
-    // Write files for docker to disk.
-    $solr_major_version = $server->getBackend()->getSolrConnector()->getSolrMajorVersion();
-    if ('7' === $solr_major_version) {
-      foreach ($config_files as $file_name => $content) {
-        file_put_contents(__DIR__ . '/../../solr-conf/' . $solr_major_version . '.x/' . $file_name, $content);
-      }
-    }
-  }
-
-  /**
    * Tests language fallback and language limiting via options.
    */
   public function testLanguageFallbackAndLanguageLimitedByOptions() {
@@ -1276,19 +1230,63 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
   }
 
   /**
+   * Test generation of Solr configuration files.
+   *
+   * @dataProvider configGenerationDataProvider
+   */
+  public function testConfigGeneration(array $files) {
+    $server = $this->getServer();
+    $backend_config = $server->getBackendConfig();
+
+    /** @var \Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
+    $list_builder = \Drupal::entityTypeManager()
+      ->getListBuilder('solr_field_type');
+
+    $list_builder->setServer($server);
+
+    $config_files = $list_builder->getConfigFiles();
+
+    foreach ($files as $file_name => $expected_strings) {
+      $this->assertArrayHasKey($file_name, $config_files);
+      foreach ($expected_strings as $string) {
+        $this->assertContains($string, $config_files[$file_name]);
+      }
+    }
+
+    $this->assertContains($server->id(), $config_files['test.txt']);
+    $this->assertNotContains('<jmx />', $config_files['solrconfig_extra.xml']);
+
+    $backend_config['connector_config']['jmx'] = TRUE;
+    // Relative path for official docker image.
+    $backend_config['connector_config']['solr_install_dir'] = '../../../..';
+    $server->setBackendConfig($backend_config);
+    $server->save();
+
+    $config_files = $list_builder->getConfigFiles();
+    $this->assertContains('<jmx />', $config_files['solrconfig_extra.xml']);
+    $this->assertContains('solr.install.dir=../../../..', $config_files['solrcore.properties']);
+
+    // Write files for docker to disk.
+    $solr_major_version = $server->getBackend()->getSolrConnector()->getSolrMajorVersion();
+    if ('7' === $solr_major_version) {
+      foreach ($config_files as $file_name => $content) {
+        file_put_contents(__DIR__ . '/../../solr-conf/' . $solr_major_version . '.x/' . $file_name, $content);
+      }
+    }
+  }
+
+  /**
    * Data provider for testConfigGeneration method.
    */
   public function configGenerationDataProvider() {
     // @codingStandardsIgnoreStart
-    return [
-      'en' => [
-        'en',
-        [
-          'schema_extra_types.xml' => [
-            # phonetic is currently not available vor Solr 6.x.
-            #'fieldType name="text_phonetic_en" class="solr.TextField"',
-            'fieldType name="text_en" class="solr.TextField"',
-            '<fieldType name="collated_und" class="solr.ICUCollationField" locale="en" strength="primary" caseLevel="false"/>',
+    return [[[
+      'schema_extra_types.xml' => [
+        # phonetic is currently not available vor Solr 6.x.
+        #'fieldType name="text_phonetic_en" class="solr.TextField"',
+        'fieldType name="text_en" class="solr.TextField"',
+        'fieldType name="text_de" class="solr.TextField"',
+        '<fieldType name="collated_und" class="solr.ICUCollationField" locale="en" strength="primary" caseLevel="false"/>',
 '<!--
   Fulltext Foo English
   6.0.0
@@ -1313,96 +1311,73 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
     <float name="mu">900</float>
   </similarity>
 </fieldType>',
-          ],
-          'schema_extra_fields.xml' => [
-            # phonetic is currently not available vor Solr 6.x.
-            #'<dynamicField name="tcphonetics_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
-            #'<dynamicField name="tcphoneticm_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
-            #'<dynamicField name="tocphonetics_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
-            #'<dynamicField name="tocphoneticm_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
-            '<dynamicField name="ts_X3b_en_*" type="text_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
-            '<dynamicField name="tm_X3b_en_*" type="text_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
-            '<dynamicField name="tos_X3b_en_*" type="text_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
-            '<dynamicField name="tom_X3b_en_*" type="text_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
-            '<dynamicField name="tus_X3b_en_*" type="text_unstemmed_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
-            '<dynamicField name="tum_X3b_en_*" type="text_unstemmed_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
-            '<dynamicField name="tus_X3b_und_*" type="text_und" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
-            '<dynamicField name="tum_X3b_und_*" type="text_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
-            '<dynamicField name="tus_*" type="text_und" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
-            '<dynamicField name="tum_*" type="text_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
-            '<dynamicField name="spellcheck_und*" type="text_spell_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
-            '<dynamicField name="spellcheck_*" type="text_spell_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
-            '<dynamicField name="sort_X3b_und_*" type="collated_und" stored="false" indexed="false" docValues="true" />',
-            '<dynamicField name="sort_*" type="collated_und" stored="false" indexed="false" docValues="true" />',
-          ],
-          'solrconfig_extra.xml' => [
-            '<str name="name">en</str>',
-          ],
-          # phonetic is currently not available vor Solr 6.x.
-          #'stopwords_phonetic_en.txt' => [],
-          #'protwords_phonetic_en.txt' => [],
-          'stopwords_en.txt' => [],
-          'synonyms_en.txt' => [
-            'drupal, durpal',
-          ],
-          'protwords_en.txt' => [],
-          'accents_en.txt' => [
-            '"\u00C4" => "A"'
-          ],
-          'solrcore.properties' => [],
-          'elevate.xml' => [],
-          'schema.xml' => [],
-          'solrconfig.xml' => [],
-          'test.txt' => [
-            'hook_search_api_solr_config_files_alter() works'
-          ],
-        ],
       ],
-      'de' => [
-        'de',
-        [
-          'schema_extra_types.xml' => [
-            # phonetic is currently not available vor Solr 6.x.
-            #'fieldType name="text_phonetic_de" class="solr.TextField"',
-            'fieldType name="text_de" class="solr.TextField"',
-          ],
-          'schema_extra_fields.xml' => [
-            # phonetic is currently not available vor Solr 6.x.
-            #'<dynamicField name="tcphonetics_X3b_de_*" type="text_phonetic_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
-            #'<dynamicField name="tcphoneticm_X3b_de_*" type="text_phonetic_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
-            #'<dynamicField name="tocphonetics_X3b_de_*" type="text_phonetic_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
-            #'<dynamicField name="tocphoneticm_X3b_de_*" type="text_phonetic_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
-            '<dynamicField name="ts_X3b_de_*" type="text_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
-            '<dynamicField name="tm_X3b_de_*" type="text_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
-            '<dynamicField name="tos_X3b_de_*" type="text_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
-            '<dynamicField name="tom_X3b_de_*" type="text_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
-            '<dynamicField name="tus_X3b_de_*" type="text_unstemmed_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
-            '<dynamicField name="tum_X3b_de_*" type="text_unstemmed_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
-          ],
-          'solrconfig_extra.xml' => [
-            '<str name="name">de</str>',
-          ],
-          # phonetic is currently not available vor Solr 6.x.
-          #'stopwords_phonetic_de.txt' => [],
-          #'protwords_phonetic_de.txt' => [],
-          'stopwords_de.txt' => [],
-          'synonyms_de.txt' => [
-            'drupal, durpal',
-          ],
-          'protwords_de.txt' => [],
-          'accents_de.txt' => [
-            ' Not needed if German2 Porter stemmer is used.'
-          ],
-          'solrcore.properties' => [],
-          'elevate.xml' => [],
-          'schema.xml' => [],
-          'solrconfig.xml' => [],
-          'test.txt' => [
-            'hook_search_api_solr_config_files_alter() works'
-          ],
-        ],
+      'schema_extra_fields.xml' => [
+        # phonetic is currently not available vor Solr 6.x.
+        #'<dynamicField name="tcphonetics_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
+        #'<dynamicField name="tcphoneticm_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
+        #'<dynamicField name="tocphonetics_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
+        #'<dynamicField name="tocphoneticm_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
+        '<dynamicField name="ts_X3b_en_*" type="text_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
+        '<dynamicField name="tm_X3b_en_*" type="text_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
+        '<dynamicField name="tos_X3b_en_*" type="text_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
+        '<dynamicField name="tom_X3b_en_*" type="text_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
+        '<dynamicField name="tus_X3b_en_*" type="text_unstemmed_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
+        '<dynamicField name="tum_X3b_en_*" type="text_unstemmed_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
+        '<dynamicField name="ts_X3b_und_*" type="text_und" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
+        '<dynamicField name="tm_X3b_und_*" type="text_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
+        '<dynamicField name="tos_X3b_und_*" type="text_und" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
+        '<dynamicField name="tom_X3b_und_*" type="text_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
+        '<dynamicField name="tus_X3b_und_*" type="text_und" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
+        '<dynamicField name="tum_X3b_und_*" type="text_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
+        '<dynamicField name="tus_*" type="text_und" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
+        '<dynamicField name="tum_*" type="text_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
+        '<dynamicField name="ts_X3b_de_*" type="text_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
+        '<dynamicField name="tm_X3b_de_*" type="text_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
+        '<dynamicField name="tos_X3b_de_*" type="text_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
+        '<dynamicField name="tom_X3b_de_*" type="text_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
+        '<dynamicField name="tus_X3b_de_*" type="text_unstemmed_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
+        '<dynamicField name="tum_X3b_de_*" type="text_unstemmed_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
+        '<dynamicField name="spellcheck_en*" type="text_spell_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
+        '<dynamicField name="spellcheck_de*" type="text_spell_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
+        '<dynamicField name="spellcheck_und*" type="text_spell_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
+        '<dynamicField name="spellcheck_*" type="text_spell_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
+        '<dynamicField name="sort_X3b_en_*" type="collated_en" stored="false" indexed="false" docValues="true" />',
+        '<dynamicField name="sort_X3b_de_*" type="collated_de" stored="false" indexed="false" docValues="true" />',
+        '<dynamicField name="sort_X3b_und_*" type="collated_und" stored="false" indexed="false" docValues="true" />',
+        '<dynamicField name="sort_*" type="collated_und" stored="false" indexed="false" docValues="true" />',
       ],
-    ];
+      'solrconfig_extra.xml' => [
+        '<str name="name">en</str>',
+        '<str name="name">de</str>',
+      ],
+      # phonetic is currently not available vor Solr 6.x.
+      #'stopwords_phonetic_en.txt' => [],
+      #'protwords_phonetic_en.txt' => [],
+      'stopwords_en.txt' => [],
+      'synonyms_en.txt' => [
+        'drupal, durpal',
+      ],
+      'protwords_en.txt' => [],
+      'accents_en.txt' => [
+        '"\u00C4" => "A"'
+      ],
+      'stopwords_de.txt' => [],
+      'synonyms_de.txt' => [
+        'drupal, durpal',
+      ],
+      'protwords_de.txt' => [],
+      'accents_de.txt' => [
+        ' Not needed if German2 Porter stemmer is used.'
+      ],
+      'solrcore.properties' => [],
+      'elevate.xml' => [],
+      'schema.xml' => [],
+      'solrconfig.xml' => [],
+      'test.txt' => [
+        'hook_search_api_solr_config_files_alter() works'
+      ],
+    ]]];
     // @codingStandardsIgnoreEnd
   }
 
