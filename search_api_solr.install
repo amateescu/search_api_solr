@@ -1120,3 +1120,37 @@ function search_api_solr_update_8312() {
     }
   }
 }
+
+/**
+ * Distinguish between simplified and traditional Chinese.
+ **/
+function search_api_solr_update_8313() {
+  foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+    if ('zh-hans' == $field_type_config['field_type_language_code']) {
+      if (!empty($field_type_config['field_type'])) {
+        foreach ($field_type_config['field_type'] as &$components) {
+          if (is_array($components)) {
+            foreach ($components as &$analyzers) {
+              if ('org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer' != $analyzers['tokenizer']['class']) {
+                $analyzers['tokenizer']['class'] = 'org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer';
+              }
+              foreach ($analyzers['filters'] as &$filter) {
+                if ('solr.CJKBigramFilterFactory' == $filter['class']) {
+                  unset($filter);
+                }
+              }
+            }
+          }
+        }
+      }
+      if (!empty($field_type_config['spellcheck_field_type'])) {
+        foreach ($field_type_config['spellcheck_field_type'] as &$components) {
+          if (is_array($components) && 'org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer' != $components['tokenizer']['class']) {
+            $components['tokenizer']['class'] = 'org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer';
+          }
+        }
+      }
+    }
+    search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
+  }
+}

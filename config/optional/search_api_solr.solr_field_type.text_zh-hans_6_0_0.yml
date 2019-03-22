@@ -19,42 +19,28 @@ field_type:
     -
       type: index
       tokenizer:
-        class: solr.StandardTokenizerFactory
+        class: org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer
       filters:
         -
           class: solr.CJKWidthFilterFactory
         -
           class: solr.LowerCaseFilterFactory
-        -
-          class: solr.CJKBigramFilterFactory
-          han: true
-          hiragana: false
-          katakana: false
-          hangul: false
-          outputUnigrams: false
     -
       type: query
       tokenizer:
-        class: solr.StandardTokenizerFactory
+        class: org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer
       filters:
         -
           class: solr.CJKWidthFilterFactory
         -
           class: solr.LowerCaseFilterFactory
-        -
-          class: solr.CJKBigramFilterFactory
-          han: true
-          hiragana: false
-          katakana: false
-          hangul: false
-          outputUnigrams: false
 spellcheck_field_type:
   name: text_spell_zh_hans
   class: solr.TextField
   positionIncrementGap: 100
   analyzer:
     tokenizer:
-      class: solr.StandardTokenizerFactory
+      class: org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer
     filters:
       -
         class: solr.CJKWidthFilterFactory
