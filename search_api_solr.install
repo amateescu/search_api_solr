@@ -1134,9 +1134,9 @@ function search_api_solr_update_8313() {
               if ('org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer' != $analyzers['tokenizer']['class']) {
                 $analyzers['tokenizer']['class'] = 'org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer';
               }
-              foreach ($analyzers['filters'] as &$filter) {
+              foreach ($analyzers['filters'] as $key => $filter) {
                 if ('solr.CJKBigramFilterFactory' == $filter['class']) {
-                  unset($filter);
+                  unset($analyzers['filters'][$key]);
                 }
               }
             }
