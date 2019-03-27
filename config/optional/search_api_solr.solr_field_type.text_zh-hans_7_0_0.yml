@@ -6,9 +6,9 @@ dependencies:
     - language
   config:
     - language.entity.zh-hans
-id: text_zh-hans_6_0_0
+id: text_zh-hans_7_0_0
 label: 'Chinese Text Field'
-minimum_solr_version: 6.0.0
+minimum_solr_version: 7.0.0
 field_type_language_code: zh-hans
 domains: { }
 field_type:
