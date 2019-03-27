@@ -85,7 +85,7 @@ field_type:
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
 unstemmed_field_type:
-  name: text_it
+  name: text_unstemmed_it
   class: solr.TextField
   positionIncrementGap: 100
   analyzers:
