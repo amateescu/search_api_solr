@@ -136,7 +136,8 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    * {@inheritdoc}
    */
   public function setFieldType(array $field_type) {
-    return $this->field_type = $field_type;
+    $this->field_type = $field_type;
+    return $this;
   }
 
   /**
@@ -149,6 +150,14 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   /**
    * {@inheritdoc}
    */
+  public function setSpellcheckFieldType(array $spellcheck_field_type) {
+    $this->spellcheck_field_type = $spellcheck_field_type;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCollatedFieldType() {
     return $this->collated_field_type;
   }
@@ -156,8 +165,24 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   /**
    * {@inheritdoc}
    */
+  public function setCollatedFieldType(array $collated_field_type) {
+    $this->collated_field_type = $collated_field_type;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getUnstemmedFieldType() {
     return $this->unstemmed_field_type;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUnstemmedFieldType(array $unstemmed_field_type) {
+    $this->unstemmed_field_type = $unstemmed_field_type;
+    return $this;
   }
 
   /**
@@ -464,6 +489,13 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   /**
    * {@inheritdoc}
    */
+  public function setSolrConfigs(array $solr_configs) {
+    return $this->solr_configs = $solr_configs;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getSolrConfigsAsXml($add_comment = TRUE) {
     $formatted_xml_string = $this->buildXmlFromArray('solrconfigs', $this->solr_configs);
 
@@ -637,6 +669,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   public function addTextFile($name, $content) {
     $this->text_files[$name] = preg_replace('/\R/u', "\n", $content);
+    return $this;
   }
 
   /**
@@ -647,6 +680,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     foreach ($text_files as $name => $content) {
       $this->addTextFile($name, $content);
     }
+    return $this;
   }
 
   /**
@@ -679,6 +713,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   public function setMinimumSolrVersion($minimum_solr_version) {
     $this->minimum_solr_version = $minimum_solr_version;
+    return $this;
   }
 
   /**

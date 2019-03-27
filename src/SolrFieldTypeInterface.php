@@ -55,7 +55,7 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    * @param array $field_type
    *   The Solr Field Type definition as nested associative array.
    *
-   * @return $this
+   * @return self
    */
   public function setFieldType(array $field_type);
 
@@ -82,7 +82,7 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    * @param string $field_type
    *   The Solr Field Type definition as JSON.
    *
-   * @return $this
+   * @return self
    */
   public function setFieldTypeAsJson($field_type);
 
@@ -110,6 +110,16 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
   public function getSpellcheckFieldType();
 
   /**
+   * Sets the Solr Spellcheck Field Type definition as nested associative array.
+   *
+   * @param array $spellcheck_field_type
+   *   The Solr SpellcheckField Type definition as nested associative array.
+   *
+   * @return self
+   */
+  public function setSpellcheckFieldType(array $spellcheck_field_type);
+
+  /**
    * Gets the Solr Spellcheck Field Type definition as JSON.
    *
    * The JSON format is used to interact with a managed Solr schema.
@@ -133,7 +143,7 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    *   The Solr Spellcheck Field Type definition as JSON, might be empty if it
    *   doesn't exist.
    *
-   * @return $this
+   * @return self
    */
   public function setSpellcheckFieldTypeAsJson($spellcheck_field_type);
 
@@ -162,6 +172,16 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
   public function getCollatedFieldType();
 
   /**
+   * Sets the Solr Collated Field Type definition as nested associative array.
+   *
+   * @param array $collated_field_type
+   *   The Solr Collated Type definition as nested associative array.
+   *
+   * @return self
+   */
+  public function setCollatedFieldType(array $collated_field_type);
+
+  /**
    * Gets the Solr Collated Field Type definition as JSON.
    *
    * The JSON format is used to interact with a managed Solr schema.
@@ -185,7 +205,7 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    *   The Solr Spellcheck Field Type definition as JSON, might be empty if it
    *   doesn't exist.
    *
-   * @return $this
+   * @return self
    */
   public function setCollatedFieldTypeAsJson($collated_field_type);
 
@@ -214,6 +234,16 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
   public function getUnstemmedFieldType();
 
   /**
+   * Sets the Solr Unstemmed Field Type definition as nested associative array.
+   *
+   * @param array $unstemmed_field_type
+   *   The Solr Unstemmed Field Type definition as nested associative array.
+   *
+   * @return self
+   */
+  public function setUnstemmedFieldType(array $unstemmed_field_type);
+
+  /**
    * Gets the Solr Unstemmed Field Type definition as JSON.
    *
    * The JSON format is used to interact with a managed Solr schema.
@@ -237,7 +267,7 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    *   The Solr Unstemmed Field Type definition as JSON, might be empty if it
    *   doesn't exist.
    *
-   * @return $this
+   * @return self
    */
   public function setUnstemmedFieldTypeAsJson($unstemmed_field_type);
 
@@ -290,6 +320,17 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
   public function getSolrConfigs();
 
   /**
+   * Sets the Solr Field Type specific additions to solrconfig.xml as array.
+   *
+   * @param array $solr_configs
+   *   The Solr Field Type specific additions to solrconfig.xml as nested
+   *   associative array.
+   *
+   * @return self
+   */
+  public function setSolrConfigs(array $solr_configs);
+
+  /**
    * Gets the Solr Field Type specific additions to solrconfig.xml as XML.
    *
    * The XML format is used as part of a classic Solr solrconf.xml.
@@ -327,6 +368,8 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    * @param array $text_files
    *   An associative array using the file names as keys and the file contents
    *   as values.
+   *
+   * @return self
    */
   public function setTextFiles(array $text_files);
 
@@ -351,6 +394,8 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    *
    * @param string $minimum_solr_version
    *   A Solr version string.
+   *
+   * @return self
    */
   public function setMinimumSolrVersion($minimum_solr_version);
 

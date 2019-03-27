@@ -105,6 +105,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       $entity_ids = $this->getEntityIds();
       /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $storage */
       $storage = $this->getStorage();
+      /** @var \Drupal\search_api_solr\Entity\SolrFieldType[] $entities */
       $entities = $storage->loadMultipleOverrideFree($entity_ids);
 
       // We filter those field types that are relevant for the current server.
@@ -133,6 +134,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
               // A newer version of the current selection domain is found.
               (version_compare($version, $selection[$name]['version'], $operator) && in_array($selection[$name]['domain'], $domains))
             ) {
+              $this->mergeFieldTypes($entities[$key], $entities[$selection[$name]['key']]);
               unset($entities[$selection[$name]['key']]);
               $selection[$name] = [
                 'version' => $version,
@@ -141,6 +143,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
               ];
             }
             else {
+              $this->mergeFieldTypes($entities[$selection[$name]['key']], $entities[$key]);
               unset($entities[$key]);
             }
           }
@@ -175,6 +178,28 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     }
 
     return $entities;
+  }
+
+  /**
+   * @param \Drupal\search_api_solr\SolrFieldTypeInterface $target
+   * @param \Drupal\search_api_solr\SolrFieldTypeInterface $source
+   */
+  protected function mergeFieldTypes($target, $source) {
+    if (empty($target->getCollatedFieldType()) && !empty($source->getCollatedFieldType())) {
+      $target->setCollatedFieldType($source->getCollatedFieldType());
+    }
+    if (empty($target->getSpellcheckFieldType()) && !empty($source->getSpellcheckFieldType())) {
+      $target->setSpellcheckFieldType($source->getSpellcheckFieldType());
+    }
+    if (empty($target->getUnstemmedFieldType()) && !empty($source->getUnstemmedFieldType())) {
+      $target->setUnstemmedFieldType($source->getUnstemmedFieldType());
+    }
+    if (empty($target->getSolrConfigs()) && !empty($source->getSolrConfigs())) {
+      $target->setSolrConfigs($source->getSolrConfigs());
+    }
+    if (empty($target->getTextFiles()) && !empty($source->getTextFiles())) {
+      $target->setTextFiles($source->getTextFiles());
+    }
   }
 
   /**
