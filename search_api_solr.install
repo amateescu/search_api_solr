@@ -939,7 +939,7 @@ function search_api_solr_update_8308() {
 }
 
 /**
- * Use solarium 4.3.
+ * Use solarium 4.3. Warning! If you have overwritten the connection settings, don't forget to adjust the 'path'. See the release notes for details.
  */
 function search_api_solr_update_8309() {
   // Remove the V1 API endpoint from the path.
@@ -1039,22 +1039,22 @@ function search_api_solr_update_8310() {
  */
 function search_api_solr_update_8311() {
   $accents = <<<ACCENTS
-    # Ą => A
-    "\u0104" => "A"
-    # Ć => C
-    "\u0106" => "C"
-    # Ę => E
-    "\u0118" => "E"
-    # Ł => L
-    "\u0141" => "L"
-    # Ń => N
-    "\u0143" => "N"
-    # Ś => S
-    "\u015a" => "S"
-    # Ź => Z
-    "\u0179" => "Z"
-    # Ż => Z
-    "\u017b" => "Z"
+# Ą => A
+"\u0104" => "A"
+# Ć => C
+"\u0106" => "C"
+# Ę => E
+"\u0118" => "E"
+# Ł => L
+"\u0141" => "L"
+# Ń => N
+"\u0143" => "N"
+# Ś => S
+"\u015a" => "S"
+# Ź => Z
+"\u0179" => "Z"
+# Ż => Z
+"\u017b" => "Z"
 
 ACCENTS;
 

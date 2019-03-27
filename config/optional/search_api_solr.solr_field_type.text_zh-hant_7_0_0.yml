@@ -64,7 +64,6 @@ collated_field_type:
   name: collated_zh-hant
   class: solr.ICUCollationField
   locale: zh-hant
-  #2869146 by mkalkbrenner, archana_prasad: Support language specific collations
   strength: primary
   caseLevel: false
 solr_configs:
