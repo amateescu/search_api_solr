@@ -1154,3 +1154,26 @@ function search_api_solr_update_8313() {
     search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
   }
 }
+
+/**
+ * Enable language-unspecific collation.
+ */
+function search_api_solr_update_8314() {
+  foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+    if (
+      empty($field_type_config['collated_field_type']) &&
+      !empty($field_type_config['spellcheck_field_type']) &&
+      \Drupal\Core\Language\LanguageInterface::LANGCODE_NOT_SPECIFIED == $field_type_config['field_type_language_code']
+    ) {
+      $field_type_config['collated_field_type'] = [
+        'name' => 'collated_' . $field_type_config['field_type_language_code'],
+        'class' => 'solr.ICUCollationField',
+        'locale' => 'en',
+        'strength' => 'primary',
+        'caseLevel' => FALSE,
+      ];
+    }
+
+    search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
+  }
+}
