@@ -3011,10 +3011,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $fl = [];
     $language_ids = $query->getLanguages();
     $field_names = $this->getSolrFieldNamesKeyedByLanguage($language_ids, $query->getIndex());
-    foreach ($this->getQueryFulltextFields($query) as $fulltext_field) {
+    // We explicit allow to get terms from twm_suggest. Therefore we call
+    // parent::getQueryFulltextFields() to not filter twm_suggest.
+    foreach (parent::getQueryFulltextFields($query) as $fulltext_field) {
       $fl = array_merge($fl, array_values($field_names[$fulltext_field]));
     }
-    return $fl;
+    return array_unique($fl);
   }
 
   /**
