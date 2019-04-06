@@ -8,6 +8,8 @@ use Solarium\Component\QueryTraits\SpellcheckTrait;
 use Solarium\Component\QueryTraits\SuggesterTrait;
 use Solarium\Component\QueryTraits\TermsTrait;
 use Solarium\Core\Query\AbstractQuery;
+use Solarium\Core\Query\RequestBuilderInterface;
+use Solarium\Core\Query\ResponseParserInterface;
 
 /**
  * Autocomplete query.
@@ -52,14 +54,14 @@ class Query extends AbstractQuery implements ComponentAwareQueryInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRequestBuilder() {
+  public function getRequestBuilder(): RequestBuilderInterface {
     return new RequestBuilder();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getResponseParser() {
+  public function getResponseParser(): ResponseParserInterface {
     return new ResponseParser();
   }
 
