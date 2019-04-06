@@ -41,6 +41,7 @@ use Drupal\search_api_autocomplete\Suggestion\SuggestionFactory;
 use Drupal\search_api_solr\Entity\SolrFieldType;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\Solarium\Autocomplete\Query as AutocompleteQuery;
+use Drupal\search_api_solr\Solarium\Result\StreamDocument;
 use Drupal\search_api_solr\SolrAutocompleteInterface;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrCloudConnectorInterface;
@@ -59,7 +60,7 @@ use Solarium\QueryType\Stream\Expression;
 use Solarium\QueryType\Update\Query\Query as UpdateQuery;
 use Solarium\QueryType\Select\Query\Query;
 use Solarium\QueryType\Select\Result\Result;
-use Solarium\QueryType\Update\Query\Document\Document;
+use Solarium\QueryType\Update\Query\Document;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -828,7 +829,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $language_id = $item->getLanguage();
       $field_names = $this->getLanguageSpecificSolrFieldNames($language_id, $index);
 
-      /** @var \Solarium\QueryType\Update\Query\Document\Document $doc */
+      /** @var \Solarium\QueryType\Update\Query\Document $doc */
       $doc = $update_query->createDocument();
       $doc->setField('timestamp', $request_time);
       $doc->setField('id', $this->createId($site_hash, $index_id, $id));
@@ -1276,7 +1277,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           }
 
           $solarium_query->setQuery(
-            ((!$this->hasIndexJustSolrDocumentDatasource($index) && (!isset($params['defType']) || 'edismax' != $params['defType'])) ? '{!boost b=boost_document}' : '') .
+            ((!$this->hasIndexJustSolrDocumentDatasource($index) && (!isset($params['defType']) || 'edismax' !== $params['defType'])) ? '{!boost b=boost_document}' : '') .
             ($flatten_keys ?: '*:*')
           );
 
@@ -1292,7 +1293,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $rerank->setQuery("'" . $payload_score . "'");
           }
 
-          if (!isset($params['defType']) || 'edismax' != $params['defType']) {
+          if (!isset($params['defType']) || 'edismax' !== $params['defType']) {
             $solarium_query->removeComponent(ComponentAwareQueryInterface::COMPONENT_EDISMAX);
           }
         }
@@ -1490,7 +1491,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     try {
       $highlight_config = $query->getIndex()->getProcessor('highlight')->getConfiguration();
-      if ($highlight_config['highlight'] != 'never') {
+      if ($highlight_config['highlight'] !== 'never') {
         $this->setHighlighting($solarium_query, $query, $highlight_fields);
       }
     }
@@ -1519,7 +1520,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     $stream = $connector->getStreamQuery();
     $stream->setExpression($stream_expression);
-    $stream->setOptions(['documentclass' => 'Drupal\search_api_solr\Solarium\Result\StreamDocument']);
+    $stream->setOptions(['documentclass' => StreamDocument::class]);
     $this->applySearchWorkarounds($stream, $query);
 
     $result = NULL;
@@ -1982,7 +1983,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * is the same as specified in
    * \Drupal\search_api\Backend\BackendSpecificInterface::indexItems().
    *
-   * @param \Solarium\QueryType\Update\Query\Document\Document $doc
+   * @param \Solarium\QueryType\Update\Query\Document $doc
    *   The Solarium document.
    * @param string $key
    *   The key to use for the field.
@@ -2087,7 +2088,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * This method allows subclasses to easily apply custom changes before the
    * documents are sent to Solr. The method is empty by default.
    *
-   * @param \Solarium\QueryType\Update\Query\Document\Document[] $documents
+   * @param \Solarium\QueryType\Update\Query\Document[] $documents
    *   An array of \Solarium\QueryType\Update\Query\Document\Document objects
    *   ready to be indexed, generated from $items array.
    * @param \Drupal\search_api\IndexInterface $index

@@ -2,13 +2,13 @@
 
 namespace Drupal\search_api_solr\Solarium\Result;
 
-use Solarium\QueryType\Select\Result\AbstractDocument;
-use Solarium\QueryType\Select\Result\ResultDocumentInterface;
+use Solarium\Core\Query\AbstractDocument;
+use Solarium\Core\Query\DocumentInterface;
 
 /**
  * Stream result Solr document.
  */
-class StreamDocument extends AbstractDocument implements ResultDocumentInterface {
+class StreamDocument extends AbstractDocument {
 
   /**
    * Constructor.
@@ -30,7 +30,7 @@ class StreamDocument extends AbstractDocument implements ResultDocumentInterface
    *
    * @return self
    */
-  public function __set($name, $value): ResultDocumentInterface {
+  public function __set($name, $value): DocumentInterface {
     $this->fields[$name] = $value;
 
     return $this;
