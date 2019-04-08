@@ -169,7 +169,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
    */
   public function getTermsQuery() {
     $query = parent::getTermsQuery();
-    return $query->addParam('distrib', TRUE);
+    return $query->setDistrib(TRUE);
   }
 
   /**
@@ -177,7 +177,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
    */
   public function getSpellcheckQuery() {
     $query = parent::getSpellcheckQuery();
-    return $query->addParam('distrib', TRUE);
+    return $query->setDistrib(TRUE);
   }
 
   /**
@@ -185,7 +185,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
    */
   public function getSuggesterQuery() {
     $query = parent::getSuggesterQuery();
-    return $query->addParam('distrib', TRUE);
+    return $query->setDistrib(TRUE);
   }
 
   /**
@@ -193,7 +193,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
    */
   public function getAutocompleteQuery() {
     $query = parent::getAutocompleteQuery();
-    return $query->addParam('distrib', TRUE);
+    return $query->setDistrib(TRUE);
   }
 
   /**
