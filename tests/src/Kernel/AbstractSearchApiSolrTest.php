@@ -1266,8 +1266,10 @@ abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
     $this->assertContains('<jmx />', $config_files['solrconfig_extra.xml']);
     $this->assertContains('solr.install.dir=../../../..', $config_files['solrcore.properties']);
 
-    // Write files for docker to disk.
     $solr_major_version = $server->getBackend()->getSolrConnector()->getSolrMajorVersion();
+    $this->assertContains('solr.luceneMatchVersion=' . $solr_major_version, $config_files['solrcore.properties']);
+
+    // Write files for docker to disk.
     if ('7' === $solr_major_version) {
       foreach ($config_files as $file_name => $content) {
         file_put_contents(__DIR__ . '/../../solr-conf/' . $solr_major_version . '.x/' . $file_name, $content);

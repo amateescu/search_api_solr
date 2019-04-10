@@ -307,6 +307,13 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     $backend = $this->getBackend();
     $connector = $backend->getSolrConnector();
     $solr_branch = $connector->getSolrBranch($this->assumed_minimum_version);
+
+    // Solr 8.x uses the same schema and solrconf as 7.x. So we can use the same
+    // templates and only adjust luceneMatchVersion to 8.
+    if ('8.x' === $solr_branch) {
+      $solr_branch = '7.x';
+    }
+
     $search_api_solr_conf_path = drupal_get_path('module', 'search_api_solr') . '/solr-conf-templates/' . $solr_branch;
     $solrcore_properties = parse_ini_file($search_api_solr_conf_path . '/solrcore.properties', FALSE, INI_SCANNER_RAW);
 

@@ -147,7 +147,7 @@ function hook_search_api_solr_field_mapping_alter(\Drupal\search_api\IndexInterf
 /**
  * Alter Solr documents before they are sent to Solr for indexing.
  *
- * @param \Solarium\QueryType\Update\Query\Document\Document[] $documents
+ * @param \Solarium\QueryType\Update\Query\Document[] $documents
  *   An array of \Solarium\QueryType\Update\Query\Document\Document objects
  *   ready to be indexed, generated from $items array.
  * @param \Drupal\search_api\IndexInterface $index
