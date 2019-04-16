@@ -485,3 +485,14 @@ function search_api_solr_entity_type_alter(array &$entity_types) {
   $entity_types['search_api_index']->setFormClass('solr_multisite_clone', 'Drupal\\search_api_solr\\Form\\IndexSolrMultisiteCloneForm');
   $entity_types['search_api_index']->setFormClass('solr_multisite_update', 'Drupal\\search_api_solr\\Form\\IndexSolrMultisiteUpdateForm');
 }
+
+/**
+ * Implements hook_ENTITY_TYPE_prepare_form().
+ *
+ * Prevent cache usages when editing the entity through a form as we might have
+ * to modify the entity and retrieve e.g. field definitions for the modified
+ * index entity.
+ */
+function search_api_solr_search_api_index_prepare_form(IndexInterface $index) {
+  $index->skipSolrFieldManagerCaches = TRUE;
+}

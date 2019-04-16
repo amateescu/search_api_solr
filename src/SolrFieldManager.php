@@ -56,6 +56,10 @@ class SolrFieldManager implements SolrFieldManagerInterface {
    * {@inheritdoc}
    */
   public function getFieldDefinitions(IndexInterface $index) {
+    if (!empty($index->skipSolrFieldManagerCaches)) {
+      return $this->buildFieldDefinitions($index);
+    }
+
     $index_id = $index->id();
     if (!isset($this->fieldDefinitions[$index_id])) {
       // Not prepared, try to load from cache.

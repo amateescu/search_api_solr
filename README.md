@@ -83,7 +83,7 @@ By default the Highlighting processor provided by Search API uses PHP to create
 highlighted snippets or an excerpt based on the entities loaded from the
 database. Solr itself can do that much better, especially for different
 languages. If you check `Retrieve result data from Solr` and `Highlight
-retrieved data` on the server edit page, the Highlighting processor will use
+retrieved data` on the index edit page, the Highlighting processor will use
 this data directly and bypass it's own logic. To do the highlighting, Solr will
 use the configuration of the Highlighting processor.
 
