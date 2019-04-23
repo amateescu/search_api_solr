@@ -485,12 +485,15 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function getSupportedFeatures() {
     $features = [
+      // Features.
       'search_api_autocomplete',
       'search_api_facets',
       'search_api_facets_operator_or',
       'search_api_granular',
       'search_api_mlt',
       'search_api_random_sort',
+      'search_api_spellcheck',
+      // Datatypes.
       'search_api_data_type_location',
       // 'search_api_data_type_geohash'.
     ];
@@ -1223,6 +1226,22 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       // Handle field collapsing / grouping.
       if (isset($options['search_api_grouping'])) {
         $this->setGrouping($solarium_query, $query, $options['search_api_grouping'], $index_fields, $field_names);
+      }
+
+      // Handle spellcheck.
+      if (isset($options['search_api_spellcheck'])) {
+        $schema_languages = $this->getSchemaLanguageStatistics();
+        $dictionaries = [];
+        foreach ($language_ids as $language_id) {
+          if (isset($schema_languages[$language_id]) && $schema_languages[$language_id]) {
+            $dictionaries[] = $language_id;
+          }
+        }
+
+        if (!empty($dictionaries)) {
+          $spellcheck = $solarium_query->getSpellcheck();
+          $spellcheck->setDictionary($dictionaries);
+        }
       }
 
       if (isset($options['offset'])) {
