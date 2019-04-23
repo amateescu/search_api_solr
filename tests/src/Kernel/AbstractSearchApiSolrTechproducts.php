@@ -5,7 +5,7 @@ namespace Drupal\Tests\search_api_solr\Kernel;
 /**
  * Tests the document datasources using the solr techproducts example.
  */
-abstract class AbstractSearchApiSolrTechproductsTest extends SolrBackendTestBase {
+abstract class AbstractSearchApiSolrTechproducts extends SolrBackendTestBase {
 
   /**
    * A Search API server ID.

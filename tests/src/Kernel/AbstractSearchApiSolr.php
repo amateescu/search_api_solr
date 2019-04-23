@@ -18,7 +18,7 @@ use Drupal\user\Entity\User;
 /**
  * Tests index and search capabilities using the Solr search backend.
  */
-abstract class AbstractSearchApiSolrTest extends SolrBackendTestBase {
+abstract class AbstractSearchApiSolr extends SolrBackendTestBase {
 
   use SolrCommitTrait;
   use InvokeMethodTrait;

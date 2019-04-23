@@ -8,7 +8,7 @@ namespace Drupal\Tests\search_api_solr\Kernel;
  * @group search_api_solr
  * @group solr_cloud
  */
-class SearchApiSolrCloudTest extends AbstractSearchApiSolrTest {
+class SearchApiSolrCloudTest extends AbstractSearchApiSolr {
 
   /**
    * Modules to enable for this test.
