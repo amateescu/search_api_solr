@@ -1795,9 +1795,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                     if (!$datasource) {
                       throw new SearchApiException();
                     }
-                    else {
-                      $pref .= $this->getPropertyPathCardinality($field->getPropertyPath(), $datasource->getPropertyDefinitions()) != 1 ? 'm' : 's';
-                    }
+                    $pref .= $this->getPropertyPathCardinality($field->getPropertyPath(), $datasource->getPropertyDefinitions()) != 1 ? 'm' : 's';
                   }
                   catch (SearchApiException $e) {
                     // Thrown by $field->getDatasource(). Assume multi value to
@@ -1897,6 +1895,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   The cardinality.
    */
   protected function getPropertyPathCardinality($property_path, array $properties, $cardinality = 1) {
+    // Support for reverse entity reference on search_api.
+    // @see \Drupal\search_api\Plugin\search_api\processor\ReverseEntityReferences
+    if (0 === strpos($property_path, 'search_api_reverse_entity_reference')) {
+      return FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED;
+    }
+
     list($key, $nested_path) = SearchApiUtility::splitPropertyPath($property_path, FALSE);
     if (isset($properties[$key])) {
       $property = $properties[$key];
