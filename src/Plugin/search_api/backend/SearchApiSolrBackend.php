@@ -1230,24 +1230,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       // Handle spellcheck.
       if (isset($options['search_api_spellcheck'])) {
-        $schema_languages = $this->getSchemaLanguageStatistics();
-        $dictionaries = [];
-        foreach ($language_ids as $language_id) {
-          if (isset($schema_languages[$language_id]) && $schema_languages[$language_id]) {
-            $dictionaries[] = $language_id;
-          }
-        }
-
-        if (!empty($dictionaries)) {
-          $spellcheck = $solarium_query->getSpellcheck();
-          $spellcheck->setDictionary($dictionaries);
-        }
+        $this->setSpellcheck($solarium_query, $query, $options['search_api_spellcheck']);
       }
 
       if (isset($options['offset'])) {
         $solarium_query->setStart($options['offset']);
       }
-      $rows = isset($options['limit']) ? $options['limit'] : 1000000;
+      // The max rows that could be returned by Solr are the max 32bit integer.
+      $rows = $options['limit'] ?? 2147483647;
       $solarium_query->setRows($rows);
 
       foreach ($options as $option => $value) {
@@ -3135,20 +3125,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   The user input.
    */
   protected function setAutocompleteSpellCheckQuery(QueryInterface $query, AutocompleteQuery $solarium_query, $user_input) {
-    /** @var \Solarium\Component\Spellcheck $spellcheck_component */
-    $spellcheck_component = $solarium_query->getSpellcheck();
-    if ($languages = $query->getLanguages()) {
-      foreach ($languages as $language) {
-        // @todo set multiple dictionaries
-        // Convert zk-hans to zk_hans.
-        $spellcheck_component->setDictionary(str_replace('-', '_', $language));
-      }
-    }
-    else {
-      $spellcheck_component->setDictionary(LanguageInterface::LANGCODE_NOT_SPECIFIED);
-    }
-    $spellcheck_component->setQuery($user_input);
-    $spellcheck_component->setCount($query->getOption('limit', 1));
+    $this->setSpellcheck($solarium_query, $query, [
+      'keys' => $user_input,
+      'count' => $query->getOption('limit', 1),
+    ]);
   }
 
   /**
@@ -3992,6 +3972,50 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $grouping_component->setSort(implode(', ', $sorts));
         }
       }
+    }
+  }
+
+  /**
+   * Adds spellcheck features to the search query.
+   *
+   * @param \Solarium\QueryType\Select\Query\Query $solarium_query
+   *   The Solarium query.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The Search API query.
+   * @param array $spellcheck_options
+   *   The spellcheck options to add.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   */
+  protected function setSpellcheck(Query $solarium_query, QueryInterface $query, array $spellcheck_options = []) {
+    $spellcheck = $solarium_query->getSpellcheck();
+    $schema_languages = $this->getSchemaLanguageStatistics();
+    $dictionaries = [];
+
+    foreach ($query->getLanguages() as $language_id) {
+      if (isset($schema_languages[$language_id]) && $schema_languages[$language_id]) {
+        // Convert zk-hans to zk_hans.
+        $dictionaries[] = str_replace('-', '_', $language_id);
+      }
+    }
+
+    if ($dictionaries) {
+      $spellcheck->setDictionary($dictionaries);
+    }
+    else {
+      $spellcheck->setDictionary(LanguageInterface::LANGCODE_NOT_SPECIFIED);
+    }
+
+    if (!empty($spellcheck_options['keys'])) {
+      $spellcheck->setQuery(implode(' ', $spellcheck_options['keys']));
+    }
+
+    if (!empty($spellcheck_options['count'])) {
+      $spellcheck->setCount($spellcheck_options['count']);
+    }
+
+    if (!empty($spellcheck_options['collate'])) {
+      $spellcheck->setCollate($spellcheck_options['collate']);
     }
   }
 
