@@ -93,24 +93,6 @@ unstemmed_field_type:
           ignoreCase: true
         -
           class: solr.PersianNormalizationFilterFactory
-spellcheck_field_type:
-  name: text_spell_fa
-  class: solr.TextField
-  positionIncrementGap: 100
-  analyzer:
-    tokenizer:
-      class: solr.WhitespaceTokenizerFactory
-    filters:
-      -
-        class: solr.LengthFilterFactory
-        min: 2
-        max: 100
-      -
-        class: solr.StopFilterFactory
-        ignoreCase: true
-        words: stopwords_fa.txt
-      -
-        class: solr.RemoveDuplicatesTokenFilterFactory
 collated_field_type:
   name: collated_fa
   class: solr.ICUCollationField

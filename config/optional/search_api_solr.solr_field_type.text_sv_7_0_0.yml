@@ -168,28 +168,6 @@ unstemmed_field_type:
           class: solr.ScandinavianNormalizationFilterFactory
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
-spellcheck_field_type:
-  name: text_spell_sv
-  class: solr.TextField
-  positionIncrementGap: 100
-  analyzer:
-    charFilters:
-      -
-        class: solr.MappingCharFilterFactory
-        mapping: accents_sv.txt
-    tokenizer:
-      class: solr.WhitespaceTokenizerFactory
-    filters:
-      -
-        class: solr.LengthFilterFactory
-        min: 2
-        max: 100
-      -
-        class: solr.StopFilterFactory
-        ignoreCase: true
-        words: stopwords_sv.txt
-      -
-        class: solr.RemoveDuplicatesTokenFilterFactory
 collated_field_type:
   name: collated_sv
   class: solr.ICUCollationField

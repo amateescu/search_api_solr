@@ -158,28 +158,6 @@ unstemmed_field_type:
           ignoreCase: true
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
-spellcheck_field_type:
-  name: text_spell_hr
-  class: solr.TextField
-  positionIncrementGap: 100
-  analyzer:
-    charFilters:
-      -
-        class: solr.MappingCharFilterFactory
-        mapping: accents_hr.txt
-    tokenizer:
-      class: solr.WhitespaceTokenizerFactory
-    filters:
-      -
-        class: solr.LengthFilterFactory
-        min: 2
-        max: 100
-      -
-        class: solr.StopFilterFactory
-        ignoreCase: true
-        words: stopwords_hr.txt
-      -
-        class: solr.RemoveDuplicatesTokenFilterFactory
 collated_field_type:
   name: collated_hr
   class: solr.ICUCollationField

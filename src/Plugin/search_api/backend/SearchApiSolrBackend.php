@@ -1237,7 +1237,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $solarium_query->setStart($options['offset']);
       }
       // The max rows that could be returned by Solr are the max 32bit integer.
-      $rows = $options['limit'] ?? 2147483647;
+      $rows = $options['limit'] ?? 2147483631;
       $solarium_query->setRows($rows);
 
       foreach ($options as $option => $value) {
@@ -1323,13 +1323,25 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         // Extract results.
         $search_api_result_set = $this->extractResults($query, $solarium_result);
 
-        // Extract facets.
         if ($solarium_result instanceof Result) {
+          // Extract facets.
           if ($solarium_facet_set = $solarium_result->getFacetSet()) {
             $search_api_result_set->setExtraData('facet_set', $solarium_facet_set);
             if ($search_api_facets = $this->extractFacets($query, $solarium_result)) {
               $search_api_result_set->setExtraData('search_api_facets', $search_api_facets);
             }
+          }
+
+          // Extract spellcheck suggestions.
+          if (isset($options['search_api_spellcheck'])) {
+            $search_api_spellcheck['suggestions'] = $this->extractSpellCheckSuggestions($solarium_result);
+            if (!empty($options['search_api_spellcheck']['collate'])) {
+              /** @var \Solarium\Component\Result\Spellcheck\Result $spellcheck_result */
+              if ($spellcheck_result = $solarium_result->getComponent(ComponentAwareQueryInterface::COMPONENT_SPELLCHECK)) {
+                $search_api_spellcheck['collation'] = $spellcheck_result->getCollation()->getQuery();
+              }
+            }
+            $search_api_result_set->setExtraData('search_api_spellcheck', $search_api_spellcheck);
           }
         }
 
@@ -3206,6 +3218,23 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected function getAutocompleteSpellCheckSuggestions(ResultInterface $result, SuggestionFactory $suggestion_factory) {
     $suggestions = [];
+    foreach ($this->extractSpellCheckSuggestions($result) as $keys) {
+      $suggestions[] = $suggestion_factory->createFromSuggestedKeys(implode(' ', $keys));
+    }
+    return $suggestions;
+  }
+
+  /**
+   * Get the spellcheck suggestions from the autocomplete query result.
+   *
+   * @param \Solarium\Core\Query\Result\ResultInterface $result
+   *   An autocomplete query result.
+   *
+   * @return array
+   *   An array of suggestions.
+   */
+  protected function extractSpellCheckSuggestions(ResultInterface $result) {
+    $suggestions = [];
     if ($spellcheck_results = $result->getComponent(ComponentAwareQueryInterface::COMPONENT_SPELLCHECK)) {
       foreach ($spellcheck_results as $term_result) {
         $keys = [];
@@ -3214,7 +3243,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $keys[] = $correction['word'];
         }
         if ($keys) {
-          $suggestions[] = $suggestion_factory->createFromSuggestedKeys(implode(' ', $keys));
+          $suggestions[$term_result->getOriginalTerm()] = $keys;
         }
       }
     }

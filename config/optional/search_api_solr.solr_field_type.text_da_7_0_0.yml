@@ -170,28 +170,6 @@ unstemmed_field_type:
           words: stopwords_da.txt
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
-spellcheck_field_type:
-  name: text_spell_da
-  class: solr.TextField
-  positionIncrementGap: 100
-  analyzer:
-    charFilters:
-      -
-        class: solr.MappingCharFilterFactory
-        mapping: accents_da.txt
-    tokenizer:
-      class: solr.WhitespaceTokenizerFactory
-    filters:
-      -
-        class: solr.LengthFilterFactory
-        min: 2
-        max: 100
-      -
-        class: solr.StopFilterFactory
-        ignoreCase: true
-        words: stopwords_da.txt
-      -
-        class: solr.RemoveDuplicatesTokenFilterFactory
 collated_field_type:
   name: collated_da
   class: solr.ICUCollationField

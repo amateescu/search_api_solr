@@ -144,28 +144,6 @@ unstemmed_field_type:
           words: stopwords_el.txt
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
-spellcheck_field_type:
-  name: text_spell_el
-  class: solr.TextField
-  positionIncrementGap: 100
-  analyzer:
-    charFilters:
-      -
-        class: solr.MappingCharFilterFactory
-        mapping: accents_el.txt
-    tokenizer:
-      class: solr.WhitespaceTokenizerFactory
-    filters:
-      -
-        class: solr.LengthFilterFactory
-        min: 2
-        max: 100
-      -
-        class: solr.StopFilterFactory
-        ignoreCase: true
-        words: stopwords_el.txt
-      -
-        class: solr.RemoveDuplicatesTokenFilterFactory
 collated_field_type:
   name: collated_el
   class: solr.ICUCollationField
