@@ -1237,7 +1237,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $solarium_query->setStart($options['offset']);
       }
       // The max rows that could be returned by Solr are the max 32bit integer.
-      $rows = $options['limit'] ?? 2147483631;
+      $rows = $options['limit'] ?? 2147483630;
       $solarium_query->setRows($rows);
 
       foreach ($options as $option => $value) {
