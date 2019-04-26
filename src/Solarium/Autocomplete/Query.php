@@ -7,6 +7,9 @@ use Solarium\Component\ComponentAwareQueryTrait;
 use Solarium\Component\QueryTraits\SpellcheckTrait;
 use Solarium\Component\QueryTraits\SuggesterTrait;
 use Solarium\Component\QueryTraits\TermsTrait;
+use Solarium\Component\Spellcheck;
+use Solarium\Component\Suggester;
+use Solarium\Component\Terms;
 use Solarium\Core\Query\AbstractQuery;
 use Solarium\Core\Query\RequestBuilderInterface;
 use Solarium\Core\Query\ResponseParserInterface;
@@ -28,7 +31,7 @@ class Query extends AbstractQuery implements ComponentAwareQueryInterface {
    */
   protected $options = [
     'handler' => 'autocomplete',
-    'resultclass' => 'Drupal\search_api_solr\Solarium\Autocomplete\Result',
+    'resultclass' => Result::class,
   ];
 
   /**
@@ -36,9 +39,9 @@ class Query extends AbstractQuery implements ComponentAwareQueryInterface {
    */
   public function __construct($options = NULL) {
     $this->componentTypes = [
-      ComponentAwareQueryInterface::COMPONENT_SPELLCHECK => 'Solarium\Component\Spellcheck',
-      ComponentAwareQueryInterface::COMPONENT_SUGGESTER => 'Solarium\Component\Suggester',
-      ComponentAwareQueryInterface::COMPONENT_TERMS => 'Solarium\Component\Terms',
+      ComponentAwareQueryInterface::COMPONENT_SPELLCHECK => Spellcheck::class,
+      ComponentAwareQueryInterface::COMPONENT_SUGGESTER => Suggester::class,
+      ComponentAwareQueryInterface::COMPONENT_TERMS => Terms::class,
     ];
 
     parent::__construct($options);

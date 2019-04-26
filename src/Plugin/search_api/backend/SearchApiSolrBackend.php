@@ -4007,7 +4007,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * Adds spellcheck features to the search query.
    *
-   * @param \Solarium\QueryType\Select\Query\Query $solarium_query
+   * @param \Solarium\Component\ComponentAwareQueryInterface $solarium_query
    *   The Solarium query.
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The Search API query.
@@ -4016,7 +4016,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  protected function setSpellcheck(Query $solarium_query, QueryInterface $query, array $spellcheck_options = []) {
+  protected function setSpellcheck(ComponentAwareQueryInterface $solarium_query, QueryInterface $query, array $spellcheck_options = []) {
     $spellcheck = $solarium_query->getSpellcheck();
     $schema_languages = $this->getSchemaLanguageStatistics();
     $dictionaries = [];
