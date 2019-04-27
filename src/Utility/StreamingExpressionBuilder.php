@@ -9,12 +9,12 @@ use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrCloudConnectorInterface;
 use Drupal\search_api_solr\SolrProcessorInterface;
-use Solarium\QueryType\Stream\Expression;
+use Solarium\QueryType\Stream\ExpressionBuilder;
 
 /**
  * Provides methods for creating streaming expressions targeting a given index.
  */
-class StreamingExpressionBuilder extends Expression {
+class StreamingExpressionBuilder extends ExpressionBuilder {
 
   /**
    * The Solr collection name.
@@ -225,9 +225,8 @@ class StreamingExpressionBuilder extends Expression {
       if (isset($this->sort_fields_mapped[$language_id][$search_api_field_name])) {
         return $this->sort_fields_mapped[$language_id][$search_api_field_name];
       }
-      else {
-        throw new \InvalidArgumentException(sprintf('Field %s does not exist in index %s.', $search_api_field_name, $this->targeted_index_id));
-      }
+
+      throw new \InvalidArgumentException(sprintf('Field %s does not exist in index %s.', $search_api_field_name, $this->targeted_index_id));
     }
     return $this->all_fields_including_graph_fields_mapped[$language_id][$search_api_field_name];
   }
@@ -392,16 +391,14 @@ class StreamingExpressionBuilder extends Expression {
    * @param string $search_api_field_name
    *   (optional) Passed on to _escaped_value();
    *   Influences whether processors act on the values.
-   * @param string $language_id
-   *   (optional) The language ID. Defaults to "und".
    *
    * @return string
    *   The imploded string of escaped values.
    */
-  public function _escape_and_implode(string $glue, array $values, $single_term = TRUE, string $search_api_field_name = NULL, string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
+  public function _escape_and_implode(string $glue, array $values, $single_term = TRUE, string $search_api_field_name = NULL) {
     $escaped_values = [];
     foreach ($values as $value) {
-      $escaped_values[] = $this->_escaped_value($value, $single_term, $search_api_field_name, $language_id);
+      $escaped_values[] = $this->_escaped_value($value, $single_term, $search_api_field_name);
     }
     return implode($glue, $escaped_values);
   }
