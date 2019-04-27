@@ -3138,7 +3138,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected function setAutocompleteSpellCheckQuery(QueryInterface $query, AutocompleteQuery $solarium_query, $user_input) {
     $this->setSpellcheck($solarium_query, $query, [
-      'keys' => $user_input,
+      'keys' => [$user_input],
       'count' => $query->getOption('limit', 1),
     ]);
   }

@@ -1340,8 +1340,6 @@ abstract class AbstractSearchApiSolr extends SolrBackendTestBase {
         '<dynamicField name="tom_X3b_de_*" type="text_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
         '<dynamicField name="tus_X3b_de_*" type="text_unstemmed_de" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
         '<dynamicField name="tum_X3b_de_*" type="text_unstemmed_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
-        '<dynamicField name="spellcheck_en*" type="text_spell_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
-        '<dynamicField name="spellcheck_de*" type="text_spell_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
         '<dynamicField name="spellcheck_und*" type="text_spell_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
         '<dynamicField name="spellcheck_*" type="text_spell_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
         '<dynamicField name="sort_X3b_en_*" type="collated_en" stored="false" indexed="false" docValues="true" />',
