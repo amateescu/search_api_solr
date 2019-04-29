@@ -1237,15 +1237,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $solarium_query->setStart($options['offset']);
       }
 
-      if (!empty($options['limit'])) {
-        // In previous versions we set a high value for rows if no limit was set
-        // in the options. The intention was to retrieve "all" results instead
-        // falling back to Solr's default of 10. But in Solr Cloud it turned out
-        // that independent from the real number of documents, Solr seems to
-        // allocate rows*shards memory for sorting the distributed result. That
-        // could lead to out of memory exceptions.
-        $solarium_query->setRows($options['limit']);
-      }
+      // In previous versions we set a high value for rows if no limit was set
+      // in the options. The intention was to retrieve "all" results instead of
+      // falling back to Solr's default of 10. But for Solr Cloud it turned out
+      // that independent from the real number of documents, Solr seems to
+      // allocate rows*shards memory for sorting the distributed result. That
+      // could lead to out of memory exceptions.
+      $solarium_query->setRows($query->getOption('limit', 10));
 
       foreach ($options as $option => $value) {
         if (strpos($option, 'solr_param_') === 0) {
