@@ -17,6 +17,8 @@ function search_api_solr_devel_entity_type_alter(array &$entity_types) {
  */
 function search_api_solr_devel_search_api_solr_query_alter(\Solarium\Core\Query\QueryInterface $solarium_query, \Drupal\search_api\Query\QueryInterface $query) {
   $solarium_query->getDebug();
+  $solarium_query->addParam('echoParams', 'all');
+  $solarium_query->setOmitHeader(FALSE);
 }
 
 /**

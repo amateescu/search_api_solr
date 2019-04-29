@@ -69,7 +69,7 @@ class SolariumRequestLogger implements EventSubscriberInterface {
    * Dumps a Solr response status as drupal messages and logs the response body.
    *
    * @param \Solarium\Core\Event\PostExecuteRequest $event
-   *   The pre execute event.
+   *   The post execute event.
    */
   public function postExecuteRequest(PostExecuteRequest $event) {
     $response = $event->getResponse();
