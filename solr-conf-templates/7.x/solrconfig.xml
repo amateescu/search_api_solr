@@ -9,7 +9,7 @@
      For more details about configurations options that may appear in
      this file, see http://wiki.apache.org/solr/SolrConfigXml.
 -->
-<config name="drupal-8.3.1-solr-7.x" >
+<config name="drupal-8.3.2-solr-7.x" >
   <!-- In all configuration below, a prefix of "solr." for class names
        is an alias that causes solr to search appropriate packages,
        including org.apache.solr.(search|update|request|core|analysis)
@@ -729,14 +729,8 @@
       <bool name="omitHeader">true</bool>
       <!-- Don't abort searches for the /select request handler (set in solrcore.properties) -->
       <int name="timeAllowed">${solr.selectSearchHandler.timeAllowed:-1}</int>
-
       <!-- By default, don't spell check -->
       <str name="spellcheck">false</str>
-      <!-- Defaults for the spell checker when used -->
-      <str name="spellcheck.onlyMorePopular">true</str>
-      <str name="spellcheck.extendedResults">false</str>
-      <!--  The number of suggestions to return -->
-      <str name="spellcheck.count">1</str>
     </lst>
     <arr name="last-components">
       <str>spellcheck</str>

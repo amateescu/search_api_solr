@@ -180,14 +180,12 @@ spellcheck_field_type:
         words: stopwords_tr.txt
       -
         class: solr.RemoveDuplicatesTokenFilterFactory
-
 collated_field_type:
   name: collated_tr
   class: solr.ICUCollationField
   locale: tr
   strength: primary
   caseLevel: false
-
 solr_configs:
   searchComponents:
     -
@@ -230,6 +228,9 @@ solr_configs:
             -
               name: thresholdTokenFrequency
               VALUE: '.01'
+            -
+              name: onlyMorePopular
+              VALUE: 'true'
     -
       name: suggest
       class: solr.SuggestComponent

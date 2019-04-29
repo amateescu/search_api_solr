@@ -443,13 +443,11 @@ function search_api_solr_update_8201() {
       foreach ($field_type_config['solr_configs']['searchComponents'] as &$component) {
         if ($component['name'] == 'suggest') {
           foreach ($component['lst'] as &$lst) {
-            foreach ($lst['str'] as &$str) {
-              foreach ($lst['str'] as &$entry) {
-                if ($entry['name'] == 'field') {
-                  $entry['VALUE'] = 'twm_suggest';
-                  search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
-                  break;
-                }
+            foreach ($lst['str'] as &$entry) {
+              if ($entry['name'] == 'field') {
+                $entry['VALUE'] = 'twm_suggest';
+                search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
+                break;
               }
             }
           }
@@ -1187,6 +1185,16 @@ function search_api_solr_update_8315() {
       if (!in_array($field_type_config['field_type_language_code'], ['und', 'ja', 'th', 'zh-hans', 'zh-hant'])) {
         unset($field_type_config['spellcheck_field_type']);
         search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
+      }
+      if (!empty($field_type_config['solr_configs']) && !empty($field_type_config['solr_configs']['searchComponents'])) {
+        foreach ($field_type_config['solr_configs']['searchComponents'] as &$component) {
+          if ('spellcheck' === $component['name']) {
+            $component['lst']['str'][] = [
+              'name' => 'onlyMorePopular',
+              'VALUE' => 'true',
+            ];
+          }
+        }
       }
     }
   }

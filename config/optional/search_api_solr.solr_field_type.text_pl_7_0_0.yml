@@ -216,6 +216,9 @@ solr_configs:
             -
               name: thresholdTokenFrequency
               VALUE: '.01'
+            -
+              name: onlyMorePopular
+              VALUE: 'true'
     -
       name: suggest
       class: solr.SuggestComponent

@@ -91,4 +91,7 @@ solr_configs:
             -
               name: maxQueryFrequency
               VALUE: '0.01'
+            -
+              name: onlyMorePopular
+              VALUE: 'true'
 text_files: { }
