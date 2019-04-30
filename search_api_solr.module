@@ -39,22 +39,26 @@ function search_api_solr_help($route_name, RouteMatchInterface $route_match) {
  * @throws \Drupal\search_api\SearchApiException
  */
 function search_api_solr_cron() {
+  $document_counts = [];
+  $optimize = FALSE;
   $request_time = \Drupal::time()->getRequestTime();
-  // 86400 seconds is one day. We use slightly less here to allow for some
+  // 86400 seconds are one day. We use slightly less here to allow for some
   // variation in the request time of the cron run, so that the time of day will
   // (more or less) stay the same.
   if ($request_time - \Drupal::state()->get('search_api_solr.last_optimize') > 86340) {
     \Drupal::state()->set('search_api_solr.last_optimize', $request_time);
+    // Delete cached endpoint data once a day.
+    \Drupal::state()->delete('search_api_solr.endpoint.data');
+    $optimize = TRUE;
+  }
 
-    foreach (search_api_solr_get_servers() as $server) {
-      try {
-        /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
-        $backend = $server->getBackend();
-        $connector = $backend->getSolrConnector();
-        $indexes = $server->getIndexes();
-        if (!$indexes) {
-          continue;
-        }
+  foreach (search_api_solr_get_servers() as $server) {
+    try {
+      /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
+      $backend = $server->getBackend();
+      $connector = $backend->getSolrConnector();
+      if ($indexes = $server->getIndexes()) {
+        $document_counts[$server->id()] = $backend->getDocumentCounts();
 
         foreach ($indexes as $index) {
           if ($backend->finalizeIndex($index)) {
@@ -62,19 +66,33 @@ function search_api_solr_cron() {
           }
         }
 
-        if ($backend->isOptimizeEnabled()) {
+        if ($optimize && $backend->isOptimizeEnabled()) {
           $connector->optimize();
           $backend->getLogger()->info('Optimized Solr server @server.', ['@server' => $server->label()]);
         }
       }
-      catch (SearchApiException $e) {
-        watchdog_exception('search_api', $e, '%type while maintaining Solr server @server: @message in %function (line %line of %file).', ['@server' => $server->label()]);
+    }
+    catch (SearchApiException $e) {
+      watchdog_exception('search_api', $e, '%type while maintaining Solr server @server: @message in %function (line %line of %file).', ['@server' => $server->label()]);
+    }
+  }
+
+  $search_all_rows = [];
+  foreach ($document_counts as $server_id => $counts) {
+    unset($counts['total']);
+    foreach ($counts as $site_hash => $index_doc_counts) {
+      foreach ($index_doc_counts as $index_id => $count) {
+        // The _search_all() and _topic_all() streaming expressions need a row
+        // limit that matches the real number of docuemnts or higher. To
+        // increase the number of query result cache hits we "normalize" the
+        // document counts to the nearest higher power of 2. Setting them to a
+        // very high fixed value instead makes no sense as this would waste
+        // memory in Solr Cloud and might lead to out of memory exceptions.
+        $search_all_rows[$server_id][$index_id] = intdiv($count, 2) * 4;
       }
     }
-
-    // Delete cached endpoint data once a day.
-    \Drupal::state()->delete('search_api_solr.endpoint.data');
   }
+  \Drupal::state()->set('search_api_solr.search_all_rows', $search_all_rows);
 }
 
 /**

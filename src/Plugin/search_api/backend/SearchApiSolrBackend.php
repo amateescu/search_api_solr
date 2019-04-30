@@ -4194,4 +4194,49 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     return $index->getThirdPartySettings('search_api_solr') + search_api_solr_default_index_third_party_settings();
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getDocumentCounts() {
+     $connector = $this->getSolrConnector();
+
+     $query = $connector->getSelectQuery();
+     $query->setRows(1);
+     $query->setFields('id');
+
+     $facet_set = $query->getFacetSet();
+     $json_facet_query = $facet_set->createJsonFacetTerms([
+       'key' => 'siteHahes',
+       'limit' => -1,
+       'field' => 'hash',
+     ]);
+
+     $nested_json_facet_terms = $facet_set->createJsonFacetTerms([
+          'key' => 'numDocsPerIndex',
+          'limit' => -1,
+          'field' => 'index_id',
+        ], /* Don't add to top level => nested. */ FALSE);
+
+     $json_facet_query->addFacet($nested_json_facet_terms);
+
+     /** @var \Solarium\QueryType\Select\Result\Result $result */
+     $result = $connector->execute($query);
+     $facet_set = $result->getFacetSet();
+
+     $document_counts = [
+       'total' => $facet_set->getFacet('count')->getValue(),
+     ];
+
+     /** @var \Solarium\Component\Result\Facet\Bucket $site_hash_bucket */
+     foreach ($facet_set->getFacet('siteHahes')->getBuckets() as $site_hash_bucket) {
+       $site_hash = $site_hash_bucket->getValue();
+       /** @var \Solarium\Component\Result\Facet\Bucket $index_bucket */
+       foreach ($site_hash_bucket->getFacetSet()->getFacet('numDocsPerIndex') as $index_bucket) {
+         $document_counts[$site_hash][$index_bucket->getValue()] = $index_bucket->getCount();
+       }
+     }
+
+     return $document_counts;
+  }
+
 }

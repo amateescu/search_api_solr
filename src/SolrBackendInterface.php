@@ -19,7 +19,7 @@ interface SolrBackendInterface extends BackendInterface {
   /**
    * The minimum required Solr schema version.
    */
-  const SEARCH_API_SOLR_MIN_SCHEMA_VERSION = '8.3.1';
+  const SEARCH_API_SOLR_MIN_SCHEMA_VERSION = '8.3.2';
 
   /**
    * The separator to indicate the start of a language ID.
@@ -260,5 +260,16 @@ interface SolrBackendInterface extends BackendInterface {
    *   current schema.
    */
   public function getSchemaLanguageStatistics();
+
+  /**
+   * Returns document counts for this server, in total and per site / index.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The Search API index entity.
+   *
+   * @return array
+   *   An associative array of document counts.
+   */
+  public function getDocumentCounts();
 
 }

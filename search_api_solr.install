@@ -140,6 +140,8 @@ function search_api_solr_requirements($phase) {
 function search_api_solr_uninstall() {
   \Drupal::state()->delete('search_api_solr.last_optimize');
   \Drupal::state()->delete('search_api_solr.endpoint.data');
+  \Drupal::state()->delete('search_api_solr.site_hash');
+  \Drupal::state()->delete('search_api_solr.search_all_rows');
   foreach (search_api_solr_get_servers() as $server) {
     foreach ($server->getIndexes() as $index) {
       \Drupal::state()
@@ -148,7 +150,6 @@ function search_api_solr_uninstall() {
     \Drupal::state()
       ->delete('search_api_solr.' . $server->id() . '.schema_parts');
   }
-  \Drupal::state()->delete('search_api_solr.site_hash');
 }
 
 /**

@@ -99,14 +99,12 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
   protected $query_helper;
 
   /**
-   * The _search_all() and _topic() streaming expressions need a row limit that
-   * is much higher then the real number of rows. Therefore we set the max 32bit
-   * integer as default. To maximize the number of query result cache hits it is
-   * important to not vary this number.
+   * The _search_all() and _topic_all() streaming expressions need a row limit
+   * is equal to or higher then the real number of rows.
    *
    * @var int
    */
-  protected $search_all_rows = 2147483647;
+  protected $search_all_rows;
 
   /**
    * StreamingExpressionBuilder constructor.
@@ -543,7 +541,7 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
     return $this->search(
       $this->_collection(),
       implode(', ', func_get_args()),
-      'rows=' . $this->search_all_rows
+      'rows=' . $this->getSearchAllRows()
     );
   }
 
@@ -699,7 +697,7 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
       $this->_checkpoints_collection(),
       $this->_collection(),
       'initialCheckpoint=0',
-      'rows=' . $this->search_all_rows,
+      'rows=' . $this->getSearchAllRows(),
       implode(', ', func_get_args())
     );
   }
@@ -718,4 +716,26 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
     return 'id="' . $checkpoint . '-' . $this->targeted_index_id . '-' . $this->targeted_site_hash . '"';
   }
 
+  /**
+   * Returns the row limit for _search_all() and _topic_all() expressions.
+   *
+   * Both need a row limit that matches the real number of documents or higher.
+   * To increase the number of query result cache hits the required document
+   * counts are "normalized" to the nearest higher power of 2. Setting them to
+   * a very high fixed value makes no sense as this would waste memory in Solr
+   * Cloud and might lead to out of memory exceptions. The numbers are prepared
+   * via search_api_solr_cron(). If the cron hasn't run yet the function return
+   * 1024 as fallback.
+   *
+   * @return int
+   *
+   * @see search_api_solr_cron()
+   */
+  protected function getSearchAllRows() {
+    if (!$this->search_all_rows) {
+      $rows = \Drupal::state()->get('search_api_solr.search_all_rows', []);
+      $this->search_all_rows = $rows[$this->targeted_site_hash][$this->targeted_index_id] ?? 1024;
+    }
+    return $this->search_all_rows;
+  }
 }
