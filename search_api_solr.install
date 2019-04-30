@@ -1199,3 +1199,32 @@ function search_api_solr_update_8315() {
     }
   }
 }
+
+/**
+ * Use Ukrainian lemmatization instead of Russian SnowballPorterFilterFactory.
+ */
+function search_api_solr_update_8316() {
+  foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+    if ('uk' === $field_type_config['field_type_language_code']) {
+      if (!empty($field_type_config['field_type'])) {
+        foreach ($field_type_config['field_type'] as &$components) {
+          if (is_array($components)) {
+            foreach ($components as &$analyzers) {
+              if (is_array($analyzers)) {
+                foreach ($analyzers['filters'] as $key => &$filter) {
+                  if ('solr.SnowballPorterFilterFactory' === $filter['class']) {
+                    $filter['class'] = 'solr.MorphologikFilterFactory';
+                    unset($filter['language']);
+                    unset($filter['protected']);
+                    $filter['dictionary'] = 'ukrainian.dict';
+                  }
+                }
+              }
+            }
+          }
+        }
+        search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
+      }
+    }
+  }
+}
