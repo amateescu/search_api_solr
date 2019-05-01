@@ -79,7 +79,8 @@ function search_api_solr_cron() {
 
   $search_all_rows = [];
   foreach ($document_counts as $server_id => $counts) {
-    unset($counts['total']);
+    $search_all_rows[$server_id]['#total'] = intdiv($counts['#total'], 2) * 4;
+    unset($counts['#total']);
     foreach ($counts as $site_hash => $index_doc_counts) {
       foreach ($index_doc_counts as $index_id => $count) {
         // The _search_all() and _topic_all() streaming expressions need a row

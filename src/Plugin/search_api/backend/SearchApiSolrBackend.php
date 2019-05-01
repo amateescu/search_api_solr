@@ -56,6 +56,7 @@ use Solarium\Core\Query\QueryInterface as SolariumQueryInterface;
 use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\Exception\ExceptionInterface;
 use Solarium\Exception\StreamException;
+use Solarium\QueryType\Select\Query\FilterQuery;
 use Solarium\QueryType\Stream\Expression;
 use Solarium\QueryType\Update\Query\Query as UpdateQuery;
 use Solarium\QueryType\Select\Query\Query;
@@ -4200,39 +4201,59 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   public function getDocumentCounts() {
      $connector = $this->getSolrConnector();
 
-     $query = $connector->getSelectQuery();
-     $query->setRows(1);
-     $query->setFields('id');
+     try {
+       $query = $connector->getSelectQuery()
+         ->addFilterQuery(new FilterQuery([
+           'key' => 'search_api',
+           'query' => '+hash:* +index_id:*'
+         ]))
+         ->setRows(1)
+         ->setFields('id');
 
-     $facet_set = $query->getFacetSet();
-     $json_facet_query = $facet_set->createJsonFacetTerms([
-       'key' => 'siteHahes',
-       'limit' => -1,
-       'field' => 'hash',
-     ]);
+       $facet_set = $query->getFacetSet();
 
-     $nested_json_facet_terms = $facet_set->createJsonFacetTerms([
-          'key' => 'numDocsPerIndex',
-          'limit' => -1,
-          'field' => 'index_id',
-        ], /* Don't add to top level => nested. */ FALSE);
+       $json_facet_query = $facet_set->createJsonFacetTerms([
+         'key' => 'siteHahes',
+         'limit' => -1,
+         'field' => 'hash',
+       ]);
 
-     $json_facet_query->addFacet($nested_json_facet_terms);
+       $nested_json_facet_terms = $facet_set->createJsonFacetTerms([
+         'key' => 'numDocsPerIndex',
+         'limit' => -1,
+         'field' => 'index_id',
+       ], /* Don't add to top level => nested. */ FALSE);
 
-     /** @var \Solarium\QueryType\Select\Result\Result $result */
-     $result = $connector->execute($query);
+       $json_facet_query->addFacet($nested_json_facet_terms);
+
+       /** @var \Solarium\QueryType\Select\Result\Result $result */
+       $result = $connector->execute($query);
+     }
+     catch (\Exception $e) {
+       $query = $connector->getSelectQuery()->setRows(1);
+       $facet_set = $query->getFacetSet();
+       $facet_set->createJsonFacetAggregation([
+         'key' => 'maxVersion',
+         'function' => 'max(_version_)',
+       ]);
+       /** @var \Solarium\QueryType\Select\Result\Result $result */
+       $result = $connector->execute($query);
+     }
+
      $facet_set = $result->getFacetSet();
 
      $document_counts = [
-       'total' => $facet_set->getFacet('count')->getValue(),
+       '#total' => $facet_set->getFacet('count')->getValue(),
      ];
 
-     /** @var \Solarium\Component\Result\Facet\Bucket $site_hash_bucket */
-     foreach ($facet_set->getFacet('siteHahes')->getBuckets() as $site_hash_bucket) {
-       $site_hash = $site_hash_bucket->getValue();
-       /** @var \Solarium\Component\Result\Facet\Bucket $index_bucket */
-       foreach ($site_hash_bucket->getFacetSet()->getFacet('numDocsPerIndex') as $index_bucket) {
-         $document_counts[$site_hash][$index_bucket->getValue()] = $index_bucket->getCount();
+     if ($site_hashes = $facet_set->getFacet('siteHahes')) {
+       /** @var \Solarium\Component\Result\Facet\Bucket $site_hash_bucket */
+       foreach ($site_hashes->getBuckets() as $site_hash_bucket) {
+         $site_hash = $site_hash_bucket->getValue();
+         /** @var \Solarium\Component\Result\Facet\Bucket $index_bucket */
+         foreach ($site_hash_bucket->getFacetSet()->getFacet('numDocsPerIndex') as $index_bucket) {
+           $document_counts[$site_hash][$index_bucket->getValue()] = $index_bucket->getCount();
+         }
        }
      }
 
