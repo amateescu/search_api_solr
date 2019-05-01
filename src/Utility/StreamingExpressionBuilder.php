@@ -57,6 +57,13 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
   protected $index;
 
   /**
+   * The server ID.
+   *
+   * @var string
+   */
+  protected $server_id;
+
+  /**
    * The formatted request time.
    *
    * @var string
@@ -107,6 +114,11 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
   protected $search_all_rows;
 
   /**
+   * @var SolrBackendInterface
+   */
+  protected $backend;
+
+  /**
    * StreamingExpressionBuilder constructor.
    *
    * @param \Drupal\search_api\IndexInterface $index
@@ -117,9 +129,9 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    */
   public function __construct(IndexInterface $index) {
     $server = $index->getServerInstance();
-    /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
-    $backend = $server->getBackend();
-    $connector = $backend->getSolrConnector();
+    $this->server_id = $server->id();
+    $this->backend = $server->getBackend();
+    $connector = $this->backend->getSolrConnector();
 
     if (!($connector instanceof SolrCloudConnectorInterface)) {
       throw new SearchApiSolrException('Streaming expression are only supported by a Solr Cloud connector.');
@@ -128,13 +140,13 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
     $language_ids = array_merge(array_keys(\Drupal::languageManager()->getLanguages()), [LanguageInterface::LANGCODE_NOT_SPECIFIED]);
     $this->collection = $connector->getCollectionName();
     $this->checkpoints_collection = $connector->getCheckpointsCollectionName();
-    $this->index_filter_query = $backend->getIndexFilterQueryString($index);
-    $this->targeted_index_id = $backend->getTargetedIndexId($index);
-    $this->targeted_site_hash = $backend->getTargetedSiteHash($index);
+    $this->index_filter_query = $this->backend->getIndexFilterQueryString($index);
+    $this->targeted_index_id = $this->backend->getTargetedIndexId($index);
+    $this->targeted_site_hash = $this->backend->getTargetedSiteHash($index);
     $this->index = $index;
-    $this->request_time = $backend->formatDate(\Drupal::time()->getRequestTime());
+    $this->request_time = $this->backend->formatDate(\Drupal::time()->getRequestTime());
     $this->all_fields_mapped = [];
-    foreach ($backend->getSolrFieldNamesKeyedByLanguage($language_ids, $index) as $search_api_field => $solr_field) {
+    foreach ($this->backend->getSolrFieldNamesKeyedByLanguage($language_ids, $index) as $search_api_field => $solr_field) {
       foreach ($solr_field as $language_id => $solr_field_name) {
         $this->all_fields_mapped[$language_id][$search_api_field] = $solr_field_name;
       }
@@ -731,10 +743,16 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    *
    * @see search_api_solr_cron()
    */
-  protected function getSearchAllRows() {
+  public function getSearchAllRows() {
     if (!$this->search_all_rows) {
       $rows = \Drupal::state()->get('search_api_solr.search_all_rows', []);
-      $this->search_all_rows = $rows[$this->targeted_site_hash][$this->targeted_index_id] ?? 1024;
+      $this->search_all_rows = $rows[$this->server_id][$this->targeted_site_hash][$this->targeted_index_id] ?? FALSE;
+      if (FALSE === $this->search_all_rows) {
+        $counts = $this->backend->getDocumentCounts();
+        $this->search_all_rows = $rows[$this->server_id][$this->targeted_site_hash][$this->targeted_index_id] =
+          intdiv($counts[$this->targeted_site_hash][$this->targeted_index_id] ?? 512, 2) * 4;
+        $rows = \Drupal::state()->set('search_api_solr.search_all_rows', $rows);
+      }
     }
     return $this->search_all_rows;
   }

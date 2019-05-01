@@ -88,7 +88,7 @@ function search_api_solr_cron() {
         // document counts to the nearest higher power of 2. Setting them to a
         // very high fixed value instead makes no sense as this would waste
         // memory in Solr Cloud and might lead to out of memory exceptions.
-        $search_all_rows[$server_id][$index_id] = intdiv($count, 2) * 4;
+        $search_all_rows[$server_id][$site_hash][$index_id] = intdiv($count, 2) * 4;
       }
     }
   }

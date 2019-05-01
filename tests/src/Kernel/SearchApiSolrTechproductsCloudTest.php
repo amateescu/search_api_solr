@@ -30,7 +30,7 @@ class SearchApiSolrTechproductsCloudTest extends AbstractSearchApiSolrTechproduc
     ]);
   }
 
-  public function testTopicStreamingExpressions() {
+  public function testStreamingExpressions() {
     try {
       $this->firstSearch();
     } catch (\Exception $e) {
@@ -44,12 +44,25 @@ class SearchApiSolrTechproductsCloudTest extends AbstractSearchApiSolrTechproduc
     $query = $queryHelper->createQuery($index);
     $exp = $queryHelper->getStreamingExpressionBuilder($query);
 
+    $this->assertEquals(64, $exp->getSearchAllRows());
+
+    $search_expression = $exp->_search_all(
+      'q="*:*"',
+      'fl="' . $exp->_field('search_api_id') . '"',
+      'sort="' . $exp->_field('search_api_id') . ' asc"'
+    );
+
+    $queryHelper->setStreamingExpression($query, $search_expression);
+    $results = $query->execute();
+    $this->assertEquals(32, $results->getResultCount());
+
     $topic_expression = $exp->_topic_all(
       $exp->_checkpoint('all_products'),
       'q="*:*"',
       'fl="' . $exp->_field('search_api_id') . '"'
     );
 
+    $query = $queryHelper->createQuery($index);
     $queryHelper->setStreamingExpression($query, $topic_expression);
     $results = $query->execute();
     $this->assertEquals(32, $results->getResultCount());
@@ -82,5 +95,4 @@ class SearchApiSolrTechproductsCloudTest extends AbstractSearchApiSolrTechproduc
     $results = $query->execute();
     $this->assertEquals(0, $results->getResultCount());
   }
-
 }
