@@ -750,8 +750,8 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
       if (FALSE === $this->search_all_rows) {
         $counts = $this->backend->getDocumentCounts();
         $this->search_all_rows = $rows[$this->server_id][$this->targeted_site_hash][$this->targeted_index_id] =
-          intdiv($counts[$this->targeted_site_hash][$this->targeted_index_id] ?? ($counts['#total'] ?? 512), 2) * 4;
-        $rows = \Drupal::state()->set('search_api_solr.search_all_rows', $rows);
+          Utility::normalizeMaxRows($counts[$this->targeted_site_hash][$this->targeted_index_id] ?? ($counts['#total'] ?? 512));
+        \Drupal::state()->set('search_api_solr.search_all_rows', $rows);
       }
     }
     return $this->search_all_rows;

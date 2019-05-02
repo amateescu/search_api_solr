@@ -563,4 +563,26 @@ class Utility {
     return $first_solr_field_name;
   }
 
+  /**
+   * Normalize the number of rows to fetch to nearest higher power of 2.
+   *
+   * The _search_all() and _topic_all() streaming expressions need a row limit
+   * that matches the real number of documents or higher. To increase the number
+   * of query result cache hits we "normalize" the document counts to the
+   * nearest higher power of 2. Setting them to a very high fixed value instead
+   * makes no sense as this would waste memory in Solr Cloud and might lead to
+   * out of memory exceptions. The absolute maximum Solr accepts regardless of
+   * the available memory is 2147483629. So we use this a cut-off.
+   *
+   * @param int $rows
+   *
+   * @return int
+   */
+  public static function normalizeMaxRows(int $rows) {
+    $i = 2;
+    while ($i <= $rows) {
+      $i *= 2;
+    }
+    return ($i > 2147483629) ? 2147483629 : $i;
+  }
 }
