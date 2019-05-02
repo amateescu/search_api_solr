@@ -4230,6 +4230,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
        $result = $connector->execute($query);
      }
      catch (\Exception $e) {
+       // For non drupal indexes we only use the implicit "count" aggregation.
+       // Therefore we need one random facet. The only filed we can be 99% sure
+       // that it exists in any index is _version_. max(_version_) should be the
+       // most minimalistic facet we can think of.
        $query = $connector->getSelectQuery()->setRows(1);
        $facet_set = $query->getFacetSet();
        $facet_set->createJsonFacetAggregation([
@@ -4242,6 +4246,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
      $facet_set = $result->getFacetSet();
 
+     // The implicit "count" aggregation over all results matiching he query
+     // exists ony any JSONFacet set.
      $document_counts = [
        '#total' => $facet_set->getFacet('count')->getValue(),
      ];
