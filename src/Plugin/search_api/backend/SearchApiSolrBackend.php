@@ -2694,7 +2694,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       foreach ($options['search_api_location'] as &$spatial) {
         if (!empty($spatial['field']) && $index_field->getFieldIdentifier() == $spatial['field']) {
           // Spatial filter queries need modifications to the query itself.
-          // Therefor we just store the parameters an let them be handled later.
+          // Therefore we just store the parameters an let them be handled
+          // later.
           // @see setSpatial()
           // @see createLocationFilterQuery()
           $spatial['filter_query_conditions'] = [
@@ -2705,21 +2706,18 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           return NULL;
         }
       }
+      unset($spatial);
     }
 
     switch ($operator) {
       case '<>':
         if (is_null($value)) {
-          if ('location' == $index_field->getType()) {
-            return $field . ':[0,-180 TO 90,180]';
+          if ('location' === $index_field->getType()) {
+            return $field . ':[-90,-180 TO 90,180]';
           }
-          else {
-            return $this->queryHelper->rangeQuery($field, NULL, NULL);
-          }
+          return $this->queryHelper->rangeQuery($field, NULL, NULL);
         }
-        else {
-          return '(*:* -' . $field . ':' . $this->queryHelper->escapePhrase($value) . ')';
-        }
+        return '(*:* -' . $field . ':' . $this->queryHelper->escapePhrase($value) . ')';
 
       case '<':
         return $this->queryHelper->rangeQuery($field, NULL, $value, FALSE);
@@ -2734,9 +2732,15 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         return $this->queryHelper->rangeQuery($field, $value, NULL, FALSE);
 
       case 'BETWEEN':
+        if ('location' === $index_field->getType()) {
+          return $this->queryHelper->rangeQuery($field, array_shift($value), array_shift($value), TRUE, FALSE);
+        }
         return $this->queryHelper->rangeQuery($field, array_shift($value), array_shift($value));
 
       case 'NOT BETWEEN':
+        if ('location' === $index_field->getType()) {
+          return '(+' . $field . ':[-90,-180 TO 90,180] -' . $this->queryHelper->rangeQuery($field, array_shift($value), array_shift($value), TRUE, FALSE) . ')';
+        }
         return '(*:* -' . $this->queryHelper->rangeQuery($field, array_shift($value), array_shift($value)) . ')';
 
       case 'IN':
@@ -2747,9 +2751,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $null = TRUE;
             break;
           }
-          else {
-            $parts[] = $this->queryHelper->escapePhrase($v);
-          }
+          $parts[] = $this->queryHelper->escapePhrase($v);
         }
         if ($null) {
           // @see https://stackoverflow.com/questions/4238609/how-to-query-solr-for-empty-fields/28859224#28859224
@@ -2831,10 +2833,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           return 0;
         }
         break;
-
-      case 'location':
-        // Do not escape.
-        return (float) $value;
     }
     return is_null($value) ? '' : $value;
   }
