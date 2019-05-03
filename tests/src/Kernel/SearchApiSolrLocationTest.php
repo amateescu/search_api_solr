@@ -377,12 +377,12 @@ class SearchApiSolrLocationTest extends SolrBackendTestBase {
     $this->assertEquals($expected, $facets, 'The correct location facets are returned');
 
     // Test boundary filtering.
-    $query = $this->buildSearch(NULL, [], NULL, FALSE)
+    $query = $this->buildSearch()
       ->addCondition('location', ['38,-75', '42,-70'], 'BETWEEN');
     $result = $query->execute();
     $this->assertResults([2], $result, 'Search for NYC by boundary and NYC only');
 
-    $query = $this->buildSearch(NULL, [], NULL, FALSE)
+    $query = $this->buildSearch()
       ->addCondition('location', ['38,-75', '42,-70'], 'NOT BETWEEN');
     $result = $query->execute();
     $this->assertResults([1, 3], $result, 'Search for outside NYC by boundary');
