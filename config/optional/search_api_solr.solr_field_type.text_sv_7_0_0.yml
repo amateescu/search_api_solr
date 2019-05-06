@@ -47,7 +47,7 @@ field_type:
           ignoreCase: true
           words: stopwords_sv.txt
         -
-          class: solr.SwedishStemFilterFactory
+          class: solr.SwedishLightStemFilterFactory
         -
           class: solr.ScandinavianNormalizationFilterFactory
         -
@@ -87,7 +87,7 @@ field_type:
           expand: true
           ignoreCase: true
         -
-          class: solr.SwedishStemFilterFactory
+          class: solr.SwedishLightStemFilterFactory
         -
           class: solr.ScandinavianNormalizationFilterFactory
         -
