@@ -10,7 +10,7 @@ id: text_sv_7_0_0
 label: 'Swedish Text Field'
 minimum_solr_version: 7.0.0
 custom_code: ''
-field_type_language_code: no
+field_type_language_code: sv
 domains: {}
 field_type:
   name: text_sv
@@ -435,7 +435,7 @@ text_files:
     "\u0152" => "OE"
     # Þ
     "\u00DE" => "TH"
-     # Ù => U
+    # Ù => U
     "\u00D9" => "U"
     # Ú => U
     "\u00DA" => "U"
