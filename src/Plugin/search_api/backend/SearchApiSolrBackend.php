@@ -4352,26 +4352,31 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     $facet_set = $result->getFacetSet();
     /** @var \Solarium\Component\Result\Facet\Aggregation $maxVersion */
-    $maxVersion = $facet_set->getFacet('maxVersion');
-    $document_versions = [
-      '#total' => $maxVersion->getValue(),
-    ];
-    /** @var \Solarium\Component\Result\Facet\Buckets $site_hashes */
-    if ($site_hashes = $facet_set->getFacet('siteHahes')) {
-      /** @var \Solarium\Component\Result\Facet\Bucket $site_hash_bucket */
-      foreach ($site_hashes->getBuckets() as $site_hash_bucket) {
-        $site_hash = $site_hash_bucket->getValue();
-        /** @var \Solarium\Component\Result\Facet\Bucket $index_bucket */
-        foreach ($site_hash_bucket->getFacetSet()->getFacet('indexes') as $index_bucket) {
-          $index = $index_bucket->getValue();
-          /** @var \Solarium\Component\Result\Facet\Bucket $datasource_bucket */
-          foreach ($index_bucket->getFacetSet()->getFacet('dataSources') as $datasource_bucket) {
-            $datasource = $datasource_bucket->getValue();
-            $document_versions[$site_hash][$index][$datasource] = $datasource_bucket->getFacetSet()->getFacet('maxVersionPerDataSource')->getValue();
+    if ($maxVersion = $facet_set->getFacet('maxVersion')) {
+      $document_versions = [
+        '#total' => $maxVersion->getValue(),
+      ];
+      /** @var \Solarium\Component\Result\Facet\Buckets $site_hashes */
+      if ($site_hashes = $facet_set->getFacet('siteHahes')) {
+        /** @var \Solarium\Component\Result\Facet\Bucket $site_hash_bucket */
+        foreach ($site_hashes->getBuckets() as $site_hash_bucket) {
+          $site_hash = $site_hash_bucket->getValue();
+          /** @var \Solarium\Component\Result\Facet\Bucket $index_bucket */
+          foreach ($site_hash_bucket->getFacetSet()->getFacet('indexes') as $index_bucket) {
+            $index = $index_bucket->getValue();
+            /** @var \Solarium\Component\Result\Facet\Bucket $datasource_bucket */
+            foreach ($index_bucket->getFacetSet()->getFacet('dataSources') as $datasource_bucket) {
+              $datasource = $datasource_bucket->getValue();
+              /** @var \Solarium\Component\Result\Facet\Aggregation $maxVersionPerDataSource */
+              if ($maxVersionPerDataSource = $datasource_bucket->getFacetSet()->getFacet('maxVersionPerDataSource')) {
+                $document_versions[$site_hash][$index][$datasource] = $maxVersionPerDataSource->getValue();
+              }
+            }
           }
         }
       }
     }
+
     return $document_versions;
   }
 }
