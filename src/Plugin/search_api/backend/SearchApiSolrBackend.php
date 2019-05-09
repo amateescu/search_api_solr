@@ -3162,7 +3162,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected function setAutocompleteSpellCheckQuery(QueryInterface $query, AutocompleteQuery $solarium_query, $user_input) {
     $this->setSpellcheck($solarium_query, $query, [
       'keys' => [$user_input],
-      'count' => $query->getOption('limit', 1),
+      'count' => $query->getOption('limit') ?? 1,
     ]);
   }
 
@@ -3182,7 +3182,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $terms_component = $solarium_query->getTerms();
     $terms_component->setFields($fl);
     $terms_component->setPrefix($incomplete_key);
-    $terms_component->setLimit($query->getOption('limit', 10));
+    $terms_component->setLimit($query->getOption('limit') ?? 10);
   }
 
   /**
@@ -3223,7 +3223,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $suggester_component->setContextFilterQuery(
         Utility::buildSuggesterContextFilterQuery($options['context_filter_tags']));
     }
-    $suggester_component->setCount($query->getOption('limit', 10));
+    $suggester_component->setCount($query->getOption('limit') ?? 10);
     // The search_api_autocomplete module highlights by itself.
     $solarium_query->addParam('suggest.highlight', FALSE);
   }
