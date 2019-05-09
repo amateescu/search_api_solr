@@ -99,7 +99,7 @@ interface SolrBackendInterface extends BackendInterface {
    * @param \Drupal\search_api\Item\ItemInterface $item
    *   An item to get documents for.
    *
-   * @return \Solarium\QueryType\Update\Query\Document\Document
+   * @return \Solarium\QueryType\Update\Query\Document
    *   A solr document.
    */
   public function getDocument(IndexInterface $index, ItemInterface $item);
@@ -114,7 +114,7 @@ interface SolrBackendInterface extends BackendInterface {
    * @param \Solarium\QueryType\Update\Query\Query $update_query
    *   The existing update query the documents should be added to.
    *
-   * @return \Solarium\QueryType\Update\Query\Document\Document[]
+   * @return \Solarium\QueryType\Update\Query\Document[]
    *   An array of solr documents.
    */
   public function getDocuments(IndexInterface $index, array $items, UpdateQuery $update_query = NULL);
@@ -262,14 +262,27 @@ interface SolrBackendInterface extends BackendInterface {
   public function getSchemaLanguageStatistics();
 
   /**
-   * Returns document counts for this server, in total and per site / index.
-   *
-   * @param \Drupal\search_api\IndexInterface $index
-   *   The Search API index entity.
+   * Get document counts for this server, in total and per site / index.
    *
    * @return array
    *   An associative array of document counts.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function getDocumentCounts();
+
+  /**
+   * Get the max document versions, in total and per site / index / datasource.
+   *
+   * _version_ numbers are important for replication and checkpoints.
+   *
+   * @return array
+   *   An associative array of max document versions.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   */
+  public function getMaxDocumentVersions();
 
 }

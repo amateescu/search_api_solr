@@ -702,6 +702,25 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
               ];
             }
           }
+
+          foreach ($this->getMaxDocumentVersions() as $site_hash => $indexes) {
+            if ('#total' === $site_hash) {
+              $info[] = [
+                'label' => $this->t('Max docuemnt _version_ for this server'),
+                'info' => $indexes,
+              ];
+            }
+            else {
+              foreach ($indexes as $index => $datasources) {
+                foreach ($datasources as $datasource => $max_version) {
+                  $info[] = [
+                    'label' => $this->t('Max _version_ for datasource %datasource in index %index on site %site', ['%datasource' => $datasource, '%index' => $index, '%site' => $site_hash]),
+                    'info' => $max_version,
+                  ];
+                }
+              }
+            }
+          }
         }
         catch (SearchApiException $e) {
           $info[] = [
@@ -4229,7 +4248,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
      }
      catch (\Exception $e) {
        // For non drupal indexes we only use the implicit "count" aggregation.
-       // Therefore we need one random facet. The only filed we can be 99% sure
+       // Therefore we need one random facet. The only field we can be 99% sure
        // that it exists in any index is _version_. max(_version_) should be the
        // most minimalistic facet we can think of.
        $query = $connector->getSelectQuery()->setRows(1);
@@ -4244,19 +4263,23 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
      $facet_set = $result->getFacetSet();
 
-     // The implicit "count" aggregation over all results matiching he query
+     // The implicit "count" aggregation over all results matching the query
      // exists ony any JSONFacet set.
+     /** @var \Solarium\Component\Result\Facet\Aggregation $count */
+     $count = $facet_set->getFacet('count');
      $document_counts = [
-       '#total' => $facet_set->getFacet('count')->getValue(),
+       '#total' => $count->getValue(),
      ];
 
-     if ($site_hashes = $facet_set->getFacet('siteHahes')) {
+    /** @var \Solarium\Component\Result\Facet\Buckets $site_hashes */
+    if ($site_hashes = $facet_set->getFacet('siteHahes')) {
        /** @var \Solarium\Component\Result\Facet\Bucket $site_hash_bucket */
        foreach ($site_hashes->getBuckets() as $site_hash_bucket) {
          $site_hash = $site_hash_bucket->getValue();
          /** @var \Solarium\Component\Result\Facet\Bucket $index_bucket */
          foreach ($site_hash_bucket->getFacetSet()->getFacet('numDocsPerIndex') as $index_bucket) {
-           $document_counts[$site_hash][$index_bucket->getValue()] = $index_bucket->getCount();
+           $index = $index_bucket->getValue();
+           $document_counts[$site_hash][$index] = $index_bucket->getCount();
          }
        }
      }
@@ -4264,4 +4287,91 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
      return $document_counts;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getMaxDocumentVersions() {
+    $connector = $this->getSolrConnector();
+
+    try {
+      $query = $connector->getSelectQuery()
+        ->addFilterQuery(new FilterQuery([
+          'key' => 'search_api',
+          'query' => '+hash:* +index_id:*'
+        ]))
+        ->setRows(1)
+        ->setFields('id');
+
+      $facet_set = $query->getFacetSet();
+
+      $facet_set->createJsonFacetAggregation([
+        'key' => 'maxVersion',
+        'function' => 'max(_version_)',
+      ]);
+
+      $siteHahes = $facet_set->createJsonFacetTerms([
+        'key' => 'siteHahes',
+        'limit' => -1,
+        'field' => 'hash',
+      ]);
+
+      $indexes = $facet_set->createJsonFacetTerms([
+        'key' => 'indexes',
+        'limit' => -1,
+        'field' => 'index_id',
+      ], /* Don't add to top level => nested. */ FALSE);
+
+      $dataSources = $facet_set->createJsonFacetTerms([
+        'key' => 'dataSources',
+        'limit' => -1,
+        'field' => 'ss_search_api_datasource',
+      ], /* Don't add to top level => nested. */ FALSE);
+
+      $maxVersionPerDataSource = $facet_set->createJsonFacetAggregation([
+        'key' => 'maxVersionPerDataSource',
+        'function' => 'max(_version_)',
+      ], /* Don't add to top level => nested. */ FALSE);
+
+      $dataSources->addFacet($maxVersionPerDataSource);
+      $indexes->addFacet($dataSources);
+      $siteHahes->addFacet($indexes);
+
+      /** @var \Solarium\QueryType\Select\Result\Result $result */
+      $result = $connector->execute($query);
+    }
+    catch (\Exception $e) {
+      $query = $connector->getSelectQuery()->setRows(1);
+      $facet_set = $query->getFacetSet();
+      $facet_set->createJsonFacetAggregation([
+        'key' => 'maxVersion',
+        'function' => 'max(_version_)',
+      ]);
+      /** @var \Solarium\QueryType\Select\Result\Result $result */
+      $result = $connector->execute($query);
+    }
+
+    $facet_set = $result->getFacetSet();
+    /** @var \Solarium\Component\Result\Facet\Aggregation $maxVersion */
+    $maxVersion = $facet_set->getFacet('maxVersion');
+    $document_versions = [
+      '#total' => $maxVersion->getValue(),
+    ];
+    /** @var \Solarium\Component\Result\Facet\Buckets $site_hashes */
+    if ($site_hashes = $facet_set->getFacet('siteHahes')) {
+      /** @var \Solarium\Component\Result\Facet\Bucket $site_hash_bucket */
+      foreach ($site_hashes->getBuckets() as $site_hash_bucket) {
+        $site_hash = $site_hash_bucket->getValue();
+        /** @var \Solarium\Component\Result\Facet\Bucket $index_bucket */
+        foreach ($site_hash_bucket->getFacetSet()->getFacet('indexes') as $index_bucket) {
+          $index = $index_bucket->getValue();
+          /** @var \Solarium\Component\Result\Facet\Bucket $datasource_bucket */
+          foreach ($index_bucket->getFacetSet()->getFacet('dataSources') as $datasource_bucket) {
+            $datasource = $datasource_bucket->getValue();
+            $document_versions[$site_hash][$index][$datasource] = $datasource_bucket->getFacetSet()->getFacet('maxVersionPerDataSource')->getValue();
+          }
+        }
+      }
+    }
+    return $document_versions;
+  }
 }
