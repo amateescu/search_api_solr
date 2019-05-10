@@ -39,8 +39,8 @@ field_type:
           ignoreCase: true
           words: stopwords_uk.txt
         -
-          class: solr.MorphologikFilterFactory
-          dictionary: ukrainian.dict
+          class: solr.MorfologikFilterFactory
+          dictionary: org/apache/lucene/analysis/uk/ukrainian.dict
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
     -
@@ -70,8 +70,8 @@ field_type:
           ignoreCase: true
           words: stopwords_uk.txt
         -
-          class: solr.MorphologikFilterFactory
-          dictionary: ukrainian.dict
+          class: solr.MorfologikFilterFactory
+          dictionary: org/apache/lucene/analysis/uk/ukrainian.dict
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
 unstemmed_field_type:

@@ -246,7 +246,7 @@ search_api_solr.solr_field_type_filters:
         nullable: true
       dictionary:
         type: string
-        label: 'OpenNLPLemmatizerFilter:: HunspellStemFilter:: MorphologikFilterFactory:: DictionaryCompoundWordTokenFilter::dictionary'
+        label: 'OpenNLPLemmatizerFilter:: HunspellStemFilter:: MorfologikFilterFactory:: DictionaryCompoundWordTokenFilter::dictionary'
         nullable: true
       lemmatizerModel:
         type: string

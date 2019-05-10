@@ -3208,7 +3208,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
       else {
         foreach ($options['context_filter_tags'] as $key => $tag) {
-          if ('drupal/langcode:multilingual' == $tag) {
+          if ('drupal/langcode:multilingual' === $tag) {
             unset($options['context_filter_tags'][$key]);
             break;
           }
