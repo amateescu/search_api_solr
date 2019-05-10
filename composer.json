@@ -34,7 +34,7 @@
         "drupal/search_api_location": "1.x-dev"
     },
     "conflict": {
-        "drupal/search_api_solr_multilingual": "*",
+        "drupal/search_api_solr_multilingual": "<3.0-beta1",
         "drupal/core": "<8.5"
     },
     "suggest": {

@@ -427,28 +427,38 @@ function search_api_solr_update_8008() {
  * Remove Search API Multilingual Solr Search left-overs.
  */
 function search_api_solr_update_8200() {
-  $database = Drupal::database();
+  if (!function_exists('search_api_solr_update_8300')) {
+    // 8.x-1.x to 8.x-2.x migration path.
+    $database = Drupal::database();
 
-  $database->delete('key_value')
-    ->condition('collection', 'system.schema')
-    ->condition('name', 'search_api_solr_multilingual')
-    ->execute();
+    $database->delete('key_value')
+      ->condition('collection', 'system.schema')
+      ->condition('name', 'search_api_solr_multilingual')
+      ->execute();
+  }
+  else {
+    // 8.x-1.x to 8.x-3.x migration path.
+
+  }
 }
 
 /**
  * Fix suggester field type.
  */
 function search_api_solr_update_8201() {
-  foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
-    if (!empty($field_type_config['solr_configs']) && !empty($field_type_config['solr_configs']['searchComponents'])) {
-      foreach ($field_type_config['solr_configs']['searchComponents'] as &$component) {
-        if ($component['name'] == 'suggest') {
-          foreach ($component['lst'] as &$lst) {
-            foreach ($lst['str'] as &$entry) {
-              if ($entry['name'] == 'field') {
-                $entry['VALUE'] = 'twm_suggest';
-                search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
-                break;
+  if (!function_exists('search_api_solr_update_8300')) {
+    // 8.x-1.x to 8.x-2.x migration path.
+    foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+      if (!empty($field_type_config['solr_configs']) && !empty($field_type_config['solr_configs']['searchComponents'])) {
+        foreach ($field_type_config['solr_configs']['searchComponents'] as &$component) {
+          if ($component['name'] == 'suggest') {
+            foreach ($component['lst'] as &$lst) {
+              foreach ($lst['str'] as &$entry) {
+                if ($entry['name'] == 'field') {
+                  $entry['VALUE'] = 'twm_suggest';
+                  search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
+                  break;
+                }
               }
             }
           }
@@ -530,20 +540,23 @@ function search_api_solr_update_8206() {
  * Fix language undefined field types.
  */
 function search_api_solr_update_8207() {
-  foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
-    if (strpos($field_type_name, 'text_und') === 0) {
-      if (!empty($field_type_config['field_type']) && !empty($field_type_config['field_type']['analyzers'])) {
-        foreach ($field_type_config['field_type']['analyzers'] as &$component) {
-          foreach ($component['filters'] as &$filter) {
-            foreach ($filter as &$entry) {
-              if ($entry['class'] == 'solr.SnowballPorterFilterFactory') {
-                unset($entry);
+  if (!function_exists('search_api_solr_update_8300')) {
+    // 8.x-1.x to 8.x-2.x migration path.
+    foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+      if (strpos($field_type_name, 'text_und') === 0) {
+        if (!empty($field_type_config['field_type']) && !empty($field_type_config['field_type']['analyzers'])) {
+          foreach ($field_type_config['field_type']['analyzers'] as &$component) {
+            foreach ($component['filters'] as &$filter) {
+              foreach ($filter as &$entry) {
+                if ($entry['class'] == 'solr.SnowballPorterFilterFactory') {
+                  unset($entry);
+                }
               }
             }
           }
         }
+        search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
       }
-      search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
     }
   }
 }
@@ -1214,10 +1227,10 @@ function search_api_solr_update_8316() {
               if (is_array($analyzers)) {
                 foreach ($analyzers['filters'] as $key => &$filter) {
                   if ('solr.SnowballPorterFilterFactory' === $filter['class']) {
-                    $filter['class'] = 'solr.MorphologikFilterFactory';
+                    $filter['class'] = 'solr.MorfologikFilterFactory';
                     unset($filter['language']);
                     unset($filter['protected']);
-                    $filter['dictionary'] = 'ukrainian.dict';
+                    $filter['dictionary'] = 'org/apache/lucene/analysis/uk/ukrainian.dict';
                   }
                 }
               }
