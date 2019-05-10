@@ -4292,6 +4292,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function getMaxDocumentVersions() {
     $connector = $this->getSolrConnector();
+    $document_versions = [];
 
     try {
       $query = $connector->getSelectQuery()
