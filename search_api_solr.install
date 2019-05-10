@@ -1244,3 +1244,33 @@ function search_api_solr_update_8317() {
     }
   }
 }
+
+
+/**
+ * Replace solr.MorphologikFilterFactory by solr.MorfologikFilterFactory.
+ */
+function search_api_solr_update_8318() {
+  foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+    if (!empty($field_type_config['field_type'])) {
+      $save = FALSE;
+      foreach ($field_type_config['field_type'] as &$components) {
+        if (is_array($components)) {
+          foreach ($components as &$analyzers) {
+            if (is_array($analyzers)) {
+              foreach ($analyzers['filters'] as $key => &$filter) {
+                if ('solr.MorphologikFilterFactory' === $filter['class']) {
+                  $filter['class'] = 'solr.MorfologikFilterFactory';
+                  $filter['dictionary'] = 'org/apache/lucene/analysis/uk/ukrainian.dict';
+                  $save = TRUE;
+                }
+              }
+            }
+          }
+        }
+      }
+      if ($save) {
+        search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
+      }
+    }
+  }
+}
