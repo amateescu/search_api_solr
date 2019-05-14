@@ -18,7 +18,6 @@ env:
   - SOLR_VERSION=7.7.1 DRUPAL_BRANCH=8.6.x DRUSH_VERSION=~9.6.0 SOLR_CLOUD=false
   - SOLR_VERSION=6.6.6 DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.6.0 SOLR_CLOUD=true
   - SOLR_VERSION=6.6.6 DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~9.6.0 SOLR_CLOUD=false
-  - SOLR_VERSION=6.6.6 DRUPAL_BRANCH=8.5.x DRUSH_VERSION=~9.6.0 SOLR_CLOUD=false
 
 git:
   # The depth needs to be increased. The default of 50 leads to fatal: reference
@@ -126,15 +125,4 @@ matrix:
     - php: 7.1
       env: SOLR_VERSION=7.7.1 DRUPAL_BRANCH=8.8.x DRUSH_VERSION=~9.6.0 SOLR_CLOUD=true
     - php: 7.1
-      env: SOLR_VERSION=7.7.1 DRUPAL_BRANCH=8.8.x DRUSH_VERSION=~9.6.0 SOLR_CLOUD=false
-    - php: 7.3
-      env: SOLR_VERSION=6.6.6 DRUPAL_BRANCH=8.5.x DRUSH_VERSION=~9.6.0 SOLR_CLOUD=false
-  allow_failures:
-    - php: 7.3
-      env: SOLR_VERSION=8.0.0 DRUPAL_BRANCH=8.8.x DRUSH_VERSION=~9.6.0 SOLR_CLOUD=true
-    - php: 7.3
-      env: SOLR_VERSION=8.0.0 DRUPAL_BRANCH=8.8.x DRUSH_VERSION=~9.6.0 SOLR_CLOUD=false
-    - php: 7.3
-      env: SOLR_VERSION=7.7.1 DRUPAL_BRANCH=8.8.x DRUSH_VERSION=~9.6.0 SOLR_CLOUD=true
-    - php: 7.3
       env: SOLR_VERSION=7.7.1 DRUPAL_BRANCH=8.8.x DRUSH_VERSION=~9.6.0 SOLR_CLOUD=false
