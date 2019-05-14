@@ -33,7 +33,8 @@ class CommandHelper extends \Drupal\search_api\Utility\CommandHelper {
   public function getServerConfigCommand($server_id, $file_name, $solr_version = NULL) {
     /** @var \Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
     $list_builder = $this->entityTypeManager->getListBuilder('solr_field_type');
-    $server = reset($this->loadServers([$server_id]));
+    $servers = $this->loadServers([$server_id]);
+    $server = reset($servers);
     if ($solr_version) {
       $config = $server->getBackendConfig();
       // Temporarily switch the Solr version but don't save!
