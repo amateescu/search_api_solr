@@ -80,7 +80,6 @@ class SolrFieldTypeForm extends EntityForm {
       '#title' => $this->t("I know what I'm doing!"),
       '#default_value' => FALSE,
     ];
-    $form['highlight_data']['#states']['invisible'][':input[name="backend_config[advanced][retrieve_data]"]']['checked'] = FALSE;
 
     $form['advanced']['field_type'] = [
       '#type' => 'textarea',
