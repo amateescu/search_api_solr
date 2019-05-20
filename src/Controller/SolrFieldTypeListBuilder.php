@@ -4,6 +4,7 @@ namespace Drupal\search_api_solr\Controller;
 
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
@@ -80,6 +81,15 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   public function load() {
     static $entities;
 
+    $active_languages = array_keys(\Drupal::languageManager()->getLanguages());
+    // Ignore region and variant of the locale string the langauge manager
+    // returns as we provide language fallbacks. For example, 'de' should be
+    // used for 'de-at' if there's no dedicated 'de-at' field type.
+    array_walk($active_languages, function (&$value) {
+      list($value, ) = explode('-', $value);
+    });
+    $active_languages[] = LanguageInterface::LANGCODE_NOT_SPECIFIED;
+
     if (!$entities) {
       $solr_version = '9999.0.0';
       $operator = '>=';
@@ -116,9 +126,11 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
         /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
         $version = $solr_field_type->getMinimumSolrVersion();
         $domains = $solr_field_type->getDomains();
+        list($language, ) = explode('-', $solr_field_type->getFieldTypeLanguageCode());
         if (
           $solr_field_type->requiresManagedSchema() != $this->getBackend()->isManagedSchema() ||
           version_compare($version, $solr_version, '>') ||
+          !in_array($language, $active_languages) ||
           (!in_array($domain, $domains) && !in_array('generic', $domains))
         ) {
           unset($entities[$key]);
@@ -130,7 +142,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
             if (
               // Current selection domain is 'generic' but something more
               // specific is found.
-              ('generic' != $domain && 'generic' == $selection[$name]['domain'] && in_array($domain, $domains)) ||
+              ('generic' !== $domain && 'generic' === $selection[$name]['domain'] && in_array($domain, $domains)) ||
               // A newer version of the current selection domain is found.
               (version_compare($version, $selection[$name]['version'], $operator) && in_array($selection[$name]['domain'], $domains))
             ) {
