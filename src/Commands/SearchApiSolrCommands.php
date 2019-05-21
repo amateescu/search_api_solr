@@ -34,8 +34,11 @@ class SearchApiSolrCommands extends DrushCommands implements StdinAwareInterface
    *   The entity type manager.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
    *   The module handler.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    */
   public function __construct(EntityTypeManagerInterface $entityTypeManager, ModuleHandlerInterface $moduleHandler) {
+    parent::__construct();
     $this->commandHelper = new CommandHelper($entityTypeManager, $moduleHandler, 'dt');
   }
 
@@ -83,6 +86,7 @@ class SearchApiSolrCommands extends DrushCommands implements StdinAwareInterface
    *
    * @throws \Drupal\search_api\ConsoleException
    *   Thrown if no indexes could be loaded.
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function getServerConfig($server_id, $file_name, $solr_version = NULL) {
     $this->commandHelper->getServerConfigCommand($server_id, $file_name, $solr_version);
@@ -150,8 +154,9 @@ class SearchApiSolrCommands extends DrushCommands implements StdinAwareInterface
       throw new SearchApiSolrException('No streaming expression provided.');
     }
 
+    $indexes = $this->commandHelper->loadIndexes([$indexId]);
     /** @var \Drupal\search_api\IndexInterface $index */
-    $index = reset($this->commandHelper->loadIndexes([$indexId]));
+    $index = reset($indexes);
 
     if (!$index) {
       throw new SearchApiSolrException('Failed to load index.');

@@ -2,7 +2,6 @@
 
 namespace Drupal\search_api_solr\Utility;
 
-use Drupal\search_api\Entity\Server;
 
 /**
  * Provides functionality to be used by CLI tools.
