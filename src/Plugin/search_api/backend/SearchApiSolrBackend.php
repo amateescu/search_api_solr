@@ -1263,7 +1263,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       // that independent from the real number of documents, Solr seems to
       // allocate rows*shards memory for sorting the distributed result. That
       // could lead to out of memory exceptions.
-      $solarium_query->setRows($query->getOption('limit', 10));
+      $solarium_query->setRows($query->getOption('limit', 10) ?? 10);
 
       foreach ($options as $option => $value) {
         if (strpos($option, 'solr_param_') === 0) {

@@ -23,7 +23,7 @@
         "php": "^7.1",
         "ext-json": "*",
         "maennchen/zipstream-php": "0.4.*",
-        "solarium/solarium": "~5.0.1",
+        "solarium/solarium": "~5.0.2",
         "drupal/search_api": "~1.12"
     },
     "require-dev": {
@@ -35,7 +35,8 @@
     },
     "conflict": {
         "drupal/search_api_solr_multilingual": "<3.0-beta1",
-        "drupal/core": "<8.5"
+        "drupal/core": "<8.6",
+        "drush/drush": "<9.6"
     },
     "suggest": {
         "drupal/facets": "Provides facetted search.",
