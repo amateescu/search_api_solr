@@ -56,7 +56,12 @@ class SolrFieldManager implements SolrFieldManagerInterface {
    * {@inheritdoc}
    */
   public function getFieldDefinitions(IndexInterface $index) {
-    if (!empty($index->skipSolrFieldManagerCaches)) {
+    // We need to prevent the use of the field definition cache when we are
+    // about to save changes, or the property check in Index::presave will work
+    // with stale cached data and remove newly added property definitions.
+    // We take the presence of $index->original as indicator that the config
+    // entity is being saved.
+    if (!empty($index->original)) {
       return $this->buildFieldDefinitions($index);
     }
 
