@@ -1198,7 +1198,6 @@ function search_api_solr_update_8315() {
     if (!empty($field_type_config['spellcheck_field_type'])) {
       if (!in_array($field_type_config['field_type_language_code'], ['und', 'ja', 'th', 'zh-hans', 'zh-hant'])) {
         unset($field_type_config['spellcheck_field_type']);
-        search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
       }
       if (!empty($field_type_config['solr_configs']) && !empty($field_type_config['solr_configs']['searchComponents'])) {
         foreach ($field_type_config['solr_configs']['searchComponents'] as &$component) {
@@ -1210,6 +1209,7 @@ function search_api_solr_update_8315() {
           }
         }
       }
+      search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
     }
   }
 }
@@ -1284,6 +1284,53 @@ function search_api_solr_update_8318() {
       if ($save) {
         search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
       }
+    }
+  }
+}
+
+/**
+ * Fix Solr 6 Czech Field Type and improve spellchekers.
+ */
+function search_api_solr_update_8319() {
+  foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+    $save = FALSE;
+    if (!empty($field_type_config['field_type'])) {
+      $save = FALSE;
+      foreach ($field_type_config['field_type'] as &$components) {
+        if (is_array($components)) {
+          foreach ($components as &$analyzers) {
+            if (is_array($analyzers)) {
+              foreach ($analyzers['filters'] as $key => &$filter) {
+                if ('solr.RemoveDuplicatesTokenFilterFactor' === $filter['class']) {
+                  $filter['class'] = 'solr.RemoveDuplicatesTokenFilterFactory';
+                  $save = TRUE;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    if (!empty($field_type_config['spellcheck_field_type'])) {
+      if (!empty($field_type_config['solr_configs']) && !empty($field_type_config['solr_configs']['searchComponents'])) {
+        foreach ($field_type_config['solr_configs']['searchComponents'] as &$component) {
+          if ('spellcheck' === $component['name']) {
+            foreach ($component['lst']['str'] as $str) {
+              if ('onlyMorePopular' === $str['name']) {
+                continue 2;
+              }
+            }
+            $component['lst']['str'][] = [
+              'name' => 'onlyMorePopular',
+              'VALUE' => 'true',
+            ];
+            $save = TRUE;
+          }
+        }
+      }
+    }
+    if ($save) {
+      search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
     }
   }
 }
