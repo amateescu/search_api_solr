@@ -923,8 +923,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             // for faster sorts and language specific collations. To allow
             // sorted multilingual searches we need to fill *all*
             // language-specific sort fields!
-            foreach (array_keys(\Drupal::languageManager()->getLanguages()) as $spell_language_id) {
-              $key = Utility::encodeSolrName('sort' . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $spell_language_id . '_' . $name);
+            $sort_languages = array_keys(\Drupal::languageManager()->getLanguages());
+            $sort_languages[] = LanguageInterface::LANGCODE_NOT_SPECIFIED;
+            foreach ($sort_languages as $sort_language_id) {
+              $key = Utility::encodeSolrName('sort' . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $sort_language_id . '_' . $name);
               if (!$doc->{$key}) {
                 $doc->addField($key, $first_value);
               }
