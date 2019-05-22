@@ -1289,7 +1289,7 @@ function search_api_solr_update_8318() {
 }
 
 /**
- * Fix Solr 6 Czech Field Type and improve spellchekers.
+ * Fix Solr 6 Czech Field Type and improve spellcheckers.
  */
 function search_api_solr_update_8319() {
   foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
@@ -1315,16 +1315,18 @@ function search_api_solr_update_8319() {
       if (!empty($field_type_config['solr_configs']) && !empty($field_type_config['solr_configs']['searchComponents'])) {
         foreach ($field_type_config['solr_configs']['searchComponents'] as &$component) {
           if ('spellcheck' === $component['name']) {
-            foreach ($component['lst']['str'] as $str) {
-              if ('onlyMorePopular' === $str['name']) {
-                continue 2;
+            if (isset($component['lst']) && $component['str']) {
+              foreach ($component['lst']['str'] as $str) {
+                if ('onlyMorePopular' === $str['name']) {
+                  continue 2;
+                }
               }
+              $component['lst']['str'][] = [
+                'name' => 'onlyMorePopular',
+                'VALUE' => 'true',
+              ];
+              $save = TRUE;
             }
-            $component['lst']['str'][] = [
-              'name' => 'onlyMorePopular',
-              'VALUE' => 'true',
-            ];
-            $save = TRUE;
           }
         }
       }
@@ -1333,4 +1335,11 @@ function search_api_solr_update_8319() {
       search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
     }
   }
+}
+
+/**
+ * Install new language-specific field types.
+ */
+function search_api_solr_update_8320() {
+  search_api_solr_update_helper_install_configs();
 }
