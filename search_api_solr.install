@@ -427,10 +427,12 @@ function search_api_solr_update_8008() {
 }
 
 /**
- * Remove Search API Multilingual Solr Search left-overs.
+ * Insatll Solr Field Types.
  */
 function search_api_solr_update_8200() {
- // 8.x-1.x to 8.x-2.x migration path is obsolete.
+  // 8.x-1.x to 8.x-2.x migration path is obsolete and therefore removed. Just
+  // install the latest field types.
+  search_api_solr_update_helper_install_configs();
 }
 
 /**
@@ -682,7 +684,12 @@ function search_api_solr_update_8300() {
       default:
         continue(2);
     }
-    $server->set('backend_config', $backend_config)->save(TRUE);
+    $dependencies = $server->get('dependencies');
+    $dependencies['module'] = ['search_api_solr'];
+    $server
+      ->set('backend_config', $backend_config)
+      ->set('dependencies', $dependencies)
+      ->save(TRUE);
   }
 
   foreach ($config_factory->listAll('search_api.index.') as $index_name) {
@@ -836,7 +843,6 @@ function search_api_solr_update_8306() {
  * Avoid redundant text files in generated Solr config files.
  */
 function search_api_solr_update_8307() {
-  $edge_7 = $ngram_7 = FALSE;
   foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
     if (
       strpos($field_type_name, 'text_phonetic') !== FALSE ||
@@ -886,23 +892,7 @@ function search_api_solr_update_8307() {
         $field_type_config['text_files'] = [];
       }
       search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
-      if (strpos($field_type_name, 'text_edge_und_7') !== FALSE) {
-        $edge_7 = TRUE;
-      }
-      elseif (strpos($field_type_name, 'text_ngram_und_7') !== FALSE) {
-        $ngram_7 = TRUE;
-      }
     }
-  }
-  if (!$edge_7) {
-    $filename = __DIR__ . '/config/install/search_api_solr.solr_field_type.text_edge_und_7_0_0.yml';
-    $config = SolrFieldType::create(Yaml::decode(file_get_contents($filename)));
-    $config->save();
-  }
-  if (!$ngram_7) {
-    $filename = __DIR__ . '/config/install/search_api_solr.solr_field_type.text_ngram_und_7_0_0.yml';
-    $config = SolrFieldType::create(Yaml::decode(file_get_contents($filename)));
-    $config->save();
   }
 }
 
@@ -1333,9 +1323,3 @@ function search_api_solr_update_8319() {
   }
 }
 
-/**
- * Install new language-specific field types.
- */
-function search_api_solr_update_8320() {
-  search_api_solr_update_helper_install_configs();
-}

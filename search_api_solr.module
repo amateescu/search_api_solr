@@ -415,7 +415,7 @@ function search_api_solr_views_data_alter(array &$data) {
 /**
  * Re-install all default Solr Field Types from their yml files.
  */
-function search_api_solr_reinstall_all_field_types() {
+function search_api_solr_install_missing_field_types() {
   module_load_include('install', 'search_api_solr');
   search_api_solr_update_helper_install_configs();
 }

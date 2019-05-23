@@ -3,7 +3,7 @@
 /**
  * Delete Solr 4 and 5 field types.
  */
-function search_api_solr_post_update_8320() {
+function search_api_solr_post_update_8204_replace_solr_4_field_types() {
   $storage = \Drupal::entityTypeManager()->getStorage('solr_field_type');
   $storage->delete($storage->loadMultiple([
     'm_text_und_5_2_0',
@@ -25,4 +25,19 @@ function search_api_solr_post_update_8320() {
     'text_ru_4_5_0',
     'text_uk_4_5_0',
   ]));
+}
+
+/**
+ * Install new Solr Field Types and uninstall search_api_solr_multilingual.
+ */
+function search_api_solr_post_update_8319() {
+  if (\Drupal::moduleHandler()->moduleExists('search_api_solr_multilingual')) {
+    /** @var \Drupal\Core\Extension\ModuleInstallerInterface $module_installer */
+    $module_installer = \Drupal::service('module_installer');
+    $module_installer->uninstall(['search_api_solr_multilingual']);
+  }
+  // module_load_include is required in case that no update_hooks were run
+  // before.
+  module_load_include('install', 'search_api_solr');
+  search_api_solr_update_helper_install_configs();
 }

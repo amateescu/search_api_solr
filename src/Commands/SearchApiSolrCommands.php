@@ -68,6 +68,21 @@ class SearchApiSolrCommands extends DrushCommands implements StdinAwareInterface
   }
 
   /**
+   * Install missing Solr Field Types from their yml files.
+   *
+   * @command search-api-solr:install-missing-fieldtypes
+   *
+   * @usage drush search-api-solr:install-missing-fieldtypes
+   *   Install missing Solr Field Types.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   *   Thrown if an index has a server which couldn't be loaded.
+   */
+  public function installMissingFieldtypes() {
+    search_api_solr_install_missing_field_types();
+  }
+
+  /**
    * Gets the config for a Solr search server.
    *
    * @param string $server_id

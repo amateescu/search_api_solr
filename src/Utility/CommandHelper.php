@@ -12,7 +12,7 @@ class CommandHelper extends \Drupal\search_api\Utility\CommandHelper {
    * Re-install all Solr Field Types from their yml files.
    */
   public function reinstallFieldtypesCommand() {
-    search_api_solr_reinstall_all_field_types();
+    search_api_solr_install_missing_field_types();
   }
 
   /**
