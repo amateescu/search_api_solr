@@ -1,45 +1,9 @@
 <?php
 
 /**
- * @file
- * Helper functions for search_api_solr.install.
+ * Delete Solr 4 and 5 field types.
  */
-
-/**
- * Installs the standard highlighter config.
- */
-function search_api_solr_post_update_install_standard_highlighter_config() {
-  // Removed.
-}
-
-/**
- * Reinstalls the solr field types.
- */
-function search_api_solr_post_update_8200_reinstall_field_types() {
-  // Removed.
-}
-
-/**
- * Deletes potential left over configs from multilingual to alpha1 migration.
- */
-function search_api_solr_post_update_8201_delete_multilingual_migration_left_over_configs() {
-  $config_factory = \Drupal::configFactory();
-  foreach ($config_factory->listAll('search_api_solr_multilingual') as $config_name) {
-    $config_factory->getEditable($config_name)->delete();
-  }
-}
-
-/**
- * Installs new optional Solr field types.
- */
-function search_api_solr_post_update_8203_install_new_optional_field_types() {
-  // Removed.
-}
-
-/**
- * Replace Solr 4 and 5 field types by Solr 6 versions.
- */
-function search_api_solr_post_update_8204_replace_solr_4_field_types() {
+function search_api_solr_post_update_8320() {
   $storage = \Drupal::entityTypeManager()->getStorage('solr_field_type');
   $storage->delete($storage->loadMultiple([
     'm_text_und_5_2_0',
