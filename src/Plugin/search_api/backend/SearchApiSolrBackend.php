@@ -1365,7 +1365,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             if (!empty($options['search_api_spellcheck']['collate'])) {
               /** @var \Solarium\Component\Result\Spellcheck\Result $spellcheck_result */
               if ($spellcheck_result = $solarium_result->getComponent(ComponentAwareQueryInterface::COMPONENT_SPELLCHECK)) {
-                $search_api_spellcheck['collation'] = $spellcheck_result->getCollation()->getQuery();
+                if ($collation = $spellcheck_result->getCollation()) {
+                  $search_api_spellcheck['collation'] = $collation->getQuery();
+                }
               }
             }
             $search_api_result_set->setExtraData('search_api_spellcheck', $search_api_spellcheck);
