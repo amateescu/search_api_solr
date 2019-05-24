@@ -39,8 +39,9 @@ field_type:
           ignoreCase: true
           words: stopwords_uk.txt
         -
-          class: solr.MorfologikFilterFactory
-          dictionary: org/apache/lucene/analysis/uk/ukrainian.dict
+          class: solr.SnowballPorterFilterFactory
+          language: Russian
+          protected: protwords_uk.txt
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
     -
@@ -70,8 +71,9 @@ field_type:
           ignoreCase: true
           words: stopwords_uk.txt
         -
-          class: solr.MorfologikFilterFactory
-          dictionary: org/apache/lucene/analysis/uk/ukrainian.dict
+          class: solr.SnowballPorterFilterFactory
+          language: Russian
+          protected: protwords_uk.txt
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
 unstemmed_field_type:
