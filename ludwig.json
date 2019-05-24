@@ -7,6 +7,10 @@
         "maennchen/zipstream-php": {
             "version" : "0.4.1",
             "url": "https://github.com/maennchen/ZipStream-PHP/archive/v0.4.1.zip"
+        },
+        "consolidation/annotated-command": {
+            "version" : "2.12.0",
+            "url": "https://github.com/consolidation/annotated-command/archive/2.12.0.zip"
         }
     }
 }

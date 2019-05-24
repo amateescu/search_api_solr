@@ -22,21 +22,22 @@
     "require": {
         "php": "^7.1",
         "ext-json": "*",
+        "drupal/search_api": "~1.12",
+        "consolidation/annotated-command": "^2.12",
         "maennchen/zipstream-php": "0.4.*",
-        "solarium/solarium": "~5.0.2",
-        "drupal/search_api": "~1.12"
+        "solarium/solarium": "~5.0.2"
     },
     "require-dev": {
         "phayes/geophp": "^1.2",
         "drupal/facets": "1.x-dev",
         "drupal/geofield": "1.x-dev",
         "drupal/search_api_autocomplete": "1.x-dev",
-        "drupal/search_api_location": "1.x-dev"
+        "drupal/search_api_location": "1.x-dev",
+        "drupal/search_api_spellcheck": "3.x-dev"
     },
     "conflict": {
-        "drupal/search_api_solr_multilingual": "<3.0-beta1",
-        "drupal/core": "<8.6",
-        "drush/drush": "<9.6"
+        "drupal/search_api_solr_multilingual": "<3.0.0-beta1",
+        "drupal/core": "<8.6"
     },
     "suggest": {
         "drupal/facets": "Provides facetted search.",
