@@ -447,6 +447,8 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    * @return \Solarium\Core\Client\Response
    *   A Solarium response object containing either the file contents or a file
    *   list.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function getFile($file = NULL);
 
@@ -473,7 +475,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    * @return bool
    *   TRUE if successful, FALSE otherwise.
    *
-   * @throws SearchApiSolrException
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function reloadCore();
 

@@ -7,7 +7,7 @@ use Drupal\Core\TypedData\Exception\MissingDataException;
 use Drupal\Core\TypedData\TypedData;
 use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api_solr\TypedData\SolrDocumentDefinition;
-use Solarium\QueryType\Select\Result\AbstractDocument;
+use Solarium\Core\Query\DocumentInterface;
 
 /**
  * Defines the "Solr document" data type.
@@ -65,6 +65,9 @@ class SolrDocument extends TypedData implements \IteratorAggregate, ComplexDataI
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\TypedData\Exception\ReadOnlyException
    */
   public function get($property_name) {
     if (!isset($this->item)) {
@@ -101,7 +104,7 @@ class SolrDocument extends TypedData implements \IteratorAggregate, ComplexDataI
       // If that didn't work, maybe we can get the field from the Solr document?
       $document = $this->item->getExtraData('search_api_solr_document');
       if (
-        $document instanceof AbstractDocument &&
+        $document instanceof DocumentInterface &&
         isset($document[$property_name])
       ) {
         $property->setValue($document[$property_name]);

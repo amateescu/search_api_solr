@@ -29,6 +29,9 @@ class Spellcheck extends SuggesterPluginBase implements PluginFormInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   * @throws \Drupal\search_api_autocomplete\SearchApiAutocompleteException
    */
   public static function supportsSearch(SearchInterface $search) {
     return (bool) static::getBackend($search->getIndex());
@@ -50,6 +53,9 @@ class Spellcheck extends SuggesterPluginBase implements PluginFormInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   * @throws \Drupal\search_api_autocomplete\SearchApiAutocompleteException
    */
   public function getAutocompleteSuggestions(QueryInterface $query, $incomplete_key, $user_input) {
     if (!($backend = static::getBackend($this->getSearch()->getIndex()))) {

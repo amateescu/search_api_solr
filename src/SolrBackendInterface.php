@@ -47,6 +47,8 @@ interface SolrBackendInterface extends BackendInterface {
    * @param bool $reset
    *   (optional) Whether to reset the static cache.
    *
+   * @throws \Drupal\search_api\SearchApiException
+   *
    * @see SearchApiSolrBackend::search()
    */
   public function getSolrFieldNames(IndexInterface $index, $reset = FALSE);
@@ -63,6 +65,8 @@ interface SolrBackendInterface extends BackendInterface {
    *
    * @return array
    *   The language-specific mapping from Drupal to Solr field names.
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function getLanguageSpecificSolrFieldNames($language_id, IndexInterface $index, $reset = FALSE);
 
@@ -78,6 +82,8 @@ interface SolrBackendInterface extends BackendInterface {
    *
    * @return array
    *   The language-specific mapping from Drupal to Solr field names.
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function getSolrFieldNamesKeyedByLanguage(array $language_ids, IndexInterface $index, $reset = FALSE);
 
@@ -101,6 +107,8 @@ interface SolrBackendInterface extends BackendInterface {
    *
    * @return \Solarium\QueryType\Update\Query\Document
    *   A solr document.
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function getDocument(IndexInterface $index, ItemInterface $item);
 
@@ -116,6 +124,8 @@ interface SolrBackendInterface extends BackendInterface {
    *
    * @return \Solarium\QueryType\Update\Query\Document[]
    *   An array of solr documents.
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function getDocuments(IndexInterface $index, array $items, UpdateQuery $update_query = NULL);
 
@@ -127,6 +137,8 @@ interface SolrBackendInterface extends BackendInterface {
    *
    * @return string
    *   The text extracted from the file.
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function extractContentFromFile($filepath);
 
@@ -190,6 +202,8 @@ interface SolrBackendInterface extends BackendInterface {
    *
    * @return string
    *   The targeted Index ID.
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function getTargetedIndexId(IndexInterface $index);
 
@@ -201,6 +215,8 @@ interface SolrBackendInterface extends BackendInterface {
    *
    * @return string
    *   The targeted site hash.
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function getTargetedSiteHash(IndexInterface $index);
 
@@ -258,6 +274,10 @@ interface SolrBackendInterface extends BackendInterface {
    *   Stats as associative array keyed by language IDs and a boolean value to
    *   indicate if corresponding field types are existing on the server's
    *   current schema.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   * @throws \Drupal\search_api\SearchApiException
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function getSchemaLanguageStatistics();
 
@@ -267,6 +287,7 @@ interface SolrBackendInterface extends BackendInterface {
    * @return array
    *   An associative array of document counts.
    *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    * @throws \Drupal\search_api\SearchApiException
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
@@ -280,6 +301,7 @@ interface SolrBackendInterface extends BackendInterface {
    * @return array
    *   An associative array of max document versions.
    *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    * @throws \Drupal\search_api\SearchApiException
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */

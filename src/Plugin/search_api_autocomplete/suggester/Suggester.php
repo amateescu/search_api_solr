@@ -31,6 +31,9 @@ class Suggester extends SuggesterPluginBase implements PluginFormInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   * @throws \Drupal\search_api_autocomplete\SearchApiAutocompleteException
    */
   public static function supportsSearch(SearchInterface $search) {
     return (bool) static::getBackend($search->getIndex());
@@ -49,6 +52,9 @@ class Suggester extends SuggesterPluginBase implements PluginFormInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   * @throws \Drupal\search_api_autocomplete\SearchApiAutocompleteException
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $search = $this->getSearch();
@@ -102,6 +108,9 @@ class Suggester extends SuggesterPluginBase implements PluginFormInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   * @throws \Drupal\search_api_autocomplete\SearchApiAutocompleteException
    */
   public function getAutocompleteSuggestions(QueryInterface $query, $incomplete_key, $user_input) {
     if (!($backend = static::getBackend($this->getSearch()->getIndex()))) {
@@ -113,10 +122,10 @@ class Suggester extends SuggesterPluginBase implements PluginFormInterface {
     if ($config['search_api_solr/site_hash']) {
       $options['context_filter_tags'][] = 'search_api_solr/site_hash:' . Utility::getSiteHash();
     }
-    if (!empty($config['search_api/index']) && 'any' != $config['search_api/index']) {
+    if (!empty($config['search_api/index']) && 'any' !== $config['search_api/index']) {
       $options['context_filter_tags'][] = 'search_api/index:' . $config['search_api/index'];
     }
-    if ('any' != $config['drupal/langcode']) {
+    if ('any' !== $config['drupal/langcode']) {
       $options['context_filter_tags'][] = 'drupal/langcode:' . $config['drupal/langcode'];
     }
 

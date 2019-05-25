@@ -325,11 +325,11 @@ class Utility {
    * @see https://wiki.apache.org/solr/SchemaXml#Dynamic_fields
    */
   public static function getLanguageSpecificSolrDynamicFieldNameForSolrDynamicFieldName($field_name, $language_id) {
-    if ('twm_suggest' == $field_name) {
+    if ('twm_suggest' === $field_name) {
       return 'twm_suggest';
     }
 
-    return Utility::modifySolrDynamicFieldName($field_name, '@^([a-z]+)_@', '$1' . SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $language_id . '_');
+    return Utility::modifySolrDynamicFieldName($field_name, '@^([a-z]+)_@', '$1' . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $language_id . '_');
   }
 
   /**
@@ -348,7 +348,7 @@ class Utility {
    * @see https://wiki.apache.org/solr/SchemaXml#Dynamic_fields
    */
   public static function getSolrDynamicFieldNameForLanguageSpecificSolrDynamicFieldName($field_name) {
-    return Utility::modifySolrDynamicFieldName($field_name, '@^([a-z]+)' . SEARCH_API_SOLR_LANGUAGE_SEPARATOR . '[^_]+?_@', '$1_');
+    return Utility::modifySolrDynamicFieldName($field_name, '@^([a-z]+)' . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . '[^_]+?_@', '$1_');
   }
 
   /**
@@ -390,7 +390,7 @@ class Utility {
    *   The language-specific prefix.
    */
   public static function getLanguageSpecificSolrDynamicFieldPrefix($prefix, $language_id) {
-    return $prefix . SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $language_id . '_';
+    return $prefix . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $language_id . '_';
   }
 
   /**
@@ -405,7 +405,7 @@ class Utility {
    */
   public static function getLanguageIdFromLanguageSpecificSolrDynamicFieldName($field_name) {
     $decoded_field_name = Utility::decodeSolrName($field_name);
-    if (preg_match('@^[a-z]+' . SEARCH_API_SOLR_LANGUAGE_SEPARATOR . '([^_]+?)_@', $decoded_field_name, $matches)) {
+    if (preg_match('@^[a-z]+' . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . '([^_]+?)_@', $decoded_field_name, $matches)) {
       return $matches[1];
     }
     return FALSE;
@@ -423,7 +423,7 @@ class Utility {
    */
   public static function extractLanguageSpecificSolrDynamicFieldDefinition($field_name) {
     $decoded_field_name = Utility::decodeSolrName($field_name);
-    if (preg_match('@^[a-z]+' . SEARCH_API_SOLR_LANGUAGE_SEPARATOR . '[^_]+?_@', $decoded_field_name, $matches)) {
+    if (preg_match('@^[a-z]+' . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . '[^_]+?_@', $decoded_field_name, $matches)) {
       return Utility::encodeSolrName($matches[0]) . '*';
     }
     return FALSE;
@@ -477,7 +477,7 @@ class Utility {
    */
   public static function parseRequestParams(Request $request) {
     $params = [];
-    $parameters = ($request->getMethod() == 'GET') ? explode('&', $request->getQueryString()) : explode('&', $request->getRawData());
+    $parameters = ($request->getMethod() === 'GET') ? explode('&', $request->getQueryString()) : explode('&', $request->getRawData());
     foreach ($parameters as $parameter) {
       if ($parameter) {
         if (strpos($parameter, '=')) {
@@ -529,7 +529,7 @@ class Utility {
     // 's'. This way we for example ensure that search_api_relevance isn't
     // modified at all.
     if (strpos($field_name, 'search_api_') === 0) {
-      if ('search_api_random' == $field_name) {
+      if ('search_api_random' === $field_name) {
         // The default Solr schema provides a virtual field named "random_*"
         // that can be used to randomly sort the results; the field is
         // available only at query-time. See schema.xml for more details about

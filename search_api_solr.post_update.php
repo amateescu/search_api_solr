@@ -2,6 +2,10 @@
 
 /**
  * Delete Solr 4 and 5 field types.
+ *
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function search_api_solr_post_update_8204_replace_solr_4_field_types() {
   $storage = \Drupal::entityTypeManager()->getStorage('solr_field_type');

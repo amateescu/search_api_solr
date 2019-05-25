@@ -20,6 +20,7 @@ class LocalActionAccessCheck implements AccessInterface {
    *   Run access checks for this account.
    * @param \Drupal\search_api\ServerInterface $search_api_server
    *   (optional) The Search API server entity.
+   *
    */
   public function access(AccountInterface $account, ServerInterface $search_api_server = NULL) {
     if ($search_api_server && $search_api_server->getBackend() instanceof SolrBackendInterface) {

@@ -93,7 +93,7 @@ trait BasicAuthTrait {
     // Use the 'postbigrequest' plugin if no specific http method is
     // configured. The plugin needs to be loaded before the request is
     // created.
-    if ($this->configuration['http_method'] == 'AUTO') {
+    if ($this->configuration['http_method'] === 'AUTO') {
       $this->solr->getPlugin('postbigrequest');
     }
 
@@ -102,10 +102,10 @@ trait BasicAuthTrait {
     $request = $this->solr->createRequest($query);
 
     // Set the configured HTTP method.
-    if ($this->configuration['http_method'] == 'POST') {
+    if ($this->configuration['http_method'] === 'POST') {
       $request->setMethod(Request::METHOD_POST);
     }
-    elseif ($this->configuration['http_method'] == 'GET') {
+    elseif ($this->configuration['http_method'] === 'GET') {
       $request->setMethod(Request::METHOD_GET);
     }
 

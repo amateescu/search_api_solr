@@ -15,6 +15,8 @@ class IndexSolrMultisiteCloneForm extends IndexForm {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function form(array $form, FormStateInterface $form_state) {
     // If the form is being rebuilt, rebuild the entity with the current form
@@ -82,6 +84,8 @@ class IndexSolrMultisiteCloneForm extends IndexForm {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \ReflectionException
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
@@ -104,6 +108,10 @@ class IndexSolrMultisiteCloneForm extends IndexForm {
    *
    * @return string[]
    *   An associative array mapping server IDs to their labels.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\search_api\SearchApiException
    */
   protected function getServerOptions() {
     $options = [];

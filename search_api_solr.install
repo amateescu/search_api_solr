@@ -10,6 +10,10 @@ use Drupal\search_api_solr\Entity\SolrFieldType;
 
 /**
  * Implements hook_requirements().
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\search_api\SearchApiException
  */
 function search_api_solr_requirements($phase) {
   $requirements = [];
@@ -136,6 +140,7 @@ function search_api_solr_requirements($phase) {
  * Implements hook_uninstall().
  *
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
  * @throws \Drupal\search_api\SearchApiException
  */
 function search_api_solr_uninstall() {

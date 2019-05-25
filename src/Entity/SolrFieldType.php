@@ -213,14 +213,15 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    *   An array of domains as strings.
    */
   public static function getAvailableDomains() {
-    $domains = ['generic'];
+    $domains = [['generic']];
     $config_factory = \Drupal::configFactory();
     foreach ($config_factory->listAll('search_api_solr.solr_field_type.') as $field_type_name) {
       $config = $config_factory->get($field_type_name);
-      $domains = array_merge($domains, $config->get('domains'));
+      $domains[] = $config->get('domains');
     }
+    $domains = array_unique(array_merge(...$domains));
     sort($domains);
-    return array_unique($domains);
+    return $domains;
   }
 
   /**
@@ -255,7 +256,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     foreach ($this->field_type['analyzers'] as $analyzer) {
       $type = 'analyzer';
       if (!empty($analyzer['type'])) {
-        if ('multiterm' == $analyzer['type']) {
+        if ('multiterm' === $analyzer['type']) {
           $type = 'multiTermAnalyzer';
         }
         else {
@@ -266,8 +267,10 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
       $field_type[$type] = $analyzer;
     }
 
+    /** @noinspection PhpComposerExtensionStubsInspection */
     return $pretty ?
-      json_encode($field_type, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) : Json::encode($field_type);
+      json_encode($field_type, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) :
+      Json::encode($field_type);
   }
 
   /**
@@ -304,8 +307,10 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   public function getSpellcheckFieldTypeAsJson(bool $pretty = FALSE) {
     if ($this->spellcheck_field_type) {
+      /** @noinspection PhpComposerExtensionStubsInspection */
       return $pretty ?
-        json_encode($this->spellcheck_field_type, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) : Json::encode($this->spellcheck_field_type);
+        json_encode($this->spellcheck_field_type, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) :
+        Json::encode($this->spellcheck_field_type);
     }
 
     return '';
@@ -325,8 +330,10 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   public function getCollatedFieldTypeAsJson(bool $pretty = FALSE) {
     if ($this->collated_field_type) {
+      /** @noinspection PhpComposerExtensionStubsInspection */
       return $pretty ?
-        json_encode($this->collated_field_type, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) : Json::encode($this->collated_field_type);
+        json_encode($this->collated_field_type, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) :
+        Json::encode($this->collated_field_type);
     }
 
     return '';
@@ -346,8 +353,10 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    */
   public function getUnstemmedFieldTypeAsJson(bool $pretty = FALSE) {
     if ($this->unstemmed_field_type) {
+      /** @noinspection PhpComposerExtensionStubsInspection */
       return $pretty ?
-        json_encode($this->unstemmed_field_type, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) : Json::encode($this->unstemmed_field_type);
+        json_encode($this->unstemmed_field_type, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) :
+        Json::encode($this->unstemmed_field_type);
     }
 
     return '';
@@ -420,10 +429,12 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    * Formats a given array to an XML string.
    */
   protected function buildXmlFromArray($root_element_name, array $attributes) {
+    /** @noinspection PhpComposerExtensionStubsInspection */
     $root = new \SimpleXMLElement('<' . $root_element_name . '/>');
     self::buildXmlFromArrayRecursive($root, $attributes);
 
     // Create formatted string.
+    /** @noinspection PhpComposerExtensionStubsInspection */
     $dom = dom_import_simplexml($root)->ownerDocument;
     $dom->formatOutput = TRUE;
     $formatted_xml_string = $dom->saveXML();
@@ -633,21 +644,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    * {@inheritdoc}
    */
   public function getCopyFields() {
-    $copy_fields = [];
-    // @codingStandardsIgnoreStart
-    // @todo Update or remove this.
-    // Foreach (array('ts' => 'terms_ts', 'tm' => 'terms_tm', 'tos' => 'terms_ts', 'tom' => 'terms_tm') as $src_prefix => $dest_prefix) {
-    // $copy_fields[] = [
-    // 'source' => SearchApiSolrUtility::encodeSolrName(
-    // Utility::getLanguageSpecificSolrDynamicFieldPrefix($src_prefix, $this->field_type_language_code)
-    // ) . '*',
-    // 'dest' => SearchApiSolrUtility::encodeSolrName(
-    // Utility::getLanguageSpecificSolrDynamicFieldPrefix($dest_prefix, $this->field_type_language_code)
-    // ) . '*',
-    // ];
-    // }.
-    // @codingStandardsIgnoreStart
-    return $copy_fields;
+    return [];
   }
 
   /**
@@ -722,7 +719,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   protected function urlRouteParameters($rel) {
     $uri_route_parameters = parent::urlRouteParameters($rel);
 
-    if ('collection' == $rel) {
+    if ('collection' === $rel) {
       $uri_route_parameters['search_api_server'] = \Drupal::routeMatch()->getRawParameter('search_api_server')
         // To be removed when https://www.drupal.org/node/2919648 is fixed.
         ?: 'core_issue_2919648_workaround';

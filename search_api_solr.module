@@ -35,8 +35,11 @@ function search_api_solr_help($route_name, RouteMatchInterface $route_match) {
  * Used to execute an optimization operation on all enabled Solr servers once a
  * day.
  *
+ * @throws \Drupal\Component\Plugin\Exception\PluginException
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
  * @throws \Drupal\search_api\SearchApiException
+ * @throws \Drupal\search_api_solr\SearchApiSolrException
  */
 function search_api_solr_cron() {
   $document_counts = [];
@@ -428,6 +431,7 @@ function search_api_solr_install_missing_field_types() {
  * @return ServerInterface[]
  *
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
  * @throws \Drupal\search_api\SearchApiException
  */
 function search_api_solr_get_servers($only_active = TRUE) {

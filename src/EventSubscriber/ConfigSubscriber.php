@@ -47,6 +47,9 @@ class ConfigSubscriber implements EventSubscriberInterface {
    *
    * @param \Drupal\Core\Config\ConfigCrudEvent $event
    *   The configuration event.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function onConfigSave(ConfigCrudEvent $event) {
     $saved_config = $event->getConfig();

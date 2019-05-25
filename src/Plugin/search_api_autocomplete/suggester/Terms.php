@@ -20,6 +20,10 @@ class Terms extends Server {
 
   /**
    * {@inheritdoc}
+   *
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   * @throws \Drupal\search_api_autocomplete\SearchApiAutocompleteException
    */
   public function getAutocompleteSuggestions(QueryInterface $query, $incomplete_key, $user_input) {
     if (!($backend = static::getBackend($this->getSearch()->getIndex()))) {
@@ -38,6 +42,8 @@ class Terms extends Server {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   protected static function getBackend(IndexInterface $index) {
     if (!$index->hasValidServer()) {

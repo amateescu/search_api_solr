@@ -45,6 +45,9 @@ class SolrFieldManager implements SolrFieldManagerInterface {
    *   The entity type manager.
    * @param \Psr\Log\LoggerInterface $logger
    *   Logger for Search API.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    */
   public function __construct(CacheBackendInterface $cache_backend, EntityTypeManagerInterface $entityTypeManager, LoggerInterface $logger) {
     $this->cacheBackend = $cache_backend;
@@ -54,6 +57,8 @@ class SolrFieldManager implements SolrFieldManagerInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function getFieldDefinitions(IndexInterface $index) {
     // We need to prevent the use of the field definition cache when we are
@@ -146,6 +151,7 @@ class SolrFieldManager implements SolrFieldManagerInterface {
    *   The array of field definitions for the server, keyed by field name.
    *
    * @throws \InvalidArgumentException
+   * @throws \Drupal\search_api\SearchApiException
    */
   protected function buildFieldDefinitionsFromSolr(IndexInterface $index) {
     /** @var \Drupal\search_api\ServerInterface|null $server */

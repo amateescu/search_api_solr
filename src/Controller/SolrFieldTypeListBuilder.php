@@ -77,6 +77,8 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function load() {
     static $entities;
@@ -216,6 +218,8 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\Core\Entity\EntityMalformedException
    */
   public function getDefaultOperations(EntityInterface $solr_field_type) {
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
@@ -234,6 +238,8 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
   /**
    * Returns the formatted XML for schema_extra_types.xml.
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function getSchemaExtraTypesXml() {
     $xml = '';
@@ -249,6 +255,8 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
   /**
    * Returns the formatted XML for solrconfig_extra.xml.
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function getSchemaExtraFieldsXml() {
     $xml = '';
@@ -257,6 +265,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       foreach ($solr_field_type->getStaticFields() as $static_field) {
         $xml .= '<field ';
         foreach ($static_field as $attribute => $value) {
+          /** @noinspection NestedTernaryOperatorInspection */
           $xml .= $attribute . '="' . (is_bool($value) ? ($value ? 'true' : 'false') : $value) . '" ';
         }
         $xml .= "/>\n";
@@ -264,6 +273,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       foreach ($solr_field_type->getDynamicFields() as $dynamic_field) {
         $xml .= '<dynamicField ';
         foreach ($dynamic_field as $attribute => $value) {
+          /** @noinspection NestedTernaryOperatorInspection */
           $xml .= $attribute . '="' . (is_bool($value) ? ($value ? 'true' : 'false') : $value) . '" ';
         }
         $xml .= "/>\n";
@@ -272,6 +282,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       foreach ($solr_field_type->getCopyFields() as $copy_field) {
         $xml .= '<copyField ';
         foreach ($copy_field as $attribute => $value) {
+          /** @noinspection NestedTernaryOperatorInspection */
           $xml .= $attribute . '="' . (is_bool($value) ? ($value ? 'true' : 'false') : $value) . '" ';
         }
         $xml .= "/>\n";
@@ -282,6 +293,8 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
   /**
    * Returns the formatted XML for schema_extra_fields.xml.
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function getSolrconfigExtraXml() {
     $search_components = [];
@@ -410,7 +423,9 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    * @throws \Drupal\search_api\SearchApiException
    */
   public function setServer(ServerInterface $server) {
-    $this->setBackend($server->getBackend());
+    /** @var SolrBackendInterface $backend */
+    $backend = $server->getBackend();
+    $this->setBackend($backend);
     $this->serverId = $server->id();
   }
 

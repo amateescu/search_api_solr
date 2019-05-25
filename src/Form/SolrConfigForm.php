@@ -59,7 +59,7 @@ class SolrConfigForm extends FormBase {
 
     try {
       // Retrieve the list of available files.
-      $files_list = SearchApiSolrUtility::getServerFiles($search_api_server);
+      $files_list = $search_api_server ? SearchApiSolrUtility::getServerFiles($search_api_server) : [];
 
       if (empty($files_list)) {
         $form['info']['#markup'] = $this->t('No files found.');
@@ -120,6 +120,8 @@ class SolrConfigForm extends FormBase {
    *
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function access(ServerInterface $search_api_server) {
     return AccessResult::allowedIf($search_api_server->hasValidBackend() && $search_api_server->getBackend() instanceof SearchApiSolrBackend)->cacheUntilEntityChanges($search_api_server);

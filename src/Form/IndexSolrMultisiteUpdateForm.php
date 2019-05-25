@@ -12,6 +12,9 @@ class IndexSolrMultisiteUpdateForm extends IndexSolrMultisiteCloneForm {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    */
   public function form(array $form, FormStateInterface $form_state) {
     // If the form is being rebuilt, rebuild the entity with the current form

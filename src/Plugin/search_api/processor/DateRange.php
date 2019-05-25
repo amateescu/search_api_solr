@@ -28,7 +28,7 @@ class DateRange extends ProcessorPluginBase {
     foreach ($items as $item) {
       /** @var \Drupal\search_api\Item\FieldInterface $field */
       foreach ($item->getFields() as $field) {
-        if ('solr_date_range' == $field->getType()) {
+        if ('solr_date_range' === $field->getType()) {
           $values = [];
           $required_properties = [
             $item->getDatasourceId() => [

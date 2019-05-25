@@ -31,6 +31,8 @@ class SolrDocumentFactory implements SolrDocumentFactoryInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function create(ItemInterface $item) {
     $plugin = $this->typedDataManager->getDefinition(static::$solr_document)['class'];

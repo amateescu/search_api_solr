@@ -82,6 +82,8 @@ interface SolrCloudConnectorInterface extends SolrConnectorInterface {
    *
    * @return \Solarium\QueryType\Stream\Result
    *   The Solarium stream result.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function stream(StreamQuery $query, Endpoint $endpoint = NULL);
 
@@ -95,6 +97,8 @@ interface SolrCloudConnectorInterface extends SolrConnectorInterface {
    *
    * @return \Solarium\QueryType\Graph\Result
    *   The Solarium graph result.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function graph(GraphQuery $query, Endpoint $endpoint = NULL);
 

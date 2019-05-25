@@ -19,7 +19,7 @@ use Drupal\search_api\Item\FieldInterface;
  *   definition_class = "\Drupal\search_api_solr\TypedData\SolrFieldDefinition"
  * )
  */
-class SolrField extends TypedData implements \IteratorAggregate, TypedDataInterface {
+class SolrField extends TypedData implements \IteratorAggregate {
 
   protected static $solr_field = 'solr_field';
 

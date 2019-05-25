@@ -92,6 +92,8 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\Core\TypedData\Exception\MissingDataException
    */
   public function getItemId(ComplexDataInterface $item) {
     return $this->getFieldValue($item, 'id_field');
@@ -99,6 +101,8 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\Core\TypedData\Exception\MissingDataException
    */
   public function getItemLabel(ComplexDataInterface $item) {
     return $this->getFieldValue($item, 'label_field');
@@ -106,6 +110,8 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\Core\TypedData\Exception\MissingDataException
    */
   public function getItemLanguage(ComplexDataInterface $item) {
     if ($this->configuration['language_field']) {
@@ -116,6 +122,8 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\Core\TypedData\Exception\MissingDataException
    */
   public function getItemUrl(ComplexDataInterface $item) {
     try {
@@ -138,6 +146,8 @@ class SolrDocument extends DatasourcePluginBase implements PluginFormInterface {
    * @return mixed|null
    *   The scalar value of the specified field (first value for multi-valued
    *   fields), if it exists; NULL otherwise.
+   *
+   * @throws \Drupal\Core\TypedData\Exception\MissingDataException
    */
   protected function getFieldValue(ComplexDataInterface $item, $config_key) {
     if (empty($this->configuration[$config_key])) {

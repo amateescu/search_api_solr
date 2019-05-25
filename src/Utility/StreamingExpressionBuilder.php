@@ -741,6 +741,10 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    *
    * @return int
    *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   * @throws \Drupal\search_api\SearchApiException
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   *
    * @see search_api_solr_cron()
    */
   public function getSearchAllRows() {

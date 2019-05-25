@@ -100,8 +100,9 @@ class SearchApiSolrCommands extends DrushCommands implements StdinAwareInterface
    * @aliases solr-gsc,sasm-gsc,search-api-solr-get-server-config,search-api-solr-multilingual-get-server-config
    *
    * @throws \Drupal\search_api\ConsoleException
-   *   Thrown if no indexes could be loaded.
    * @throws \Drupal\search_api\SearchApiException
+   * @throws \ZipStream\Exception\FileNotFoundException
+   * @throws \ZipStream\Exception\FileNotReadableException
    */
   public function getServerConfig($server_id, $file_name, $solr_version = NULL) {
     $this->commandHelper->getServerConfigCommand($server_id, $file_name, $solr_version);
@@ -181,22 +182,25 @@ class SearchApiSolrCommands extends DrushCommands implements StdinAwareInterface
       throw new SearchApiSolrException('Index is not enabled.');
     }
 
-    /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
-    $backend = $index->getServerInstance()->getBackend();
+    if ($server = $index->getServerInstance()) {
+      /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
+      $backend = $server->getBackend();
 
-    if (!($backend instanceof SolrBackendInterface) || !($backend->getSolrConnector() instanceof SolrCloudConnectorInterface)) {
-      throw new SearchApiSolrException('The index must be located on Solr Cloud to execute streaming expressions.');
+      if (!($backend instanceof SolrBackendInterface) || !($backend->getSolrConnector() instanceof SolrCloudConnectorInterface)) {
+        throw new SearchApiSolrException('The index must be located on Solr Cloud to execute streaming expressions.');
+      }
+
+      $queryHelper = \Drupal::service('search_api_solr.streaming_expression_query_helper');
+      $query = $queryHelper->createQuery($index);
+      $queryHelper->setStreamingExpression($query,
+        $expression,
+        basename(__FILE__) . ':' . __LINE__
+      );
+      $result = $backend->executeStreamingExpression($query);
+
+      return $result->getBody();
     }
 
-    $queryHelper = \Drupal::service('search_api_solr.streaming_expression_query_helper');
-    $query = $queryHelper->createQuery($index);
-    $queryHelper->setStreamingExpression($query,
-      $expression,
-      basename(__FILE__) . ':' . __LINE__
-    );
-    $result = $backend->executeStreamingExpression($query);
-
-    return $result->getBody();
+    throw new SearchApiSolrException('Server could not be loaded.');
   }
-
 }

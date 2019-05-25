@@ -30,9 +30,7 @@ class StandardSolrConnector extends SolrConnectorPluginBase {
       $reload_action->setCore($core);
       $core_admin_query->setAction($reload_action);
       $response = $this->solr->coreAdmin($core_admin_query);
-      $was_successful = $response->getWasSuccessful();
-
-      return $was_successful;
+      return $response->getWasSuccessful();
     }
     catch (HttpException $e) {
       throw new SearchApiSolrException("Reloading core $core failed with error code " . $e->getCode() . '.', $e->getCode(), $e);

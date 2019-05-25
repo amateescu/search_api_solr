@@ -306,7 +306,8 @@ interface SolrFieldTypeInterface extends ConfigEntityInterface {
    * Gets a list of copy fields.
    *
    * @return array
-   *   An array of copy field definitions.
+   *   An array of copy field definitions. A copy field definition consists of
+   *   arrays like ['source' => 'fieldA', 'dest' => 'fieldB'].
    */
   public function getCopyFields();
 

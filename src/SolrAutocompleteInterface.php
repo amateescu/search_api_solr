@@ -31,6 +31,8 @@ interface SolrAutocompleteInterface {
    *
    * @return \Drupal\search_api_autocomplete\Suggestion\SuggestionInterface[]
    *   An array of autocomplete suggestions.
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function getTermsSuggestions(QueryInterface $query, SearchInterface $search, $incomplete_key, $user_input);
 
@@ -55,6 +57,8 @@ interface SolrAutocompleteInterface {
    *
    * @return \Drupal\search_api_autocomplete\Suggestion\SuggestionInterface[]
    *   An array of autocomplete suggestions.
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function getSpellcheckSuggestions(QueryInterface $query, SearchInterface $search, $incomplete_key, $user_input);
 
@@ -82,6 +86,8 @@ interface SolrAutocompleteInterface {
    *
    * @return \Drupal\search_api_autocomplete\Suggestion\SuggestionInterface[]
    *   An array of autocomplete suggestions.
+   *
+   * @throws \Drupal\search_api\SearchApiException
    */
   public function getSuggesterSuggestions(QueryInterface $query, SearchInterface $search, $incomplete_key, $user_input, array $options = []);
 
