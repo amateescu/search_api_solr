@@ -1524,7 +1524,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
       }
       if ($returned_fields) {
-        $highlight_fields = array_unique(array_merge(...$required_fields));
+        $highlight_fields = array_unique(array_merge(...$returned_fields));
         $returned_fields = array_unique(array_merge($highlight_fields, $required_fields));
       }
       // ... Otherwise return all fields and score.
