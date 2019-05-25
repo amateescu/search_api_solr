@@ -202,11 +202,11 @@ class Utility {
 
     foreach ($snippets as $snippet) {
       if (preg_match_all('@\[HIGHLIGHT\](.+?)\[/HIGHLIGHT\]@', $snippet, $matches)) {
-        $keys = array_merge($keys, $matches[1]);
+        $keys[] = $matches[1];
       }
     }
 
-    return array_unique($keys);
+    return array_unique(array_merge(...$keys));
   }
 
   /**

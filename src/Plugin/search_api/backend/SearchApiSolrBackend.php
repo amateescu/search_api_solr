@@ -672,7 +672,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
             $status = 'ok';
             if (empty($this->configuration['skip_schema_check'])) {
-              if (substr($stats_summary['@schema_version'], 0, 10) == 'search-api') {
+              if (substr($stats_summary['@schema_version'], 0, 10) === 'search-api') {
                 \Drupal::messenger()->addError($this->t('Your schema.xml version is too old. Please replace all configuration files with the ones packaged with this module and re-index you data.'));
                 $status = 'error';
               }
@@ -1065,17 +1065,16 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
           return TRUE;
         }
-        else {
-          if ($lock->wait($lock_name)) {
-            // wait() returns TRUE if the lock isn't released within the given
-            // timeout (default 30s).
-            $vars = ['%index_id' => $index->id(), '%pid' => getmypid()];
-            $this->getLogger()->debug('PID %pid, Index %index_id: Waited unsuccessfully for finalization lock.', $vars);
-            throw new SearchApiSolrException('The search index currently being rebuilt. Try again later.');
-          }
 
-          $this->finalizeIndex($index);
+        if ($lock->wait($lock_name)) {
+          // wait() returns TRUE if the lock isn't released within the given
+          // timeout (default 30s).
+          $vars = ['%index_id' => $index->id(), '%pid' => getmypid()];
+          $this->getLogger()->debug('PID %pid, Index %index_id: Waited unsuccessfully for finalization lock.', $vars);
+          throw new SearchApiSolrException('The search index currently being rebuilt. Try again later.');
         }
+
+        $this->finalizeIndex($index);
       }
     }
 
@@ -1294,7 +1293,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $keys = $query->getKeys();
           $query_fields_boosted = $edismax->getQueryFields();
           if (
-            (isset($params['defType']) && 'edismax' == $params['defType']) ||
+            (isset($params['defType']) && 'edismax' === $params['defType']) ||
             !$query_fields_boosted
           ) {
             // Edismax was forced via API or the query fields were removed via
@@ -1521,12 +1520,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       // the fields accordingly. ...
       foreach ($fields_to_be_retrieved as $field_name) {
         if (isset($field_names[$field_name])) {
-          $returned_fields = array_merge($returned_fields, array_values($field_names[$field_name]));
+          $returned_fields[] = array_values($field_names[$field_name]);
         }
       }
       if ($returned_fields) {
-        $highlight_fields = array_unique($returned_fields);
-        $returned_fields = array_merge($returned_fields, $required_fields);
+        $highlight_fields = array_unique(array_merge(...$required_fields));
+        $returned_fields = array_unique(array_merge($highlight_fields, $required_fields));
       }
       // ... Otherwise return all fields and score.
       else {
@@ -1599,6 +1598,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                       $array_value = $processor->decodeStreamingExpressionValue($array_value) ?: $array_value;
                     }
                   }
+                  unset($array_value);
                   $document->{$field_name} = $field_value;
                 }
               }
@@ -1771,14 +1771,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             // in our schema.xml.
             $type = $field->getType();
 
-            if ('solr_text_suggester' == $type) {
+            if ('solr_text_suggester' === $type) {
               // Any field of this type will be indexed in the same Solr field.
               // The 'twm_suggest' is the backend for the suggester component.
               $field_mapping[$search_api_name] = 'twm_suggest';
               break;
             }
 
-            if ('solr_text_spellcheck' == $type) {
+            if ('solr_text_spellcheck' === $type) {
               // Any field of this type will be indexed in the same Solr field.
               // Don't use the language separator here! This field name is used
               // without in in the solrconfig.xml.
@@ -1843,7 +1843,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             // don't really exist in the solr core, but we tell solr to name the
             // distance calculation results that way. Later we directly pass
             // these as "fields" to Drupal and especially Views.
-            if ($type == 'location') {
+            if ($type === 'location') {
               // Solr returns the calculated distance value as a single decimal
               // value (even for multi-valued location fields). Therefore we
               // have to prefix the field name accordingly by fts_*.
@@ -2112,17 +2112,16 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                   }
                 }
               }
-              continue(2);
+              continue 2;
             }
-            else {
-              $value = $value->getText();
-            }
+
+            $value = $value->getText();
             // No break, now we have a string.
           case 'string':
           default:
             // Keep $value as it is.
             if (!$value) {
-              continue(2);
+              continue 2;
             }
         }
 
@@ -2311,6 +2310,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                 $value = new TextValue($value);
             }
           }
+          unset($value);
           $field->setValues($doc_field);
           $result_item->setField($search_api_property, $field);
         }
@@ -2384,15 +2384,15 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
               if ($term === '') {
                 $term = '!';
               }
-              elseif ($type == 'boolean') {
-                if ($term == 'true') {
+              elseif ($type === 'boolean') {
+                if ($term === 'true') {
                   $term = '"1"';
                 }
-                elseif ($term == 'false') {
+                elseif ($term === 'false') {
                   $term = '"0"';
                 }
               }
-              elseif ($type == 'date') {
+              elseif ($type === 'date') {
                 $term = $term ? '"' . strtotime($term) . '"' : NULL;
               }
               else {
@@ -2519,14 +2519,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $index_fields += $this->getSpecialFields($index);
     }
 
-    $fq = [];
-
     // If there's a language condition take this one anfd keep it for nested
     // conditions until we get a new language condition.
     $conditions = $condition_group->getConditions();
     foreach ($conditions as $condition) {
       if ($condition instanceof ConditionInterface) {
-        if ('search_api_language' == $condition->getField()) {
+        if ('search_api_language' === $condition->getField()) {
           $language_ids = $condition->getValue();
           if (!is_array($language_ids)) {
             $language_ids = [$language_ids];
@@ -2546,6 +2544,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     $solr_fields = $this->getSolrFieldNamesKeyedByLanguage($language_ids, $index);
+
+    $fq = [];
 
     foreach ($conditions as $condition) {
       if ($condition instanceof ConditionInterface) {
@@ -2567,7 +2567,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $parse_mode_id = $query->getParseMode()->getPluginId();
             $keys = [
               '#conjunction' => 'OR',
-              '#negation' => $condition->getOperator() == '<>',
+              '#negation' => $condition->getOperator() === '<>',
             ];
             switch ($parse_mode_id) {
               // This is a hack. We assume that the user filters for any term /
@@ -2602,10 +2602,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                 'tags' => $condition_group->getTags(),
               ];
             }
-            $fq = array_merge($fq, $this->reduceFilterQueries($nested_fqs, new ConditionGroup(
-              '=' == $condition->getOperator() ? 'AND' : 'OR',
+            $fq[] = $this->reduceFilterQueries($nested_fqs, new ConditionGroup(
+              '=' === $condition->getOperator() ? 'AND' : 'OR',
               $condition_group->getTags()
-            )));
+            ));
           }
         }
         else {
@@ -2614,20 +2614,23 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
 
         if ($filter_query) {
-          $fq[] = [
+          $fq[] = [[
             'query' => $filter_query,
             'tags' => $condition_group->getTags(),
-          ];
+          ]];
         }
       }
       else {
         // Nested condition group.
         $nested_fqs = $this->createFilterQueries($condition, $options, $query, $language_ids);
-        $fq = array_merge($fq, $this->reduceFilterQueries($nested_fqs, $condition));
+        $fq[] = $this->reduceFilterQueries($nested_fqs, $condition);
       }
     }
 
-    return $fq;
+    if ($fq) {
+      return array_merge(...$fq);
+    }
+    return [];
   }
 
   /**
@@ -2652,7 +2655,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     if (count($filter_queries) > 1) {
       $queries = [];
       $tags = [];
-      $pre = $condition_group->getConjunction() == 'OR' ? '' : '+';
+      $pre = $condition_group->getConjunction() === 'OR' ? '' : '+';
       foreach ($filter_queries as $nested_fq) {
         if (strpos($nested_fq['query'], '-') !== 0) {
           $queries[] = $pre . $nested_fq['query'];
@@ -2692,7 +2695,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     foreach ($value as &$v) {
-      if (!is_null($v) || !in_array($operator, ['=', '<>', 'IN', 'NOT IN'])) {
+      if (NULL !== $v || !in_array($operator, ['=', '<>', 'IN', 'NOT IN'])) {
         $v = $this->formatFilterValue($v, $index_field->getType());
         // Remaining NULL values are now converted to empty strings.
       }
@@ -2713,7 +2716,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
     }
 
-    if (!is_null($value) && isset($options['search_api_location'])) {
+    if (NULL !== $value && isset($options['search_api_location'])) {
       foreach ($options['search_api_location'] as &$spatial) {
         if (!empty($spatial['field']) && $index_field->getFieldIdentifier() == $spatial['field']) {
           // Spatial filter queries need modifications to the query itself.
@@ -2734,7 +2737,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     switch ($operator) {
       case '<>':
-        if (is_null($value)) {
+        if (NULL === $value) {
           if ('location' === $index_field->getType()) {
             return $field . ':[-90,-180 TO 90,180]';
           }
@@ -2770,7 +2773,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $parts = [];
         $null = FALSE;
         foreach ($value as $v) {
-          if (is_null($v)) {
+          if (NULL === $v) {
             $null = TRUE;
             break;
           }
@@ -2786,7 +2789,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $parts = [];
         $null = FALSE;
         foreach ($value as $v) {
-          if (is_null($v)) {
+          if (NULL === $v) {
             $null = TRUE;
           }
           else {
@@ -2797,18 +2800,18 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       case '=':
       default:
-        if (is_null($value)) {
+        if (NULL === $value) {
           // @see https://stackoverflow.com/questions/4238609/how-to-query-solr-for-empty-fields/28859224#28859224
           return '(*:* -' . $this->queryHelper->rangeQuery($field, NULL, NULL) . ')';
         }
-        else {
-          return $field . ':' . $this->queryHelper->escapePhrase($value);
-        }
+        return $field . ':' . $this->queryHelper->escapePhrase($value);
     }
   }
 
   /**
    * Create a single search query string.
+   *
+   * @throws SearchApiSolrException
    */
   protected function createLocationFilterQuery(&$spatial) {
     $spatial_method = (isset($spatial['method']) && in_array($spatial['method'], ['geofilt', 'bbox'])) ? $spatial['method'] : 'geofilt';
@@ -2857,7 +2860,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
         break;
     }
-    return is_null($value) ? '' : $value;
+    return $value ?? '';
   }
 
   /**
@@ -3067,9 +3070,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // We explicit allow to get terms from twm_suggest. Therefore we call
     // parent::getQueryFulltextFields() to not filter twm_suggest.
     foreach (parent::getQueryFulltextFields($query) as $fulltext_field) {
-      $fl = array_merge($fl, array_values($field_names[$fulltext_field]));
+      $fl[] = array_values($field_names[$fulltext_field]);
     }
-    return array_unique($fl);
+    return array_unique(array_merge(...$fl));
   }
 
   /**
@@ -3398,7 +3401,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $suffix = '</strong>';
       try {
         $highlight_config = $item->getIndex()->getProcessor('highlight')->getConfiguration();
-        if ($highlight_config['highlight'] == 'never') {
+        if ($highlight_config['highlight'] === 'never') {
           return;
         }
         $prefix = $highlight_config['prefix'];
@@ -3412,7 +3415,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       foreach ($field_mapping as $search_api_property => $solr_property) {
         if (!empty($data['highlighting'][$solr_id][$solr_property])) {
           foreach ($data['highlighting'][$solr_id][$solr_property] as $value) {
-            $keys = array_merge($keys, Utility::getHighlightedKeys($value));
+            $keys[] = Utility::getHighlightedKeys($value);
             // Contrary to above, we here want to preserve HTML, so we just
             // replace the [HIGHLIGHT] tags with the appropriate format.
             $snippets[$search_api_property][] = Utility::formatHighlighting($value, $prefix, $suffix);
@@ -3421,7 +3424,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
       if ($snippets) {
         $item->setExtraData('highlighted_fields', $snippets);
-        $item->setExtraData('highlighted_keys', array_unique($keys));
+        $item->setExtraData('highlighted_keys', array_unique(array_merge(...$keys)));
       }
     }
   }
@@ -3484,7 +3487,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $query_parts = [];
 
     if (is_array($keys)) {
-      if (isset($keys['#conjunction']) && $keys['#conjunction'] == 'OR') {
+      if (isset($keys['#conjunction']) && $keys['#conjunction'] === 'OR') {
         $pre = '';
       }
 
@@ -3501,7 +3504,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           continue;
         }
         if (is_array($key)) {
-          if ('edismax' == $parse_mode_id) {
+          if ('edismax' === $parse_mode_id) {
             throw new SearchApiSolrException('Incompatible parse mode.');
           }
           if ($subkeys = $this->flattenKeys($key, $fields, $parse_mode_id)) {
@@ -3596,12 +3599,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     if (count($query_parts) == 1) {
       return $neg . reset($query_parts);
     }
-    elseif (count($query_parts) > 1) {
+
+    if (count($query_parts) > 1) {
       return $neg . '(' . implode(' ', $query_parts) . ')';
     }
-    else {
-      return '';
-    }
+
+    return '';
   }
 
   /**
@@ -3709,9 +3712,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       if (51200 != $highlighter['maxAnalyzedChars']) {
         $hl->setMaxAnalyzedChars($highlighter['maxAnalyzedChars']);
       }
-      if ('gap' != $highlighter['fragmenter']) {
+      if ('gap' !== $highlighter['fragmenter']) {
         $hl->setFragmenter($highlighter['fragmenter']);
-        if ('regex' != $highlighter['fragmenter']) {
+        if ('regex' !== $highlighter['fragmenter']) {
           $hl->setRegexPattern($highlighter['regex']['pattern']);
           if (0.5 != $highlighter['regex']['slop']) {
             $hl->setRegexSlop($highlighter['regex']['slop']);
@@ -3811,17 +3814,16 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       // Date fields don't seem to be supported at all in MLT queries.
       if (strpos($first_field, 'd') !== 0) {
         if (strpos($first_field, 't') !== 0) {
-          $mlt_fl[] = $first_field;
+          $mlt_fl[] = [$first_field];
           // For non-text fields, set minimum word length to 0.
           $solarium_query->addParam('f.' . $first_field . '.mlt.minwl', 0);
         }
         else {
-          $mlt_fl = array_merge($mlt_fl, array_values($field_names[$mlt_field]));
+          $mlt_fl[] = array_values($field_names[$mlt_field]);
         }
       }
     }
-
-    $solarium_query->setMltFields($mlt_fl);
+    $solarium_query->setMltFields(array_merge(...$mlt_fl));
     // @todo Add some configuration options here and support more MLT options.
     $solarium_query->setMinimumDocumentFrequency(1);
     $solarium_query->setMinimumTermFrequency(1);
@@ -3896,36 +3898,34 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Change the facet parameters for spatial fields to return distance
     // facets.
     $facet_set = $solarium_query->getFacetSet();
-    if (!empty($facet_set)) {
-      /** @var \Solarium\Component\Facet\Field[] $facets */
-      $facets = $facet_set->getFacets();
-      foreach ($facets as $delta => $facet) {
-        $facet_options = $facet->getOptions();
-        if ($facet_options['field'] != $solr_distance_field) {
-          continue;
-        }
-        $facet_set->removeFacet($delta);
+    /** @var \Solarium\Component\Facet\Field[] $facets */
+    $facets = $facet_set->getFacets();
+    foreach ($facets as $delta => $facet) {
+      $facet_options = $facet->getOptions();
+      if ($facet_options['field'] != $solr_distance_field) {
+        continue;
+      }
+      $facet_set->removeFacet($delta);
 
-        $limit = $facet->getLimit();
+      $limit = $facet->getLimit();
 
-        // @todo Check if these defaults make any sense.
-        $steps = $limit > 0 ? $limit : 5;
-        $step = ($spatial['radius'] - $spatial['min_radius']) / $steps;
+      // @todo Check if these defaults make any sense.
+      $steps = $limit > 0 ? $limit : 5;
+      $step = ($spatial['radius'] - $spatial['min_radius']) / $steps;
 
-        for ($i = 0; $i < $steps; $i++) {
-          $distance_min = $spatial['min_radius'] + ($step * $i);
-          // @todo $step - 1 means 1km less. That opens a gap in the facets of
-          //   1km that is not covered.
-          $distance_max = $distance_min + $step - 1;
-          // Define our own facet key to transport the min and max values.
-          // These will be extracted in extractFacets().
-          $key = "spatial-{$distance_field}-{$distance_min}-{$distance_max}";
-          // Due to a limitation/bug in Solarium, it is not possible to use
-          // setQuery method for geo facets.
-          // So the key is misused to get a correct query.
-          // @see https://github.com/solariumphp/solarium/issues/229
-          $facet_set->createFacetQuery($key . ' frange l=' . $distance_min . ' u=' . $distance_max)->setQuery('geodist()');
-        }
+      for ($i = 0; $i < $steps; $i++) {
+        $distance_min = $spatial['min_radius'] + ($step * $i);
+        // @todo $step - 1 means 1km less. That opens a gap in the facets of
+        //   1km that is not covered.
+        $distance_max = $distance_min + $step - 1;
+        // Define our own facet key to transport the min and max values.
+        // These will be extracted in extractFacets().
+        $key = "spatial-{$distance_field}-{$distance_min}-{$distance_max}";
+        // Due to a limitation/bug in Solarium, it is not possible to use
+        // setQuery method for geo facets.
+        // So the key is misused to get a correct query.
+        // @see https://github.com/solariumphp/solarium/issues/229
+        $facet_set->createFacetQuery($key . ' frange l=' . $distance_min . ' u=' . $distance_max)->setQuery('geodist()');
       }
     }
   }
@@ -3995,7 +3995,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         /** @var \Drupal\search_api\Item\Field $field */
         $field = $index_fields[$collapse_field];
         $type = $field->getType();
-        if ($this->dataTypeHelper->isTextType($type) || 's' != Utility::getSolrFieldCardinality($first_name)) {
+        if ($this->dataTypeHelper->isTextType($type) || 's' !== Utility::getSolrFieldCardinality($first_name)) {
           $this->getLogger()->error('Grouping is not supported for field @field. Only single-valued fields not indexed as "Fulltext" are supported.',
             ['@field' => $index_fields[$collapse_field]['name']]);
         }
