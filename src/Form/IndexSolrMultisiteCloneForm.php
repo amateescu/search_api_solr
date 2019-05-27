@@ -71,11 +71,12 @@ class IndexSolrMultisiteCloneForm extends IndexForm {
 
     $this->buildEntityForm($form, $form_state, $index);
 
-    $form['name']['#default_value'] = 'Multisite ' . $form['name']['#default_value'];
+    $site_hash = Utility::getSiteHash();
+    $form['name']['#default_value'] = 'Multisite ' . $form['name']['#default_value'] . ' ' . $site_hash;
     $form['datasources']['#default_value'] = ['solr_multisite_document'];
     $form['datasource_configs']['solr_multisite_document']['target_index']['#default_value'] = $target_index;
     $form['datasource_configs']['solr_multisite_document']['target_index_machine_name']['#default_value'] = $target_index_machine_name;
-    $form['datasource_configs']['solr_multisite_document']['target_hash']['#default_value'] = Utility::getSiteHash();
+    $form['datasource_configs']['solr_multisite_document']['target_hash']['#default_value'] = $site_hash;
     $form['options']['read_only']['#default_value'] = TRUE;
     $form['status']['#default_value'] = FALSE;
 
