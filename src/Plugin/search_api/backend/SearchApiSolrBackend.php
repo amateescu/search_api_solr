@@ -298,7 +298,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#title' => $this->t("Yes, I know what I'm doing and want to enable a daily optimization!"),
       '#default_value' => $this->configuration['optimize'],
       '#states' => [
-        'invisible' => [':input[name="advanced][i_know_what_i_do"]' => ['checked' => FALSE]],
+        'invisible' => [':input[name="backend_config[advanced][i_know_what_i_do]"]' => ['checked' => FALSE]],
       ],
     ];
 
