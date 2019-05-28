@@ -50,11 +50,19 @@ entity.solr_field_type.delete_form:
   requirements:
     _permission: 'administer search_api'
 
-entity.solr_field_type.export_form:
-  path: '/admin/config/search/search-api/solr_field_type/{solr_field_type}/export'
+entity.solr_field_type.disable_for_server:
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_field_type/{solr_field_type}/disable'
   defaults:
-    _entity_form: 'solr_field_type.export'
-    _title: 'Export SolrFieldType'
+    _title: 'Disable SolrFieldType for server'
+    _controller: '\Drupal\search_api_solr\Controller\SolrFieldTypeController::disableOnServer'
+  requirements:
+    _permission: 'administer search_api'
+
+entity.solr_field_type.enable_for_server:
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_field_type/{solr_field_type}/enable'
+  defaults:
+    _title: 'Enable SolrFieldType for server'
+    _controller: '\Drupal\search_api_solr\Controller\SolrFieldTypeController::enableOnServer'
   requirements:
     _permission: 'administer search_api'
 

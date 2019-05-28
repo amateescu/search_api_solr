@@ -193,6 +193,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'connector' => NULL,
       'connector_config' => [],
       'optimize' => FALSE,
+      'disabled_field_types' => [],
     ];
   }
 
@@ -313,6 +314,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#title' => $this->t('Retrieve results for this site only'),
       '#description' => $description,
       '#default_value' => $this->configuration['site_hash'],
+    ];
+
+    $form['disabled_field_types'] = [
+      '#type' => 'value',
+      '#value' => $this->configuration['disabled_field_types'],
     ];
 
     return $form;
@@ -745,6 +751,16 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'label' => $this->t('Targeted content domain'),
       'info' => $this->getDomain(),
     ];
+
+    if (!empty($this->configuration['disabled_field_types'])) {
+      \Drupal::messenger()
+        ->addWarning($this->t('You disabled some Solr Field Types for this server.'));
+
+      $info[] = [
+        'label' => $this->t('Disabled Solr Field Types'),
+        'info' => implode(', ', $this->configuration['disabled_field_types']),
+      ];
+    }
 
     return $info;
   }
@@ -3874,6 +3890,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         });
       }
       $solarium_query->setQuery('id:' . implode(' id:', $ids));
+      // @todo limit fields to retrieve
     }
 
     $mlt_fl = [];
@@ -4471,5 +4488,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     return $document_versions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDisabledFieldTypes(): array {
+    return $this->configuration['disabled_field_types'];
   }
 }

@@ -20,8 +20,7 @@ use Drupal\search_api_solr\SolrFieldTypeInterface;
  *     "form" = {
  *       "add" = "Drupal\search_api_solr\Form\SolrFieldTypeForm",
  *       "edit" = "Drupal\search_api_solr\Form\SolrFieldTypeForm",
- *       "delete" = "Drupal\search_api_solr\Form\SolrFieldTypeDeleteForm",
- *       "export" = "Drupal\search_api_solr\Form\SolrFieldTypeExportForm"
+ *       "delete" = "Drupal\search_api_solr\Form\SolrFieldTypeDeleteForm"
  *     }
  *   },
  *   config_prefix = "solr_field_type",
@@ -34,7 +33,8 @@ use Drupal\search_api_solr\SolrFieldTypeInterface;
  *   links = {
  *     "edit-form" = "/admin/config/search/search-api/solr_field_type/{solr_field_type}",
  *     "delete-form" = "/admin/config/search/search-api/solr_field_type/{solr_field_type}/delete",
- *     "export-form" = "/admin/config/search/search-api/solr_field_type/{solr_field_type}/export",
+ *     "disable-for-server" = "/admin/config/search/search-api/server/{search_api_server}/solr_field_type/{solr_field_type}/disable",
+ *     "enable-for-server" = "/admin/config/search/search-api/server/{search_api_server}/solr_field_type/{solr_field_type}/enable",
  *     "collection" = "/admin/config/search/search-api/server/{search_api_server}/solr_field_type"
  *   }
  * )
@@ -719,7 +719,11 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
   protected function urlRouteParameters($rel) {
     $uri_route_parameters = parent::urlRouteParameters($rel);
 
-    if ('collection' === $rel) {
+    if (
+      'collection' === $rel ||
+      'disable-for-server' === $rel ||
+      'enable-for-server' === $rel
+    ) {
       $uri_route_parameters['search_api_server'] = \Drupal::routeMatch()->getRawParameter('search_api_server')
         // To be removed when https://www.drupal.org/node/2919648 is fixed.
         ?: 'core_issue_2919648_workaround';

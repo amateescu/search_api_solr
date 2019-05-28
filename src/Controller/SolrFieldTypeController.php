@@ -4,8 +4,11 @@ namespace Drupal\search_api_solr\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Url;
 use Drupal\search_api\ServerInterface;
+use Drupal\search_api_solr\SolrFieldTypeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -144,6 +147,41 @@ class SolrFieldTypeController extends ControllerBase {
     $list_builder = $this->entityTypeManager()->getListBuilder('solr_field_type');
     $list_builder->setServer($search_api_server);
     return $list_builder;
+  }
+
+  /**
+   * Disables a Solr Field Type on this server.
+   *
+   * @param \Drupal\search_api\ServerInterface $search_api_server
+   * @param \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\search_api\SearchApiException
+   */
+  public function disableOnServer(ServerInterface $search_api_server, SolrFieldTypeInterface $solr_field_type) {
+    $backend_config = $search_api_server->getBackendConfig();
+    $backend_config['disabled_field_types'][] = $solr_field_type->id();
+    $backend_config['disabled_field_types'] = array_unique($backend_config['disabled_field_types']);
+    $search_api_server->setBackendConfig($backend_config);
+    $search_api_server->save();
+    return new RedirectResponse(Url::fromRoute('entity.solr_field_type.collection', ['search_api_server' => $search_api_server->id()], ['query' => ['time' => \Drupal::time()->getRequestTime()]])->toString());
+  }
+
+  /**
+   * Disables a Solr Field Type on this server.
+   *
+   * @param \Drupal\search_api\ServerInterface $search_api_server
+   * @param \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\search_api\SearchApiException
+   */
+  public function enableOnServer(ServerInterface $search_api_server, SolrFieldTypeInterface $solr_field_type) {
+    $backend_config = $search_api_server->getBackendConfig();
+    $backend_config['disabled_field_types'] = array_values(array_diff($backend_config['disabled_field_types'], [$solr_field_type->id()]));
+    $search_api_server->setBackendConfig($backend_config);
+    $search_api_server->save();
+    return new RedirectResponse(Url::fromRoute('entity.solr_field_type.collection', ['search_api_server' => $search_api_server->id()], ['query' => ['time' => \Drupal::time()->getRequestTime()]])->toString());
   }
 
 }

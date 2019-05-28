@@ -307,4 +307,11 @@ interface SolrBackendInterface extends BackendInterface {
    */
   public function getMaxDocumentVersions();
 
+  /**
+   * Gets a list of Solr Field Types that are disabled for this backend.
+   *
+   * @return String[]
+   */
+  public function getDisabledFieldTypes(): array;
+
 }

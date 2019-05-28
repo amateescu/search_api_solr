@@ -28,3 +28,8 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
     optimize:
       type: boolean
       label: 'Optimize this backend'
+    disabled_field_types:
+      type: sequence
+      label: 'Disabled Solr Field Types'
+      sequence:
+        type: string

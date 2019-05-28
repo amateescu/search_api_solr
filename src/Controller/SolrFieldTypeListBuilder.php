@@ -48,6 +48,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       'langcode' => $this->t('Language'),
       'domains' => $this->t('Domains'),
       'id' => $this->t('Machine name'),
+      'enabled' => $this->t('Enabled'),
     ];
     return $header + parent::buildHeader();
   }
@@ -61,6 +62,17 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     if (empty($domains)) {
       $domains = ['generic'];
     }
+
+    $enabled_label = $solr_field_type->disabledOnServer ? $this->t('Disabled') : $this->t('Enabled');
+    $enabled_icon = [
+      '#theme' => 'image',
+      '#uri' => !$solr_field_type->disabledOnServer ? 'core/misc/icons/73b355/check.svg' : 'core/misc/icons/e32700/error.svg',
+      '#width' => 18,
+      '#height' => 18,
+      '#alt' => $enabled_label,
+      '#title' => $enabled_label,
+    ];
+
     $row = [
       'label' => $solr_field_type->label(),
       'minimum_solr_version' => $solr_field_type->getMinimumSolrVersion(),
@@ -71,6 +83,10 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       // @todo format
       'domains' => implode(', ', $domains),
       'id' => $solr_field_type->id(),
+      'enabled' => [
+        'data' => $enabled_icon,
+        'class' => ['checkbox'],
+      ],
     ];
     return $row + parent::buildRow($solr_field_type);
   }
@@ -97,9 +113,11 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       $operator = '>=';
       $domain = 'generic';
       $warning = FALSE;
+      $disabled_field_types = [];
       try {
         /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
         $backend = $this->getBackend();
+        $disabled_field_types = $backend->getDisabledFieldTypes();
         $domain = $backend->getDomain();
         $solr_version = $backend->getSolrConnector()->getSolrVersion();
         if (version_compare($solr_version, '0.0.0', '==')) {
@@ -125,6 +143,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       // different values for minimum_solr_version and domains.
       $selection = [];
       foreach ($entities as $key => $solr_field_type) {
+        $entities[$key]->disabledOnServer = in_array($solr_field_type->id(), $disabled_field_types);
         /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
         $version = $solr_field_type->getMinimumSolrVersion();
         $domains = $solr_field_type->getDomains();
@@ -195,6 +214,22 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   }
 
   /**
+   * Returns a list of all enabled field types for current server.
+   *
+   * @return array
+   * @throws \Drupal\search_api\SearchApiException
+   */
+  protected function getEnabledSolrFieldTypes(): array {
+    $solr_field_types = [];
+    foreach ($this->load() as $solr_field_type) {
+      if (!$solr_field_type->disabledOnServer) {
+        $solr_field_types[] = $solr_field_type;
+      }
+    }
+    return $solr_field_types;
+  }
+
+  /**
    * @param \Drupal\search_api_solr\SolrFieldTypeInterface $target
    * @param \Drupal\search_api_solr\SolrFieldTypeInterface $source
    */
@@ -224,13 +259,24 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   public function getDefaultOperations(EntityInterface $solr_field_type) {
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
     $operations = parent::getDefaultOperations($solr_field_type);
+    unset($operations['delete']);
 
-    if ($solr_field_type->access('view') && $solr_field_type->hasLinkTemplate('export-form')) {
-      $operations['export'] = [
-        'title' => $this->t('Export'),
-        'weight' => 10,
-        'url' => $solr_field_type->toUrl('export-form'),
-      ];
+    if (strpos($solr_field_type->id(), 'text_und') !== 0) {
+      if (!$solr_field_type->disabledOnServer && $solr_field_type->access('view') && $solr_field_type->hasLinkTemplate('disable-for-server')) {
+        $operations['disable_for_server'] = [
+          'title' => $this->t('Disable'),
+          'weight' => 10,
+          'url' => $solr_field_type->toUrl('disable-for-server'),
+        ];
+      }
+
+      if ($solr_field_type->disabledOnServer && $solr_field_type->access('view') && $solr_field_type->hasLinkTemplate('enable-for-server')) {
+        $operations['enable_for_server'] = [
+          'title' => $this->t('Enable'),
+          'weight' => 10,
+          'url' => $solr_field_type->toUrl('enable-for-server'),
+        ];
+      }
     }
 
     return $operations;
@@ -244,7 +290,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   public function getSchemaExtraTypesXml() {
     $xml = '';
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
-    foreach ($this->load() as $solr_field_type) {
+    foreach ($this->getEnabledSolrFieldTypes() as $solr_field_type) {
       $xml .= $solr_field_type->getFieldTypeAsXml();
       $xml .= $solr_field_type->getSpellcheckFieldTypeAsXml();
       $xml .= $solr_field_type->getCollatedFieldTypeAsXml();
@@ -261,7 +307,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   public function getSchemaExtraFieldsXml() {
     $xml = '';
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
-    foreach ($this->load() as $solr_field_type) {
+    foreach ($this->getEnabledSolrFieldTypes() as $solr_field_type) {
       foreach ($solr_field_type->getStaticFields() as $static_field) {
         $xml .= '<field ';
         foreach ($static_field as $attribute => $value) {
@@ -299,7 +345,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   public function getSolrconfigExtraXml() {
     $search_components = [];
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
-    foreach ($this->load() as $solr_field_type) {
+    foreach ($this->getEnabledSolrFieldTypes() as $solr_field_type) {
       $xml = $solr_field_type->getSolrConfigsAsXml();
       if (preg_match_all('@(<searchComponent name="[^"]+"[^>]*?>)(.*?)</searchComponent>@sm', $xml, $matches)) {
         foreach ($matches[1] as $key => $search_component) {
@@ -349,7 +395,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     ];
 
     // Add language specific text files.
-    $solr_field_types = $this->load();
+    $solr_field_types = $this->getEnabledSolrFieldTypes();
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
     foreach ($solr_field_types as $solr_field_type) {
       $text_files = $solr_field_type->getTextFiles();
@@ -375,7 +421,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       if (strpos($file, '.') !== 0) {
         foreach (array_keys($files) as $existing_file) {
           if ($file == $existing_file) {
-            continue(2);
+            continue 2;
           }
         }
         $files[$file] = file_get_contents($search_api_solr_conf_path . '/' . $file);

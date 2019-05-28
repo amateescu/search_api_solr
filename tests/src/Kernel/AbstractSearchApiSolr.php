@@ -1259,12 +1259,19 @@ abstract class AbstractSearchApiSolr extends SolrBackendTestBase {
     $backend_config['connector_config']['jmx'] = TRUE;
     // Relative path for official docker image.
     $backend_config['connector_config']['solr_install_dir'] = '../../../..';
+    $backend_config['disabled_field_types'] = ['text_foo_en', 'text_de'];
     $server->setBackendConfig($backend_config);
     $server->save();
 
     $config_files = $list_builder->getConfigFiles();
     $this->assertContains('<jmx />', $config_files['solrconfig_extra.xml']);
     $this->assertContains('solr.install.dir=../../../..', $config_files['solrcore.properties']);
+    $this->assertContains('text_en', $config_files['schema_extra_types.xml']);
+    $this->assertNotContains('text_foo_en', $config_files['schema_extra_types.xml']);
+    $this->assertNotContains('text_de', $config_files['schema_extra_types.xml']);
+
+    $this->assertContains('ts_X3b_en_*', $config_files['schema_extra_fields.xml']);
+    $this->assertNotContains('ts_X3b_de_*', $config_files['schema_extra_fields.xml']);
 
     $solr_major_version = $server->getBackend()->getSolrConnector()->getSolrMajorVersion();
     $this->assertContains('solr.luceneMatchVersion=' . $solr_major_version, $config_files['solrcore.properties']);
