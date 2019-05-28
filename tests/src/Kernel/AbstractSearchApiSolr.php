@@ -1259,7 +1259,7 @@ abstract class AbstractSearchApiSolr extends SolrBackendTestBase {
     $backend_config['connector_config']['jmx'] = TRUE;
     // Relative path for official docker image.
     $backend_config['connector_config']['solr_install_dir'] = '../../../..';
-    $backend_config['disabled_field_types'] = ['text_foo_en', 'text_de'];
+    $backend_config['disabled_field_types'] = ['text_foo_en_6_0_0', 'text_de_7_0_0'];
     $server->setBackendConfig($backend_config);
     $server->save();
 
