@@ -38,6 +38,11 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   protected $assumed_minimum_version = '';
 
   /**
+   * @var bool
+   */
+  protected $reset = FALSE;
+
+  /**
    * {@inheritdoc}
    */
   public function buildHeader() {
@@ -108,7 +113,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     });
     $active_languages[] = LanguageInterface::LANGCODE_NOT_SPECIFIED;
 
-    if (!$entities) {
+    if (!$entities || $this->reset) {
       $solr_version = '9999.0.0';
       $operator = '>=';
       $domain = 'generic';
@@ -208,6 +213,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       // Sort the entities using the entity class's sort() method.
       // See \Drupal\Core\Config\Entity\ConfigEntityBase::sort().
       uasort($entities, [$this->entityType->getClass(), 'sort']);
+      $this->reset = FALSE;
     }
 
     return $entities;
@@ -483,6 +489,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    */
   public function setBackend(SolrBackendInterface $backend) {
     $this->backend = $backend;
+    $this->reset = TRUE;
   }
 
   /**

@@ -1262,6 +1262,8 @@ abstract class AbstractSearchApiSolr extends SolrBackendTestBase {
     $backend_config['disabled_field_types'] = ['text_foo_en_6_0_0', 'text_de_7_0_0'];
     $server->setBackendConfig($backend_config);
     $server->save();
+    // Reset list builder's static cache.
+    $list_builder->setServer($server);
 
     $config_files = $list_builder->getConfigFiles();
     $this->assertContains('<jmx />', $config_files['solrconfig_extra.xml']);
