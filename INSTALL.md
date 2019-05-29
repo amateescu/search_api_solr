@@ -62,8 +62,9 @@ But the Search API Solr Search module will create the correct configs for you!
 unzip config.zip -d $SOLR/server/solr/$CORE/conf
 ```
 
-NOTE: If you use the "Multilingual Solr" backend you have to repeat steps 2 and
-3 every time you add a new language to your Drupal instance!
+NOTE: You have to repeat steps 2 and 3 every time you add a new language to your
+Drupal instance or add a custom Solr Field Type! The UI should inform you about
+that.
 
 NOTE: It's important that the Solr server runs with the right config files for
 a backend. Don't switch between Solr Backends without adjusting the config

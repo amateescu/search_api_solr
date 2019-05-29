@@ -687,14 +687,18 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
             $status = 'ok';
             if (empty($this->configuration['skip_schema_check'])) {
-              if (substr($stats_summary['@schema_version'], 0, 10) === 'search-api') {
-                \Drupal::messenger()->addError($this->t('Your schema.xml version is too old. Please replace all configuration files with the ones packaged with this module and re-index you data.'));
-                $status = 'error';
+              $variables[':url'] = Url::fromUri('internal:/' . drupal_get_path('module', 'search_api_solr') . '/INSTALL.md')->toString();
+              if (
+                strpos($stats_summary['@schema_version'],'search-api') === 0 ||
+                strpos($stats_summary['@schema_version'],'drupal') === 0
+              ) {
+                if (strpos($stats_summary['@schema_version'], 'drupal-' . SolrBackendInterface::SEARCH_API_SOLR_MIN_SCHEMA_VERSION) !== 0) {
+                  \Drupal::messenger()->addError($this->t('You are using outdated Solr configuration set. Please follow the instructions described in the <a href=":url">INSTALL.md</a> file for setting up Solr.', $variables));
+                  $status = 'error';
+                }
               }
-              elseif (strpos($stats_summary['@schema_version'], 'drupal-' . SolrBackendInterface::SEARCH_API_SOLR_MIN_SCHEMA_VERSION) !== 0) {
-                $variables[':url'] = Url::fromUri('internal:/' . drupal_get_path('module', 'search_api_solr') . '/INSTALL.md')
-                  ->toString();
-                \Drupal::messenger()->addError($this->t('You are using outdated Solr configuration files. Please follow the instructions in the <a href=":url">INSTALL.md</a> file for setting up Solr.', $variables));
+              else {
+                \Drupal::messenger()->addError($this->t('You are using an incompatible Solr schema. Please follow the instructions described in the <a href=":url">INSTALL.md</a> file for setting up Solr.', $variables));
                 $status = 'error';
               }
             }
