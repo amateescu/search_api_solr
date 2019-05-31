@@ -806,7 +806,7 @@
        <str name="echoParams">explicit</str>
        <str name="wt">json</str>
        <str name="indent">true</str>
-       <str name="df">text</str>
+       <str name="df">id</str>
      </lst>
   </requestHandler>
 
@@ -846,12 +846,9 @@
      when performing moreLikeThis requests.-->
   <requestHandler name="/mlt" class="solr.MoreLikeThisHandler">
     <lst name="defaults">
-      <str name="df">content</str>
+      <str name="df">id</str>
       <str name="mlt.mintf">1</str>
       <str name="mlt.mindf">1</str>
-      <str name="mlt.minwl">3</str>
-      <str name="mlt.maxwl">15</str>
-      <str name="mlt.maxqt">20</str>
       <str name="mlt.match.include">false</str>
       <!-- Abort any searches longer than 2 seconds (set in solrcore.properties) -->
       <int name="timeAllowed">${solr.mlt.timeAllowed:2000}</int>
@@ -861,7 +858,7 @@
   <!-- A minimal query type for doing lucene queries -->
   <requestHandler name="standard" class="solr.SearchHandler">
      <lst name="defaults">
-       <str name="df">content</str>
+       <str name="df">id</str>
        <str name="echoParams">explicit</str>
        <bool name="omitHeader">true</bool>
      </lst>
@@ -869,7 +866,7 @@
 
   <initParams path="/update/**,/query,/select,/tvrh,/elevate,/spell,/browse">
     <lst name="defaults">
-      <str name="df">text</str>
+      <str name="df">id</str>
     </lst>
   </initParams>
 
@@ -1056,7 +1053,7 @@
     -->
   <requestHandler name="/spell" class="solr.SearchHandler" startup="lazy">
     <lst name="defaults">
-      <str name="df">spell</str>
+      <str name="df">id</str>
       <str name="spellcheck.dictionary">und</str>
       <str name="spellcheck">on</str>
       <str name="spellcheck.onlyMorePopular">false</str>
@@ -1099,7 +1096,7 @@
     -->
   <requestHandler name="/tvrh" class="solr.SearchHandler" startup="lazy">
     <lst name="defaults">
-      <str name="df">text</str>
+      <str name="df">id</str>
       <bool name="tv">true</bool>
     </lst>
     <arr name="last-components">
@@ -1164,7 +1161,7 @@
   <requestHandler name="/elevate" class="solr.SearchHandler" startup="lazy">
     <lst name="defaults">
       <str name="echoParams">explicit</str>
-      <str name="df">text</str>
+      <str name="df">id</str>
     </lst>
     <arr name="last-components">
       <str>elevator</str>
