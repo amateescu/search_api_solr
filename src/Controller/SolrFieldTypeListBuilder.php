@@ -6,6 +6,7 @@ use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api\ServerInterface;
+use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\Utility\Utility;
@@ -430,7 +431,11 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
             continue 2;
           }
         }
-        $files[$file] = file_get_contents($search_api_solr_conf_path . '/' . $file);
+        $files[$file] = str_replace(
+          'SEARCH_API_SOLR_MIN_SCHEMA_VERSION',
+          SearchApiSolrBackend::SEARCH_API_SOLR_MIN_SCHEMA_VERSION,
+          file_get_contents($search_api_solr_conf_path . '/' . $file)
+        );
       }
     }
 
