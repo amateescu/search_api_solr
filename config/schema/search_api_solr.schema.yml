@@ -59,6 +59,40 @@ search_api.index.*.third_party.search_api_solr:
             fragsize:
               type: integer
               label: 'Specifies the size, in characters, of fragments to consider for highlighting.'
+    mlt:
+      type: mapping
+      label: 'mlt settings'
+      mapping:
+        mintf:
+          type: integer
+          label: 'Specifies the Minimum Term Frequency, the frequency below which terms will be ignored in the source document.'
+        mindf:
+          type: integer
+          label: 'Specifies the Minimum Document Frequency, the frequency at which words will be ignored which do not occur in at least this many documents.'
+        maxdf:
+          type: integer
+          label: 'Specifies the Maximum Document Frequency, the frequency at which words will be ignored which occur in more than this many documents.'
+        maxdfpct:
+          type: integer
+          label: 'Specifies the Maximum Document Frequency using a relative ratio to the number of documents in the index. The argument must be an integer between 0 and 100. For example 75 means the word will be ignored if it occurs in more than 75 percent of the documents in the index.'
+        minwl:
+          type: integer
+          label: 'Sets the minimum word length below which words will be ignored.'
+        maxwl:
+          type: integer
+          label: 'Sets the maximum word length above which words will be ignored.'
+        maxqt:
+          type: integer
+          label: 'Sets the maximum number of query terms that will be included in any generated query.'
+        maxntp:
+          type: integer
+          label: 'Sets the maximum number of tokens to parse in each example document field that is not stored with TermVector support.'
+        boost:
+          type: boolean
+          label: 'Specifies if the query will be boosted by the interesting term relevance.'
+        interestingTerms:
+          type: string
+          label: 'Controls how the MoreLikeThis component presents the "interesting" terms (the top TF/IDF terms) for the query. Supports three settings. The setting "list" lists the terms. The setting "none" lists no terms. The setting "details" lists the terms along with the boost value used for each term. Unless mlt.boost=true, all terms will have boost=1.0.'
     advanced:
       type: mapping
       label: 'advanced settings'

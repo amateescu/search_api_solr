@@ -123,6 +123,18 @@ function search_api_solr_default_index_third_party_settings() {
         'fragsize' => 0,
       ],
     ],
+    'mlt' => [
+      'mintf' => 1,
+      'mindf' => 1,
+      'maxdf' => 0,
+      'maxdfpct' => 0,
+      'minwl' => 0,
+      'maxwl' => 0,
+      'maxqt' => 100,
+      'maxntp' => 2000,
+      'boost' => FALSE,
+      'interestingTerms' => 'none',
+    ],
     'advanced' => [
       'index_prefix' => '',
     ],
@@ -327,6 +339,95 @@ function search_api_solr_form_search_api_index_form_alter(&$form, FormStateInter
       '#description' => t('Specifies the size, in characters, of fragments to consider for highlighting. 0 indicates that no fragmenting should be considered and the whole field value should be used. This parameter accepts per-field overrides.'),
       '#default_value' => $settings['highlighter']['highlight']['fragsize'],
     ];
+
+    $form['third_party_settings']['search_api_solr']['mlt'] = [
+      '#tree' => TRUE,
+      '#type' => 'details',
+      '#title' => t('MLT (MoreLikeThis)'),
+      '#collapsed' => TRUE,
+      '#description' => t('If a Search API MoreLikeThis block is configured for this index, these settings will be used.'),
+    ];
+
+    $form['third_party_settings']['search_api_solr']['mlt']['mintf'] = [
+      '#type' => 'number',
+      '#min' => 0,
+      '#title' => t('mintf'),
+      '#description' => t('Specifies the Minimum Term Frequency, the frequency below which terms will be ignored in the source document.'),
+      '#default_value' => $settings['mlt']['mintf'],
+    ];
+
+    $form['third_party_settings']['search_api_solr']['mlt']['mindf'] = [
+      '#type' => 'number',
+      '#min' => 0,
+      '#title' => t('mindf'),
+      '#description' => t('Specifies the Minimum Document Frequency, the frequency at which words will be ignored which do not occur in at least this many documents.'),
+      '#default_value' => $settings['mlt']['mindf'],
+    ];
+
+    $form['third_party_settings']['search_api_solr']['mlt']['maxdf'] = [
+      '#type' => 'number',
+      '#min' => 0,
+      '#title' => t('maxdf'),
+      '#description' => t('Specifies the Maximum Document Frequency, the frequency at which words will be ignored which occur in more than this many documents.'),
+      '#default_value' => $settings['mlt']['maxdf'],
+    ];
+
+    $form['third_party_settings']['search_api_solr']['mlt']['maxdfpct'] = [
+      '#type' => 'number',
+      '#min' => 0,
+      '#max' => 100,
+      '#title' => t('maxdfpct'),
+      '#description' => t('Specifies the Maximum Document Frequency using a relative ratio to the number of documents in the index. The argument must be an integer between 0 and 100. For example 75 means the word will be ignored if it occurs in more than 75 percent of the documents in the index.'),
+      '#default_value' => $settings['mlt']['maxdfpct'],
+    ];
+
+    $form['third_party_settings']['search_api_solr']['mlt']['minwl'] = [
+      '#type' => 'number',
+      '#min' => 0,
+      '#title' => t('minwl'),
+      '#description' => t('Sets the minimum word length below which words will be ignored.'),
+      '#default_value' => $settings['mlt']['minwl'],
+    ];
+
+    $form['third_party_settings']['search_api_solr']['mlt']['maxwl'] = [
+      '#type' => 'number',
+      '#min' => 0,
+      '#title' => t('maxwl'),
+      '#description' => t('Sets the maximum word length above which words will be ignored.'),
+      '#default_value' => $settings['mlt']['maxwl'],
+    ];
+
+    $form['third_party_settings']['search_api_solr']['mlt']['maxqt'] = [
+      '#type' => 'number',
+      '#min' => 0,
+      '#title' => t('maxqt'),
+      '#description' => t('Sets the maximum number of query terms that will be included in any generated query.'),
+      '#default_value' => $settings['mlt']['maxqt'],
+    ];
+
+    $form['third_party_settings']['search_api_solr']['mlt']['maxntp'] = [
+      '#type' => 'number',
+      '#min' => 0,
+      '#title' => t('maxntp'),
+      '#description' => t('Sets the maximum number of tokens to parse in each example document field that is not stored with TermVector support.'),
+      '#default_value' => $settings['mlt']['maxntp'],
+    ];
+
+    $form['third_party_settings']['search_api_solr']['mlt']['boost'] = [
+      '#type' => 'checkbox',
+      '#title' => t('boost'),
+      '#description' => t('Specifies if the query will be boosted by the interesting term relevance.'),
+      '#default_value' => $settings['mlt']['boost'],
+    ];
+
+    $form['third_party_settings']['search_api_solr']['mlt']['interestingTerms'] = [
+      '#type' => 'select',
+      '#options' => ['none' => 'none', 'list' => 'list', 'details' => 'details'],
+      '#title' => t('interestingTerms'),
+      '#description' => t('Controls how the MoreLikeThis component presents the "interesting" terms (the top TF/IDF terms) for the query. Supports three settings. The setting "list" lists the terms. The setting "none" lists no terms. The setting "details" lists the terms along with the boost value used for each term. Unless mlt.boost=true, all terms will have boost=1.0.'),
+      '#default_value' => $settings['mlt']['interestingTerms'],
+    ];
+
 
     $form['third_party_settings']['search_api_solr']['advanced'] = [
       '#tree' => TRUE,

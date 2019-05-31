@@ -3878,8 +3878,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $id = $this->queryHelper->escapePhrase($id);
         });
       }
-      $solarium_query->setQuery('id:' . implode(' id:', $ids));
-      // @todo limit fields to retrieve
+      $solarium_query
+        ->setQuery('id:' . implode(' id:', $ids))
+        ->setFields('id');
     }
 
     $mlt_fl = [];
@@ -3888,19 +3889,37 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       // Date fields don't seem to be supported at all in MLT queries.
       if (strpos($first_field, 'd') !== 0) {
         if (strpos($first_field, 't') !== 0) {
+          // Non-text fields are not language-specific.
           $mlt_fl[] = [$first_field];
-          // For non-text fields, set minimum word length to 0.
-          $solarium_query->addParam('f.' . $first_field . '.mlt.minwl', 0);
         }
         else {
           $mlt_fl[] = array_values($field_names[$mlt_field]);
         }
       }
     }
-    $solarium_query->setMltFields(array_merge(...$mlt_fl));
-    // @todo Add some configuration options here and support more MLT options.
-    $solarium_query->setMinimumDocumentFrequency(1);
-    $solarium_query->setMinimumTermFrequency(1);
+
+    $settings = $this->getIndexSolrSettings($query->getIndex());
+    $solarium_query
+      ->setMltFields(array_merge(...$mlt_fl))
+      ->setMinimumTermFrequency($settings['mlt']['mintf'])
+      ->setMinimumDocumentFrequency($settings['mlt']['mindf'])
+      ->setMaximumQueryTerms($settings['mlt']['maxqt'])
+      ->setMaximumNumberOfTokens($settings['mlt']['maxntp'])
+      ->setBoost($settings['mlt']['boost'])
+      ->setInterestingTerms($settings['mlt']['interestingTerms']);
+
+    if ($settings['mlt']['maxdf']) {
+      $solarium_query->addParam('mlt.maxdf', $settings['mlt']['maxdf']);
+    }
+    if ($settings['mlt']['maxdfpct']) {
+      $solarium_query->addParam('mlt.maxdf', $settings['mlt']['maxdfpct']);
+    }
+    if ($settings['mlt']['minwl']) {
+      $solarium_query->setMinimumWordLength($settings['mlt']['minwl']);
+    }
+    if ($settings['mlt']['maxwl']) {
+      $solarium_query->setMaximumWordLength($settings['mlt']['maxwl']);
+    }
 
     return $solarium_query;
   }
