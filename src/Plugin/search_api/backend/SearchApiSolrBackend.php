@@ -4374,6 +4374,16 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
          'key' => 'maxVersion',
          'function' => 'max(_version_)',
        ]);
+
+       if (version_compare($connector->getSolrVersion(), '8.1.0', '>=')) {
+         // For whatever reason since Solr 8.1.0 the facet query above leads to
+         // a NullPointerException in Solr itself if headers are omitted. But
+         // omit headers is the default!
+         // @todo track if this issue persists for later Solr versions, too.
+         // @see https://issues.apache.org/jira/browse/SOLR-13509
+         $query->setOmitHeader(FALSE);
+       }
+
        /** @var \Solarium\QueryType\Select\Result\Result $result */
        $result = $connector->execute($query);
      }
