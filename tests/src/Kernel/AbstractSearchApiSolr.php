@@ -1236,13 +1236,22 @@ abstract class AbstractSearchApiSolr extends SolrBackendTestBase {
    */
   public function testConfigGeneration(array $files) {
     $server = $this->getServer();
+    $solr_major_version = $server->getBackend()->getSolrConnector()->getSolrMajorVersion();
+    $solr_version = $server->getBackend()->getSolrConnector()->getSolrVersion();
+    $solr_install_dir = '/opt/solr-' . $solr_version;
+
     $backend_config = $server->getBackendConfig();
+    // Relative path for official docker image.
+    $backend_config['connector_config']['solr_install_dir'] = $solr_install_dir;
+    $server->setBackendConfig($backend_config);
+    $server->save();
 
     /** @var \Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
     $list_builder = \Drupal::entityTypeManager()
       ->getListBuilder('solr_field_type');
 
     $list_builder->setServer($server);
+
 
     $config_files = $list_builder->getConfigFiles();
 
@@ -1253,12 +1262,18 @@ abstract class AbstractSearchApiSolr extends SolrBackendTestBase {
       }
     }
 
+    $this->assertContains('solr.luceneMatchVersion=' . $solr_major_version, $config_files['solrcore.properties']);
     $this->assertContains($server->id(), $config_files['test.txt']);
     $this->assertNotContains('<jmx />', $config_files['solrconfig_extra.xml']);
 
+    // Write files for docker to disk.
+    if ('8' === $solr_major_version) {
+      foreach ($config_files as $file_name => $content) {
+        file_put_contents(__DIR__ . '/../../solr-conf/' . $solr_major_version . '.x/' . $file_name, $content);
+      }
+    }
+
     $backend_config['connector_config']['jmx'] = TRUE;
-    // Relative path for official docker image.
-    $backend_config['connector_config']['solr_install_dir'] = '../../../..';
     $backend_config['disabled_field_types'] = ['text_foo_en_6_0_0', 'text_de_6_0_0', 'text_de_7_0_0'];
     $server->setBackendConfig($backend_config);
     $server->save();
@@ -1267,23 +1282,13 @@ abstract class AbstractSearchApiSolr extends SolrBackendTestBase {
 
     $config_files = $list_builder->getConfigFiles();
     $this->assertContains('<jmx />', $config_files['solrconfig_extra.xml']);
-    $this->assertContains('solr.install.dir=../../../..', $config_files['solrcore.properties']);
+    $this->assertContains('solr.install.dir=' . $solr_install_dir, $config_files['solrcore.properties']);
     $this->assertContains('text_en', $config_files['schema_extra_types.xml']);
     $this->assertNotContains('text_foo_en', $config_files['schema_extra_types.xml']);
     $this->assertNotContains('text_de', $config_files['schema_extra_types.xml']);
 
     $this->assertContains('ts_X3b_en_*', $config_files['schema_extra_fields.xml']);
     $this->assertNotContains('ts_X3b_de_*', $config_files['schema_extra_fields.xml']);
-
-    $solr_major_version = $server->getBackend()->getSolrConnector()->getSolrMajorVersion();
-    $this->assertContains('solr.luceneMatchVersion=' . $solr_major_version, $config_files['solrcore.properties']);
-
-    // Write files for docker to disk.
-    if ('7' === $solr_major_version) {
-      foreach ($config_files as $file_name => $content) {
-        file_put_contents(__DIR__ . '/../../solr-conf/' . $solr_major_version . '.x/' . $file_name, $content);
-      }
-    }
   }
 
   /**

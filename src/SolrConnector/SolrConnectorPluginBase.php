@@ -255,7 +255,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     $form['advanced']['solr_install_dir'] = [
       '#type' => 'textfield',
       '#title' => $this->t('solr.install.dir'),
-      '#description' => $this->t('The path where Solr is installed on the server, relative to the configuration or absolute. Some examples are "../../.." for Solr downloaded from apache.org, "../../../.." for the official Solr docker container, "/usr/local/opt/solr/libexec" for installations via homebrew on macOS or "/opt/solr" for some linux distributions. If you use different systems for development, testing and production you can use drupal config overwrites to adjust the value per environment or adjust the generated solrcore.properties per environment or use java virtual machine options to set the property.'),
+      '#description' => $this->t('The path where Solr is installed on the server, relative to the configuration or absolute. Some examples are "../../.." for Solr downloaded from apache.org, "/opt/solr-EXACT_VERSION_STRING" for the official Solr docker container, "/usr/local/opt/solr/libexec" for installations via homebrew on macOS or "/opt/solr" for some linux distributions. If you use different systems for development, testing and production you can use drupal config overwrites to adjust the value per environment or adjust the generated solrcore.properties per environment or use java virtual machine options to set the property.'),
       '#default_value' => isset($this->configuration['solr_install_dir']) ? $this->configuration['solr_install_dir'] : '../../..',
     ];
 
