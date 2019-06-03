@@ -880,8 +880,12 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
         $description = 'access denied';
         break;
 
+      case 500:
+        $description = 'internal error. Check your Solr logs for details!';
+        break;
+
       default:
-        $description = 'unreachable';
+        $description = sprintf('unreachable or returned unexpected response code "%d"', $response_code);
     }
     throw new SearchApiSolrException('Solr endpoint ' . $endpoint->getServerUri() . " $description.", $response_code, $e);
   }
