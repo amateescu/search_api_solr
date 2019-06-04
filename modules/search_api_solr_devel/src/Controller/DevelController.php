@@ -16,7 +16,6 @@ use Drupal\search_api\IndexInterface;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility;
-use Solarium\Exception\HttpException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -222,11 +221,11 @@ class DevelController extends ControllerBase {
                         $num_found = $results->getNumFound();
                         $summary_row['solr_exists'] = $this->t('yes');
                       }
-                      catch (HttpException $e) {
+                      catch (\Exception $e) {
                         $results = [];
                         $num_found = -1;
                         $output_details[$details_id][] = [
-                          '#markup' => $this->t('Error querying the Solr server!'),
+                          '#markup' => $this->t('Error querying the Solr server!') . '<pre>' . $e->getMessage() . '</pre>',
                         ];
                         $summary_row['solr_exists'] = $this->t('error');
                       }
