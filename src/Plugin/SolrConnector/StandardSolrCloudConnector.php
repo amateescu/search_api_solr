@@ -229,4 +229,18 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function alterConfigFiles(array &$files, string $lucene_match_version, string $server_id = '') {
+    parent::alterConfigFiles($files, $lucene_match_version, $server_id);
+
+    // Leverage the implicit Solr request handlers with default settings for
+    // Solr Cloud.
+    // @see https://lucene.apache.org/solr/guide/8_0/implicit-requesthandlers.html
+    $files['solrconfig.xml'] = preg_replace("@<requestHandler\s+name=\"/replication\".*?</requestHandler>@ms", '', $files['solrconfig.xml']);
+    $files['solrconfig.xml'] = preg_replace("@<requestHandler\s+name=\"/get\".*?</requestHandler>@ms", '', $files['solrconfig.xml']);
+    $files['solrcore.properties'] = preg_replace("/solr\.replication.*\n/", '', $files['solrcore.properties']);
+  }
+
 }

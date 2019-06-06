@@ -1289,6 +1289,19 @@ abstract class AbstractSearchApiSolr extends SolrBackendTestBase {
 
     $this->assertContains('ts_X3b_en_*', $config_files['schema_extra_fields.xml']);
     $this->assertNotContains('ts_X3b_de_*', $config_files['schema_extra_fields.xml']);
+
+    /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
+    $backend = $server->getBackend();
+    if ($backend->getSolrConnector()->isCloud()) {
+      $this->assertNotContains('solr.replication', $config_files['solrcore.properties']);
+      $this->assertNotContains('"/replication"', $config_files['solrconfig.xml']);
+      $this->assertNotContains('"/get"', $config_files['solrconfig.xml']);
+    }
+    else {
+      $this->assertContains('solr.replication', $config_files['solrcore.properties']);
+      $this->assertContains('"/replication"', $config_files['solrconfig.xml']);
+      $this->assertContains('"/get"', $config_files['solrconfig.xml']);
+    }
   }
 
   /**
