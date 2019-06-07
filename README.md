@@ -19,12 +19,8 @@ This module provides an implementation of the Search API which uses an Apache
 Solr search server for indexing and searching. Before enabling or using this
 module, you'll have to follow the instructions given in INSTALL.md first.
 
-The minimum support version for Search API Solr Search 8.x-2.x is Solr 6.6.
+The minimum support version for Search API Solr Search 8.x-3.x is Solr 6.4.
 Any version below might work if you use your own Solr config.
-
-For more detailed documentation, see the
-[handbook](https://drupal.org/node/1999280)
-
 
 Supported optional features
 ---------------------------
@@ -51,10 +47,9 @@ Regarding third-party features, the following are supported:
     a "More like this" block for node pages build with Views.
 - multisite
   - Introduced by module: search_api_solr
-  - Currently WIP for 8.x-3.x
 - spellcheck
   - Introduced by module: search_api_solr
-  - Currently WIP for 8.x-3.x
+  - Views integration provided by search_api_spellcheck
 - attachments
   - Introduced by module: search_api_attachments
 - location
@@ -165,7 +160,7 @@ Support
 
 Support is currently provided via our
 [issue queue](https://www.drupal.org/project/issues/search_api_solr?version=8.x)
-or on https://drupalchat.eu/channel/search.
+or on https://drupalchat.me/channel/search.
 
 Developers
 ----------
