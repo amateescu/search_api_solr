@@ -132,13 +132,14 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
     $this->server_id = $server->id();
     $this->backend = $server->getBackend();
     $connector = $this->backend->getSolrConnector();
+    $index_settings = $this->backend->getIndexSolrSettings($index);
 
     if (!($connector instanceof SolrCloudConnectorInterface)) {
       throw new SearchApiSolrException('Streaming expression are only supported by a Solr Cloud connector.');
     }
 
     $language_ids = array_merge(array_keys(\Drupal::languageManager()->getLanguages()), [LanguageInterface::LANGCODE_NOT_SPECIFIED]);
-    $this->collection = $connector->getCollectionName();
+    $this->collection = $index_settings['advanced']['collection'] ?: $connector->getCollectionName();
     $this->checkpoints_collection = $connector->getCheckpointsCollectionName();
     $this->index_filter_query = $this->backend->getIndexFilterQueryString($index);
     $this->targeted_index_id = $this->backend->getTargetedIndexId($index);

@@ -191,7 +191,7 @@ abstract class AbstractSearchApiSolr extends SolrBackendTestBase {
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = Index::load($this->indexId);
     $server->deleteAllIndexItems($index);
-    $this->ensureCommit($server);
+    $this->ensureCommit($index);
     $query = $this->buildSearch();
     $results = $query->execute();
     $this->assertEquals(0, $results->getResultCount(), 'Clearing the server worked correctly.');
@@ -719,7 +719,7 @@ abstract class AbstractSearchApiSolr extends SolrBackendTestBase {
     $index = $this->getIndex();
     $index->removeDatasource('entity:user')->save();
 
-    $this->ensureCommit($index->getServerInstance());
+    $this->ensureCommit($index);
 
     $results = $this->buildSearch()->execute();
     $this->assertEquals(5, $results->getResultCount(), 'Number of indexed entities is correct.');

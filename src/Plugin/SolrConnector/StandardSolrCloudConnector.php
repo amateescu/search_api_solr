@@ -42,8 +42,8 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
 
     $form['path']['#description'] = $this->t('The path that identifies the Solr instance to use on the node.');
 
-    $form['core']['#title'] = $this->t('Solr collection');
-    $form['core']['#description'] = $this->t('The name that identifies the Solr collection to use.');
+    $form['core']['#title'] = $this->t('Default Solr collection');
+    $form['core']['#description'] = $this->t('The name that identifies the Solr default collection to use. The concrete collection to use could be overwritten per index.');
 
     $form['timeout']['#description'] = $this->t('The timeout in seconds for search queries sent to the Solr collection.');
 
@@ -206,16 +206,18 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
   /**
    * Reloads collection.
    *
+   * @param string $collection
+   *
    * @return bool
    *   TRUE if successful, FALSE otherwise.
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public function reloadCollection() {
+  public function reloadCollection(?string $collection = NULL) {
     $this->connect();
 
     try {
-      $collection = $this->configuration['core'];
+      $collection = $collection ?? $this->configuration['core'];
 
       $query = $this->solr->createCollections();
       $action = $query->createReload(['name' => $collection]);

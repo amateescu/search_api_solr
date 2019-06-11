@@ -55,6 +55,7 @@ use Solarium\Core\Query\Helper;
 use Solarium\Core\Query\QueryInterface as SolariumQueryInterface;
 use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\Exception\ExceptionInterface;
+use Solarium\Exception\OutOfBoundsException;
 use Solarium\Exception\StreamException;
 use Solarium\QueryType\Select\Query\FilterQuery;
 use Solarium\QueryType\Stream\Expression;
@@ -838,7 +839,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
     try {
       $update_query->addDocuments($documents);
-      $connector->update($update_query);
+      $connector->update($update_query, $this->getCollectionEndpoint($index));
 
       $field_names = $this->getSolrFieldNames($index);
       $ret = [];
@@ -870,8 +871,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function getDocuments(IndexInterface $index, array $items, UpdateQuery $update_query = NULL) {
-    $connector = $this->getSolrConnector();
-
     $documents = [];
     $index_id = $this->getTargetedIndexId($index);
     $site_hash = $this->getTargetedSiteHash($index);
@@ -880,6 +879,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $base_urls = [];
 
     if (!$update_query) {
+      $connector = $this->getSolrConnector();
       $update_query = $connector->getUpdateQuery();
     }
 
@@ -1008,7 +1008,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $connector = $this->getSolrConnector();
       $update_query = $connector->getUpdateQuery();
       $update_query->addDeleteByIds($solr_ids);
-      $connector->update($update_query);
+      $connector->update($update_query, $this->getCollectionEndpoint($index));
       \Drupal::state()->set('search_api_solr.' . $index->id() . '.last_update', \Drupal::time()->getCurrentTime());
     }
     catch (ExceptionInterface $e) {
@@ -1033,7 +1033,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
     $update_query = $connector->getUpdateQuery();
     $update_query->addDeleteQuery($query);
-    $connector->update($update_query);
+    $connector->update($update_query, $this->getCollectionEndpoint($index));
     \Drupal::state()->set('search_api_solr.' . $index->id() . '.last_update', \Drupal::time()->getCurrentTime());
   }
 
@@ -1049,6 +1049,33 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     }
 
     return $fq;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCollectionEndpoint(IndexInterface $index) {
+    $connector = $this->getSolrConnector();
+    if ($this->solrConnector->isCloud()) {
+      // Using the index_id as endpoint name leads to collisions in a multisite
+      // setup. Using the index filter query string instead is a good
+      // workaround.
+      $endpoint_name = $this->getIndexFilterQueryString($index);
+      try {
+        return $this->solrConnector->getEndpoint($endpoint_name);
+      }
+      catch (OutOfBoundsException $e) {
+        $additional_config = [];
+        if ($settings = $this->getIndexSolrSettings($index)) {
+          if ($settings['advanced']['collection']) {
+            $additional_config['core'] = $settings['advanced']['collection'];
+          }
+        }
+        return $this->solrConnector->createEndpoint($endpoint_name, $additional_config);
+      }
+    }
+
+    return $connector->getEndpoint();
   }
 
   /**
@@ -1077,13 +1104,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $previous_timeout = $connector->adjustTimeout($connector->getFinalizeTimeout());
           try {
             if (!empty($settings['commit_before_finalize'])) {
-              $this->ensureCommit($this->getServer());
+              $this->ensureCommit($index);
             }
 
             $this->moduleHandler->invokeAll('search_api_solr_finalize_index', [$index]);
 
             if (!empty($settings['commit_after_finalize'])) {
-              $this->ensureCommit($this->getServer());
+              $this->ensureCommit($index);
             }
 
             \Drupal::state()
@@ -1369,7 +1396,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $this->moduleHandler->alter('search_api_solr_converted_query', $solarium_query, $query);
 
         // Send search request.
-        $response = $connector->search($solarium_query);
+        $response = $connector->search($solarium_query, $this->getCollectionEndpoint($index));
         $body = $response->getBody();
         if (200 != $response->getStatusCode()) {
           throw new SearchApiSolrException(strip_tags($body), $response->getStatusCode());
@@ -1607,7 +1634,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       throw new SearchApiSolrException('Streaming expression are only supported by a Solr Cloud connector.');
     }
 
-    $this->finalizeIndex($query->getIndex());
+    $index = $query->getIndex();
+    $this->finalizeIndex($index);
 
     $stream = $connector->getStreamQuery();
     $stream->setExpression($stream_expression);
@@ -1617,7 +1645,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $result = NULL;
 
     try {
-      $result = $connector->stream($stream);
+      $result = $connector->stream($stream, $this->getCollectionEndpoint($index));
 
       if ($processors = $query->getIndex()->getProcessorsByStage(ProcessorInterface::STAGE_POSTPROCESS_QUERY)) {
         foreach ($processors as $key => $processor) {
@@ -1679,14 +1707,15 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       throw new SearchApiSolrException('Streaming expression are only supported by a Solr Cloud connector.');
     }
 
-    $this->finalizeIndex($query->getIndex());
+    $index = $query->getIndex();
+    $this->finalizeIndex($index);
 
     $graph = $connector->getGraphQuery();
     $graph->setExpression($stream_expression);
     $this->applySearchWorkarounds($graph, $query);
 
     try {
-      return $connector->graph($graph);
+      return $connector->graph($graph, $this->getCollectionEndpoint($index));
     }
     catch (\Exception $e) {
       throw new SearchApiSolrException('An error occurred while trying execute a streaming expression on Solr: ' . $e->getMessage(), $e->getCode(), $e);
@@ -3063,7 +3092,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $suggestion_factory = new SuggestionFactory($user_input);
         $this->ensureLanguageCondition($query);
         $this->setAutocompleteTermQuery($query, $solarium_query, $incomplete_key);
-        $result = $this->getSolrConnector()->execute($solarium_query);
+        $result = $this->getSolrConnector()->execute($solarium_query, $this->getCollectionEndpoint($query->getIndex()));
         $suggestions = $this->getAutocompleteTermSuggestions($result, $suggestion_factory, $incomplete_key);
         // Filter out duplicate suggestions.
         $this->filterDuplicateAutocompleteSuggestions($suggestions);
@@ -3179,7 +3208,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $this->setAutocompleteSpellCheckQuery($query, $solarium_query, $user_input);
         // Allow modules to alter the solarium autocomplete query.
         $this->moduleHandler->alter('search_api_solr_spellcheck_autocomplete_query', $solarium_query, $query);
-        $result = $this->getSolrConnector()->execute($solarium_query);
+        $result = $this->getSolrConnector()->execute($solarium_query, $this->getCollectionEndpoint($query->getIndex()));
         $suggestions = $this->getAutocompleteSpellCheckSuggestions($result, $suggestion_factory);
         // Filter out duplicate suggestions.
         $this->filterDuplicateAutocompleteSuggestions($suggestions);
@@ -3205,7 +3234,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $this->setAutocompleteSuggesterQuery($query, $solarium_query, $user_input, $options);
         // Allow modules to alter the solarium autocomplete query.
         $this->moduleHandler->alter('search_api_solr_suggester_autocomplete_query', $solarium_query, $query);
-        $result = $this->getSolrConnector()->execute($solarium_query);
+        $result = $this->getSolrConnector()->execute($solarium_query, $this->getCollectionEndpoint($query->getIndex()));
         $suggestions = $this->getAutocompleteSuggesterSuggestions($result, $suggestion_factory);
         // Filter out duplicate suggestions.
         $this->filterDuplicateAutocompleteSuggestions($suggestions);
@@ -4263,6 +4292,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getSchemaLanguageStatistics() {
+    // @todo iterate over all indexes in case of cloud?
     $available = $this->getSolrConnector()->pingCore();
     $stats = [];
     foreach (\Drupal::languageManager()->getLanguages() as $language) {
@@ -4317,15 +4347,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   /**
-   * Returns the Solr settings for the given index.
-   *
-   * @param \Drupal\search_api\IndexInterface $index
-   *   The Search API index entity.
-   *
-   * @return array
-   *   An associative array of settings.
+   * {@inheritdoc}
    */
-  protected function getIndexSolrSettings(IndexInterface $index) {
+  public function getIndexSolrSettings(IndexInterface $index) {
     return $index->getThirdPartySettings('search_api_solr') + search_api_solr_default_index_third_party_settings();
   }
 

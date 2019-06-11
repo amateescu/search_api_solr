@@ -179,6 +179,31 @@ interface SolrBackendInterface extends BackendInterface {
   public function getIndexFilterQueryString(IndexInterface $index);
 
   /**
+   * Returns the endpoint to use for the index.
+   *
+   * In case of Solr Cloud an index might use a different Solr collection.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *
+   * @return \Solarium\Core\Client\Endpoint
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   * @throws \Drupal\search_api\SearchApiException
+   */
+  public function getCollectionEndpoint(IndexInterface $index);
+
+  /**
+   * Returns the Solr settings for the given index.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The Search API index entity.
+   *
+   * @return array
+   *   An associative array of settings.
+   */
+  public function getIndexSolrSettings(IndexInterface $index);
+
+    /**
    * Prefixes an index ID as configured.
    *
    * The resulting ID will be a concatenation of the following strings:

@@ -36,7 +36,7 @@ class IntegrationTest extends SearchApiIntegrationTest {
     if ($this->indexId) {
       if ($index = $this->getIndex()) {
         $index->clear();
-        $this->ensureCommit($index->getServerInstance());
+        $this->ensureCommit($index);
       }
     }
     parent::tearDown();
@@ -140,7 +140,7 @@ class IntegrationTest extends SearchApiIntegrationTest {
   protected function indexItems() {
     $index_status = parent::indexItems();
     $index = Index::load($this->indexId);
-    $this->ensureCommit($index->getServerInstance());
+    $this->ensureCommit($index);
     return $index_status;
   }
 

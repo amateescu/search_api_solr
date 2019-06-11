@@ -71,7 +71,7 @@ abstract class AbstractSearchApiSolrTechproducts extends SolrBackendTestBase {
     // removal. Regression test for
     // https://www.drupal.org/project/search_api_solr/issues/2847092
     $server->removeIndex($this->getIndex());
-    $this->ensureCommit($server);
+    $this->ensureCommit($this->getIndex());
     $server->addIndex($this->getIndex());
     $this->firstSearch();
   }

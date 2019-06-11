@@ -217,7 +217,7 @@ class DevelController extends ControllerBase {
                       $query->setFields('*');
                       try {
                         // @TODO: Run a timer on this process and report it?
-                        $results = $solr->execute($query);
+                        $results = $solr->execute($query, $backend->getCollectionEndpoint($index));
                         $num_found = $results->getNumFound();
                         $summary_row['solr_exists'] = $this->t('yes');
                       }
