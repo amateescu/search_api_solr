@@ -1186,10 +1186,16 @@ function search_api_solr_update_8315() {
       if (!empty($field_type_config['solr_configs']) && !empty($field_type_config['solr_configs']['searchComponents'])) {
         foreach ($field_type_config['solr_configs']['searchComponents'] as &$component) {
           if ('spellcheck' === $component['name']) {
-            $component['lst']['str'][] = [
-              'name' => 'onlyMorePopular',
-              'VALUE' => 'true',
-            ];
+            if (isset($component['lst']) && is_array($component['lst'])) {
+              foreach ($component['lst'] as &$lst) {
+                if ('spellchecker' === $lst['name']) {
+                  $lst['str'][] = [
+                    'name' => 'onlyMorePopular',
+                    'VALUE' => 'true',
+                  ];
+                }
+              }
+            }
           }
         }
       }
@@ -1296,27 +1302,48 @@ function search_api_solr_update_8319() {
         }
       }
     }
-    if (!empty($field_type_config['spellcheck_field_type'])) {
-      if (!empty($field_type_config['solr_configs']) && !empty($field_type_config['solr_configs']['searchComponents'])) {
-        foreach ($field_type_config['solr_configs']['searchComponents'] as &$component) {
-          if ('spellcheck' === $component['name']) {
-            if (isset($component['lst']) && is_array($component['lst'])) {
-              foreach ($component['lst'] as &$lsts) {
-                foreach ($lsts as &$lst) {
-                  if (isset($lst['str']) && is_array($lst['str'])) {
-                    foreach ($lst['str'] as $str) {
-                      if ('onlyMorePopular' === $str['name']) {
-                        continue 3;
-                      }
+    if ($save) {
+      search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
+    }
+  }
+}
+
+/**
+ * Fix 2.x to 3.0 upgrade path of spellcheck components.
+ */
+function search_api_solr_update_8320() {
+  foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+    $save = FALSE;
+    if (isset($field_type_config['spellcheck_field_type']) && empty($field_type_config['spellcheck_field_type'])) {
+      unset($field_type_config['spellcheck_field_type']);
+      $save = TRUE;
+    }
+    if (!empty($field_type_config['solr_configs']) && !empty($field_type_config['solr_configs']['searchComponents'])) {
+      foreach ($field_type_config['solr_configs']['searchComponents'] as &$component) {
+        if ('spellcheck' === $component['name']) {
+          if (isset($component['lst']) && is_array($component['lst'])) {
+            foreach ($component['lst'] as $key => &$lst) {
+              if ('spellchecker' === $lst['name']) {
+                if (isset($lst['str']) && is_array($lst['str'])) {
+                  foreach ($lst['str'] as $str) {
+                    if ('onlyMorePopular' === $str['name']) {
+                      continue 2;
                     }
-                    $lst['str'][] = [
-                      'name' => 'onlyMorePopular',
-                      'VALUE' => 'true',
-                    ];
-                    $save = TRUE;
                   }
+                  $lst['str'][] = [
+                    'name' => 'onlyMorePopular',
+                    'VALUE' => 'true',
+                  ];
+                  $save = TRUE;
                 }
               }
+            }
+            if ('str' === $key) {
+              // An previously erroneous implementation of
+              // search_api_solr_update_8315() added that entry which needs to
+              // be removed now.
+              unset($component['lst']['str']);
+              $save = TRUE;
             }
           }
         }
@@ -1327,4 +1354,3 @@ function search_api_solr_update_8319() {
     }
   }
 }
-

@@ -74,21 +74,21 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
    *
    * @var array
    */
-  protected $spellcheck_field_type = NULL;
+  protected $spellcheck_field_type;
 
   /**
    * Solr Collated Field Type definition.
    *
    * @var array
    */
-  protected $collated_field_type = NULL;
+  protected $collated_field_type;
 
   /**
    * Solr Unstemmed Field Type definition.
    *
    * @var  array
    */
-  protected $unstemmed_field_type = NULL;
+  protected $unstemmed_field_type;
 
   /**
    * The custom code targeted by this Solr Field Type.
