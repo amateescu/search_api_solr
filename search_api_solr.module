@@ -11,6 +11,7 @@ use Drupal\search_api_solr\Form\IndexSolrMultisiteCloneForm;
 use Drupal\search_api_solr\Form\IndexSolrMultisiteUpdateForm;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\Utility\Utility;
+use Zend\Stdlib\ArrayUtils;
 
 /**
  * Implements hook_help().
@@ -147,6 +148,17 @@ function search_api_solr_default_index_third_party_settings() {
 }
 
 /**
+ * Merges the default third party settings to those of an index for Solr.
+ *
+ * @param array $third_party_settings
+ *
+ * @return array
+ */
+function search_api_solr_merge_default_index_third_party_settings(array $third_party_settings) {
+  return ArrayUtils::merge(search_api_solr_default_index_third_party_settings(), $third_party_settings, TRUE);
+}
+
+/**
  * Implements hook_form_FORM_alter.
  */
 function search_api_solr_form_search_api_index_form_alter(&$form, FormStateInterface $form_state, $form_id) {
@@ -164,7 +176,7 @@ function search_api_solr_form_search_api_index_form_alter(&$form, FormStateInter
     if (!$index->isNew()) {
       $settings = $index->getThirdPartySettings('search_api_solr');
     }
-    $settings += search_api_solr_default_index_third_party_settings();
+    $settings = search_api_solr_merge_default_index_third_party_settings($settings);
 
     $form['third_party_settings']['search_api_solr'] = [
       '#tree' => TRUE,

@@ -27,7 +27,8 @@
         "drupal/search_api": "~1.12",
         "consolidation/annotated-command": "^2.12",
         "maennchen/zipstream-php": "0.4.*",
-        "solarium/solarium": "~5.0.2"
+        "solarium/solarium": "~5.0.2",
+        "zendframework/zend-stdlib": "^3.2.1"
     },
     "require-dev": {
         "phayes/geophp": "^1.2",

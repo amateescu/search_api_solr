@@ -4350,7 +4350,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getIndexSolrSettings(IndexInterface $index) {
-    return $index->getThirdPartySettings('search_api_solr') + search_api_solr_default_index_third_party_settings();
+    return search_api_solr_merge_default_index_third_party_settings($index->getThirdPartySettings('search_api_solr'));
   }
 
   /**

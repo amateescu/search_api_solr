@@ -65,4 +65,76 @@ class UtilitiesTest extends KernelTestBase {
     $this->assertEquals('text_de-CH-1901', Utility::decodeSolrName($encoded));
   }
 
+  public function testMergeDefaultIndexThirdPartySettings() {
+    $third_party_settings = [
+      'finalize' => TRUE,
+      'commit_before_finalize' => FALSE,
+      'highlighter' => [
+        'maxAnalyzedChars' => 51200,
+        'fragmenter' => 'gap',
+        'usePhraseHighlighter' => TRUE,
+        'highlightMultiTerm' => TRUE,
+        'preserveMulti' => FALSE,
+        'regex' => [
+          'slop' => 0.9,
+          'maxAnalyzedChars' => 2,
+        ],
+      ],
+      'advanced' => [
+        'index_prefix' => 'dummy',
+      ],
+      'multilingual' => [
+        'limit_to_content_language' => TRUE,
+        'include_language_independent' => TRUE,
+      ],
+    ];
+
+    $this->assertEquals(
+      [
+        'finalize' => TRUE,
+        'commit_before_finalize' => FALSE,
+        'commit_after_finalize' => FALSE,
+        'highlighter' => [
+          'maxAnalyzedChars' => 51200,
+          'fragmenter' => 'gap',
+          'usePhraseHighlighter' => TRUE,
+          'highlightMultiTerm' => TRUE,
+          'preserveMulti' => FALSE,
+          'regex' => [
+            'slop' => 0.9,
+            'pattern' => 'blank',
+            'maxAnalyzedChars' => 2,
+          ],
+          'highlight' => [
+            'mergeContiguous' => FALSE,
+            'requireFieldMatch' => FALSE,
+            'snippets' => 3,
+            'fragsize' => 0,
+          ],
+        ],
+        'mlt' => [
+          'mintf' => 1,
+          'mindf' => 1,
+          'maxdf' => 0,
+          'maxdfpct' => 0,
+          'minwl' => 0,
+          'maxwl' => 0,
+          'maxqt' => 100,
+          'maxntp' => 2000,
+          'boost' => FALSE,
+          'interestingTerms' => 'none',
+        ],
+        'advanced' => [
+          'index_prefix' => 'dummy',
+          'collection' => '',
+        ],
+        'multilingual' => [
+          'limit_to_content_language' => TRUE,
+          'include_language_independent' => TRUE,
+        ],
+      ],
+      search_api_solr_merge_default_index_third_party_settings($third_party_settings)
+    );
+  }
+
 }
