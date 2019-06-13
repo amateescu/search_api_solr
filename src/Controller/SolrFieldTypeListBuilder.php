@@ -10,6 +10,7 @@ use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\Utility\Utility;
+use ZipStream\Option\Archive;
 use ZipStream\ZipStream;
 
 /**
@@ -460,7 +461,10 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     $connector = $backend->getSolrConnector();
     $solr_branch = $connector->getSolrBranch($this->assumed_minimum_version);
 
-    $zip = new ZipStream('solr_' . $solr_branch . '_config.zip');
+    $archive_options = new Archive();
+    $archive_options->setSendHttpHeaders(TRUE);
+
+    $zip = new ZipStream('solr_' . $solr_branch . '_config.zip', $archive_options);
 
     $files = $this->getConfigFiles();
 
