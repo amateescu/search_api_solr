@@ -10,6 +10,7 @@ use Drupal\search_api_solr\SolrFieldTypeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
+use ZipStream\Option\Archive;
 
 /**
  * Provides different listings of SolrFieldType.
@@ -107,18 +108,23 @@ class SolrFieldTypeController extends ControllerBase {
    * @param \Drupal\search_api\ServerInterface $search_api_server
    *   The Search API server entity.
    *
-   * @return array
+   * @return array|void
    *   A render array as expected by drupal_render().
    */
   public function getConfigZip(ServerInterface $search_api_server) {
-    @ob_clean();
-
     try {
-      /** @var \ZipStream\ZipStream $zip */
-      $zip = $this->getListBuilder($search_api_server)->getConfigZip();
-      $zip->finish();
+      $archive_options = new Archive();
+      $archive_options->setSendHttpHeaders(TRUE);
 
+      @ob_clean();
+      // If you are using nginx as a webserver, it will try to buffer the
+      // response. We have to disable this with a custom header.
+      // @see https://github.com/maennchen/ZipStream-PHP/wiki/nginx
+      header('X-Accel-Buffering: no');
+      $zip = $this->getListBuilder($search_api_server)->getConfigZip($archive_options);
+      $zip->finish();
       @ob_end_flush();
+
       exit();
     }
     catch (\Exception $e) {

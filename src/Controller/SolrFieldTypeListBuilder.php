@@ -448,6 +448,8 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   /**
    * Returns a ZipStream of all configuration files.
    *
+   * @param \ZipStream\Option\Archive $archive_options
+   *
    * @return \ZipStream\ZipStream
    *   The ZipStream that contains all configuration files.
    *
@@ -455,14 +457,11 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    * @throws \ZipStream\Exception\FileNotFoundException
    * @throws \ZipStream\Exception\FileNotReadableException
    */
-  public function getConfigZip() {
+  public function getConfigZip(Archive $archive_options): ZipStream {
     /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
     $backend = $this->getBackend();
     $connector = $backend->getSolrConnector();
     $solr_branch = $connector->getSolrBranch($this->assumed_minimum_version);
-
-    $archive_options = new Archive();
-    $archive_options->setSendHttpHeaders(TRUE);
 
     $zip = new ZipStream('solr_' . $solr_branch . '_config.zip', $archive_options);
 

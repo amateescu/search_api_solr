@@ -3,6 +3,8 @@
 namespace Drupal\search_api_solr\Utility;
 
 
+use ZipStream\Option\Archive;
+
 /**
  * Provides functionality to be used by CLI tools.
  */
@@ -28,6 +30,7 @@ class CommandHelper extends \Drupal\search_api\Utility\CommandHelper {
    * @throws \Drupal\search_api\SearchApiException
    * @throws \ZipStream\Exception\FileNotFoundException
    * @throws \ZipStream\Exception\FileNotReadableException
+   * @throws \ZipStream\Exception\OverflowException
    */
   public function getServerConfigCommand($server_id, $file_name, $solr_version = NULL) {
     /** @var \Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
@@ -41,11 +44,15 @@ class CommandHelper extends \Drupal\search_api\Utility\CommandHelper {
       $server->setBackendConfig($config);
     }
     $list_builder->setServer($server);
-    @ob_end_clean();
-    ob_start();
-    $zip = $list_builder->getConfigZip();
+
+    $stream = fopen($file_name, 'w+b');
+    $archive_options = new Archive();
+    $archive_options->setOutputStream($stream);
+
+    $zip = $list_builder->getConfigZip($archive_options);
     $zip->finish();
-    file_put_contents($file_name, ob_get_clean());
+
+    fclose($stream);
   }
 
   /**
