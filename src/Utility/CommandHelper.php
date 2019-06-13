@@ -2,7 +2,6 @@
 
 namespace Drupal\search_api_solr\Utility;
 
-
 use ZipStream\Option\Archive;
 
 /**
