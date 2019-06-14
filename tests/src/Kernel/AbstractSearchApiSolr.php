@@ -13,6 +13,7 @@ use Drupal\search_api_autocomplete\Entity\Search;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\Tests\search_api_solr\Traits\InvokeMethodTrait;
 use Drupal\search_api_solr\Utility\SolrCommitTrait;
+use Drupal\search_api_solr\Utility\Utility as SolrUtility;
 use Drupal\user\Entity\User;
 
 /**
@@ -231,81 +232,94 @@ abstract class AbstractSearchApiSolr extends SolrBackendTestBase {
 
     $query = $this->buildSearch('foo "apple pie" bar');
 
-    $flat = $this->invokeMethod($backend, 'flattenKeys', [
+    $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       [],
-      'phrase',
-    ]);
+      'phrase'
+    );
     $this->assertEquals('(+"foo" +"apple pie" +"bar")', $flat);
 
-    $flat = $this->invokeMethod($backend, 'flattenKeys', [
+    $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       [],
-      'terms',
-    ]);
+      'terms'
+    );
     $this->assertEquals('(+"foo" +"apple pie" +"bar")', $flat);
-
-    $flat = $this->invokeMethod($backend, 'flattenKeys', [
-      $query->getKeys(),
-      [],
-      'edismax',
-    ]);
-    $this->assertEquals('({!edismax qf=\'\'}+"foo" +"apple pie" +"bar")', $flat);
 
     $exception = FALSE;
     try {
-      $flat = $this->invokeMethod($backend, 'flattenKeys', [
+      $flat = SolrUtility::flattenKeys(
         $query->getKeys(),
         [],
-        'direct',
-      ]);
+        'edismax'
+      );
     }
     catch (SearchApiSolrException $e) {
       $exception = TRUE;
     }
     $this->assertTrue($exception);
 
-    $flat = $this->invokeMethod($backend, 'flattenKeys', [
+    $exception = FALSE;
+    try {
+      $flat = SolrUtility::flattenKeys(
+        $query->getKeys(),
+        [],
+        'direct'
+      );
+    }
+    catch (SearchApiSolrException $e) {
+      $exception = TRUE;
+    }
+    $this->assertTrue($exception);
+
+    $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       ['solr_field'],
-      'phrase',
-    ]);
+      'phrase'
+    );
     $this->assertEquals('solr_field:(+"foo" +"apple pie" +"bar")', $flat);
 
-    $flat = $this->invokeMethod($backend, 'flattenKeys', [
+    $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       ['solr_field'],
-      'terms',
-    ]);
+      'terms'
+    );
     $this->assertEquals('((+(solr_field:"foo") +(solr_field:"apple pie") +(solr_field:"bar")) solr_field:(+"foo" +"apple pie" +"bar"))', $flat);
 
-    $flat = $this->invokeMethod($backend, 'flattenKeys', [
+    $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       ['solr_field'],
-      'edismax',
-    ]);
+      'edismax'
+    );
     $this->assertEquals('({!edismax qf=\'solr_field\'}+"foo" +"apple pie" +"bar")', $flat);
 
-    $flat = $this->invokeMethod($backend, 'flattenKeys', [
+    $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       ['solr_field_1', 'solr_field_2'],
-      'phrase',
-    ]);
+      'phrase'
+    );
     $this->assertEquals('(solr_field_1:(+"foo" +"apple pie" +"bar") solr_field_2:(+"foo" +"apple pie" +"bar"))', $flat);
 
-    $flat = $this->invokeMethod($backend, 'flattenKeys', [
+    $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       ['solr_field_1', 'solr_field_2'],
-      'terms',
-    ]);
+      'terms'
+    );
     $this->assertEquals('((+(solr_field_1:"foo" solr_field_2:"foo") +(solr_field_1:"apple pie" solr_field_2:"apple pie") +(solr_field_1:"bar" solr_field_2:"bar")) solr_field_1:(+"foo" +"apple pie" +"bar") solr_field_2:(+"foo" +"apple pie" +"bar"))', $flat);
 
-    $flat = $this->invokeMethod($backend, 'flattenKeys', [
+    $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       ['solr_field_1', 'solr_field_2'],
-      'edismax',
-    ]);
+      'edismax'
+    );
     $this->assertEquals('({!edismax qf=\'solr_field_1 solr_field_2\'}+"foo" +"apple pie" +"bar")', $flat);
+
+    $flat = SolrUtility::flattenKeys(
+      $query->getKeys(),
+      [],
+      'keys'
+    );
+    $this->assertEquals('+"foo" +"apple pie" +"bar"', $flat);
   }
 
   /**

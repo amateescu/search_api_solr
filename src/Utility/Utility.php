@@ -585,4 +585,283 @@ class Utility {
     }
     return ($i > 2147483629) ? 2147483629 : $i;
   }
+
+  /**
+   * Flattens keys and fields into a single search string.
+   *
+   * Formatting the keys into a Solr query can be a bit complex. Keep in mind
+   * that the default operator is OR. For some combinations we had to take
+   * decisions because different interpretations are possible and we have to
+   * ensure that stop words in boolean combinations don't lead to zero results.
+   * Therefore this function will produce these queries:
+   *
+   * @code
+   * #conjunction | #negation | fields | parse mode     | return value
+   * ---------------------------------------------------------------------------
+   * AND          | FALSE     | []     | terms / phrase | +(+A +B)
+   * AND          | TRUE      | []     | terms / phrase | -(+A +B)
+   * OR           | FALSE     | []     | terms / phrase | +(A B)
+   * OR           | TRUE      | []     | terms / phrase | -(A B)
+   * AND          | FALSE     | [x]    | terms / phrase | +(x:(+A +B)^1)
+   * AND          | TRUE      | [x]    | terms / phrase | -(x:(+A +B)^1)
+   * OR           | FALSE     | [x]    | terms / phrase | +(x:(A B)^1)
+   * OR           | TRUE      | [x]    | terms / phrase | -(x:(A B)^1)
+   * AND          | FALSE     | [x,y]  | terms          | +((+(x:A^1 y:A^1) +(x:B^1 y:B^1)) x:(+A +B)^1 y:(+A +B)^1)
+   * AND          | FALSE     | [x,y]  | phrase         | +(x:(+A +B)^1 y:(+A +B)^1)
+   * AND          | TRUE      | [x,y]  | terms          | -((+(x:A^1 y:A^1) +(x:B^1 y:B^1)) x:(+A +B)^1 y:(+A +B)^1)
+   * AND          | TRUE      | [x,y]  | phrase         | -(x:(+A +B)^1 y:(+A +B)^1)
+   * OR           | FALSE     | [x,y]  | terms          | +(((x:A^1 y:A^1) (x:B^1 y:B^1)) x:(A B)^1 y:(A B)^1)
+   * OR           | FALSE     | [x,y]  | phrase         | +(x:(A B)^1 y:(A B)^1)
+   * OR           | TRUE      | [x,y]  | terms          | -(((x:A^1 y:A^1) (x:B^1 y:B^1)) x:(A B)^1 y:(A B)^1)
+   * OR           | TRUE      | [x,y]  | phrase         | -(x:(A B)^1 y:(A B)^1)
+   * AND          | FALSE     | [x,y]  | edismax        | +({!edismax qf=x^1,y^1}+A +B)
+   * AND          | TRUE      | [x,y]  | edismax        | -({!edismax qf=x^1,y^1}+A +B)
+   * OR           | FALSE     | [x,y]  | edismax        | +({!edismax qf=x^1,y^1}A B)
+   * OR           | TRUE      | [x,y]  | edismax        | -({!edismax qf=x^1,y^1}A B)
+   * AND / OR     | FALSE     | [x]    | direct         | +(x:(A)^1)
+   * AND / OR     | TRUE      | [x]    | direct         | -(x:(A)^1)
+   * AND / OR     | FALSE     | [x,y]  | direct         | +(x:(A)^1 y:(A)^1)
+   * AND / OR     | TRUE      | [x,y]  | direct         | -(x:(A)^1 y:(A)^1)
+   * AND          | FALSE     | []     | keys           | +A +B
+   * AND          | TRUE      | []     | keys           | -(+A +B)
+   * OR           | FALSE     | []     | keys           | A B
+   * OR           | TRUE      | []     | keys           | -(A B)
+   * @endcode
+   *
+   * @param array|string $keys
+   *   The keys array to flatten, formatted as specified by
+   *   \Drupal\search_api\Query\QueryInterface::getKeys() or a phrase string.
+   * @param array $fields
+   *   (optional) An array of field names.
+   * @param string $parse_mode_id
+   *   (optional) The parse mode ID. Defaults to "phrase".
+   *
+   * @return string
+   *   A Solr query string representing the same keys.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   */
+  public static function flattenKeys($keys, array $fields = [], string $parse_mode_id = 'phrase'): string {
+    switch ($parse_mode_id) {
+      case 'keys':
+        if (!empty($fields)) {
+          throw new SearchApiSolrException(sprintf('Parse mode %s could not handle fields.', $parse_mode_id));
+        }
+        break;
+
+      case 'edismax':
+      case 'direct':
+        if (empty($fields)) {
+          throw new SearchApiSolrException(sprintf('Parse mode %s requires fields.', $parse_mode_id));
+        }
+        break;
+    }
+
+    $k = [];
+    $pre = '+';
+    $neg = '';
+    $query_parts = [];
+
+    if (is_array($keys)) {
+      $queryHelper = \Drupal::service('solarium.query_helper');
+
+      if (isset($keys['#conjunction']) && $keys['#conjunction'] === 'OR') {
+        $pre = '';
+      }
+
+      if (!empty($keys['#negation'])) {
+        $neg = '-';
+      }
+
+      $escaped = $keys['#escaped'] ?? FALSE;
+
+      foreach ($keys as $key_nr => $key) {
+        // We cannot use \Drupal\Core\Render\Element::children() anymore because
+        // $keys is not a valid render array.
+        if (!$key || strpos($key_nr, '#') === 0) {
+          continue;
+        }
+        if (is_array($key)) {
+          if ('edismax' === $parse_mode_id) {
+            throw new SearchApiSolrException('Incompatible parse mode.');
+          }
+          if ($subkeys = self::flattenKeys($key, $fields, $parse_mode_id)) {
+            $query_parts[] = $subkeys;
+          }
+        }
+        elseif ($escaped) {
+          $k[] = trim($key);
+        }
+        else {
+          switch ($parse_mode_id) {
+            // Using the 'phrase' parse mode, Search API provides one big phrase
+            // as keys. Using the 'terms' parse mode, Search API provides chunks
+            // of single terms as keys. But these chunks might contain not just
+            // real terms but again a phrase if you enter something like this in
+            // the search box: term1 "term2 as phrase" term3. This will be
+            // converted in this keys array: ['term1', 'term2 as phrase',
+            // 'term3']. To have Solr behave like the database backend, these
+            // three "terms" should be handled like three phrases.
+            case 'terms':
+            case 'phrase':
+            case 'edismax':
+            case 'keys':
+              $k[] = $queryHelper->queryHelper->escapePhrase(trim($key));
+              break;
+
+            default:
+              throw new SearchApiSolrException('Incompatible parse mode.');
+          }
+        }
+      }
+    }
+    elseif (is_string($keys)) {
+      switch ($parse_mode_id) {
+        case 'direct':
+          $pre = '';
+          $k[] = '(' . trim($keys) . ')';
+          break;
+
+        default:
+          throw new SearchApiSolrException('Incompatible parse mode.');
+      }
+    }
+
+    if ($k) {
+      switch ($parse_mode_id) {
+        case 'edismax':
+          $query_parts[] = "({!edismax qf='" . implode(' ', $fields) . "'}" . $pre . implode(' ' . $pre, $k) . ')';
+          break;
+
+        case 'keys':
+          $query_parts[] = $pre . implode(' ' . $pre, $k);
+          break;
+
+        case "terms":
+          if (count($k) > 1 && count($fields) > 0) {
+            $key_parts = [];
+            foreach ($k as $l) {
+              $field_parts = [];
+              foreach ($fields as $f) {
+                $field = $f;
+                $boost_or_fuzzy = '';
+                // Split on operators:
+                // - boost (^),
+                // - fixed score (^=),
+                // - fuzzy/term proximity (~).
+                if ($split = preg_split('/([\^~])/', $f, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE)) {
+                  $field = array_shift($split);
+                  $boost_or_fuzzy = implode('', $split);
+                }
+                $field_parts[] = $field . ':' . $l . $boost_or_fuzzy;
+              }
+              $key_parts[] = $pre . '(' . implode(' ', $field_parts) . ')';
+            }
+            $query_parts[] = '(' . implode(' ', $key_parts) . ')';
+          }
+        // No break! Execute 'default', too.
+        default:
+          if (count($fields) > 0) {
+            foreach ($fields as $f) {
+              $field = $f;
+              $boost_or_fuzzy = '';
+              // Split on operators for boost (^), fixed score (^=), fuzzy/term proximity (~).
+              if ($split = preg_split('/([\^~])/', $f, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE)) {
+                $field = array_shift($split);
+                $boost_or_fuzzy = implode('', $split);
+              }
+              $query_parts[] = $field . ':(' . $pre . implode(' ' . $pre, $k) . ')' . $boost_or_fuzzy;
+            }
+          }
+          else {
+            $query_parts[] = '(' . $pre . implode(' ' . $pre, $k) . ')';
+          }
+      }
+    }
+
+    if (count($query_parts) === 1) {
+      return $neg . reset($query_parts);
+    }
+
+    if (count($query_parts) > 1) {
+      return $neg . '(' . implode(' ', $query_parts) . ')';
+    }
+
+    return '';
+  }
+
+  /**
+   * Flattens keys into payload_score queries.
+   *
+   * @param array|string $keys
+   *   The keys array to flatten, formatted as specified by
+   *   \Drupal\search_api\Query\QueryInterface::getKeys() or a phrase string.
+   * @param string $parse_mode_id
+   *   (optional) The parse mode ID. Defaults to "phrase".
+   *
+   * @return string
+   *   A Solr query string representing the same keys.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   */
+  public static function flattenKeysToPayloadScore($keys, string $parse_mode_id = 'phrase'): string {
+    $k = [];
+    $payload_scores = [];
+
+    if (is_array($keys)) {
+      $queryHelper = \Drupal::service('solarium.query_helper');
+
+      $escaped = $keys['#escaped'] ?? FALSE;
+
+      foreach ($keys as $key_nr => $key) {
+        if (!$key || strpos($key_nr, '#') === 0) {
+          continue;
+        }
+        if (is_array($key)) {
+          if ($subkeys = self::flattenKeysToPayloadScore($key, $parse_mode_id)) {
+            $payload_scores[] = $subkeys;
+          }
+        }
+        elseif ($escaped) {
+          $k[] = trim($key);
+        }
+        else {
+          switch ($parse_mode_id) {
+            case 'terms':
+            case 'phrase':
+            case 'edismax':
+              $k[] = $queryHelper->queryHelper->escapePhrase(trim($key));
+              break;
+
+            default:
+              throw new SearchApiSolrException('Incompatible parse mode.');
+          }
+        }
+      }
+    }
+    elseif (is_string($keys)) {
+      switch ($parse_mode_id) {
+        case 'direct':
+          // NOP.
+          break;
+
+        default:
+          throw new SearchApiSolrException('Incompatible parse mode.');
+      }
+    }
+
+    // See the boost_term_payload field type in schema.xml. If we send shorter
+    // or larger keys then defined by solr.LengthFilterFactory we'll trigger a
+    // "SpanQuery is null" exception.
+    $k = array_filter($k, function ($v) {
+      $v = trim($v, '"');
+      return (mb_strlen($v) >= 2) && (mb_strlen($v) <= 100);
+    });
+
+    if ($k) {
+      $payload_scores[] = ' {!payload_score f=boost_term v=' . implode(' func=max} {!payload_score f=boost_term v=', $k) . ' func=max}';
+    }
+
+    return implode('', $payload_scores);
+  }
 }
