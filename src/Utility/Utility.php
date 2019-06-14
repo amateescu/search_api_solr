@@ -706,7 +706,7 @@ class Utility {
             case 'phrase':
             case 'edismax':
             case 'keys':
-              $k[] = $queryHelper->queryHelper->escapePhrase(trim($key));
+              $k[] = $queryHelper->escapePhrase(trim($key));
               break;
 
             default:
@@ -830,7 +830,7 @@ class Utility {
             case 'terms':
             case 'phrase':
             case 'edismax':
-              $k[] = $queryHelper->queryHelper->escapePhrase(trim($key));
+              $k[] = $queryHelper->escapePhrase(trim($key));
               break;
 
             default:
