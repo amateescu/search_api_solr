@@ -3015,6 +3015,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         case 'search_api_string':
         default:
           if (strpos($field, 't') === 0) {
+            // @todo For sure Solr can handle it. But it was a trade-off for
+            //       3.x. For full multilingual support, fulltext fields are
+            //       indexed in language specific fields. In case of facets it
+            //       is hard to detect which language specific fields should be
+            //       considered. And the results have to be combined across
+            //       languages. One way to implement it might be facet queries.
             throw new SearchApiSolrException('Facetting on fulltext fields is not yet supported. Consider to add a string field to the index for that purpose.');
           }
           // Create the Solarium facet field object.
