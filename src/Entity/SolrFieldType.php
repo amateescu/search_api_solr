@@ -545,7 +545,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
           'termVectors' => TRUE,
           'omitNorms' => strpos($prefix, 'to') === 0,
         ];
-        if (LanguageInterface::LANGCODE_NOT_SPECIFIED == $this->field_type_language_code) {
+        if (LanguageInterface::LANGCODE_NOT_SPECIFIED === $this->field_type_language_code) {
           // Add a language-unspecific default dynamic field as fallback for
           // languages we don't have a dedicated config for.
           $dynamic_field['name'] = SearchApiSolrUtility::encodeSolrName($prefix) . '_*';
@@ -559,7 +559,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
       // example de-at => de.
       $dynamic_fields[] = $spellcheck_field;
 
-      if (LanguageInterface::LANGCODE_NOT_SPECIFIED == $this->field_type_language_code) {
+      if (LanguageInterface::LANGCODE_NOT_SPECIFIED === $this->field_type_language_code) {
         // Add a language-unspecific default dynamic spellcheck field as
         // fallback for languages we don't have a dedicated config for.
         $spellcheck_field['name'] = 'spellcheck_*';
@@ -570,7 +570,7 @@ class SolrFieldType extends ConfigEntityBase implements SolrFieldTypeInterface {
     if ($collated_field = $this->getCollatedField()) {
       $dynamic_fields[] = $collated_field;
 
-      if (LanguageInterface::LANGCODE_NOT_SPECIFIED == $this->field_type_language_code) {
+      if (LanguageInterface::LANGCODE_NOT_SPECIFIED === $this->field_type_language_code) {
         // Add a language-unspecific default dynamic sort field as fallback for
         // languages we don't have a dedicated config for.
         $collated_field['name'] = 'sort_*';

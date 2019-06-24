@@ -3,6 +3,7 @@
 namespace Drupal\search_api_solr\Utility;
 
 use Drupal\Component\Utility\NestedArray;
+use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
@@ -111,7 +112,7 @@ class Utility {
 
     // Return the info.
     if (isset($type)) {
-      return isset($types[$type]) ? $types[$type] : NULL;
+      return $types[$type] ?? NULL;
     }
     return $types;
   }
@@ -523,6 +524,11 @@ class Utility {
    */
   public static function getSortableSolrField(string $field_name, array $solr_field_names, QueryInterface $query) {
     $first_solr_field_name = reset($solr_field_names[$field_name]);
+
+    if (Utility::hasIndexJustSolrDocumentDatasource($query->getIndex())) {
+      return $first_solr_field_name;
+    }
+
     // First we need to handle special fields which are prefixed by
     // 'search_api_'. Otherwise they will erroneously be treated as dynamic
     // string fields by the next detection below because they start with an
@@ -542,7 +548,7 @@ class Utility {
       }
     }
     elseif (strpos($first_solr_field_name, 'spellcheck') === 0 || strpos($first_solr_field_name, 'twm_suggest') === 0) {
-      throw new SearchApiSolrException('You can\'t sort by spellcheck or suggester catalogs.');
+      throw new SearchApiSolrException("You can't sort by spellcheck or suggester catalogs.");
     }
     elseif (strpos($first_solr_field_name, 's') === 0 || strpos($first_solr_field_name, 't') === 0) {
       // For string and fulltext fields use the dedicated sort field for faster
@@ -864,4 +870,37 @@ class Utility {
 
     return implode('', $payload_scores);
   }
+
+  /**
+   * Returns whether the index only contains "solr_*" datasources.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The Search API index entity.
+   *
+   * @return bool
+   *   TRUE if the index only contains "solr_*" datasources, FALSE otherwise.
+   */
+  public static function hasIndexJustSolrDatasources(IndexInterface $index): bool {
+    $datasource_ids = $index->getDatasourceIds();
+    $datasource_ids = array_filter($datasource_ids, function ($datasource_id) {
+      return strpos($datasource_id, 'solr_') !== 0;
+    });
+    return !$datasource_ids;
+  }
+
+  /**
+   * Returns whether the index only contains "solr_document" datasources.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The Search API index entity.
+   *
+   * @return bool
+   *   TRUE if the index only contains "solr_document" datasources, FALSE
+   *   otherwise.
+   */
+  public static function hasIndexJustSolrDocumentDatasource(IndexInterface $index): bool {
+    $datasource_ids = $index->getDatasourceIds();
+    return (1 == count($datasource_ids)) && in_array('solr_document', $datasource_ids);
+  }
+
 }

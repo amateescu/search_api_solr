@@ -128,6 +128,10 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function __construct(IndexInterface $index) {
+    if (Utility::hasIndexJustSolrDocumentDatasource($index)) {
+      throw new SearchApiSolrException('StreamingExpressionBuilder requires a Drupal schema. Consider the solarium library for other schemas.');
+    }
+
     $server = $index->getServerInstance();
     $this->server_id = $server->id();
     $this->backend = $server->getBackend();
@@ -135,7 +139,7 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
     $index_settings = $this->backend->getIndexSolrSettings($index);
 
     if (!($connector instanceof SolrCloudConnectorInterface)) {
-      throw new SearchApiSolrException('Streaming expression are only supported by a Solr Cloud connector.');
+      throw new SearchApiSolrException('Streaming expressions are only supported by a Solr Cloud connector.');
     }
 
     $language_ids = array_merge(array_keys(\Drupal::languageManager()->getLanguages()), [LanguageInterface::LANGCODE_NOT_SPECIFIED]);
@@ -174,6 +178,9 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
         'ancestors' => 'ancestors',
       ];
       $this->sort_fields_mapped[$language_id] = [];
+      // As we only support the Drupal schema here we can safely take decisions
+      // based on filed name prefixes. For other schemas an exception will be
+      // thrown above.
       foreach ($this->all_fields_mapped[$language_id] as $search_api_field => $solr_field) {
         if (strpos($solr_field, 't') === 0 || strpos($solr_field, 's') === 0) {
           $this->sort_fields_mapped[$language_id]['sort_' . $search_api_field] = Utility::encodeSolrName('sort' . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $language_id . '_' . $search_api_field);
@@ -183,7 +190,7 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
         }
 
         if (
-          strpos($solr_field, 's') === 0 ||
+          strpos($solr_field, 's') === 0 || // Covers sort_*, too.
           strpos($solr_field, 'i') === 0 ||
           strpos($solr_field, 'f') === 0 ||
           strpos($solr_field, 'p') === 0 ||
