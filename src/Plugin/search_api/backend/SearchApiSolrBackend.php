@@ -50,6 +50,7 @@ use Drupal\search_api_solr\SolrProcessorInterface;
 use Drupal\search_api_solr\Utility\SolrCommitTrait;
 use Drupal\search_api_solr\Utility\Utility;
 use Solarium\Component\ComponentAwareQueryInterface;
+use Solarium\Core\Client\Endpoint;
 use Solarium\Core\Client\Response;
 use Solarium\Core\Query\Helper;
 use Solarium\Core\Query\QueryInterface as SolariumQueryInterface;
@@ -64,6 +65,7 @@ use Solarium\QueryType\Select\Query\Query;
 use Solarium\QueryType\Select\Result\Result;
 use Solarium\QueryType\Update\Query\Document;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Zend\Stdlib\ArrayUtils;
 
 /**
  * Apache Solr backend for search api.
@@ -4145,91 +4147,181 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getDocumentCounts() {
-     $connector = $this->getSolrConnector();
+    $connector = $this->getSolrConnector();
+    $connector_endpoint = $connector->getEndpoint();
 
-     try {
-       $query = $connector->getSelectQuery()
-         ->addFilterQuery(new FilterQuery([
-           'key' => 'search_api',
-           'query' => '+hash:* +index_id:*'
-         ]))
-         ->setRows(1)
-         ->setFields('id');
+    $connector_endpoint_counted = FALSE;
+    $document_counts = [
+      '#total' => 0,
+    ];
 
-       $facet_set = $query->getFacetSet();
+    if ($indexes = $this->getServer()->getIndexes()) {
+      foreach ($indexes as $index) {
+        $collection_endpoint = $this->getCollectionEndpoint($index);
+        if ($collection_endpoint->getBaseUri() !== $connector_endpoint->getBaseUri()) {
+          $collection_document_counts = $this->doDocumentCounts($collection_endpoint);
+          $collection_document_counts['#total'] += $document_counts['#total'];
+          $document_counts = ArrayUtils::merge($document_counts, $collection_document_counts, TRUE);
+        }
+        elseif (!$connector_endpoint_counted) {
+          $connector_document_counts = $this->doDocumentCounts($connector_endpoint);
+          $connector_document_counts['#total'] += $document_counts['#total'];
+          $document_counts = ArrayUtils::merge($document_counts, $connector_document_counts, TRUE);
+          $connector_endpoint_counted = TRUE;
+        }
+      }
+    }
+    else {
+      return $this->doDocumentCounts($connector_endpoint);
+    }
 
-       $json_facet_query = $facet_set->createJsonFacetTerms([
-         'key' => 'siteHahes',
-         'limit' => -1,
-         'field' => 'hash',
-       ]);
+    return $document_counts;
+  }
 
-       $nested_json_facet_terms = $facet_set->createJsonFacetTerms([
-         'key' => 'numDocsPerIndex',
-         'limit' => -1,
-         'field' => 'index_id',
-       ], /* Don't add to top level => nested. */ FALSE);
+  /**
+   * Perform document count for a given endpoint, in total and per site / index.
+   *
+   * @param \Solarium\Core\Client\Endpoint $endpoint
+   *
+   * @return array
+   *   An associative array of document counts.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   * @throws \Drupal\search_api\SearchApiException
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   */
+  protected function doDocumentCounts(Endpoint $endpoint): array {
+    $connector = $this->getSolrConnector();
 
-       $json_facet_query->addFacet($nested_json_facet_terms);
+    try {
+      $query = $connector->getSelectQuery()
+        ->addFilterQuery(new FilterQuery([
+          'key' => 'search_api',
+          'query' => '+hash:* +index_id:*',
+        ]))
+        ->setRows(1)
+        ->setFields('id');
 
-       /** @var \Solarium\QueryType\Select\Result\Result $result */
-       $result = $connector->execute($query);
-     }
-     catch (\Exception $e) {
-       // For non drupal indexes we only use the implicit "count" aggregation.
-       // Therefore we need one random facet. The only field we can be 99% sure
-       // that it exists in any index is _version_. max(_version_) should be the
-       // most minimalistic facet we can think of.
-       $query = $connector->getSelectQuery()->setRows(1);
-       $facet_set = $query->getFacetSet();
-       $facet_set->createJsonFacetAggregation([
-         'key' => 'maxVersion',
-         'function' => 'max(_version_)',
-       ]);
+      $facet_set = $query->getFacetSet();
 
-       if (version_compare($connector->getSolrVersion(), '8.1.0', '>=')) {
-         // For whatever reason since Solr 8.1.0 the facet query above leads to
-         // a NullPointerException in Solr itself if headers are omitted. But
-         // omit headers is the default!
-         // @todo track if this issue persists for later Solr versions, too.
-         // @see https://issues.apache.org/jira/browse/SOLR-13509
-         $query->setOmitHeader(FALSE);
-       }
+      $json_facet_query = $facet_set->createJsonFacetTerms([
+        'key' => 'siteHashes',
+        'limit' => -1,
+        'field' => 'hash',
+      ]);
 
-       /** @var \Solarium\QueryType\Select\Result\Result $result */
-       $result = $connector->execute($query);
-     }
+      $nested_json_facet_terms = $facet_set->createJsonFacetTerms([
+        'key' => 'numDocsPerIndex',
+        'limit' => -1,
+        'field' => 'index_id',
+      ], /* Don't add to top level => nested. */ FALSE);
 
-     $facet_set = $result->getFacetSet();
+      $json_facet_query->addFacet($nested_json_facet_terms);
 
-     // The implicit "count" aggregation over all results matching the query
-     // exists ony any JSONFacet set.
-     /** @var \Solarium\Component\Result\Facet\Aggregation $count */
-     $count = $facet_set->getFacet('count');
-     $document_counts = [
-       '#total' => $count->getValue(),
-     ];
+      /** @var \Solarium\QueryType\Select\Result\Result $result */
+      $result = $connector->execute($query, $endpoint);
+    }
+    catch (\Exception $e) {
+      // For non drupal indexes we only use the implicit "count" aggregation.
+      // Therefore we need one random facet. The only field we can be 99% sure
+      // that it exists in any index is _version_. max(_version_) should be the
+      // most minimalistic facet we can think of.
+      $query = $connector->getSelectQuery()->setRows(1);
+      $facet_set = $query->getFacetSet();
+      $facet_set->createJsonFacetAggregation([
+        'key' => 'maxVersion',
+        'function' => 'max(_version_)',
+      ]);
+
+      if (version_compare($connector->getSolrVersion(), '8.1.0', '>=')) {
+        // For whatever reason since Solr 8.1.0 the facet query above leads to
+        // a NullPointerException in Solr itself if headers are omitted. But
+        // omit headers is the default!
+        // @todo track if this issue persists for later Solr versions, too.
+        // @see https://issues.apache.org/jira/browse/SOLR-13509
+        $query->setOmitHeader(FALSE);
+      }
+
+      /** @var \Solarium\QueryType\Select\Result\Result $result */
+      $result = $connector->execute($query, $endpoint);
+    }
+
+    $facet_set = $result->getFacetSet();
+
+    // The implicit "count" aggregation over all results matching the query
+    // exists ony any JSONFacet set.
+    /** @var \Solarium\Component\Result\Facet\Aggregation $count */
+    $count = $facet_set->getFacet('count');
+    $document_counts = [
+      '#total' => $count->getValue(),
+    ];
 
     /** @var \Solarium\Component\Result\Facet\Buckets $site_hashes */
-    if ($site_hashes = $facet_set->getFacet('siteHahes')) {
-       /** @var \Solarium\Component\Result\Facet\Bucket $site_hash_bucket */
-       foreach ($site_hashes->getBuckets() as $site_hash_bucket) {
-         $site_hash = $site_hash_bucket->getValue();
-         /** @var \Solarium\Component\Result\Facet\Bucket $index_bucket */
-         foreach ($site_hash_bucket->getFacetSet()->getFacet('numDocsPerIndex') as $index_bucket) {
-           $index = $index_bucket->getValue();
-           $document_counts[$site_hash][$index] = $index_bucket->getCount();
-         }
-       }
-     }
+    if ($site_hashes = $facet_set->getFacet('siteHashes')) {
+      /** @var \Solarium\Component\Result\Facet\Bucket $site_hash_bucket */
+      foreach ($site_hashes->getBuckets() as $site_hash_bucket) {
+        $site_hash = $site_hash_bucket->getValue();
+        /** @var \Solarium\Component\Result\Facet\Bucket $index_bucket */
+        foreach ($site_hash_bucket->getFacetSet()->getFacet('numDocsPerIndex') as $index_bucket) {
+          $index = $index_bucket->getValue();
+          $document_counts[$site_hash][$index] = $index_bucket->getCount();
+        }
+      }
+    }
 
-     return $document_counts;
+    return $document_counts;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getMaxDocumentVersions() {
+    $connector = $this->getSolrConnector();
+    $connector_endpoint = $connector->getEndpoint();
+
+    $connector_endpoint_counted = FALSE;
+    $document_versions = [
+      '#total' => 0,
+    ];
+
+    if ($indexes = $this->getServer()->getIndexes()) {
+      foreach ($indexes as $index) {
+        $collection_endpoint = $this->getCollectionEndpoint($index);
+        if ($collection_endpoint->getBaseUri() !== $connector_endpoint->getBaseUri()) {
+          $collection_document_versions = $this->doGetMaxDocumentVersions($collection_endpoint);
+          $collection_document_versions['#total'] += $document_versions['#total'];
+          $document_versions = ArrayUtils::merge($document_versions, $collection_document_versions, TRUE);
+        }
+        elseif (!$connector_endpoint_counted) {
+          $connector_document_versions = $this->doGetMaxDocumentVersions($connector_endpoint);
+          $connector_document_versions['#total'] += $document_versions['#total'];
+          $document_versions = ArrayUtils::merge($document_versions, $connector_document_versions, TRUE);
+          $connector_endpoint_counted = TRUE;
+        }
+      }
+    }
+    else {
+      return $this->doGetMaxDocumentVersions($connector_endpoint);
+    }
+
+    return $document_versions;
+  }
+
+  /**
+   * Get the max document versions, in total and per site / index / datasource.
+   *
+   * _version_ numbers are important for replication and checkpoints.
+   *
+   * @param \Solarium\Core\Client\Endpoint $endpoint
+   *
+   * @return array
+   *   An associative array of max document versions.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   * @throws \Drupal\search_api\SearchApiException
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   */
+  protected function doGetMaxDocumentVersions(Endpoint $endpoint): array {
     $connector = $this->getSolrConnector();
     $document_versions = [];
 
@@ -4249,8 +4341,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         'function' => 'max(_version_)',
       ]);
 
-      $siteHahes = $facet_set->createJsonFacetTerms([
-        'key' => 'siteHahes',
+      $siteHashes = $facet_set->createJsonFacetTerms([
+        'key' => 'siteHashes',
         'limit' => -1,
         'field' => 'hash',
       ]);
@@ -4274,10 +4366,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       $dataSources->addFacet($maxVersionPerDataSource);
       $indexes->addFacet($dataSources);
-      $siteHahes->addFacet($indexes);
+      $siteHashes->addFacet($indexes);
 
       /** @var \Solarium\QueryType\Select\Result\Result $result */
-      $result = $connector->execute($query);
+      $result = $connector->execute($query, $endpoint);
     }
     catch (\Exception $e) {
       $query = $connector->getSelectQuery()->setRows(1);
@@ -4287,7 +4379,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         'function' => 'max(_version_)',
       ]);
       /** @var \Solarium\QueryType\Select\Result\Result $result */
-      $result = $connector->execute($query);
+      $result = $connector->execute($query, $endpoint);
     }
 
     $facet_set = $result->getFacetSet();
@@ -4297,7 +4389,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         '#total' => $maxVersion->getValue(),
       ];
       /** @var \Solarium\Component\Result\Facet\Buckets $site_hashes */
-      if ($site_hashes = $facet_set->getFacet('siteHahes')) {
+      if ($site_hashes = $facet_set->getFacet('siteHashes')) {
         /** @var \Solarium\Component\Result\Facet\Bucket $site_hash_bucket */
         foreach ($site_hashes->getBuckets() as $site_hash_bucket) {
           $site_hash = $site_hash_bucket->getValue();
