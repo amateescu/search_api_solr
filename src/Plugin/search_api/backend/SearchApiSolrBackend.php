@@ -728,7 +728,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           foreach ($this->getMaxDocumentVersions() as $site_hash => $indexes) {
             if ('#total' === $site_hash) {
               $info[] = [
-                'label' => $this->t('Max docuemnt _version_ for this server'),
+                'label' => $this->t('Max document _version_ for this server'),
                 'info' => $indexes,
               ];
             }
