@@ -128,10 +128,6 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function __construct(IndexInterface $index) {
-    if (Utility::hasIndexJustSolrDocumentDatasource($index)) {
-      throw new SearchApiSolrException('StreamingExpressionBuilder requires a Drupal schema. Consider the solarium library for other schemas.');
-    }
-
     $server = $index->getServerInstance();
     $this->server_id = $server->id();
     $this->backend = $server->getBackend();
@@ -157,17 +153,20 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
       }
     }
     foreach ($language_ids as $language_id) {
-      $this->all_fields_mapped[$language_id] += [
-        // Search API Solr Search specific fields.
-        'id' => 'id',
-        'index_id' => 'index_id',
-        'hash' => 'hash',
-        'site' => 'site',
-        'timestamp' => 'timestamp',
-        'context_tags' => 'sm_context_tags',
-        // @todo to be removed
-        'spell' => 'spell',
-      ];
+      if (!Utility::hasIndexJustSolrDocumentDatasource($index)) {
+        $this->all_fields_mapped[$language_id] += [
+          // Search API Solr Search specific fields.
+          'id' => 'id',
+          'index_id' => 'index_id',
+          'hash' => 'hash',
+          'site' => 'site',
+          'timestamp' => 'timestamp',
+          'context_tags' => 'sm_context_tags',
+          // @todo to be removed
+          'spell' => 'spell',
+        ];
+      }
+
       $this->all_fields_including_graph_fields_mapped[$language_id] = $this->all_fields_mapped[$language_id] + [
         // Graph traversal reserved names. We can't get a conflict here since
         // all dynamic fields are prefixed.
@@ -177,27 +176,27 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
         'level' => 'level',
         'ancestors' => 'ancestors',
       ];
-      $this->sort_fields_mapped[$language_id] = [];
-      // As we only support the Drupal schema here we can safely take decisions
-      // based on filed name prefixes. For other schemas an exception will be
-      // thrown above.
-      foreach ($this->all_fields_mapped[$language_id] as $search_api_field => $solr_field) {
-        if (strpos($solr_field, 't') === 0 || strpos($solr_field, 's') === 0) {
-          $this->sort_fields_mapped[$language_id]['sort_' . $search_api_field] = Utility::encodeSolrName('sort' . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $language_id . '_' . $search_api_field);
-        }
-        elseif (preg_match('/^([a-z]+)m(_.*)/', $solr_field, $matches) && strpos($solr_field, 'random_') !== 0) {
-          $this->sort_fields_mapped[$language_id]['sort' . Utility::decodeSolrName($matches[2])] = $matches[1] . 's' . $matches[2];
-        }
 
-        if (
-          strpos($solr_field, 's') === 0 || // Covers sort_*, too.
-          strpos($solr_field, 'i') === 0 ||
-          strpos($solr_field, 'f') === 0 ||
-          strpos($solr_field, 'p') === 0 ||
-          strpos($solr_field, 'b') === 0 ||
-          strpos($solr_field, 'h') === 0
-        ) {
-          $this->all_doc_value_fields_mapped[$language_id][$search_api_field] = $solr_field;
+      $this->sort_fields_mapped[$language_id] = [];
+      if (!Utility::hasIndexJustSolrDocumentDatasource($index)) {
+        foreach ($this->all_fields_mapped[$language_id] as $search_api_field => $solr_field) {
+          if (strpos($solr_field, 't') === 0 || strpos($solr_field, 's') === 0) {
+            $this->sort_fields_mapped[$language_id]['sort_' . $search_api_field] = Utility::encodeSolrName('sort' . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $language_id . '_' . $search_api_field);
+          }
+          elseif (preg_match('/^([a-z]+)m(_.*)/', $solr_field, $matches) && strpos($solr_field, 'random_') !== 0) {
+            $this->sort_fields_mapped[$language_id]['sort' . Utility::decodeSolrName($matches[2])] = $matches[1] . 's' . $matches[2];
+          }
+
+          if (
+            strpos($solr_field, 's') === 0 || // Covers sort_*, too.
+            strpos($solr_field, 'i') === 0 ||
+            strpos($solr_field, 'f') === 0 ||
+            strpos($solr_field, 'p') === 0 ||
+            strpos($solr_field, 'b') === 0 ||
+            strpos($solr_field, 'h') === 0
+          ) {
+            $this->all_doc_value_fields_mapped[$language_id][$search_api_field] = $solr_field;
+          }
         }
       }
     }
