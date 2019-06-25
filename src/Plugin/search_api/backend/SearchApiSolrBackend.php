@@ -2606,11 +2606,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $index_fulltext_fields[$index_id] = [];
     }
 
-    if (!isset($index_fields[$index_id])) {
+    if (!isset($index_fields[$index_id]) || empty($index_fields[$index_id])) {
       $index_fields[$index_id] = $index->getFields(TRUE) + $this->getSpecialFields($index);
     }
 
-    if (!isset($index_fulltext_fields[$index_id])) {
+    if (!isset($index_fulltext_fields[$index_id]) || empty($index_fulltext_fields[$index_id])) {
       $index_fulltext_fields[$index_id] = $index->getFulltextFields();
     }
 
@@ -3035,7 +3035,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
         case 'search_api_string':
         default:
-          if (!isset($index_fulltext_fields[$index_id])) {
+          if (!isset($index_fulltext_fields[$index_id]) || empty($index_fulltext_fields[$index_id])) {
             $index_fulltext_fields[$index_id] = $index->getFulltextFields();
           }
 
