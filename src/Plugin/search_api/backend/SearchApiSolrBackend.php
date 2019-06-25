@@ -2602,15 +2602,15 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     if (empty($language_ids)) {
       // Reset.
-      $index_fields[$index_id] = [];
-      $index_fulltext_fields[$index_id] = [];
+      unset($index_fields[$index_id]);
+      unset($index_fulltext_fields[$index_id]);
     }
 
-    if (!isset($index_fields[$index_id]) || empty($index_fields[$index_id])) {
+    if (!isset($index_fields[$index_id])) {
       $index_fields[$index_id] = $index->getFields(TRUE) + $this->getSpecialFields($index);
     }
 
-    if (!isset($index_fulltext_fields[$index_id]) || empty($index_fulltext_fields[$index_id])) {
+    if (!isset($index_fulltext_fields[$index_id])) {
       $index_fulltext_fields[$index_id] = $index->getFulltextFields();
     }
 
@@ -2652,7 +2652,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $value = $condition->getValue();
         $filter_query = '';
 
-        if (in_array($field, $index_fulltext_fields)) {
+        if (in_array($field, $index_fulltext_fields[$index_id])) {
           if ($value) {
             if (empty($language_ids)) {
               throw new SearchApiException('Conditon on fulltext field without corresponding condition on search_api_language detected.');
@@ -3035,11 +3035,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
         case 'search_api_string':
         default:
-          if (!isset($index_fulltext_fields[$index_id]) || empty($index_fulltext_fields[$index_id])) {
+          if (!isset($index_fulltext_fields[$index_id])) {
             $index_fulltext_fields[$index_id] = $index->getFulltextFields();
           }
 
-          if (in_array($info['field'], $index_fulltext_fields)) {
+          if (in_array($info['field'], $index_fulltext_fields[$index_id])) {
             // @todo For sure Solr can handle it. But it was a trade-off for
             //       3.x. For full multilingual support, fulltext fields are
             //       indexed in language specific fields. In case of facets it
@@ -3069,8 +3069,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
       // For "OR" facets, add the expected tag for exclusion.
       if (isset($info['operator']) && strtolower($info['operator']) === 'or') {
+        // The tag "facet:field_name" is defined by the facets module. Therefore
+        // we have to use the Search API field name here to create the same tag.
+        // @see \Drupal\facets\QueryType\QueryTypeRangeBase::execute()
         // @see https://cwiki.apache.org/confluence/display/solr/Faceting#Faceting-LocalParametersforFaceting
-        $facet_field->setExcludes(['facet:' . $solr_field]);
+        $facet_field->setExcludes(['facet:' . $info['field']]);
       }
 
       // Set mincount, unless it's the default.
