@@ -656,72 +656,82 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         ];
 
         try {
-          // If Solr can be reached, provide more information. This isn't done
-          // often (only when an admin views the server details), so we clear
-          // the cache to get the current data.
-          $data = $connector->getLuke();
-          if (isset($data['index']['numDocs'])) {
-            // Collect the stats.
-            $stats_summary = $connector->getStatsSummary();
+          $endpoints = [$connector->getEndpoint()];
+          $endpoints_queried = [];
 
-            $pending_msg = $stats_summary['@pending_docs'] ? $this->t('(@pending_docs sent but not yet processed)', $stats_summary) : '';
-            $index_msg = $stats_summary['@index_size'] ? $this->t('(@index_size on disk)', $stats_summary) : '';
-            $indexed_message = $this->t('@num items @pending @index_msg', [
-              '@num' => $data['index']['numDocs'],
-              '@pending' => $pending_msg,
-              '@index_msg' => $index_msg,
-            ]);
-            $info[] = [
-              'label' => $this->t('Indexed'),
-              'info' => $indexed_message,
-            ];
+          foreach ($this->getServer()->getIndexes() as $index) {
+            $endpoints[] = $this->getCollectionEndpoint($index);
+          }
 
-            if (!empty($stats_summary['@deletes_total'])) {
-              $info[] = [
-                'label' => $this->t('Pending Deletions'),
-                'info' => $stats_summary['@deletes_total'],
-              ];
-            }
+          foreach ($endpoints as $endpoint) {
+            $key = $endpoint->getBaseUri();
+            if (!in_array($key, $endpoints_queried)) {
+              $endpoints_queried[] = $key;
+              $data = $connector->getLuke($endpoint);
+              if (isset($data['index']['numDocs'])) {
+                // Collect the stats.
+                $stats_summary = $connector->getStatsSummary($endpoint);
 
-            $info[] = [
-              'label' => $this->t('Delay'),
-              'info' => $this->t('@autocommit_time before updates are processed.', $stats_summary),
-            ];
+                $pending_msg = $stats_summary['@pending_docs'] ? $this->t('(@pending_docs sent but not yet processed)', $stats_summary) : '';
+                $index_msg = $stats_summary['@index_size'] ? $this->t('(@index_size on disk)', $stats_summary) : '';
+                $indexed_message = $this->t('@num items @pending @index_msg', [
+                  '@num' => $data['index']['numDocs'],
+                  '@pending' => $pending_msg,
+                  '@index_msg' => $index_msg,
+                ]);
+                $info[] = [
+                  'label' => $this->t('%key: Indexed', ['%key' => $key]),
+                  'info' => $indexed_message,
+                ];
 
-            $status = 'ok';
-            if (empty($this->configuration['skip_schema_check'])) {
-              $variables[':url'] = Url::fromUri('internal:/' . drupal_get_path('module', 'search_api_solr') . '/INSTALL.md')->toString();
-              if (
-                strpos($stats_summary['@schema_version'],'search-api') === 0 ||
-                strpos($stats_summary['@schema_version'],'drupal') === 0
-              ) {
-                if (strpos($stats_summary['@schema_version'], 'drupal-' . SolrBackendInterface::SEARCH_API_SOLR_MIN_SCHEMA_VERSION) !== 0) {
-                  \Drupal::messenger()->addError($this->t('You are using outdated Solr configuration set. Please follow the instructions described in the <a href=":url">INSTALL.md</a> file for setting up Solr.', $variables));
-                  $status = 'error';
+                if (!empty($stats_summary['@deletes_total'])) {
+                  $info[] = [
+                    'label' => $this->t('%key: Pending Deletions', ['%key' => $key]),
+                    'info' => $stats_summary['@deletes_total'],
+                  ];
+                }
+
+                $info[] = [
+                  'label' => $this->t('%key: Delay', ['%key' => $key]),
+                  'info' => $this->t('@autocommit_time before updates are processed.', $stats_summary),
+                ];
+
+                $status = 'ok';
+                if (empty($this->configuration['skip_schema_check'])) {
+                  $variables[':url'] = Url::fromUri('internal:/' . drupal_get_path('module', 'search_api_solr') . '/INSTALL.md')->toString();
+                  if (
+                    strpos($stats_summary['@schema_version'],'search-api') === 0 ||
+                    strpos($stats_summary['@schema_version'],'drupal') === 0
+                  ) {
+                    if (strpos($stats_summary['@schema_version'], 'drupal-' . SolrBackendInterface::SEARCH_API_SOLR_MIN_SCHEMA_VERSION) !== 0) {
+                      \Drupal::messenger()->addError($this->t('You are using outdated Solr configuration set. Please follow the instructions described in the <a href=":url">INSTALL.md</a> file for setting up Solr.', $variables));
+                      $status = 'error';
+                    }
+                  }
+                  else {
+                    \Drupal::messenger()->addError($this->t('You are using an incompatible Solr schema. Please follow the instructions described in the <a href=":url">INSTALL.md</a> file for setting up Solr.', $variables));
+                    $status = 'error';
+                  }
+                }
+                $info[] = [
+                  'label' => $this->t('%key: Schema', ['%key' => $key]),
+                  'info' => $stats_summary['@schema_version'],
+                  'status' => $status,
+                ];
+
+                if (!empty($stats_summary['@collection_name'])) {
+                  $info[] = [
+                    'label' => $this->t('%key: Solr Collection Name', ['%key' => $key]),
+                    'info' => $stats_summary['@collection_name'],
+                  ];
+                }
+                elseif (!empty($stats_summary['@core_name'])) {
+                  $info[] = [
+                    'label' => $this->t('%key: Solr Core Name', ['%key' => $key]),
+                    'info' => $stats_summary['@core_name'],
+                  ];
                 }
               }
-              else {
-                \Drupal::messenger()->addError($this->t('You are using an incompatible Solr schema. Please follow the instructions described in the <a href=":url">INSTALL.md</a> file for setting up Solr.', $variables));
-                $status = 'error';
-              }
-            }
-            $info[] = [
-              'label' => $this->t('Schema'),
-              'info' => $stats_summary['@schema_version'],
-              'status' => $status,
-            ];
-
-            if (!empty($stats_summary['@collection_name'])) {
-              $info[] = [
-                'label' => $this->t('Solr Collection Name'),
-                'info' => $stats_summary['@collection_name'],
-              ];
-            }
-            elseif (!empty($stats_summary['@core_name'])) {
-              $info[] = [
-                'label' => $this->t('Solr Core Name'),
-                'info' => $stats_summary['@core_name'],
-              ];
             }
           }
 
@@ -4147,31 +4157,26 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getDocumentCounts() {
-    $connector = $this->getSolrConnector();
-    $connector_endpoint = $connector->getEndpoint();
-
-    $connector_endpoint_counted = FALSE;
     $document_counts = [
       '#total' => 0,
     ];
 
     if ($indexes = $this->getServer()->getIndexes()) {
+      $connector_endpoints_queried = [];
       foreach ($indexes as $index) {
         $collection_endpoint = $this->getCollectionEndpoint($index);
-        if ($collection_endpoint->getBaseUri() !== $connector_endpoint->getBaseUri()) {
+        $key = $collection_endpoint->getBaseUri();
+        if (!in_array($key, $connector_endpoints_queried)) {
+          $connector_endpoints_queried[] = $key;
           $collection_document_counts = $this->doDocumentCounts($collection_endpoint);
           $collection_document_counts['#total'] += $document_counts['#total'];
           $document_counts = ArrayUtils::merge($document_counts, $collection_document_counts, TRUE);
         }
-        elseif (!$connector_endpoint_counted) {
-          $connector_document_counts = $this->doDocumentCounts($connector_endpoint);
-          $connector_document_counts['#total'] += $document_counts['#total'];
-          $document_counts = ArrayUtils::merge($document_counts, $connector_document_counts, TRUE);
-          $connector_endpoint_counted = TRUE;
-        }
       }
     }
     else {
+      $connector = $this->getSolrConnector();
+      $connector_endpoint = $connector->getEndpoint();
       return $this->doDocumentCounts($connector_endpoint);
     }
 
@@ -4276,31 +4281,26 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getMaxDocumentVersions() {
-    $connector = $this->getSolrConnector();
-    $connector_endpoint = $connector->getEndpoint();
-
-    $connector_endpoint_counted = FALSE;
     $document_versions = [
       '#total' => 0,
     ];
 
     if ($indexes = $this->getServer()->getIndexes()) {
+      $connector_endpoints_queried = [];
       foreach ($indexes as $index) {
         $collection_endpoint = $this->getCollectionEndpoint($index);
-        if ($collection_endpoint->getBaseUri() !== $connector_endpoint->getBaseUri()) {
+        $key = $collection_endpoint->getBaseUri();
+        if (!in_array($key, $connector_endpoints_queried)) {
+          $connector_endpoints_queried[] = $key;
           $collection_document_versions = $this->doGetMaxDocumentVersions($collection_endpoint);
           $collection_document_versions['#total'] += $document_versions['#total'];
           $document_versions = ArrayUtils::merge($document_versions, $collection_document_versions, TRUE);
         }
-        elseif (!$connector_endpoint_counted) {
-          $connector_document_versions = $this->doGetMaxDocumentVersions($connector_endpoint);
-          $connector_document_versions['#total'] += $document_versions['#total'];
-          $document_versions = ArrayUtils::merge($document_versions, $connector_document_versions, TRUE);
-          $connector_endpoint_counted = TRUE;
-        }
       }
     }
     else {
+      $connector = $this->getSolrConnector();
+      $connector_endpoint = $connector->getEndpoint();
       return $this->doGetMaxDocumentVersions($connector_endpoint);
     }
 

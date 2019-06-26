@@ -440,8 +440,8 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function getLuke() {
-    return $this->getDataFromHandler($this->configuration['core'] . '/admin/luke', TRUE);
+  public function getLuke(?Endpoint $endpoint = NULL) {
+    return $this->getDataFromHandler(($endpoint ? ($endpoint->getCollection() ?? $endpoint->getCore()) : $this->configuration['core']) . '/admin/luke', TRUE);
   }
 
   /**
@@ -534,7 +534,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function getStatsSummary() {
+  public function getStatsSummary(?Endpoint $endpoint = NULL) {
     $this->connect();
 
     $summary = [
@@ -552,7 +552,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     $query = $this->solr->createPing();
     $query->setResponseWriter(Query::WT_PHPS);
     $query->setHandler('admin/mbeans?stats=true');
-    $stats = $this->execute($query)->getData();
+    $stats = $this->execute($query, $endpoint)->getData();
     if (!empty($stats)) {
       $solr_version = $this->getSolrVersion(TRUE);
       $max_time = -1;
@@ -749,7 +749,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function search(Query $query, Endpoint $endpoint = NULL) {
+  public function search(Query $query, ?Endpoint $endpoint = NULL) {
     $this->connect();
 
     if (!$endpoint) {
@@ -788,7 +788,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function update(UpdateQuery $query, Endpoint $endpoint = NULL) {
+  public function update(UpdateQuery $query, ?Endpoint $endpoint = NULL) {
     $this->connect();
 
     if (!$endpoint) {
@@ -825,7 +825,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function execute(QueryInterface $query, Endpoint $endpoint = NULL) {
+  public function execute(QueryInterface $query, ?Endpoint $endpoint = NULL) {
     $this->connect();
 
     if (!$endpoint) {
@@ -843,7 +843,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function executeRequest(Request $request, Endpoint $endpoint = NULL) {
+  public function executeRequest(Request $request, ?Endpoint $endpoint = NULL) {
     $this->connect();
 
     if (!$endpoint) {
@@ -868,7 +868,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  protected function handleHttpException(HttpException $e, Endpoint $endpoint) {
+  protected function handleHttpException(HttpException $e, ?Endpoint $endpoint) {
     $response_code = $e->getCode();
     switch ($response_code) {
       case 404:
@@ -893,7 +893,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function optimize(Endpoint $endpoint = NULL) {
+  public function optimize(?Endpoint $endpoint = NULL) {
     $this->connect();
 
     if (!$endpoint) {
@@ -917,7 +917,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function adjustTimeout(int $timeout, Endpoint $endpoint = NULL) {
+  public function adjustTimeout(int $timeout, ?Endpoint $endpoint = NULL) {
     $this->connect();
 
     if (!$endpoint) {
@@ -931,7 +931,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function getTimeout(Endpoint $endpoint = NULL) {
+  public function getTimeout(?Endpoint $endpoint = NULL) {
     $this->connect();
 
     if (!$endpoint) {
@@ -965,7 +965,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function extract(QueryInterface $query, Endpoint $endpoint = NULL) {
+  public function extract(QueryInterface $query, ?Endpoint $endpoint = NULL) {
     return $this->execute($query, $endpoint);
   }
 

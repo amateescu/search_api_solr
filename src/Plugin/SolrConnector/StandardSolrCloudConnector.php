@@ -71,8 +71,8 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
   /**
    * {@inheritdoc}
    */
-  public function getStatsSummary() {
-    $summary = parent::getStatsSummary();
+  public function getStatsSummary(?Endpoint $endpoint = NULL) {
+    $summary = parent::getStatsSummary($endpoint);
     $summary['@collection_name'] = '';
 
     $query = $this->solr->createPing();

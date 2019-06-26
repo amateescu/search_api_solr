@@ -151,6 +151,7 @@ class SolrFieldManager implements SolrFieldManagerInterface {
    *   The array of field definitions for the server, keyed by field name.
    *
    * @throws \InvalidArgumentException
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    * @throws \Drupal\search_api\SearchApiException
    */
   protected function buildFieldDefinitionsFromSolr(IndexInterface $index) {
@@ -173,7 +174,7 @@ class SolrFieldManager implements SolrFieldManagerInterface {
         throw new \InvalidArgumentException("The Search API server's backend must be an instance of SolrBackendInterface.");
       }
       try {
-        $luke = $backend->getSolrConnector()->getLuke();
+        $luke = $backend->getSolrConnector()->getLuke($backend->getCollectionEndpoint($index));
         foreach ($luke['fields'] as $name => $definition) {
           $field = new SolrFieldDefinition($definition);
           $label = Unicode::ucfirst(trim(str_replace('_', ' ', $name)));

@@ -114,12 +114,14 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
   /**
    * Gets meta-data about the index.
    *
+   * @param \Solarium\Core\Client\Endpoint|null $endpoint
+   *
    * @return object
    *   A response object filled with data from Solr's Luke.
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public function getLuke();
+  public function getLuke(?Endpoint $endpoint = NULL);
 
   /**
    * Gets the full schema version string the core is using.
@@ -178,7 +180,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public function getStatsSummary();
+  public function getStatsSummary(?Endpoint $endpoint = NULL);
 
   /**
    * Sends a REST GET request to the Solr core and returns the result.
@@ -324,7 +326,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public function search(Query $query, Endpoint $endpoint = NULL);
+  public function search(Query $query, ?Endpoint $endpoint = NULL);
 
   /**
    * Creates a result from a response.
@@ -352,7 +354,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public function update(UpdateQuery $query, Endpoint $endpoint = NULL);
+  public function update(UpdateQuery $query, ?Endpoint $endpoint = NULL);
 
   /**
    * Executes any query.
@@ -367,7 +369,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public function execute(QueryInterface $query, Endpoint $endpoint = NULL);
+  public function execute(QueryInterface $query, ?Endpoint $endpoint = NULL);
 
   /**
    * Executes a request and returns the response.
@@ -382,7 +384,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public function executeRequest(Request $request, Endpoint $endpoint = NULL);
+  public function executeRequest(Request $request, ?Endpoint $endpoint = NULL);
 
   /**
    * Optimizes the Solr index.
@@ -392,7 +394,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public function optimize(Endpoint $endpoint = NULL);
+  public function optimize(?Endpoint $endpoint = NULL);
 
   /**
    * Executes an extract query.
@@ -407,7 +409,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public function extract(QueryInterface $query, Endpoint $endpoint = NULL);
+  public function extract(QueryInterface $query, ?Endpoint $endpoint = NULL);
 
   /**
    * Gets the content from an extract query result.
@@ -509,7 +511,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    * @return int
    *   The previous query timeout value.
    */
-  public function adjustTimeout(int $timeout, Endpoint $endpoint = NULL);
+  public function adjustTimeout(int $timeout, ?Endpoint $endpoint = NULL);
 
   /**
    * Get the query timeout.
@@ -520,7 +522,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    * @return int
    *   The current query timeout value.
    */
-  public function getTimeout(Endpoint $endpoint = NULL);
+  public function getTimeout(?Endpoint $endpoint = NULL);
 
   /**
    * Get the index timeout.
