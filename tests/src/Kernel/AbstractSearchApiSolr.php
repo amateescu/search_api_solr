@@ -1276,6 +1276,9 @@ abstract class AbstractSearchApiSolr extends SolrBackendTestBase {
       }
     }
 
+    $config_name = 'name="drupal-' . SolrBackendInterface::SEARCH_API_SOLR_MIN_SCHEMA_VERSION . '-solr-' . $solr_major_version . '.x"';
+    $this->assertContains($config_name, $config_files['solrconfig.xml']);
+    $this->assertContains($config_name, $config_files['schema.xml']);
     $this->assertContains('solr.luceneMatchVersion=' . $solr_major_version, $config_files['solrcore.properties']);
     $this->assertContains($server->id(), $config_files['test.txt']);
     $this->assertNotContains('<jmx />', $config_files['solrconfig_extra.xml']);

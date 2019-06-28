@@ -6,7 +6,6 @@ use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api\ServerInterface;
-use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\Utility\Utility;
@@ -385,7 +384,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
     $backend = $this->getBackend();
     $connector = $backend->getSolrConnector();
-    $solr_branch = $connector->getSolrBranch($this->assumed_minimum_version);
+    $solr_branch = $real_solr_branch = $connector->getSolrBranch($this->assumed_minimum_version);
 
     // Solr 8.x uses the same schema and solrconf as 7.x. So we can use the same
     // templates and only adjust luceneMatchVersion to 8.
@@ -433,8 +432,8 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
           }
         }
         $files[$file] = str_replace(
-          'SEARCH_API_SOLR_MIN_SCHEMA_VERSION',
-          SearchApiSolrBackend::SEARCH_API_SOLR_MIN_SCHEMA_VERSION,
+          ['SEARCH_API_SOLR_MIN_SCHEMA_VERSION', 'SEARCH_API_SOLR_BRANCH'],
+          [SolrBackendInterface::SEARCH_API_SOLR_MIN_SCHEMA_VERSION, $real_solr_branch],
           file_get_contents($search_api_solr_conf_path . '/' . $file)
         );
       }
