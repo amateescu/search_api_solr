@@ -12,6 +12,7 @@ use Drupal\search_api_solr\SolrCloudConnectorInterface;
 use Drupal\search_api_solr\Utility\CommandHelper;
 use Drush\Commands\DrushCommands;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Defines Drush commands for the Search API Solr.
@@ -34,12 +35,14 @@ class SearchApiSolrCommands extends DrushCommands implements StdinAwareInterface
    *   The entity type manager.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
    *   The module handler.
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, ModuleHandlerInterface $moduleHandler) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, ModuleHandlerInterface $moduleHandler, EventDispatcherInterface $eventDispatcher) {
     parent::__construct();
-    $this->commandHelper = new CommandHelper($entityTypeManager, $moduleHandler, 'dt');
+    $this->commandHelper = new CommandHelper($entityTypeManager, $moduleHandler, $eventDispatcher, 'dt');
   }
 
   /**

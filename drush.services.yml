@@ -4,5 +4,6 @@ services:
     arguments:
       - '@entity_type.manager'
       - '@module_handler'
+      - '@event_dispatcher'
     tags:
       - { name: drush.command }
