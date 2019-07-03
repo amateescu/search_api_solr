@@ -1383,6 +1383,44 @@ function search_api_solr_update_8321() {
             }
           }
         }
+        if (!empty($field_type_config['spellcheck_field_type'])) {
+          foreach ($field_type_config['spellcheck_field_type'] as &$analyzer) {
+            if (is_array($analyzer)) {
+              if ('org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer' === $analyzer['tokenizer']['class']) {
+                $analyzer['tokenizer']['class'] = 'solr.HMMChineseTokenizerFactory';
+                $analyzer['filters'] = [
+                  ['class' => 'solr.CJKWidthFilterFactory'],
+                  ['class' => 'solr.LowerCaseFilterFactory'],
+                ];
+                $save = TRUE;
+              }
+            }
+          }
+        }
+        if (!isset($field_type_config['unstemmed_field_type'])) {
+          $field_type_config['unstemmed_field_type'] = [
+            'name' => 'text_unstemmed_zh_hans',
+            'class' => 'solr.TextField',
+            'positionIncrementGap' => 100,
+            'analyzers' => [
+              [
+                'type' => 'index',
+                'tokenizer' => [
+                  'class' => 'solr.HMMChineseTokenizerFactory',
+                ],
+                'filters' => [
+                  ['class' => 'solr.CJKWidthFilterFactory'],
+                  [
+                    'class' => 'solr.StopFilterFactory',
+                    'words' => 'org/apache/lucene/analysis/cn/smart/stopwords.txt',
+                  ],
+                  ['class' => 'solr.LowerCaseFilterFactory'],
+                ],
+              ],
+            ],
+          ];
+          $save = TRUE;
+        }
       }
       elseif ('zh-hant' === $field_type_config['field_type_language_code']) {
         $field_type_config['label'] = 'Traditional Chinese Text Field';
@@ -1392,6 +1430,28 @@ function search_api_solr_update_8321() {
               if ('org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer' === $analyzers['tokenizer']['class']) {
                 $analyzers['tokenizer']['class'] = 'solr.ICUTokenizerFactory';
                 $analyzers['filters'] = [
+                  [
+                    'class' => 'solr.CJKBigramFilterFactory',
+                    'han' => TRUE,
+                    'hiragana' => FALSE,
+                    'katakana' => FALSE,
+                    'hangul' => FALSE,
+                    'outputUnigrams' => FALSE,
+                  ],
+                  ['class' => 'solr.CJKWidthFilterFactory'],
+                  ['class' => 'solr.LowerCaseFilterFactory'],
+                ];
+                $save = TRUE;
+              }
+            }
+          }
+        }
+        if (!empty($field_type_config['spellcheck_field_type'])) {
+          foreach ($field_type_config['spellcheck_field_type'] as &$analyzer) {
+            if (is_array($analyzer)) {
+              if ('org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer' === $analyzer['tokenizer']['class']) {
+                $analyzer['tokenizer']['class'] = 'solr.ICUTokenizerFactory';
+                $analyzer['filters'] = [
                   [
                     'class' => 'solr.CJKBigramFilterFactory',
                     'han' => TRUE,

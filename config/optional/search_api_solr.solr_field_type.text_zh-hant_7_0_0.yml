@@ -54,12 +54,19 @@ spellcheck_field_type:
   positionIncrementGap: 100
   analyzer:
     tokenizer:
-      class: org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer
-    filters:
-      -
-        class: solr.CJKWidthFilterFactory
-        min: 2
-        max: 100
+      class: solr.ICUTokenizerFactory
+      filters:
+        -
+          class: solr.CJKBigramFilterFactory
+          han: true
+          hiragana: false
+          katakana: false
+          hangul: false
+          outputUnigrams: false
+        -
+          class: solr.CJKWidthFilterFactory
+        -
+          class: solr.LowerCaseFilterFactory
 collated_field_type:
   name: collated_zh-hant
   class: solr.ICUCollationField
