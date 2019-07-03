@@ -55,18 +55,18 @@ spellcheck_field_type:
   analyzer:
     tokenizer:
       class: solr.ICUTokenizerFactory
-      filters:
-        -
-          class: solr.CJKBigramFilterFactory
-          han: true
-          hiragana: false
-          katakana: false
-          hangul: false
-          outputUnigrams: false
-        -
-          class: solr.CJKWidthFilterFactory
-        -
-          class: solr.LowerCaseFilterFactory
+    filters:
+      -
+        class: solr.CJKBigramFilterFactory
+        han: true
+        hiragana: false
+        katakana: false
+        hangul: false
+        outputUnigrams: false
+      -
+        class: solr.CJKWidthFilterFactory
+      -
+        class: solr.LowerCaseFilterFactory
 collated_field_type:
   name: collated_zh-hant
   class: solr.ICUCollationField
