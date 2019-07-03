@@ -26,12 +26,14 @@ https://drupal.org/node/1999310 .
 
 As a pre-requisite for running your own Solr server, you'll need a Java JRE.
 
-Download the latest version of Solr 6.x or 7.x from
+Download the latest version of Solr 7.x or 8.x from
 http://www.apache.org/dyn/closer.cgi/lucene/solr/ and unpack the archive
 somewhere outside of your web server's document tree. The unpacked Solr
 directory is named `$SOLR` in these instructions.
 
-For better performance and more features, 7.7.x or 8.x should be used!
+NB: Solr 6.x is still supported by search_api_solr but strongly discouraged.
+That version has been declared end-of-life by the Apache Solr project and is thus no
+longer supported by them.
 
 First you have to create a Solr core for Drupal. Therefore you have to create
 two directories (replace `$SOLR` and `$CORE` according to your needs):
