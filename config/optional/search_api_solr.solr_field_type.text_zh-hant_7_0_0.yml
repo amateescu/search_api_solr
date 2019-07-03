@@ -7,7 +7,7 @@ dependencies:
   config:
     - language.entity.zh-hant
 id: text_zh-hant_7_0_0
-label: ' Traditional Chinese Text Field'
+label: 'Traditional Chinese Text Field'
 minimum_solr_version: 7.0.0
 field_type_language_code: zh-hant
 domains: { }
@@ -19,12 +19,8 @@ field_type:
     -
       type: index
       tokenizer:
-        class: org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer
+        class: solr.ICUTokenizerFactory
       filters:
-        -
-          class: solr.CJKWidthFilterFactory
-        -
-          class: solr.LowerCaseFilterFactory
         -
           class: solr.CJKBigramFilterFactory
           han: true
@@ -32,15 +28,15 @@ field_type:
           katakana: false
           hangul: false
           outputUnigrams: false
+        -
+          class: solr.CJKWidthFilterFactory
+        -
+          class: solr.LowerCaseFilterFactory
     -
       type: query
       tokenizer:
-        class: org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer
+        class: solr.ICUTokenizerFactory
       filters:
-        -
-          class: solr.CJKWidthFilterFactory
-        -
-          class: solr.LowerCaseFilterFactory
         -
           class: solr.CJKBigramFilterFactory
           han: true
@@ -48,6 +44,10 @@ field_type:
           katakana: false
           hangul: false
           outputUnigrams: false
+        -
+          class: solr.CJKWidthFilterFactory
+        -
+          class: solr.LowerCaseFilterFactory
 spellcheck_field_type:
   name: text_spell_zh_hant
   class: solr.TextField
