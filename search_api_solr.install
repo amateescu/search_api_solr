@@ -1475,3 +1475,27 @@ function search_api_solr_update_8321() {
     }
   }
 }
+
+/**
+ * Fix Thai Field Types.
+ */
+function search_api_solr_update_8322() {
+  foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+    if (!empty($field_type_config['field_type'])) {
+      $save = FALSE;
+      if ('th' === $field_type_config['field_type_language_code']) {
+        if (!empty($field_type_config['spellcheck_field_type']['analyzer']['filters'])) {
+          foreach ($field_type_config['spellcheck_field_type']['analyzer']['filters'] as &$filter) {
+            if ('stopwords_th.txty' === $filter['words']) {
+              $filter['words'] = 'stopwords_th.txt';
+              $save = TRUE;
+            }
+          }
+        }
+      }
+      if ($save) {
+        search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
+      }
+    }
+  }
+}

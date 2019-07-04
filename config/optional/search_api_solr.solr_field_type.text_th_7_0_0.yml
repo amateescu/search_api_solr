@@ -56,7 +56,7 @@ spellcheck_field_type:
       -
         class: solr.StopFilterFactory
         ignoreCase: true
-        words: stopwords_th.txty
+        words: stopwords_th.txt
 collated_field_type:
   name: collated_th
   class: solr.ICUCollationField
