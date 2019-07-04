@@ -1477,7 +1477,7 @@ function search_api_solr_update_8321() {
 }
 
 /**
- * Fix Thai Field Types.
+ * Fix Thai and Turkish Field Types.
  */
 function search_api_solr_update_8322() {
   foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
@@ -1489,6 +1489,22 @@ function search_api_solr_update_8322() {
             if ('stopwords_th.txty' === $filter['words']) {
               $filter['words'] = 'stopwords_th.txt';
               $save = TRUE;
+            }
+          }
+        }
+      }
+      if ('tr' === $field_type_config['field_type_language_code']) {
+        foreach ($field_type_config['field_type'] as &$components) {
+          if (is_array($components)) {
+            foreach ($components as &$analyzers) {
+              if (is_array($analyzers)) {
+                foreach ($analyzers['filters'] as $key => &$filter) {
+                  if ('stopwords_tr.tx' === $filter['words']) {
+                    $filter['words'] = 'stopwords_tr.txt';
+                    $save = TRUE;
+                  }
+                }
+              }
             }
           }
         }

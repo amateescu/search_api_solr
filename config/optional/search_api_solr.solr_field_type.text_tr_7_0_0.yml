@@ -77,7 +77,7 @@ field_type:
         -
           class: solr.StopFilterFactory
           ignoreCase: true
-          words: stopwords_tr.tx
+          words: stopwords_tr.txt
         -
           class: solr.SynonymGraphFilterFactory
           synonyms: synonyms_tr.txt
