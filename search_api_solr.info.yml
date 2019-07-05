@@ -6,5 +6,5 @@ php: 7.1
 package: Search
 dependencies:
   - drupal:language
-  - search_api:search_api
+  - search_api:search_api (>=8.6)
   - drupal:system (>=8.6)

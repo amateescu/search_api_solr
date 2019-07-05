@@ -127,6 +127,7 @@ class UtilitiesTest extends KernelTestBase {
         'advanced' => [
           'index_prefix' => 'dummy',
           'collection' => '',
+          'timezone' => '',
         ],
         'multilingual' => [
           'limit_to_content_language' => TRUE,
