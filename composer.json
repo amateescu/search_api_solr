@@ -24,10 +24,10 @@
         "ext-dom": "*",
         "ext-json": "*",
         "ext-simplexml": "*",
-        "drupal/search_api": "~1.12",
+        "drupal/search_api": "~1.14",
         "consolidation/annotated-command": "^2.12",
         "maennchen/zipstream-php": "^1.1.0",
-        "solarium/solarium": "~5.0.2",
+        "solarium/solarium": "~5.0.3",
         "zendframework/zend-stdlib": "^3.0.1"
     },
     "require-dev": {
@@ -45,7 +45,8 @@
     "suggest": {
         "drupal/facets": "Provides facetted search.",
         "drupal/search_api_autocomplete": "Provides auto complete for search boxes.",
-        "drupal/search_api_location": "Provides location searches."
+        "drupal/search_api_location": "Provides location searches.",
+        "drupal/search_api_spellcheck": "Provides spell checking and 'Did You Mean?'."
     },
     "extra": {
         "drush": {
