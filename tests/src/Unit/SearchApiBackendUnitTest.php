@@ -17,9 +17,6 @@ use Drupal\Tests\UnitTestCase;
 use Solarium\Core\Query\Helper;
 use Solarium\QueryType\Update\Query\Document;
 
-// @see datetime.module
-define('DATETIME_STORAGE_TIMEZONE', 'UTC');
-
 /**
  * Tests functionality of the backend.
  *

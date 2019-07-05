@@ -3,6 +3,7 @@
 namespace Drupal\search_api_solr\Utility;
 
 use Drupal\Component\Utility\NestedArray;
+use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\ServerInterface;
@@ -910,7 +911,7 @@ class Utility {
    * 1. time zone configured for the index
    * 2. the current user's time zone
    * 3. site default time zone
-   * 4. UTC
+   * 4. storage time zone (UTC)
    *
    * @param \Drupal\search_api\IndexInterface $index
    *
@@ -931,7 +932,7 @@ class Utility {
     if (!$timezone) {
       $timezone = $system_date->get('timezone.default') ?: date_default_timezone_get();
     }
-    return $timezone ?: 'UTC';
+    return $timezone ?: DateTimeItemInterface::STORAGE_TIMEZONE;
   }
 
   /**
