@@ -132,7 +132,7 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
     $this->server_id = $server->id();
     $this->backend = $server->getBackend();
     $connector = $this->backend->getSolrConnector();
-    $index_settings = $this->backend->getIndexSolrSettings($index);
+    $index_settings = Utility::getIndexSolrSettings($index);
 
     if (!($connector instanceof SolrCloudConnectorInterface)) {
       throw new SearchApiSolrException('Streaming expressions are only supported by a Solr Cloud connector.');

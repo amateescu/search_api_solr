@@ -1078,7 +1078,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
       catch (OutOfBoundsException $e) {
         $additional_config = [];
-        if ($settings = $this->getIndexSolrSettings($index)) {
+        if ($settings = Utility::getIndexSolrSettings($index)) {
           if ($settings['advanced']['collection']) {
             $additional_config['core'] = $settings['advanced']['collection'];
           }
@@ -1099,7 +1099,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     static $finalization_in_progress = [];
 
     if ($index->status() && !isset($finalization_in_progress[$index->id()]) && !$index->isReadOnly()) {
-      $settings = $this->getIndexSolrSettings($index);
+      $settings = Utility::getIndexSolrSettings($index);
       if (
         // Not empty reflects the default FALSE for outdated index configs, too.
         !empty($settings['finalize']) &&
@@ -1469,7 +1469,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     /** @var \Drupal\search_api\Entity\Index $index */
     $index = $query->getIndex();
 
-    $settings = $this->getIndexSolrSettings($index);
+    $settings = Utility::getIndexSolrSettings($index);
     $language_ids = $query->getLanguages();
 
     // If there are no languages set, we need to set them. As an example, a
@@ -1508,6 +1508,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   search query.
    */
   protected function applySearchWorkarounds(SolariumQueryInterface $solarium_query, QueryInterface $query) {
+    $solarium_query->setTimeZone(Utility::getTimeZone($query->getIndex()));
+
     // Do not modify 'Server index status' queries.
     // @see https://www.drupal.org/node/2668852
     if ($query->hasTag('server_index_status')) {
@@ -3487,7 +3489,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getIndexId(IndexInterface $index) {
-    $settings = $this->getIndexSolrSettings($index);
+    $settings = Utility::getIndexSolrSettings($index);
     return $this->configuration['server_prefix'] . $settings['advanced']['index_prefix'] . $index->id();
   }
 
@@ -3594,7 +3596,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected function setHighlighting(Query $solarium_query, QueryInterface $query, array $highlighted_fields = []) {
     if (!empty($this->configuration['highlight_data'])) {
-      $settings = $this->getIndexSolrSettings($query->getIndex());
+      $settings = Utility::getIndexSolrSettings($query->getIndex());
       $highlighter = $settings['highlighter'];
 
       $hl = $solarium_query->getHighlighting();
@@ -3727,7 +3729,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
     }
 
-    $settings = $this->getIndexSolrSettings($query->getIndex());
+    $settings = Utility::getIndexSolrSettings($query->getIndex());
     $solarium_query
       ->setMltFields(array_merge(...$mlt_fl))
       ->setMinimumTermFrequency($settings['mlt']['mintf'])
@@ -4150,7 +4152,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getIndexSolrSettings(IndexInterface $index) {
-    return search_api_solr_merge_default_index_third_party_settings($index->getThirdPartySettings('search_api_solr'));
+    return Utility::getIndexSolrSettings($index);
   }
 
   /**

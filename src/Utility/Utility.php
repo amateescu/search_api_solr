@@ -903,4 +903,50 @@ class Utility {
     return (1 == count($datasource_ids)) && in_array('solr_document', $datasource_ids);
   }
 
+  /**
+   * Returns the timezone for a query.
+   *
+   * There's a fallback mechanism to get the time zone:
+   * 1. time zone configured for the index
+   * 2. the current user's time zone
+   * 3. site default time zone
+   * 4. UTC
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *
+   * @return string
+   */
+  public static function getTimeZone(IndexInterface $index) {
+    $settings = self::getIndexSolrSettings($index);
+    $system_date = \Drupal::config('system.date');
+    $timezone = '';
+    if ($settings['advanced']['timezone']) {
+      $timezone = $settings['advanced']['timezone'];
+    }
+    else {
+      if ($system_date->get('timezone.user.configurable')) {
+        $timezone = \Drupal::currentUser()->getAccount()->getTimeZone();
+      }
+    }
+    if (!$timezone) {
+      $timezone = $system_date->get('timezone.default') ?: date_default_timezone_get();
+    }
+    return $timezone ?: 'UTC';
+  }
+
+  /**
+   * Returns the Solr settings for the given index.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The Search API index entity.
+   *
+   * @return array
+   *   An associative array of settings.
+   */
+  public static function getIndexSolrSettings(IndexInterface $index) {
+    return search_api_solr_merge_default_index_third_party_settings(
+      $index->getThirdPartySettings('search_api_solr')
+    );
+  }
+
 }

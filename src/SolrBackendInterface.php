@@ -200,6 +200,8 @@ interface SolrBackendInterface extends BackendInterface {
    *
    * @return array
    *   An associative array of settings.
+   *
+   * @deprecated use \Drupal\search_api_solr\Utility\Utility::getIndexSolrSettings()
    */
   public function getIndexSolrSettings(IndexInterface $index);
 

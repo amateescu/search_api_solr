@@ -103,6 +103,9 @@ search_api.index.*.third_party.search_api_solr:
         collection:
           type: string
           label: 'If the server uses a Solr Cloud connector, this setting overwrites the configured default collection if set.'
+        timezone:
+          type: string
+          label: 'Forces a time zone to be set for every query targeting this index.'
     multilingual:
       type: mapping
       label: 'multilingual settings'

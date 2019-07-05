@@ -119,7 +119,7 @@ function hook_search_api_solr_converted_query_alter(\Solarium\Core\Query\QueryIn
   // If the Search API query has a 'I_know_what_I_am_doing' option set to
   // 'really!', overwrite the 'q' parameter, query handler and add some boost
   // queries.
-  if ($query->getOption('I_know_what_I_am_doing') == 'really!') {
+  if ($query->getOption('I_know_what_I_am_doing') === 'really!') {
     // $solr_field_names maps search_api field names to real field names in
     // the Solr index.
     $solr_field_names = $query->getIndex()->getServerInstance()->getBackend()->getSolrFieldNames($query->getIndex());

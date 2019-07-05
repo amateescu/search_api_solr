@@ -139,6 +139,7 @@ function search_api_solr_default_index_third_party_settings() {
     'advanced' => [
       'index_prefix' => '',
       'collection' => '',
+      'timezone' => '',
     ],
     'multilingual' => [
       'limit_to_content_language' => FALSE,
@@ -462,6 +463,14 @@ function search_api_solr_form_search_api_index_form_alter(&$form, FormStateInter
       '#default_value' => $settings['advanced']['collection'],
     ];
 
+    $zones = system_time_zones(TRUE, TRUE);
+    $form['third_party_settings']['search_api_solr']['advanced']['timezone'] = [
+      '#type' => 'select',
+      '#title' => t('Time zone'),
+      '#description' => t("For correct date calculations the time zone to use is sent to the Solr server. By default the individual time zone of the current user will be used. If not available the site's default time zone will be used as fallback. But by setting a time zone here you can force a time zone for every query targeting this index."),
+      '#default_value' => $settings['advanced']['timezone'],
+      '#options' => $zones,
+    ];
   }
 }
 
