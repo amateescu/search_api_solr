@@ -107,8 +107,8 @@ class IntegrationTest extends SearchApiIntegrationTest {
     $edit += [
       'backend_config[connector_config][host]' => 'localhost',
       'backend_config[connector_config][port]' => '8983',
-      'backend_config[connector_config][path]' => '/',
-      'backend_config[connector_config][core]' => 'foo',
+      'backend_config[connector_config][path]' => '/foo',
+      'backend_config[connector_config][core]' => 'bar',
     ];
     $this->submitForm($edit, 'Save');
 
