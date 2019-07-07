@@ -671,7 +671,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
               $key = $endpoint->getBaseUri();
             }
             catch (UnexpectedValueException $e) {
-              if (0 === $index_id && $connector->isCloud()) {
+              if ($cloud && 0 === $index_id) {
                 $info[] = [
                   'label' => $this->t('Default Collection'),
                   'info' => $this->t("Default collection isn't set. Ensure that the collections are properly set on the indexes in their advanced section od the Solr specific index options."),
@@ -692,7 +692,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
             if (!in_array($key, $endpoints_queried)) {
               $endpoints_queried[] = $key;
-              $connector->setCollectionNameFromEndpoint($endpoint);
+              if ($cloud) {
+                $connector->setCollectionNameFromEndpoint($endpoint);
+              }
               $data = $connector->getLuke();
               if (isset($data['index']['numDocs'])) {
                 // Collect the stats.
