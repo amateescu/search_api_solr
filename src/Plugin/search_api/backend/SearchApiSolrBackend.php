@@ -59,6 +59,7 @@ use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\Exception\ExceptionInterface;
 use Solarium\Exception\OutOfBoundsException;
 use Solarium\Exception\StreamException;
+use Solarium\Exception\UnexpectedValueException;
 use Solarium\QueryType\Select\Query\FilterQuery;
 use Solarium\QueryType\Stream\Expression;
 use Solarium\QueryType\Update\Query\Query as UpdateQuery;
@@ -493,7 +494,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function isAvailable() {
     $conn = $this->getSolrConnector();
-    return $conn->pingCore() !== FALSE;
+    return $conn->pingServer() !== FALSE;
   }
 
   /**
@@ -657,21 +658,45 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         ];
 
         try {
-          $endpoints = [$connector->getEndpoint()];
+          $endpoints[0] = $connector->getEndpoint();
           $endpoints_queried = [];
 
           foreach ($this->getServer()->getIndexes() as $index) {
-            $endpoints[] = $this->getCollectionEndpoint($index);
+            $endpoints[$index->id()] = $this->getCollectionEndpoint($index);
           }
 
-          foreach ($endpoints as $endpoint) {
-            $key = $endpoint->getBaseUri();
+          /** @var Endpoint $endpoint */
+          foreach ($endpoints as $index_id => $endpoint) {
+            try {
+              $key = $endpoint->getBaseUri();
+            }
+            catch (UnexpectedValueException $e) {
+              if (0 === $index_id && $connector->isCloud()) {
+                $info[] = [
+                  'label' => $this->t('Default Collection'),
+                  'info' => $this->t("Default collection isn't set. Ensure that the collections are properly set on the indexes in their advanced section od the Solr specific index options."),
+                  'status' => 'error',
+                ];
+              } else {
+                $info[] = [
+                  'label' => $this->t('Additional information'),
+                  'info' => $this->t('Collection or core configuration for index %index is wrong or missing: %msg', [
+                    '%index' => $index_id,
+                    '%msg' => $e->getMessage()
+                  ]),
+                  'status' => 'error',
+                ];
+              }
+              continue;
+            }
+
             if (!in_array($key, $endpoints_queried)) {
               $endpoints_queried[] = $key;
-              $data = $connector->getLuke($endpoint);
+              $connector->setCollectionNameFromEndpoint($endpoint);
+              $data = $connector->getLuke();
               if (isset($data['index']['numDocs'])) {
                 // Collect the stats.
-                $stats_summary = $connector->getStatsSummary($endpoint);
+                $stats_summary = $connector->getStatsSummary();
 
                 $pending_msg = $stats_summary['@pending_docs'] ? $this->t('(@pending_docs sent but not yet processed)', $stats_summary) : '';
                 $index_msg = $stats_summary['@index_size'] ? $this->t('(@index_size on disk)', $stats_summary) : '';
@@ -736,23 +761,39 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             }
           }
 
-          foreach ($this->getMaxDocumentVersions() as $site_hash => $indexes) {
-            if ('#total' === $site_hash) {
-              $info[] = [
-                'label' => $this->t('Max document _version_ for this server'),
-                'info' => $indexes,
-              ];
-            }
-            else {
-              foreach ($indexes as $index => $datasources) {
-                foreach ($datasources as $datasource => $max_version) {
-                  $info[] = [
-                    'label' => $this->t('Max _version_ for datasource %datasource in index %index on site %site', ['%datasource' => $datasource, '%index' => $index, '%site' => $site_hash]),
-                    'info' => $max_version,
-                  ];
+          try {
+            foreach ($this->getMaxDocumentVersions() as $site_hash => $indexes) {
+              if ('#total' === $site_hash) {
+                $info[] = [
+                  'label' => $this->t('Max document _version_ for this server'),
+                  'info' => $indexes,
+                ];
+              }
+              else {
+                foreach ($indexes as $index => $datasources) {
+                  foreach ($datasources as $datasource => $max_version) {
+                    $info[] = [
+                      'label' => $this->t('Max _version_ for datasource %datasource in index %index on site %site', [
+                        '%datasource' => $datasource,
+                        '%index' => $index,
+                        '%site' => $site_hash
+                      ]),
+                      'info' => $max_version,
+                    ];
+                  }
                 }
               }
             }
+          }
+          catch (UnexpectedValueException $e) {
+            $info[] = [
+              'label' => $this->t('Max document _version_ for this server'),
+              'info' => $this->t('Collection or core configuration for at least one index on this server is wrong or missing: %msg', [
+                '%index' => $index_id,
+                '%msg' => $e->getMessage()
+              ]),
+              'status' => 'error',
+            ];
           }
         }
         catch (SearchApiException $e) {
@@ -1791,7 +1832,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @return bool
    *   TRUE if the index only contains "solr_*" datasources, FALSE otherwise.
    *
-   * @deprecated Use \Drupal\search_api_solr\Utility\Utility::hasIndexJustSolrDatasources() instead.
+   * @deprecated Use
+   *   \Drupal\search_api_solr\Utility\Utility::hasIndexJustSolrDatasources()
+   *   instead.
    */
   protected function hasIndexJustSolrDatasources(IndexInterface $index) {
     return Utility::hasIndexJustSolrDatasources($index);
@@ -1807,7 +1850,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   TRUE if the index only contains "solr_document" datasources, FALSE
    *   otherwise.
    *
-   * @deprecated Use \Drupal\search_api_solr\Utility\Utility::hasIndexJustSolrDocumentDatasource() instead.
+   * @deprecated Use
+   *   \Drupal\search_api_solr\Utility\Utility::hasIndexJustSolrDocumentDatasource()
+   *   instead.
    */
   protected function hasIndexJustSolrDocumentDatasource(IndexInterface $index) {
     return Utility::hasIndexJustSolrDocumentDatasource($index);
@@ -4334,7 +4379,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $query = $connector->getSelectQuery()
         ->addFilterQuery(new FilterQuery([
           'key' => 'search_api',
-          'query' => '+hash:* +index_id:*'
+          'query' => '+hash:* +index_id:*',
         ]))
         ->setRows(1)
         ->setFields('id');

@@ -159,6 +159,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       '#title' => $this->t('Solr core'),
       '#description' => $this->t('The name that identifies the Solr core to use on the server.'),
       '#default_value' => isset($this->configuration['core']) ? $this->configuration['core'] : '',
+      '#required' => TRUE,
     ];
 
     $form['timeout'] = [
@@ -440,8 +441,8 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function getLuke(?Endpoint $endpoint = NULL) {
-    return $this->getDataFromHandler(($endpoint ? ($endpoint->getCollection() ?? $endpoint->getCore()) : $this->configuration['core']) . '/admin/luke', TRUE);
+  public function getLuke() {
+    return $this->getDataFromHandler($this->configuration['core'] . '/admin/luke', TRUE);
   }
 
   /**
@@ -534,7 +535,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function getStatsSummary(?Endpoint $endpoint = NULL) {
+  public function getStatsSummary() {
     $this->connect();
 
     $summary = [
@@ -552,7 +553,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     $query = $this->solr->createPing();
     $query->setResponseWriter(Query::WT_PHPS);
     $query->setHandler('admin/mbeans?stats=true');
-    $stats = $this->execute($query, $endpoint)->getData();
+    $stats = $this->execute($query)->getData();
     if (!empty($stats)) {
       $solr_version = $this->getSolrVersion(TRUE);
       $max_time = -1;

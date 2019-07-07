@@ -114,14 +114,12 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
   /**
    * Gets meta-data about the index.
    *
-   * @param \Solarium\Core\Client\Endpoint|null $endpoint
-   *
    * @return object
    *   A response object filled with data from Solr's Luke.
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public function getLuke(?Endpoint $endpoint = NULL);
+  public function getLuke();
 
   /**
    * Gets the full schema version string the core is using.
@@ -180,7 +178,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public function getStatsSummary(?Endpoint $endpoint = NULL);
+  public function getStatsSummary();
 
   /**
    * Sends a REST GET request to the Solr core and returns the result.

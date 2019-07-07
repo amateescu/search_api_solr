@@ -174,7 +174,14 @@ class SolrFieldManager implements SolrFieldManagerInterface {
         throw new \InvalidArgumentException("The Search API server's backend must be an instance of SolrBackendInterface.");
       }
       try {
-        $luke = $backend->getSolrConnector()->getLuke($backend->getCollectionEndpoint($index));
+        $connector = $backend->getSolrConnector();
+        if ($connector instanceof SolrCloudConnectorInterface) {
+          $connector->setCollectionNameFromEndpoint(
+            $backend->getCollectionEndpoint($index)
+          );
+        }
+
+        $luke = $connector->getLuke();
         foreach ($luke['fields'] as $name => $definition) {
           $field = new SolrFieldDefinition($definition);
           $label = Unicode::ucfirst(trim(str_replace('_', ' ', $name)));

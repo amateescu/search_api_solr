@@ -20,6 +20,13 @@ interface SolrCloudConnectorInterface extends SolrConnectorInterface {
   public function getCollectionName();
 
   /**
+   * Temporarily set a different collection name for the connection.
+   *
+   * @param \Solarium\Core\Client\Endpoint|null $endpoint
+   */
+  public function setCollectionNameFromEndpoint(Endpoint $endpoint);
+
+  /**
    * Returns the Solr collection name used to store topic checkpoints.
    *
    * @return string
@@ -85,7 +92,7 @@ interface SolrCloudConnectorInterface extends SolrConnectorInterface {
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public function stream(StreamQuery $query, Endpoint $endpoint = NULL);
+  public function stream(StreamQuery $query, ?Endpoint $endpoint = NULL);
 
   /**
    * Executes a graph query.
@@ -100,6 +107,6 @@ interface SolrCloudConnectorInterface extends SolrConnectorInterface {
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public function graph(GraphQuery $query, Endpoint $endpoint = NULL);
+  public function graph(GraphQuery $query, ?Endpoint $endpoint = NULL);
 
 }

@@ -44,6 +44,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
 
     $form['core']['#title'] = $this->t('Default Solr collection');
     $form['core']['#description'] = $this->t('The name that identifies the Solr default collection to use. The concrete collection to use could be overwritten per index.');
+    $form['core']['#required'] = FALSE;
 
     $form['timeout']['#description'] = $this->t('The timeout in seconds for search queries sent to the Solr collection.');
 
@@ -71,8 +72,8 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
   /**
    * {@inheritdoc}
    */
-  public function getStatsSummary(?Endpoint $endpoint = NULL) {
-    $summary = parent::getStatsSummary($endpoint);
+  public function getStatsSummary() {
+    $summary = parent::getStatsSummary();
     $summary['@collection_name'] = '';
 
     $query = $this->solr->createPing();
@@ -97,6 +98,13 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
    */
   public function getCollectionName() {
     return $this->configuration['core'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setCollectionNameFromEndpoint(Endpoint $endpoint) {
+    $this->configuration['core'] = $endpoint->getCollection() ?? $endpoint->getCore();
   }
 
   /**
@@ -145,7 +153,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
   /**
    * {@inheritdoc}
    */
-  public function stream(StreamQuery $query, Endpoint $endpoint = NULL) {
+  public function stream(StreamQuery $query, ?Endpoint $endpoint = NULL) {
     return $this->execute($query, $endpoint);
   }
 
@@ -160,7 +168,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
   /**
    * {@inheritdoc}
    */
-  public function graph(GraphQuery $query, Endpoint $endpoint = NULL) {
+  public function graph(GraphQuery $query, ?Endpoint $endpoint = NULL) {
     return $this->execute($query, $endpoint);
   }
 
@@ -244,5 +252,4 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
     $files['solrconfig.xml'] = preg_replace("@<requestHandler\s+name=\"/get\".*?</requestHandler>@ms", '', $files['solrconfig.xml']);
     $files['solrcore.properties'] = preg_replace("/solr\.replication.*\n/", '', $files['solrcore.properties']);
   }
-
 }
