@@ -493,8 +493,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @throws \Drupal\search_api\SearchApiException
    */
   public function isAvailable() {
-    $conn = $this->getSolrConnector();
-    return $conn->pingServer() !== FALSE;
+    try {
+      $conn = $this->getSolrConnector();
+      return $conn->pingServer() !== FALSE;
+    }
+    catch (\Exception $e) {
+      $this->logException($e);
+    }
+    return FALSE;
   }
 
   /**
@@ -4025,9 +4031,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @param array $spellcheck_options
    *   The spellcheck options to add.
    *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   * @throws \Drupal\search_api\SearchApiException
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   protected function setSpellcheck(ComponentAwareQueryInterface $solarium_query, QueryInterface $query, array $spellcheck_options = []) {
+    /** @var \Solarium\Component\Spellcheck $spellcheck */
     $spellcheck = $solarium_query->getSpellcheck();
     $schema_languages = $this->getSchemaLanguageStatistics();
     $dictionaries = [];
