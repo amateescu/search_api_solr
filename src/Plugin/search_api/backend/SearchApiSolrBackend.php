@@ -500,6 +500,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     catch (\Exception $e) {
       $this->logException($e);
     }
+    // If any exception was thrown we consider the server to be unavailable.
     return FALSE;
   }
 
