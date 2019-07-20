@@ -33,3 +33,6 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
       label: 'Disabled Solr Field Types'
       sequence:
         type: string
+    limit:
+      type: integer
+      label: 'The default results limit if no limit is set as query option'

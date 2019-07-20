@@ -199,6 +199,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'connector_config' => [],
       'optimize' => FALSE,
       'disabled_field_types' => [],
+      // 10 is Solr's default limit if no limit is set.
+      'limit' => 10,
     ];
   }
 
@@ -211,6 +213,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $configuration['skip_schema_check'] = (bool) $configuration['skip_schema_check'];
     $configuration['site_hash'] = (bool) $configuration['site_hash'];
     $configuration['optimize'] = (bool) $configuration['optimize'];
+    $configuration['limit'] = (int) $configuration['limit'];
 
     parent::setConfiguration($configuration);
 
@@ -257,18 +260,32 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#type' => 'details',
       '#title' => $this->t('Advanced'),
     ];
+
+    $form['advanced']['limit'] = [
+      '#type' => 'number',
+      '#min' => 0,
+      // The max rows that could be returned by Solr are the max 32bit integer.
+      '#max' => 2147483630,
+      '#title' => $this->t('Default result limit'),
+      '#description' => $this->t('Solr always requires to limit the search results. This default value will be set if the Search API query itself is not limited. 2147483630 is the theoretical maximum since the result pointer is an integer. But be careful! Especially in Solr Cloud setups too high values might cause an OutOfMemoryException because Solr reserves this limit per shard for sorting the combined result. This sum must not exceed the maximum integer value! And even if there is no exception any too high memory consumption per query on your server is a bad thing in general.'),
+      '#default_value' => $this->configuration['limit'] ?: 10,
+      '#required' => TRUE,
+    ];
+
     $form['advanced']['retrieve_data'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Retrieve result data from Solr'),
       '#description' => $this->t('When checked, result data will be retrieved directly from the Solr server. This might make item loads unnecessary. Only indexed fields can be retrieved. Note also that the returned field data might not always be correct, due to preprocessing and caching issues.'),
       '#default_value' => $this->configuration['retrieve_data'],
     ];
+
     $form['advanced']['highlight_data'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Retrieve highlighted snippets'),
       '#description' => $this->t('Return a highlighted version of the indexed fulltext fields. These will be used by the "Highlighting Processor" directly instead of applying its own PHP algorithm.'),
       '#default_value' => $this->configuration['highlight_data'],
     ];
+
     $form['advanced']['skip_schema_check'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Skip schema verification'),
@@ -1388,8 +1405,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       // falling back to Solr's default of 10. But for Solr Cloud it turned out
       // that independent from the real number of documents, Solr seems to
       // allocate rows*shards memory for sorting the distributed result. That
-      // could lead to out of memory exceptions.
-      $solarium_query->setRows($query->getOption('limit', 10) ?? 10);
+      // could lead to out of memory exceptions. The default limit is now
+      // configurable as advanced server option.
+      $solarium_query->setRows($query->getOption('limit') ?? ($this->configuration['limit'] ?? 10));
 
       foreach ($options as $option => $value) {
         if (strpos($option, 'solr_param_') === 0) {
