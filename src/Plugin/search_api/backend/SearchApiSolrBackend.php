@@ -1428,14 +1428,16 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $query_fields_boosted = $edismax->getQueryFields() ?? '';
 
           if (isset($params['defType']) && 'edismax' === $params['defType']) {
-            // Edismax was forced via API. We just need to escape the keys.
-            $flatten_keys = Utility::flattenKeys($keys, [], 'keys');
+            // Edismax was forced via API. In case of parse mode 'direct' we get
+            // a string we use as it is. In the other cases we just need to
+            // escape the keys.
+            $flatten_keys = 'direct' === $parse_mode_id ? $keys : Utility::flattenKeys($keys, [], 'keys');
           }
           else {
             $flatten_keys = Utility::flattenKeys($keys, explode(' ', $query_fields_boosted), $parse_mode_id);
           }
 
-          if (strpos($flatten_keys, '-(') === 0) {
+          if ('direct' !== $parse_mode_id && strpos($flatten_keys, '-(') === 0) {
             // flattenKeys() always wraps the query in parenthesis. If the query
             // is negated we need to extend it by *:* which logically means 'all
             // documents' except the ones that match the flatten keys.
