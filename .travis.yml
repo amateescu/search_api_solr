@@ -87,6 +87,7 @@ before_script:
   - ./vendor/bin/drush language-add de
   - ./vendor/bin/drush language-add el
   - ./vendor/bin/drush language-add es
+  - ./vendor/bin/drush language-add et
   - ./vendor/bin/drush language-add fa
   - ./vendor/bin/drush language-add fi
   - ./vendor/bin/drush language-add fr
