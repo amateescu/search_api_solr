@@ -1425,14 +1425,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           $params = $solarium_query->getParams();
           // Extract keys.
           $keys = $query->getKeys();
-          $query_fields_boosted = $edismax->getQueryFields();
-          if (
-            (isset($params['defType']) && 'edismax' === $params['defType']) ||
-            !$query_fields_boosted
-          ) {
-            // Edismax was forced via API or the query fields were removed via
-            // API.
-            $flatten_keys = Utility::flattenKeys($keys, [], $parse_mode_id);
+          $query_fields_boosted = $edismax->getQueryFields() ?? '';
+
+          if (isset($params['defType']) && 'edismax' === $params['defType']) {
+            // Edismax was forced via API. We just need to escape the keys.
+            $flatten_keys = Utility::flattenKeys($keys, [], 'keys');
           }
           else {
             $flatten_keys = Utility::flattenKeys($keys, explode(' ', $query_fields_boosted), $parse_mode_id);
@@ -1464,6 +1461,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
           if (!isset($params['defType']) || 'edismax' !== $params['defType']) {
             $solarium_query->removeComponent(ComponentAwareQueryInterface::COMPONENT_EDISMAX);
+          }
+          else {
+            // Remove defType 'edismax' because the solarium query still has the
+            // edismax component which will set defType itself. We should avoid
+            // to have this parameter twice.
+            $solarium_query->removeParam('defType');
           }
         }
 
