@@ -74,6 +74,29 @@ abstract class AbstractSearchApiSolrTechproducts extends SolrBackendTestBase {
     $this->ensureCommit($this->getIndex());
     $server->addIndex($this->getIndex());
     $this->firstSearch();
+
+    // Regression test for
+    // https://www.drupal.org/project/search_api_solr/issues/3068714
+    $config['rows'] = 2;
+    $server->setBackendConfig($config);
+    $server->save();
+    /** @var \Drupal\search_api\Query\ResultSet $result */
+    $query = $this->buildSearch(NULL, [], NULL, FALSE)
+      ->sort('search_api_id');
+    $result = $query->execute();
+    $this->assertEquals([
+      "solr_document/0579B002",
+      "solr_document/100-435805",
+    ], array_keys($result->getResultItems()), 'Search for all tech products, 2 rows limit via config');
+    $query = $this->buildSearch(NULL, [], NULL, FALSE)
+      ->sort('search_api_id');
+    $query->setOption('limit', 3);
+    $result = $query->execute();
+    $this->assertEquals([
+      "solr_document/0579B002",
+      "solr_document/100-435805",
+      "solr_document/3007WFP",
+    ], array_keys($result->getResultItems()), 'Search for all tech products, 3 rows limit via query');
   }
 
   /**
