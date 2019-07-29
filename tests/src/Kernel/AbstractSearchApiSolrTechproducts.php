@@ -83,6 +83,7 @@ abstract class AbstractSearchApiSolrTechproducts extends SolrBackendTestBase {
     /** @var \Drupal\search_api\Query\ResultSet $result */
     $query = $this->buildSearch(NULL, [], NULL, FALSE)
       ->sort('search_api_id');
+    $query->range(0);
     $result = $query->execute();
     $this->assertEquals([
       "solr_document/0579B002",
@@ -90,7 +91,7 @@ abstract class AbstractSearchApiSolrTechproducts extends SolrBackendTestBase {
     ], array_keys($result->getResultItems()), 'Search for all tech products, 2 rows limit via config');
     $query = $this->buildSearch(NULL, [], NULL, FALSE)
       ->sort('search_api_id');
-    $query->setOption('limit', 3);
+    $query->range(0, 3);
     $result = $query->execute();
     $this->assertEquals([
       "solr_document/0579B002",
