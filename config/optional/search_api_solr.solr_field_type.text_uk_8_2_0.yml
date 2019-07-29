@@ -40,7 +40,7 @@ field_type:
           words: stopwords_uk.txt
         -
           class: solr.MorfologikFilterFactory
-          dictionary: ukrainian.dict
+          dictionary: ua/net/nlp/ukrainian.dict
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
     -
@@ -71,7 +71,7 @@ field_type:
           words: stopwords_uk.txt
         -
           class: solr.MorfologikFilterFactory
-          dictionary: ukrainian.dict
+          dictionary: ua/net/nlp/ukrainian.dict
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
 unstemmed_field_type:
