@@ -890,6 +890,23 @@ class Utility {
   }
 
   /**
+   * Returns whether the index contains any "solr_*" datasources.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The Search API index entity.
+   *
+   * @return bool
+   *   TRUE if the index contains "solr_*" datasources, FALSE otherwise.
+   */
+  public static function hasIndexSolrDatasources(IndexInterface $index): bool {
+    $datasource_ids = $index->getDatasourceIds();
+    $datasource_ids = array_filter($datasource_ids, function ($datasource_id) {
+      return strpos($datasource_id, 'solr_') === 0;
+    });
+    return !empty($datasource_ids);
+  }
+
+  /**
    * Returns whether the index only contains "solr_document" datasources.
    *
    * @param \Drupal\search_api\IndexInterface $index

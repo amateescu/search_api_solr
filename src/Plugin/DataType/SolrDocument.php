@@ -19,6 +19,7 @@ use Solarium\Core\Query\DocumentInterface;
  *   id = "solr_document",
  *   label = @Translation("Solr document"),
  *   description = @Translation("Records from a Solr index."),
+ *   deriver = "\Drupal\search_api_solr\Plugin\DataType\Deriver\SolrDocumentDeriver",
  *   definition_class = "\Drupal\search_api_solr\TypedData\SolrDocumentDefinition"
  * )
  */
