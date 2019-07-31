@@ -52,18 +52,25 @@ class IntegrationTest extends BrowserTestBase {
   public function testInstallAndDefaultSetupWorking() {
     $this->drupalLogin($this->adminUser);
 
+    // Installation invokes a batch and this breaks it.
+    \Drupal::state()->set('search_api_use_tracking_batch', FALSE);
+
     // Install the search_api_solr_defaults module.
     $edit_enable = [
       'modules[search_api_solr_defaults][enable]' => TRUE,
     ];
-    $this->drupalPostForm('admin/modules', $edit_enable, t('Install'));
-    $this->assertText(t('Some required modules must be enabled'));
+    $this->drupalPostForm('admin/modules', $edit_enable, 'Install');
 
-    $this->drupalPostForm(NULL, NULL, t('Continue'));
-    $this->assertTextHelper(t('3 modules have been enabled: Solr Search Defaults, Search API Solr, Search API.'), 'Modules have been installed.');
+    $this->assertSession()->pageTextContains('Some required modules must be enabled');
+
+    $this->drupalPostForm(NULL, [], 'Continue');
+
+    $this->assertSession()->pageTextContains('3 modules have been enabled: Solr Search Defaults, Search API Solr, Search API.');
 
     $this->rebuildContainer();
-    $this->resetAll();
+
+    $this->drupalPostForm('admin/config/search/search-api/server/default_solr_server/edit', [], 'Save');
+    $this->assertSession()->pageTextContains('The server was successfully saved.');
 
     $server = Server::load('default_solr_server');
     $this->assertTrue($server, 'Server can be loaded');
@@ -73,36 +80,63 @@ class IntegrationTest extends BrowserTestBase {
 
     $this->drupalLogin($this->authenticatedUser);
     $this->drupalGet('solr-search/content');
-    $this->assertResponse(200, 'Authenticated user can access the search view.');
+    $this->assertSession()->statusCodeEquals(200);
     $this->drupalLogin($this->adminUser);
 
+    $title = 'Test node title';
+    $edit = [
+      'title[0][value]' => $title,
+      'body[0][value]' => 'This is test content for the Search API to index.',
+    ];
+    $this->drupalPostForm('node/add/article', $edit, 'Save');
+
+    $this->drupalLogout();
+    $this->drupalGet('solr-search/content');
+    $this->assertSession()->pageTextContains('Please enter some keywords to search.');
+    $this->assertSession()->pageTextNotContains($title);
+    $this->assertSession()->responseNotContains('Error message');
+    $this->submitForm([], 'Search');
+    $this->assertSession()->pageTextNotContains($title);
+    $this->assertSession()->responseNotContains('Error message');
+    $this->submitForm(['keys' => 'test'], 'Search');
+    $this->assertSession()->pageTextContains($title);
+    $this->assertSession()->responseNotContains('Error message');
+
     // Uninstall the module.
+    $this->drupalLogin($this->adminUser);
     $edit_disable = [
       'uninstall[search_api_solr_defaults]' => TRUE,
     ];
-    $this->drupalPostForm('admin/modules/uninstall', $edit_disable, t('Uninstall'));
-    $this->drupalPostForm(NULL, [], t('Uninstall'));
+    $this->drupalPostForm('admin/modules/uninstall', $edit_disable, 'Uninstall');
+    $this->submitForm([], 'Uninstall');
     $this->rebuildContainer();
-    $this->assertFalse($this->container->get('module_handler')
-      ->moduleExists('search_api_solr_defaults'), 'Solr Search Defaults module uninstalled.');
+    $this->assertFalse($this->container->get('module_handler')->moduleExists('search_api_solr_defaults'), 'Solr Search Defaults module uninstalled.');
 
     // Check if the server is found in the Search API admin UI.
     $this->drupalGet('admin/config/search/search-api/server/default_solr_server');
-    $this->assertResponse(200, 'Server was not removed.');
+    $this->assertSession()->statusCodeEquals(200);
 
     // Check if the index is found in the Search API admin UI.
     $this->drupalGet('admin/config/search/search-api/index/default_solr_index');
-    $this->assertResponse(200, 'Index was not removed.');
+    $this->assertSession()->statusCodeEquals(200);
+
+    // Check that saving any of the index's config forms works fine.
+    foreach (['edit', 'fields', 'processors'] as $tab) {
+      $submit = $tab == 'fields' ? 'Save changes' : 'Save';
+      $this->drupalGet("admin/config/search/search-api/index/default_solr_index/$tab");
+      $this->submitForm([], $submit);
+      $this->assertSession()->statusCodeEquals(200);
+    }
 
     $this->drupalLogin($this->authenticatedUser);
     $this->drupalGet('solr-search/content');
-    $this->assertResponse(200, 'Authenticated user can access the search view.');
+    $this->assertSession()->statusCodeEquals(200);
     $this->drupalLogin($this->adminUser);
 
     // Enable the module again. This should fail because the either the index
     // or the server or the view was found.
-    $this->drupalPostForm('admin/modules', $edit_enable, t('Install'));
-    $this->assertText(t('It looks like the default setup provided by this module already exists on your site. Cannot re-install module.'));
+    $this->drupalPostForm('admin/modules', $edit_enable, 'Install');
+    $this->assertSession()->pageTextContains('It looks like the default setup provided by this module already exists on your site. Cannot re-install module.');
 
     // Delete all the entities that we would fail on if they exist.
     $entities_to_remove = [
@@ -124,16 +158,18 @@ class IntegrationTest extends BrowserTestBase {
     }
 
     // Delete the article content type.
+    $this->drupalGet('node/1/delete');
+    $this->submitForm([], 'Delete');
     $this->drupalGet('admin/structure/types/manage/article');
-    $this->clickLink(t('Delete'));
-    $this->assertResponse(200);
-    $this->drupalPostForm(NULL, [], t('Delete'));
+    $this->clickLink('Delete');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->submitForm([], 'Delete');
 
     // Try to install search_api_solr_defaults module and test if it failed
     // because there was no content type "article".
-    $this->drupalPostForm('admin/modules', $edit_enable, t('Install'));
+    $this->drupalPostForm('admin/modules', $edit_enable, 'Install');
     $success_text = t('Content type @content_type not found. Solr Search Defaults module could not be installed.', ['@content_type' => 'article']);
-    $this->assertText($success_text);
+    $this->assertSession()->pageTextContains($success_text);
   }
 
 }
