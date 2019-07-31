@@ -962,7 +962,7 @@ class Utility {
    *   An associative array of settings.
    */
   public static function getIndexSolrSettings(IndexInterface $index) {
-    return search_api_solr_merge_default_index_third_party_settings(
+    return \search_api_solr_merge_default_index_third_party_settings(
       $index->getThirdPartySettings('search_api_solr')
     );
   }

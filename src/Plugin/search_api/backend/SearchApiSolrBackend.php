@@ -61,7 +61,7 @@ use Solarium\Exception\OutOfBoundsException;
 use Solarium\Exception\StreamException;
 use Solarium\Exception\UnexpectedValueException;
 use Solarium\QueryType\Select\Query\FilterQuery;
-use Solarium\QueryType\Stream\Expression;
+use Solarium\QueryType\Stream\ExpressionBuilder;
 use Solarium\QueryType\Update\Query\Query as UpdateQuery;
 use Solarium\QueryType\Select\Query\Query;
 use Solarium\QueryType\Select\Result\Result;
@@ -1196,7 +1196,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $lock->release('search_api_solr.' . $index->id() . '.finalization_lock');
             $connector->adjustTimeout($previous_timeout);
             if ($e instanceof StreamException) {
-              throw new SearchApiSolrException($e->getMessage() . "\n" . Expression::indent($e->getExpression()), $e->getCode(), $e);
+              throw new SearchApiSolrException($e->getMessage() . "\n" . ExpressionBuilder::indent($e->getExpression()), $e->getCode(), $e);
             }
             throw new SearchApiSolrException($e->getMessage(), $e->getCode(), $e);
           }
@@ -1760,7 +1760,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
     }
     catch (StreamException $e) {
-      $message = $e->getMessage() . "\n" . Expression::indent($e->getExpression());
+      $message = $e->getMessage() . "\n" . ExpressionBuilder::indent($e->getExpression());
       if ($comment = $query->getOption('solr_streaming_expression_comment', FALSE)) {
         $message .= "\nComment: " . $comment;
       }

@@ -1,22 +1,17 @@
 <?php
 
-namespace Drupal\search_api_solr_defaults\Tests;
+namespace Drupal\Tests\search_api_solr_defaults\Functional;
 
-use Drupal\comment\Tests\CommentTestTrait;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\field\Tests\EntityReference\EntityReferenceTestTrait;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
-use Drupal\simpletest\WebTestBase;
+use Drupal\Tests\BrowserTestBase;
 
 /**
  * Tests the correct installation of the default configs.
  *
  * @group search_api_solr
  */
-class IntegrationTest extends WebTestBase {
-
-  use StringTranslationTrait, CommentTestTrait, EntityReferenceTestTrait;
+class IntegrationTest extends BrowserTestBase {
 
   /**
    * The profile to install as a basis for testing.
@@ -54,26 +49,21 @@ class IntegrationTest extends WebTestBase {
   /**
    * Tests whether the default search was correctly installed.
    */
-  protected function testInstallAndDefaultSetupWorking() {
+  public function testInstallAndDefaultSetupWorking() {
     $this->drupalLogin($this->adminUser);
 
     // Install the search_api_solr_defaults module.
     $edit_enable = [
-      'modules[Search][search_api_solr_defaults][enable]' => TRUE,
+      'modules[search_api_solr_defaults][enable]' => TRUE,
     ];
     $this->drupalPostForm('admin/modules', $edit_enable, t('Install'));
-
-    $this->assertText(t('Some required modules must be enabled'), 'Dependencies required.');
+    $this->assertText(t('Some required modules must be enabled'));
 
     $this->drupalPostForm(NULL, NULL, t('Continue'));
-    $args = [
-      '@count' => 3,
-      '%names' => 'Solr Search Defaults, Solr search, Search API',
-    ];
-    $success_text = strip_tags(t('@count modules have been enabled: %names.', $args));
-    $this->assertText($success_text, 'Modules have been installed.');
+    $this->assertTextHelper(t('3 modules have been enabled: Solr Search Defaults, Search API Solr, Search API.'), 'Modules have been installed.');
 
     $this->rebuildContainer();
+    $this->resetAll();
 
     $server = Server::load('default_solr_server');
     $this->assertTrue($server, 'Server can be loaded');
@@ -93,7 +83,8 @@ class IntegrationTest extends WebTestBase {
     $this->drupalPostForm('admin/modules/uninstall', $edit_disable, t('Uninstall'));
     $this->drupalPostForm(NULL, [], t('Uninstall'));
     $this->rebuildContainer();
-    $this->assertFalse($this->container->get('module_handler')->moduleExists('search_api_solr_defaults'), 'Search API DB Defaults module uninstalled.');
+    $this->assertFalse($this->container->get('module_handler')
+      ->moduleExists('search_api_solr_defaults'), 'Solr Search Defaults module uninstalled.');
 
     // Check if the server is found in the Search API admin UI.
     $this->drupalGet('admin/config/search/search-api/server/default_solr_server');
@@ -141,7 +132,7 @@ class IntegrationTest extends WebTestBase {
     // Try to install search_api_solr_defaults module and test if it failed
     // because there was no content type "article".
     $this->drupalPostForm('admin/modules', $edit_enable, t('Install'));
-    $success_text = t('Content type @content_type not found. Database Search Defaults module could not be installed.', ['@content_type' => 'article']);
+    $success_text = t('Content type @content_type not found. Solr Search Defaults module could not be installed.', ['@content_type' => 'article']);
     $this->assertText($success_text);
   }
 
