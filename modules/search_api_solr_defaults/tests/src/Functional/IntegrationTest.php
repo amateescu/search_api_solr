@@ -20,6 +20,8 @@ class IntegrationTest extends BrowserTestBase {
    */
   protected $profile = 'standard';
 
+  protected static $modules = ['composer_deploy'];
+
   /**
    * A non-admin user used for this test.
    *
