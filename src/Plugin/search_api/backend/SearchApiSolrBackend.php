@@ -3567,7 +3567,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function getTargetedIndexId(IndexInterface $index) {
     $config = $this->getDatasourceConfig($index);
-    return isset($config['target_index']) ? $config['target_index'] : $this->getIndexId($index);
+    return $config['target_index'] ?? $this->getIndexId($index);
   }
 
   /**
@@ -3575,7 +3575,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function getTargetedSiteHash(IndexInterface $index) {
     $config = $this->getDatasourceConfig($index);
-    return isset($config['target_hash']) ? $config['target_hash'] : Utility::getSiteHash();
+    return $config['target_hash'] ?? Utility::getSiteHash();
   }
 
   /**

@@ -154,7 +154,7 @@ class IntegrationTest extends BrowserTestBase {
     $entities_to_remove = [
       'search_api_index' => 'default_solr_index',
       'search_api_server' => 'default_solr_server',
-      'view' => 'search_content',
+      'view' => 'solr_search_content',
     ];
     /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
     $entity_type_manager = \Drupal::service('entity_type.manager');
