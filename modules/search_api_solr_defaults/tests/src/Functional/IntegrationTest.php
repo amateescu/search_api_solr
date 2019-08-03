@@ -97,6 +97,10 @@ class IntegrationTest extends BrowserTestBase {
     ];
     $this->drupalPostForm('node/add/article', $edit, 'Save');
 
+    if (SOLR_INDEX_WAIT) {
+      sleep(SOLR_INDEX_WAIT);
+    }
+
     $this->drupalLogout();
     $this->drupalGet('solr-search/content');
     $this->assertSession()->pageTextContains('Please enter some keywords to search.');

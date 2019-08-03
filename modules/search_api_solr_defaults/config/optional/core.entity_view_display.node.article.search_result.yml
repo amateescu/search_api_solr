@@ -7,7 +7,6 @@ dependencies:
     - field.field.node.article.comment
     - field.field.node.article.field_image
     - field.field.node.article.field_tags
-    - image.style.thumbnail
     - node.type.article
   module:
     - image
@@ -25,7 +24,6 @@ content:
       trim_length: 300
     third_party_settings: {  }
     label: hidden
-    region: content
   field_image:
     type: image
     weight: 0
@@ -34,12 +32,10 @@ content:
       image_link: content
     third_party_settings: {  }
     label: hidden
-    region: content
   links:
     weight: 2
     settings: {  }
     third_party_settings: {  }
-    region: content
 hidden:
   comment: true
   field_tags: true

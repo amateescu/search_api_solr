@@ -1,11 +1,14 @@
+id: solr_search_content
 langcode: en
 status: true
 dependencies:
-  config:
-    - search_api.index.default_solr_index
   module:
     - search_api
-id: solr_search_content
+  config:
+    - core.entity_view_mode.node.search_result
+    - core.entity_view_display.node.article.search_result
+    - core.entity_view_display.node.page.search_result
+    - search_api.index.default_solr_index
 label: 'Solr search content'
 module: views
 description: 'A search page preconfigured to search through the content of your site'
@@ -130,11 +133,12 @@ display:
       display_extenders: {  }
     cache_metadata:
       contexts:
+        - 'languages:language_content'
         - 'languages:language_interface'
         - url
         - url.query_args
       cacheable: false
-      max-age: -1
+      max-age: 0
       tags: {  }
   page_1:
     display_plugin: page
@@ -146,9 +150,10 @@ display:
       path: solr-search/content
     cache_metadata:
       contexts:
+        - 'languages:language_content'
         - 'languages:language_interface'
         - url
         - url.query_args
       cacheable: false
-      max-age: -1
+      max-age: 0
       tags: {  }
