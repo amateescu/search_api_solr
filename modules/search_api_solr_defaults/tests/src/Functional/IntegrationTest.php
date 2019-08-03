@@ -63,11 +63,11 @@ class IntegrationTest extends BrowserTestBase {
     ];
     $this->drupalPostForm('admin/modules', $edit_enable, 'Install');
 
-    $this->assertSession()->pageTextContains('Some required modules must be enabled');
+    $this->assertSession()->responseContains('Some required modules must be enabled');
 
     $this->drupalPostForm(NULL, [], 'Continue');
 
-    $this->assertSession()->pageTextContains('3 modules have been enabled: Solr Search Defaults, Search API Solr, Search API.');
+    $this->assertSession()->responseContains('4 modules have been enabled: Solr Search Defaults, Search API Solr, Language, Search API.');
 
     $this->rebuildContainer();
 
