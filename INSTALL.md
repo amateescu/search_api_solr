@@ -32,8 +32,8 @@ somewhere outside of your web server's document tree. The unpacked Solr
 directory is named `$SOLR` in these instructions.
 
 NB: Solr 6.x is still supported by search_api_solr but strongly discouraged.
-That version has been declared end-of-life by the Apache Solr project and is thus no
-longer supported by them.
+That version has been declared end-of-life by the Apache Solr project and is
+thus no longer supported by them.
 
 First you have to create a Solr core for Drupal. Therefore you have to create
 two directories (replace `$SOLR` and `$CORE` according to your needs):
@@ -118,3 +118,7 @@ to match your distribution specifics path, for example
 ```
 solr.install.dir=/opt/solr
 ```
+
+Note: The paths where the config.zip needs to be extracted to might differ from
+the instructions above as well. For some distributions a directory like
+`/var/solr` or `/usr/local/solr` exists.
