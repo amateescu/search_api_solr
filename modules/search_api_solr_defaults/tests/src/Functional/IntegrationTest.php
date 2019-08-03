@@ -20,6 +20,11 @@ class IntegrationTest extends BrowserTestBase {
    */
   protected $profile = 'standard';
 
+  /**
+   * The dependencies should be fulfilled by dev versions, use composer_deploy.
+   *
+   * @var array
+   */
   protected static $modules = ['composer_deploy'];
 
   /**
@@ -67,7 +72,7 @@ class IntegrationTest extends BrowserTestBase {
 
     $this->drupalPostForm(NULL, [], 'Continue');
 
-    $this->assertSession()->responseContains('4 modules have been enabled: Solr Search Defaults, Search API Solr, Language, Search API.');
+    $this->assertSession()->responseContains('modules have been enabled');
 
     $this->rebuildContainer();
 
