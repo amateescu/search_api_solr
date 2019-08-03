@@ -16,7 +16,7 @@ backend_config:
     index_timeout: 10
     optimize_timeout: 15
     finalize_timeout: 30
-    commit_within: 1000
+    commit_within: 10
     solr_version: ''
     http_method: AUTO
     jmx: false
@@ -29,8 +29,5 @@ backend_config:
   server_prefix: ''
   optimize: false
 dependencies:
-  config:
-    - search_api_solr.solr_field_type.text_phonetic_und_7_0_0
-    - search_api_solr.solr_field_type.text_und_7_0_0
   module:
     - search_api_solr

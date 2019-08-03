@@ -4,6 +4,7 @@ namespace Drupal\Tests\search_api_solr_defaults\Functional;
 
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
+use Drupal\search_api_solr\Utility\SolrCommitTrait;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -12,6 +13,8 @@ use Drupal\Tests\BrowserTestBase;
  * @group search_api_solr
  */
 class IntegrationTest extends BrowserTestBase {
+
+  use SolrCommitTrait;
 
   /**
    * The profile to install as a basis for testing.
@@ -97,9 +100,7 @@ class IntegrationTest extends BrowserTestBase {
     ];
     $this->drupalPostForm('node/add/article', $edit, 'Save');
 
-    if (SOLR_INDEX_WAIT) {
-      sleep(SOLR_INDEX_WAIT);
-    }
+    $this->ensureCommit($index);
 
     $this->drupalLogout();
     $this->drupalGet('solr-search/content');
