@@ -135,7 +135,7 @@ class IntegrationTest extends BrowserTestBase {
 
     // Check that saving any of the index's config forms works fine.
     foreach (['edit', 'fields', 'processors'] as $tab) {
-      $submit = $tab == 'fields' ? 'Save changes' : 'Save';
+      $submit = $tab === 'fields' ? 'Save changes' : 'Save';
       $this->drupalGet("admin/config/search/search-api/index/default_solr_index/$tab");
       $this->submitForm([], $submit);
       $this->assertSession()->statusCodeEquals(200);
