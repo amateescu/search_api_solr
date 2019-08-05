@@ -435,8 +435,6 @@ function search_api_solr_update_8008() {
 
 /**
  * Install Solr Field Types.
- *
- * @throws \Drupal\Core\Entity\Exception\EntityTypeIdLengthException
  */
 function search_api_solr_update_8200() {
   // 8.x-1.x to 8.x-2.x migration path is obsolete and therefore removed. Just
@@ -521,12 +519,7 @@ function search_api_solr_update_8202() {
   }
 }
 
-/**
- * Install new essential Solr field types.
- */
-function search_api_solr_update_8203() {
-  // Removed.
-}
+// Removed search_api_solr_update_8203().
 
 /**
  * Enable phrase suggestions support.
@@ -611,19 +604,9 @@ function search_api_solr_update_8208() {
   $config->save(TRUE);
 }
 
-/**
- * Install missing configs for 8.x-2.0-alpha3.
- */
-function search_api_solr_update_8209() {
-  // search_api_solr_update_helper_install_configs(InstallStorage::CONFIG_INSTALL_DIRECTORY);
-}
+// Removed search_api_solr_update_8209().
 
-/**
- * Install missing configs for 8.x-2.0-beta1.
- */
-function search_api_solr_update_8210() {
-  // search_api_solr_update_helper_install_configs(InstallStorage::CONFIG_OPTIONAL_DIRECTORY);
-}
+// Removed search_api_solr_update_8210().
 
 /**
  * Add default finalize timeout settings to existing configs.
