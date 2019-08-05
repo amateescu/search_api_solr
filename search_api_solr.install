@@ -432,7 +432,7 @@ function search_api_solr_update_8008() {
 }
 
 /**
- * Insatll Solr Field Types.
+ * Insatall Solr Field Types.
  */
 function search_api_solr_update_8200() {
   // 8.x-1.x to 8.x-2.x migration path is obsolete and therefore removed. Just

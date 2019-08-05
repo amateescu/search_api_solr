@@ -61,7 +61,7 @@ use Solarium\Exception\OutOfBoundsException;
 use Solarium\Exception\StreamException;
 use Solarium\Exception\UnexpectedValueException;
 use Solarium\QueryType\Select\Query\FilterQuery;
-use Solarium\QueryType\Stream\Expression;
+use Solarium\QueryType\Stream\ExpressionBuilder;
 use Solarium\QueryType\Update\Query\Query as UpdateQuery;
 use Solarium\QueryType\Select\Query\Query;
 use Solarium\QueryType\Select\Result\Result;
@@ -886,13 +886,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function removeIndex($index) {
-    // Only delete the index's data if the index isn't read-only. If the index
-    // has already been deleted and we only get the ID, we just assume it was
-    // read-only to be on the safe side.
-    if (is_object($index) && !$index->isReadOnly()) {
-      $this->deleteAllIndexItems($index);
-      $this->getLanguageSpecificSolrFieldNames(LanguageInterface::LANGCODE_NOT_SPECIFIED, $index, TRUE);
-    }
+    parent::removeIndex($index);
+    // Reset the static field names cache.
+    $this->getLanguageSpecificSolrFieldNames(LanguageInterface::LANGCODE_NOT_SPECIFIED, NULL, TRUE);
   }
 
   /**
@@ -1196,7 +1192,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $lock->release('search_api_solr.' . $index->id() . '.finalization_lock');
             $connector->adjustTimeout($previous_timeout);
             if ($e instanceof StreamException) {
-              throw new SearchApiSolrException($e->getMessage() . "\n" . Expression::indent($e->getExpression()), $e->getCode(), $e);
+              throw new SearchApiSolrException($e->getMessage() . "\n" . ExpressionBuilder::indent($e->getExpression()), $e->getCode(), $e);
             }
             throw new SearchApiSolrException($e->getMessage(), $e->getCode(), $e);
           }
@@ -1760,7 +1756,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
     }
     catch (StreamException $e) {
-      $message = $e->getMessage() . "\n" . Expression::indent($e->getExpression());
+      $message = $e->getMessage() . "\n" . ExpressionBuilder::indent($e->getExpression());
       if ($comment = $query->getOption('solr_streaming_expression_comment', FALSE)) {
         $message .= "\nComment: " . $comment;
       }
@@ -2030,19 +2026,21 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
-  public function getLanguageSpecificSolrFieldNames($language_id, IndexInterface $index, $reset = FALSE) {
+  public function getLanguageSpecificSolrFieldNames($language_id, ?IndexInterface $index, $reset = FALSE) {
     static $field_names = [];
 
     if ($reset) {
       $field_names = [];
     }
 
-    $index_id = $index->id();
-    if (!isset($field_names[$index_id]) || !isset($field_names[$index_id][$language_id])) {
-      $field_names[$index_id][$language_id] = $this->formatSolrFieldNames($language_id, $index);
-    }
+    if ($index) {
+      $index_id = $index->id();
+      if (!isset($field_names[$index_id]) || !isset($field_names[$index_id][$language_id])) {
+        $field_names[$index_id][$language_id] = $this->formatSolrFieldNames($language_id, $index);
+      }
 
-    return $field_names[$index_id][$language_id];
+      return $field_names[$index_id][$language_id];
+    }
   }
 
   /**
@@ -3567,7 +3565,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function getTargetedIndexId(IndexInterface $index) {
     $config = $this->getDatasourceConfig($index);
-    return isset($config['target_index']) ? $config['target_index'] : $this->getIndexId($index);
+    return $config['target_index'] ?? $this->getIndexId($index);
   }
 
   /**
@@ -3575,7 +3573,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function getTargetedSiteHash(IndexInterface $index) {
     $config = $this->getDatasourceConfig($index);
-    return isset($config['target_hash']) ? $config['target_hash'] : Utility::getSiteHash();
+    return $config['target_hash'] ?? Utility::getSiteHash();
   }
 
   /**
