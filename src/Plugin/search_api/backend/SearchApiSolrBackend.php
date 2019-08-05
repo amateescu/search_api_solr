@@ -886,8 +886,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function removeIndex($index) {
-    parent::removeIndex();
-    $this->getLanguageSpecificSolrFieldNames(LanguageInterface::LANGCODE_NOT_SPECIFIED, $index, TRUE);
+    parent::removeIndex($index);
+    // Reset the static field names cache.
+    $this->getLanguageSpecificSolrFieldNames(LanguageInterface::LANGCODE_NOT_SPECIFIED, NULL, TRUE);
   }
 
   /**
@@ -2025,19 +2026,21 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
-  public function getLanguageSpecificSolrFieldNames($language_id, IndexInterface $index, $reset = FALSE) {
+  public function getLanguageSpecificSolrFieldNames($language_id, ?IndexInterface $index, $reset = FALSE) {
     static $field_names = [];
 
     if ($reset) {
       $field_names = [];
     }
 
-    $index_id = $index->id();
-    if (!isset($field_names[$index_id]) || !isset($field_names[$index_id][$language_id])) {
-      $field_names[$index_id][$language_id] = $this->formatSolrFieldNames($language_id, $index);
-    }
+    if ($index) {
+      $index_id = $index->id();
+      if (!isset($field_names[$index_id]) || !isset($field_names[$index_id][$language_id])) {
+        $field_names[$index_id][$language_id] = $this->formatSolrFieldNames($language_id, $index);
+      }
 
-    return $field_names[$index_id][$language_id];
+      return $field_names[$index_id][$language_id];
+    }
   }
 
   /**

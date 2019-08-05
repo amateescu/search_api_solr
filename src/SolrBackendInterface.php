@@ -68,7 +68,7 @@ interface SolrBackendInterface extends BackendInterface {
    *
    * @throws \Drupal\search_api\SearchApiException
    */
-  public function getLanguageSpecificSolrFieldNames($language_id, IndexInterface $index, $reset = FALSE);
+  public function getLanguageSpecificSolrFieldNames($language_id, ?IndexInterface $index, $reset = FALSE);
 
   /**
    * Gets a language-specific mapping from Drupal to Solr field names.
