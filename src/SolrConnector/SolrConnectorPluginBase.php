@@ -640,6 +640,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     $query = $this->solr->createApi([
       'handler' => $handler,
       'accept' => 'application/json',
+      'contenttype' => 'application/json',
       'method' => $method,
       'rawdata' => (Request::METHOD_POST == $method ? $command_json : NULL),
     ]);
