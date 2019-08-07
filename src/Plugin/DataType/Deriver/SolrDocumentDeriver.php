@@ -3,11 +3,11 @@
 namespace Drupal\search_api_solr\Plugin\DataType\Deriver;
 
 use Drupal\Component\Plugin\Derivative\DeriverBase;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Discovery\ContainerDeriverInterface;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\Utility\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\EntityTypeManager;
 
 /**
  * Provides data type plugins for each index.
@@ -50,10 +50,10 @@ class SolrDocumentDeriver extends DeriverBase implements ContainerDeriverInterfa
    *
    * @param string $base_plugin_id
    *    Base plugin ID.
-   * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *    Entity type manager.
    */
-  public function __construct($base_plugin_id, EntityTypeManager $entity_type_manager) {
+  public function __construct($base_plugin_id, EntityTypeManagerInterface $entity_type_manager) {
     $this->basePluginId = $base_plugin_id;
     $this->entityTypeManager = $entity_type_manager;
   }
