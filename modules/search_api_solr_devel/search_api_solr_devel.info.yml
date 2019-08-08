@@ -1,5 +1,5 @@
 type: module
-name: 'Solr Search Devel'
+name: 'Search API Solr Devel'
 description: 'Debugging your Solr integration.'
 package: Search
 core: 8.x

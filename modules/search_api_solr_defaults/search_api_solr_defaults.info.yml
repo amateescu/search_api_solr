@@ -1,5 +1,5 @@
 type: module
-name: 'Solr Search Defaults'
+name: 'Search API Solr Search Defaults'
 description: 'Enable this module for a best-practice default setup of Search API with the Solr backend. After installation it is recommended to uninstall this module again for performance reasons. The provided configuration will not be removed.'
 package: Search
 core: 8.x
