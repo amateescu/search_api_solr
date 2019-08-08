@@ -97,7 +97,9 @@ before_script:
   - ./vendor/bin/drush language-add it
   - ./vendor/bin/drush language-add ja
   - ./vendor/bin/drush language-add lv
+  - ./vendor/bin/drush language-add nb
   - ./vendor/bin/drush language-add nl
+  - ./vendor/bin/drush language-add nn
   - ./vendor/bin/drush language-add no
   - ./vendor/bin/drush language-add pl
   - ./vendor/bin/drush language-add pt
