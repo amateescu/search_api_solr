@@ -11,6 +11,7 @@ use Drupal\search_api\Datasource\DatasourcePluginBase;
  * @SearchApiDatasource(
  *   id = "search_api_solr_test_widget",
  *   label = @Translation("Widgets"),
+ *   description = @Translation("A test widget."),
  * )
  */
 class WidgetDatasource extends DatasourcePluginBase {

@@ -10,6 +10,7 @@ use Drupal\Core\TypedData\Plugin\DataType\Map;
  * @DataType(
  *  id = "search_api_solr_test_widget",
  *  label = @Translation("Widget"),
+ *  description = @Translation("A test widget."),
  *  definition_class = "\Drupal\search_api_solr_test\TypedData\WidgetDefinition"
  * )
  */
