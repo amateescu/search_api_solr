@@ -70,7 +70,7 @@ that.
 
 NOTE: There's file called `solrcore.properties` within the set of generated
 config files. If you need to fine tune some setting you should do it within this
-file if possible instead of modifying `solrconf.xml.
+file if possible instead of modifying `solrconf.xml`.
 
 Now you can start your Solr server:
 
