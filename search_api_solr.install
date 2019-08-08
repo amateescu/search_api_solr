@@ -1570,3 +1570,10 @@ function search_api_solr_update_8323() {
     }
   }
 }
+
+/**
+ * Install new Norwegian configs if required.
+ */
+function search_api_solr_update_8324() {
+  search_api_solr_update_helper_install_configs();
+}
