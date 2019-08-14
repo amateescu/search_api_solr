@@ -67,11 +67,6 @@ install:
   #- cd modules/contrib/search_api
   #- curl https://www.drupal.org/files/issues/2018-12-20/3021717.patch | patch -p1
   #- cd $TRAVIS_BUILD_DIR/../drupal
-  #########################################
-  # to be removed once #3073283 is resolved
-  - cd modules/contrib/search_api
-  - curl https://www.drupal.org/files/issues/2019-08-12/3073283-6.patch | patch -p1
-  - cd $TRAVIS_BUILD_DIR/../drupal
 
 before_script:
   - export SOLR_INDEX_WAIT=4
