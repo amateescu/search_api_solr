@@ -2082,14 +2082,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   The cardinality.
    */
   protected function getPropertyPathCardinality($property_path, array $properties, $cardinality = 1) {
-    // Support for reverse entity reference on search_api.
-    // @see \Drupal\search_api\Plugin\search_api\processor\ReverseEntityReferences
-    // @todo remove this when search_api 1.14 is released as isList() below is
-    //       sufficient.
-    if (0 === strpos($property_path, 'search_api_reverse_entity_reference')) {
-      return FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED;
-    }
-
     list($key, $nested_path) = SearchApiUtility::splitPropertyPath($property_path, FALSE);
     if (isset($properties[$key])) {
       $property = $properties[$key];

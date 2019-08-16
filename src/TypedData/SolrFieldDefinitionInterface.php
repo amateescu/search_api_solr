@@ -6,15 +6,6 @@ use Drupal\Core\TypedData\DataDefinitionInterface;
 
 /**
  * Defines an interface for Solr field definitions.
- *
- * The methods in this interface were copied from the Sarnia 7.x module's
- * SarniaSearchApiSolrField class.  It is possible that not all of these methods
- * are necessary or will be used.  They were copied because isMultivalued()
- * provides a convenient way to implement DataDefinitionInterface::isList().
- * The rest of the methods were also included just in case they are needed for
- * other purposes.
- *
- * @todo Remove unused methods before the official release.
  */
 interface SolrFieldDefinitionInterface extends DataDefinitionInterface {
 
