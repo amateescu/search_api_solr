@@ -1577,3 +1577,33 @@ function search_api_solr_update_8323() {
 function search_api_solr_update_8324() {
   search_api_solr_update_helper_install_configs();
 }
+
+/**
+ * Fix the Polish phonetic field type.
+ */
+function search_api_solr_update_8325() {
+  foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+    if (!empty($field_type_config['field_type'])) {
+      $save = FALSE;
+      if ('text_phonetic_pl_7_0_0' === $field_type_config['id']) {
+        foreach ($field_type_config['field_type'] as &$components) {
+          if (is_array($components)) {
+            foreach ($components as &$analyzers) {
+              if (is_array($analyzers) && 'query' === $analyzers['type']) {
+                foreach ($analyzers['filters'] as $key => &$filter) {
+                  if ('solr.WordDelimiterGraphFilterFactory' === $filter['class'] && 'protwords_de.txt' === $filter['protected']) {
+                    $filter['protected'] = 'protwords_pl.txt';
+                    $save = TRUE;
+                  }
+                }
+              }
+            }
+          }
+        }
+        if ($save) {
+          search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
+        }
+      }
+    }
+  }
+}

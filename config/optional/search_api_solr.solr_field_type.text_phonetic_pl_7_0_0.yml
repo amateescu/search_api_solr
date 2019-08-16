@@ -64,7 +64,7 @@ field_type:
           class: solr.WordDelimiterGraphFilterFactory
           catenateNumbers: 0
           generateNumberParts: 1
-          protected: protwords_de.txt
+          protected: protwords_pl.txt
           splitOnCaseChange: 0
           generateWordParts: 1
           preserveOriginal: 1
