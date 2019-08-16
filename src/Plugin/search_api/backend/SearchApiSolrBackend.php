@@ -3422,7 +3422,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected function setAutocompleteSuggesterQuery(QueryInterface $query, AutocompleteQuery $solarium_query, $user_input, array $options = []) {
     if (isset($options['context_filter_tags']) && in_array('drupal/langcode:multilingual', $options['context_filter_tags'])) {
       $langcodes = $query->getLanguages();
-      if (count($langcodes) == 1) {
+      if ($langcodes && count($langcodes) == 1) {
         $langcode = reset($langcodes);
         $options['context_filter_tags'] = str_replace('drupal/langcode:multilingual', 'drupal/langcode:' . $langcode, $options['context_filter_tags']);
         $options['dictionary'] = $langcode;
