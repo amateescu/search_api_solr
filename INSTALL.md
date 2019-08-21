@@ -90,7 +90,7 @@ configuration or through the use of a firewall.
 Other options include adding basic HTTP authentication or renaming the solr/
 directory to a random string of characters and using that as the path.
 
-For configuring indexes and searches you have to follow the documention of
+For configuring indexes and searches you have to follow the documentation of
 search_api.
 
 

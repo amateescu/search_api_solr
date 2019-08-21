@@ -1430,7 +1430,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $flatten_keys = 'direct' === $parse_mode_id ? $keys : Utility::flattenKeys($keys, [], 'keys');
           }
           else {
-            $flatten_keys = Utility::flattenKeys($keys, explode(' ', $query_fields_boosted), $parse_mode_id);
+            $flatten_keys = Utility::flattenKeys($keys, ($query_fields_boosted ? explode(' ', $query_fields_boosted) : []), $parse_mode_id);
           }
 
           if ('direct' !== $parse_mode_id && strpos($flatten_keys, '-(') === 0) {
