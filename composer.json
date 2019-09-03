@@ -27,7 +27,7 @@
         "drupal/search_api": "~1.14",
         "consolidation/annotated-command": "^2.12",
         "maennchen/zipstream-php": "^1.1.0",
-        "solarium/solarium": "~5.0.3",
+        "solarium/solarium": "~5.1.0",
         "zendframework/zend-stdlib": "^3.0.1"
     },
     "require-dev": {

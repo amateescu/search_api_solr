@@ -1446,15 +1446,16 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           );
 
           // Apply term boosts if configured via a Search API processor and no
-          // sort is present.
+          // other sort than score (search_api_relevance) is present.
+          $sorts = $solarium_query->getSorts();
           if (
-            !$solarium_query->getSorts() &&
+            (!$sorts || count($sorts) > 1 || isset($sorts['score'])) &&
             !Utility::hasIndexJustSolrDocumentDatasource($index) &&
             $payload_score = Utility::flattenKeysToPayloadScore($keys, $parse_mode_id)
           ) {
             /** @var \Solarium\Component\ReRankQuery $rerank */
             $rerank = $solarium_query->getReRankQuery();
-            $rerank->setQuery("'" . $payload_score . "'");
+            $rerank->setQuery($payload_score);
           }
 
           if (!isset($params['defType']) || 'edismax' !== $params['defType']) {
@@ -2257,13 +2258,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                   }
                   $boost = $token->getBoost();
                   if (0.0 != $boost && 1.0 != $boost) {
-                    // @todo These regexes are a first approach to isolate the
-                    //   terms to be boosted. We should consider to re-use the
-                    //   logic of the tokenizer processor. But this might
-                    //   require to turn some methods to public.
-                    $doc->addField('boost_term', preg_replace('/(\w{3,})/', '$1|' . $boost,
-                      preg_replace('/\W+/', ' ', $value)
-                    ));
+                    // @todo This regex is a first approach to isolate the terms
+                    //   to be boosted. We should consider to re-use the logic
+                    //   of the tokenizer processor. But this might require to
+                    //   turn some methods to public.
+                    $doc->addField('boost_term', preg_replace('/([^\s]{2,})/', '$1|' . sprintf('%.1f', $boost), $value));
                   }
                 }
               }
