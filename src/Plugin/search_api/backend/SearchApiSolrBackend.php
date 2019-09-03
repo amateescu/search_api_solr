@@ -1449,7 +1449,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           // other sort than score (search_api_relevance) is present.
           $sorts = $solarium_query->getSorts();
           if (
-            (!$sorts || count($sorts) > 1 || isset($sorts['score'])) &&
+            (!$sorts || (count($sorts) === 1 && isset($sorts['score']))) &&
             !Utility::hasIndexJustSolrDocumentDatasource($index) &&
             $payload_score = Utility::flattenKeysToPayloadScore($keys, $parse_mode_id)
           ) {
