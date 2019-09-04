@@ -56,8 +56,8 @@ install:
   - cd $TRAVIS_BUILD_DIR/../drupal
   - composer install
   - composer config repositories.search_api_solr vcs $TRAVIS_BUILD_DIR
-  - composer require symfony/event-dispatcher:"4.3.3 as 3.4.0"
-  - composer require drupal/search_api:1.x-dev drupal/search_api_autocomplete:1.x-dev drupal/search_api_solr:999.3.0 drupal/search_api_location:1.x-dev drupal/facets:1.x-dev drupal/geofield:1.x-dev drupal/composer_deploy drush/drush:$DRUSH_VERSION drupal/drush_language:1.x-dev
+  - composer require symfony/event-dispatcher:"4.3.3 as 3.4.99"
+  - composer require solarium/solarium:"dev-master as 5.1.99" drupal/search_api:1.x-dev drupal/search_api_autocomplete:1.x-dev drupal/search_api_solr:999.3.0 drupal/search_api_location:1.x-dev drupal/facets:1.x-dev drupal/geofield:1.x-dev drupal/composer_deploy drush/drush:$DRUSH_VERSION drupal/drush_language:1.x-dev
   - |
     if [ ${DRUPAL_BRANCH} != "8.8.x" ]; then
       composer run-script drupal-phpunit-upgrade
