@@ -79,6 +79,7 @@ class HtmlFilterTest extends ProcessorTestBase {
 
     $query = new Query($this->index);
     $query->sort('search_api_relevance');
+    $query->sort('search_api_id');
     $result = $query->execute();
     $this->assertEquals([
       'entity:node/1:en',
