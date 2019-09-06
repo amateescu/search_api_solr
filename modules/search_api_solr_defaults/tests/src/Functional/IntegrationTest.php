@@ -24,13 +24,6 @@ class IntegrationTest extends BrowserTestBase {
   protected $profile = 'standard';
 
   /**
-   * The dependencies should be fulfilled by dev versions, use composer_deploy.
-   *
-   * @var array
-   */
-  protected static $modules = ['composer_deploy'];
-
-  /**
    * A non-admin user used for this test.
    *
    * @var \Drupal\Core\Session\AccountInterface
