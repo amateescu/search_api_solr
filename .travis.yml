@@ -40,10 +40,11 @@ before_install:
   - wget -nc --continue -v --tries=3 --directory-prefix=solr_downloads "http://archive.apache.org/dist/lucene/solr/${SOLR_VERSION}/solr-${SOLR_VERSION}.tgz"
   - tar -xzf solr_downloads/solr-${SOLR_VERSION}.tgz
   - mysql -e 'CREATE DATABASE drupal;'
+  - patch -p1 < .travis_no_deps.patch
+  - git commit -m 'no deps' search_api_solr.info.yml
+  - git tag 3.99
 
 install:
-  - patch -p1 < .travis_no_deps.patch
-  - git tag 3.99
   # Make sure we don't fail when checking out projects.
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
   - echo -e "Host git.drupal.org\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
