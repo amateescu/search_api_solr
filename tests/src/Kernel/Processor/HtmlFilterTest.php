@@ -90,6 +90,7 @@ class HtmlFilterTest extends ProcessorTestBase {
     $query = new Query($this->index);
     $query->keys(['beautiful']);
     $query->sort('search_api_relevance');
+    $query->sort('search_api_id');
     $result = $query->execute();
     $this->assertEquals([
       'entity:node/1:en',
@@ -101,6 +102,7 @@ class HtmlFilterTest extends ProcessorTestBase {
     $query = new Query($this->index);
     $query->keys(['page']);
     $query->sort('search_api_relevance');
+    $query->sort('search_api_id');
     $result = $query->execute();
     $this->assertEquals([
       'entity:node/2:en',
@@ -138,6 +140,7 @@ class HtmlFilterTest extends ProcessorTestBase {
     $query = new Query($this->index);
     $query->keys(["d'avion"]);
     $query->sort('search_api_relevance');
+    $query->sort('search_api_id');
     $result = $query->execute();
     $this->assertEquals([
       'entity:node/5:en',
@@ -147,6 +150,7 @@ class HtmlFilterTest extends ProcessorTestBase {
     $query = new Query($this->index);
     $query->keys(['😀😎☠👾']);
     $query->sort('search_api_relevance');
+    $query->sort('search_api_id');
     $result = $query->execute();
     $this->assertEquals([
       'entity:node/7:en',
