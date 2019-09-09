@@ -32,6 +32,8 @@
     },
     "require-dev": {
         "phayes/geophp": "^1.2",
+        "monolog/monolog": "^2.0",
+        "drupal/devel": "2.x-dev",
         "drupal/facets": "1.x-dev",
         "drupal/geofield": "1.x-dev",
         "drupal/search_api_autocomplete": "1.x-dev",
