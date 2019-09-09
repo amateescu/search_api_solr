@@ -1,4 +1,4 @@
-id: solr_search_index
+id: solr_search_index_cloud
 name: 'Test index'
 description: 'An index used for testing'
 read_only: false

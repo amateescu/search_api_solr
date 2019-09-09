@@ -29,7 +29,7 @@ third_party_settings:
     multilingual:
       limit_to_content_language: false
       include_language_independent: true
-id: techproducts
+id: techproducts_cloud
 name: techproducts
 description: ''
 read_only: true
