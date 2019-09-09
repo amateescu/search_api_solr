@@ -8,6 +8,8 @@ use Drupal\search_api_solr_test\Logger\InMemoryLogger;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
 use Drupal\search_api_solr\Utility\SolrCommitTrait;
 
+defined('SOLR_CLOUD') || define('SOLR_CLOUD', getenv('SOLR_CLOUD') ?: 'false');
+
 /**
  * Tests location searches and distance facets using the Solr search backend.
  *
@@ -24,6 +26,7 @@ abstract class SolrBackendTestBase extends BackendTestBase {
    */
   public static $modules = [
     'search_api_solr',
+    'search_api_solr_test',
   ];
 
   /**
@@ -51,6 +54,11 @@ abstract class SolrBackendTestBase extends BackendTestBase {
    * {@inheritdoc}
    */
   public function setUp() {
+    if ('true' === SOLR_CLOUD) {
+      $this->serverId .= '_cloud';
+      $this->indexId .= '_cloud';
+    }
+
     parent::setUp();
 
     $this->installConfigs();
@@ -66,6 +74,7 @@ abstract class SolrBackendTestBase extends BackendTestBase {
   protected function installConfigs() {
     $this->installConfig([
       'search_api_solr',
+      'search_api_solr_test',
     ]);
   }
 

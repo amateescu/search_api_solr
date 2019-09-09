@@ -124,7 +124,12 @@ before_script:
   - cp -a modules/contrib/search_api/tests/search_api_test_example_content modules/contrib/search_api/search_api_test_example_content
   - cp -a modules/contrib/search_api_solr/tests/modules/search_api_solr_test modules/contrib/search_api_solr/search_api_solr_test
   - ./vendor/bin/drush en --yes search_api_solr_test
-  - ./vendor/bin/drush solr-gsc solr_search_server conf.zip $SOLR_VERSION
+  - |
+      if [ ${SOLR_CLOUD} == "true" ]; then
+        ./vendor/bin/drush solr-gsc solr_search_server conf.zip $SOLR_VERSION
+      else
+        ./vendor/bin/drush solr-gsc solr_search_server_cloud conf.zip $SOLR_VERSION
+      fi
   - rm -rf core/modules/system/entity_test modules/contrib/search_api/search_api_test_example_content modules/contrib/search_api_solr/search_api_solr_test
   - mkdir $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8
   - mkdir $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf
@@ -139,7 +144,7 @@ before_script:
        $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/post -c techproducts $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/example/exampledocs/*.xml || travis_terminate 1;
        $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr create -c d8 -s 2 -rf 2 -d $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf -n d8 || travis_terminate 1;
        $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr create -c checkpoints -s 1 -rf 2 || travis_terminate 1;
-     else
+    else
        $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr start -e techproducts || travis_terminate 1;
        $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr create -c d8 -d $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf || travis_terminate 1;
     fi
@@ -147,12 +152,7 @@ before_script:
 script:
   # Run the tests within the drupal directory.
   - cd $TRAVIS_BUILD_DIR/../drupal
-  - |
-    if [ ${SOLR_CLOUD} == "true" ]; then
-      vendor/bin/phpunit -c core --group search_api_solr --verbose --debug --exclude-group solr_no_cloud modules/contrib/search_api_solr || travis_terminate 1;
-    else
-      vendor/bin/phpunit -c core --group search_api_solr --verbose --debug --exclude-group solr_cloud modules/contrib/search_api_solr || travis_terminate 1;
-    fi
+  - vendor/bin/phpunit -c core --group search_api_solr --verbose --debug modules/contrib/search_api_solr || travis_terminate 1;
 
 matrix:
   exclude:

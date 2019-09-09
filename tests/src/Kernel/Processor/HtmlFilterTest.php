@@ -41,7 +41,7 @@ class HtmlFilterTest extends ProcessorTestBase {
   public function setUp($processor = NULL) {
     parent::setUp('html_filter');
 
-    $this->enableSolrServer('search_api_solr_test', '/config/install/search_api.server.solr_search_server.yml');
+    $this->enableSolrServer();
 
     $this->installConfig(['filter']);
 

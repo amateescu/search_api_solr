@@ -138,4 +138,13 @@ class UtilitiesTest extends KernelTestBase {
     );
   }
 
+  /**
+   * Tests extracting of highlighted keys.
+   */
+  public function testHighlightedKeys() {
+    $snippet = '';
+    $highlighted_keys = Utility::getHighlightedKeys($snippet);
+
+    $this->assertEquals([], $highlighted_keys);
+  }
 }
