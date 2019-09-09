@@ -123,17 +123,17 @@ class HtmlFilterTest extends ProcessorTestBase {
 
     $this->createNode([
       'type' => 'page',
-      'title' => '😀😎☠👾',
+      'title' => '😀😎👾',
     ]);
 
     $this->createNode([
       'type' => 'page',
-      'title' => '<b>More strange " characters 😀😎☠👾<b>',
+      'title' => '<b>More strange " characters 😀😎👾<b>',
     ]);
 
     $this->createNode([
       'type' => 'page',
-      'title' => 'More strange " characters 😀😎☠👾',
+      'title' => 'More strange " characters 😀😎👾',
     ]);
 
     $this->indexItems();
@@ -149,7 +149,7 @@ class HtmlFilterTest extends ProcessorTestBase {
     ], array_keys($result->getResultItems()));
 
     $query = new Query($this->index);
-    $query->keys(['😀😎☠👾']);
+    $query->keys(['😀😎👾']);
     $query->sort('search_api_relevance', QueryInterface::SORT_DESC);
     $query->sort('search_api_id');
     $result = $query->execute();
