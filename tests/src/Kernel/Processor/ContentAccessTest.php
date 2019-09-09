@@ -31,6 +31,7 @@ class ContentAccessTest extends SearchApiContentAccessTest {
   public function setUp($processor = NULL) {
     parent::setUp();
     $this->enableSolrServer();
+    $this->travisLogger->debug('ContentAccessTest');
   }
 
 }

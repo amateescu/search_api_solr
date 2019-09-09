@@ -51,9 +51,14 @@ abstract class SolrBackendTestBase extends BackendTestBase {
   /**
    * The in-memory logger.
    *
-   * @var \Drupal\search_api_solr_test\Logger\InMemoryLogger
+   * @var \Psr\Log\LoggerInterface
    */
   protected $logger;
+
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $travisLogger;
 
   /**
    * {@inheritdoc}
@@ -72,9 +77,9 @@ abstract class SolrBackendTestBase extends BackendTestBase {
     $this->logger = new InMemoryLogger();
     \Drupal::service('logger.factory')->addLogger($this->logger);
 
-    $logger = new Logger('search_api_solr');
-    $logger->pushHandler(new StreamHandler(TRAVIS_BUILD_DIR . '/solr_query.log', Logger::DEBUG));
-    \Drupal::service('search_api_solr_devel.solarium_request_logger')->setLogger($logger);
+    $this->travisLogger = new Logger('search_api_solr');
+    $this->travisLogger->pushHandler(new StreamHandler(TRAVIS_BUILD_DIR . '/solr_query.log', Logger::DEBUG));
+    \Drupal::service('search_api_solr_devel.solarium_request_logger')->setLogger($this->travisLogger);
   }
 
   /**

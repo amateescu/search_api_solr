@@ -16,6 +16,11 @@ defined('SOLR_CLOUD') || define('SOLR_CLOUD', getenv('SOLR_CLOUD') ?: 'false');
  */
 trait SolrBackendTrait {
 
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $travisLogger;
+
   use SolrCommitTrait;
 
   /**

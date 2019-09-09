@@ -90,6 +90,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
    * Regression tests for #2469547.
    */
   protected function regressionTest2469547() {
+    $this->travisLogger->debug('SearchApiSolrTest::regressionTest2469547()');
     return;
 
     // @todo
@@ -119,6 +120,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
    * Regression tests for #2888629.
    */
   protected function regressionTest2888629() {
+    $this->travisLogger->debug('SearchApiSolrTest::regressionTest2888629()');
+
     $query = $this->buildSearch();
     $query->addCondition('category', NULL);
     $results = $query->execute();
@@ -146,6 +149,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
    * {@inheritdoc}
    */
   public function searchSuccess() {
+    $this->travisLogger->debug('SearchApiSolrTest::searchSuccess()');
+
     parent::searchSuccess();
 
     $parse_mode_manager = \Drupal::service('plugin.manager.search_api.parse_mode');
@@ -188,6 +193,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
    * {@inheritdoc}
    */
   protected function checkModuleUninstall() {
+    $this->travisLogger->debug('SearchApiSolrTest::checkModuleUninstall()');
+
     // See whether clearing the server works.
     // Regression test for #2156151.
     /** @var \Drupal\search_api\ServerInterface $server */
@@ -552,6 +559,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
    * Tests retrieve_data options.
    */
   protected function checkRetrieveData() {
+    $this->travisLogger->debug('SearchApiSolrTest::checkRetrieveData()');
+
     $server = $this->getIndex()->getServerInstance();
     $config = $server->getBackendConfig();
     $backend = $server->getBackend();
@@ -630,6 +639,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
    * Tests highlight options.
    */
   protected function checkHighlight() {
+    $this->travisLogger->debug('SearchApiSolrTest::checkHighlight()');
+
     $server = $this->getIndex()->getServerInstance();
     $config = $server->getBackendConfig();
 
@@ -693,6 +704,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
    * Tests addition and deletion of a data source.
    */
   protected function checkDatasourceAdditionAndDeletion() {
+    $this->travisLogger->debug('SearchApiSolrTest::checkDatasourceAdditionAndDeletion()');
+
     $this->indexItems($this->indexId);
 
     $results = $this->buildSearch()->execute();
@@ -776,6 +789,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
    * Tests search result grouping.
    */
   public function checkSearchResultGrouping() {
+    $this->travisLogger->debug('SearchApiSolrTest::checkSearchResultGrouping()');
+
     if (in_array('search_api_grouping', $this->getIndex()->getServerInstance()->getBackend()->getSupportedFeatures())) {
       $query = $this->buildSearch(NULL, [], [], FALSE);
       $query->setOption('search_api_grouping', [
@@ -801,6 +816,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
    * Tests search result sorts.
    */
   protected function checkSearchResultSorts() {
+    $this->travisLogger->debug('SearchApiSolrTest::checkSearchResultSorts()');
+
     // Add node with body length just above the solr limit for search fields.
     // It's exceeded by just a single char to simulate an edge case.
     $this->addTestEntity(6, [
@@ -896,6 +913,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
    * Tests the autocomplete support and ngram results.
    */
   public function testAutocompleteAndNgram() {
+    $this->travisLogger->debug('SearchApiSolrTest::testAutocompleteAndNgram()');
+
     $this->addTestEntity(1, [
       'name' => 'Test Article 1',
       'body' => 'The test article number 1 about cats, dogs and trees.',
@@ -1030,6 +1049,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
    * Tests language fallback and language limiting via options.
    */
   public function testLanguageFallbackAndLanguageLimitedByOptions() {
+    $this->travisLogger->debug('SearchApiSolrTest::testLanguageFallbackAndLanguageLimitedByOptions()');
+
     $this->insertMultilingualExampleContent();
     $this->indexItems($this->indexId);
 
@@ -1268,7 +1289,6 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       ->getListBuilder('solr_field_type');
 
     $list_builder->setServer($server);
-
 
     $config_files = $list_builder->getConfigFiles();
 

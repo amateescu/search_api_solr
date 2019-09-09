@@ -49,6 +49,7 @@ class DateRangeTest extends ProcessorTestBase {
   public function setUp($processor = NULL) {
     parent::setUp('solr_date_range');
     $this->enableSolrServer();
+    $this->travisLogger->debug('DateRangeTest');
 
     // Create a node type for testing.
     $type = NodeType::create(['type' => 'page', 'name' => 'page']);

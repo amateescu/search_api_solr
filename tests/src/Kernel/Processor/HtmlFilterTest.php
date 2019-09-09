@@ -43,8 +43,8 @@ class HtmlFilterTest extends ProcessorTestBase {
    */
   public function setUp($processor = NULL) {
     parent::setUp('html_filter');
-
     $this->enableSolrServer();
+    $this->travisLogger->debug('HtmlFilterTest');
 
     $this->installConfig(['filter']);
 
