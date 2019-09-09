@@ -4,6 +4,7 @@ namespace Drupal\Tests\search_api_solr\Kernel\Processor;
 
 use Drupal\node\Entity\NodeType;
 use Drupal\search_api\Query\Query;
+use Drupal\search_api\Query\QueryInterface;
 use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\Tests\search_api\Kernel\Processor\ProcessorTestBase;
 
@@ -78,7 +79,7 @@ class HtmlFilterTest extends ProcessorTestBase {
     $this->indexItems();
 
     $query = new Query($this->index);
-    $query->sort('search_api_relevance');
+    $query->sort('search_api_relevance', QueryInterface::SORT_DESC);
     $query->sort('search_api_id');
     $result = $query->execute();
     $this->assertEquals([
@@ -89,7 +90,7 @@ class HtmlFilterTest extends ProcessorTestBase {
 
     $query = new Query($this->index);
     $query->keys(['beautiful']);
-    $query->sort('search_api_relevance');
+    $query->sort('search_api_relevance', QueryInterface::SORT_DESC);
     $query->sort('search_api_id');
     $result = $query->execute();
     $this->assertEquals([
@@ -101,7 +102,7 @@ class HtmlFilterTest extends ProcessorTestBase {
     // Rerank query based on payloads for HTML tags boosts on match.
     $query = new Query($this->index);
     $query->keys(['page']);
-    $query->sort('search_api_relevance');
+    $query->sort('search_api_relevance', QueryInterface::SORT_DESC);
     $query->sort('search_api_id');
     $result = $query->execute();
     $this->assertEquals([
@@ -139,7 +140,7 @@ class HtmlFilterTest extends ProcessorTestBase {
 
     $query = new Query($this->index);
     $query->keys(["d'avion"]);
-    $query->sort('search_api_relevance');
+    $query->sort('search_api_relevance', QueryInterface::SORT_DESC);
     $query->sort('search_api_id');
     $result = $query->execute();
     $this->assertEquals([
@@ -149,7 +150,7 @@ class HtmlFilterTest extends ProcessorTestBase {
 
     $query = new Query($this->index);
     $query->keys(['😀😎☠👾']);
-    $query->sort('search_api_relevance');
+    $query->sort('search_api_relevance', QueryInterface::SORT_DESC);
     $query->sort('search_api_id');
     $result = $query->execute();
     $this->assertEquals([

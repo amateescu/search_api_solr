@@ -1448,8 +1448,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           // Apply term boosts if configured via a Search API processor and no
           // other sort than score (search_api_relevance) is present.
           $sorts = $solarium_query->getSorts();
+          $sort_fields = array_keys($sorts);
+          $sort_field = reset($field_names['search_api_relevance']);
           if (
-            (!$sorts || (count($sorts) === 1 && isset($sorts['score']))) &&
+            (!$sort_fields || ($sort_field === $sort_fields[0] && stripos($sorts[$sort_field], QueryInterface::SORT_DESC) === 0)) &&
             !Utility::hasIndexJustSolrDocumentDatasource($index) &&
             $payload_score = Utility::flattenKeysToPayloadScore($keys, $parse_mode_id)
           ) {
