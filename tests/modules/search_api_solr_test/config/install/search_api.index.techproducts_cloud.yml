@@ -76,4 +76,4 @@ tracker_settings:
 options:
   index_directly: true
   cron_limit: 50
-server: techproducts
+server: techproducts_cloud
