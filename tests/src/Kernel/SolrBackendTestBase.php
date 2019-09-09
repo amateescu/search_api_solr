@@ -28,6 +28,7 @@ abstract class SolrBackendTestBase extends BackendTestBase {
    * @var string[]
    */
   public static $modules = [
+    'devel',
     'search_api_solr',
     'search_api_solr_devel',
     'search_api_solr_test',
@@ -81,6 +82,7 @@ abstract class SolrBackendTestBase extends BackendTestBase {
    */
   protected function installConfigs() {
     $this->installConfig([
+      'devel',
       'search_api_solr',
       'search_api_solr_test',
     ]);

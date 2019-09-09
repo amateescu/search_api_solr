@@ -21,7 +21,9 @@ class AddHierarchyTest extends SearchApiAddHierarchyTest {
    * {@inheritdoc}
    */
   public static $modules = [
+    'devel',
     'search_api_solr',
+    'search_api_solr_devel',
     'search_api_solr_test',
   ];
 

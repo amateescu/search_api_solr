@@ -37,7 +37,9 @@ class DateRangeTest extends ProcessorTestBase {
   public static $modules = [
     'datetime',
     'datetime_range',
+    'devel',
     'search_api_solr',
+    'search_api_solr_devel',
     'search_api_solr_test',
   ];
 
