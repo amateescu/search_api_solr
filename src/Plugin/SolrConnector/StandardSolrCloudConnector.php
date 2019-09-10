@@ -285,7 +285,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
     // Set the StatsCache.
     // @see https://lucene.apache.org/solr/guide/8_0/distributed-requests.html#configuring-statscache-distributed-idf
     if (!empty($this->configuration['stats_cache'])) {
-      $files['solrconfig_extra.xml'] .= '<statsCache class="' . $this->configuration['stats_cache'] . '"/>' . "\n";
+      $files['solrconfig_extra.xml'] .= '<statsCache class="' . $this->configuration['stats_cache'] . '" />' . "\n";
     }
   }
 }

@@ -1305,6 +1305,9 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertContains('solr.luceneMatchVersion=' . $solr_major_version, $config_files['solrcore.properties']);
     $this->assertContains($server->id(), $config_files['test.txt']);
     $this->assertNotContains('<jmx />', $config_files['solrconfig_extra.xml']);
+    if ('true' === SOLR_CLOUD) {
+      $this->assertNotContains('<statsCache class="org.apache.solr.search.stats.ExactStatsCache" />', $config_files['solrconfig_extra.xml']);
+    }
 
     // Write files for docker to disk.
     if ('8' === $solr_major_version) {
