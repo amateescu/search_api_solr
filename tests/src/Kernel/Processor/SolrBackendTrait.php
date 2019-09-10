@@ -51,7 +51,7 @@ trait SolrBackendTrait {
     $this->index = $index_storage->load($this->index->id());
 
     $logger = new Logger('search_api_solr');
-    $logger->pushHandler(new StreamHandler(TRAVIS_BUILD_DIR . '/solr_query.log', Logger::DEBUG));
+    $logger->pushHandler(new StreamHandler(TRAVIS_BUILD_DIR . '/solr.query.log', Logger::DEBUG));
     \Drupal::service('search_api_solr_devel.solarium_request_logger')->setLogger($logger);
   }
 

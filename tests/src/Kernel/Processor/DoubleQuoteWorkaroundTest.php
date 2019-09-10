@@ -38,7 +38,6 @@ class DoubleQuoteWorkaroundTest extends ProcessorTestBase {
   public function setUp($processor = NULL) {
     parent::setUp('double_quote_workaround');
     $this->enableSolrServer();
-    $this->travisLogger->debug('DoubleQuoteWorkaroundTest');
 
     $backend = $this->index->getServerInstance()->getBackend();
     $config = $backend->getConfiguration();

@@ -73,8 +73,6 @@ install:
 before_script:
   - export SOLR_INDEX_WAIT=4
   - export SYMFONY_DEPRECATIONS_HELPER=disabled
-  - export SIMPLETEST_DB=mysql://root:@localhost/drupal
-  - export SIMPLETEST_BASE_URL=http://localhost:8888
   # Start the built-in php web server (mysql is already started) and suppress
   # web server access logs output.
   - php -S localhost:8888 >& /dev/null &
@@ -151,10 +149,10 @@ before_script:
 script:
   # Run the tests within the drupal directory.
   - cd $TRAVIS_BUILD_DIR/../drupal
-  - vendor/bin/phpunit -c core --group search_api_solr --verbose --debug modules/contrib/search_api_solr
+  - vendor/bin/phpunit -c modules/contrib/search_api_solr/.travis.phpunit.xml --group search_api_solr --verbose --debug modules/contrib/search_api_solr
 
 after_script:
-  - cat $TRAVIS_BUILD_DIR/solr_query.log
+  - cat $TRAVIS_BUILD_DIR/solr.error.log
 
 matrix:
   exclude:

@@ -33,7 +33,6 @@ class AddHierarchyTest extends SearchApiAddHierarchyTest {
   public function setUp($processor = NULL) {
     parent::setUp();
     $this->enableSolrServer();
-    $this->travisLogger->debug('AddHierarchyTest');
   }
 
   public function testRegression3059312() {
