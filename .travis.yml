@@ -124,9 +124,9 @@ before_script:
   - ./vendor/bin/drush en --yes search_api_solr_test
   - |
       if [ ${SOLR_CLOUD} == "true" ]; then
-        ./vendor/bin/drush solr-gsc solr_search_server conf.zip $SOLR_VERSION
-      else
         ./vendor/bin/drush solr-gsc solr_search_server_cloud conf.zip $SOLR_VERSION
+      else
+        ./vendor/bin/drush solr-gsc solr_search_server conf.zip $SOLR_VERSION
       fi
   - rm -rf core/modules/system/entity_test modules/contrib/search_api/search_api_test_example_content modules/contrib/search_api_solr/search_api_solr_test
   - mkdir $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8
