@@ -1306,7 +1306,10 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertContains($server->id(), $config_files['test.txt']);
     $this->assertNotContains('<jmx />', $config_files['solrconfig_extra.xml']);
     if ('true' === SOLR_CLOUD) {
-      $this->assertNotContains('<statsCache class="org.apache.solr.search.stats.ExactStatsCache" />', $config_files['solrconfig_extra.xml']);
+      $this->assertContains('<statsCache class="org.apache.solr.search.stats.ExactStatsCache" />', $config_files['solrconfig_extra.xml']);
+    }
+    else {
+      $this->assertNotContains('<statsCache', $config_files['solrconfig_extra.xml']);
     }
 
     // Write files for docker to disk.
