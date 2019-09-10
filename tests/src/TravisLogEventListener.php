@@ -12,7 +12,7 @@ use PHPUnit\Framework\Warning;
 
 defined('TRAVIS_BUILD_DIR') || define('TRAVIS_BUILD_DIR', getenv('TRAVIS_BUILD_DIR') ?: '.');
 
-class PhpUnitEventListener implements TestListener {
+class TravisLogEventListener implements TestListener {
 
   /**
    * @var \Psr\Log\LoggerInterface
