@@ -40,7 +40,7 @@ before_install:
   - wget -nc --continue -v --tries=3 --directory-prefix=solr_downloads "http://archive.apache.org/dist/lucene/solr/${SOLR_VERSION}/solr-${SOLR_VERSION}.tgz"
   - tar -xzf solr_downloads/solr-${SOLR_VERSION}.tgz
   - mysql -e 'CREATE DATABASE drupal;'
-  - patch -p1 < .travis_no_deps.patch
+  - patch -p1 < tests/travis_no_deps.patch
   - git commit -m 'no deps' search_api_solr.info.yml
   - git tag 3.99
 
@@ -69,7 +69,7 @@ install:
   #- cd modules/contrib/search_api
   #- curl https://www.drupal.org/files/issues/2018-12-20/3021717.patch | patch -p1
   #- cd $TRAVIS_BUILD_DIR/../drupal
-  - cp $TRAVIS_BUILD_DIR/.travis.phpunit.xml $TRAVIS_BUILD_DIR/../drupal/core/phpunit.xml.dist
+  - cp $TRAVIS_BUILD_DIR/tests/travis.phpunit.xml $TRAVIS_BUILD_DIR/../drupal/core/phpunit.xml.dist
 
 before_script:
   - export SOLR_INDEX_WAIT=4
@@ -150,10 +150,13 @@ before_script:
 script:
   # Run the tests within the drupal directory.
   - cd $TRAVIS_BUILD_DIR/../drupal
-  - vendor/bin/phpunit -c core --group search_api_solr modules/contrib/search_api_solr
+  - vendor/bin/phpunit --stop-on-error --stop-on-failure --stop-on-warning -c core --group search_api_solr modules/contrib/search_api_solr
 
 after_script:
-  - cat $TRAVIS_BUILD_DIR/solr.error.log
+  - |
+    if [ -f $TRAVIS_BUILD_DIR/solr.error.log ]; then
+        cat $TRAVIS_BUILD_DIR/solr.error.log;
+    fi
 
 matrix:
   exclude:
