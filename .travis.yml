@@ -150,7 +150,7 @@ before_script:
 script:
   # Run the tests within the drupal directory.
   - cd $TRAVIS_BUILD_DIR/../drupal
-  - vendor/bin/phpunit -c core --group search_api_solr --verbose --debug modules/contrib/search_api_solr
+  - vendor/bin/phpunit -c core --group search_api_solr modules/contrib/search_api_solr
 
 after_script:
   - cat $TRAVIS_BUILD_DIR/solr.error.log
