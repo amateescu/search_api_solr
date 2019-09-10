@@ -1440,25 +1440,21 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $flatten_keys = '*:* ' . $flatten_keys;
           }
 
-          $solarium_query->setQuery(
-            ((!Utility::hasIndexJustSolrDocumentDatasource($index) && (!isset($params['defType']) || 'edismax' !== $params['defType'])) ? '{!boost b=boost_document}' : '') .
-            ($flatten_keys ?: '*:*')
-          );
-
-          // Apply term boosts if configured via a Search API processor and no
-          // other sort than score (search_api_relevance) is present.
-          $sorts = $solarium_query->getSorts();
-          $sort_fields = array_keys($sorts);
-          $sort_field = reset($field_names['search_api_relevance']);
-          if (
-            (!$sort_fields || ($sort_field === $sort_fields[0] && stripos($sorts[$sort_field], QueryInterface::SORT_DESC) === 0)) &&
-            !Utility::hasIndexJustSolrDocumentDatasource($index) &&
-            $payload_score = Utility::flattenKeysToPayloadScore($keys, $parse_mode_id)
-          ) {
-            /** @var \Solarium\Component\ReRankQuery $rerank */
-            $rerank = $solarium_query->getReRankQuery();
-            $rerank->setQuery($payload_score);
+          $flatten_query = [];
+          if (!Utility::hasIndexJustSolrDocumentDatasource($index) && (!isset($params['defType']) || 'edismax' !== $params['defType'])) {
+            // Apply term boosts if configured via a Search API processor if
+            // sort by search_api_relevance is present.
+            $sorts = $solarium_query->getSorts();
+            $relevance_field = reset($field_names['search_api_relevance']);
+            if (isset($sorts[$relevance_field])) {
+              $flatten_query[] = '{!boost b=boost_document}';
+              $flatten_query[] = Utility::flattenKeysToPayloadScore($keys, $parse_mode_id);
+            }
           }
+
+          $flatten_query[] = $flatten_keys ?: '*:*';
+
+          $solarium_query->setQuery(implode(' ', $flatten_query));
 
           if (!isset($params['defType']) || 'edismax' !== $params['defType']) {
             $solarium_query->removeComponent(ComponentAwareQueryInterface::COMPONENT_EDISMAX);
