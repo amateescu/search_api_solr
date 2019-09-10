@@ -28,7 +28,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
   public function defaultConfiguration() {
     return [
       'checkpoints_collection' => '',
-      'stats_cache' => 'org.apache.solr.search.stats.LRUStatsCache',
+      'stats_cache' => 'org.apache.solr.search.stats.ExactSharedStatsCache',
     ] + parent::defaultConfiguration();
   }
 

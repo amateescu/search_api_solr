@@ -87,13 +87,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   use SolrCommitTrait;
 
   /**
-   * Metadata describing fields on the Solr/Lucene index.
-   *
-   * @var string[][]
-   */
-  protected $fieldNames = [];
-
-  /**
    * The module handler.
    *
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
@@ -1452,7 +1445,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             }
           }
 
-          $flatten_query[] = $flatten_keys ?: '*:*';
+          $flatten_query[] = trim($flatten_keys ?: '*:*');
 
           $solarium_query->setQuery(implode(' ', $flatten_query));
 
