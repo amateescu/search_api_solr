@@ -19,17 +19,17 @@ class TravisLogEventListener implements TestListener {
 
   public function addWarning(Test $test, Warning $e, $time) {
     $this->errors = TRUE;
-    file_put_contents(TRAVIS_BUILD_DIR . '/solr.error.log', printf("Warning while running test '%s'.\n", $test->getName()), FILE_APPEND);
+    file_put_contents(TRAVIS_BUILD_DIR . '/solr.error.log', printf("Warning while running test '%s'.\n", $test->getName()), FILE_APPEND | LOCK_EX);
   }
 
   public function addError(Test $test, \Exception $e, $time) {
     $this->errors = TRUE;
-    file_put_contents(TRAVIS_BUILD_DIR . '/solr.error.log', printf("Error while running test '%s'.\n", $test->getName()), FILE_APPEND);
+    file_put_contents(TRAVIS_BUILD_DIR . '/solr.error.log', printf("Error while running test '%s'.\n", $test->getName()), FILE_APPEND | LOCK_EX);
   }
 
   public function addFailure(Test $test, AssertionFailedError $e, $time) {
     $this->errors = TRUE;
-    file_put_contents(TRAVIS_BUILD_DIR . '/solr.error.log', printf("Test '%s' failed.\n", $test->getName()), FILE_APPEND);
+    file_put_contents(TRAVIS_BUILD_DIR . '/solr.error.log', printf("Test '%s' failed.\n", $test->getName()), FILE_APPEND | LOCK_EX);
   }
 
   public function addIncompleteTest(Test $test, \Exception $e, $time) {
@@ -47,7 +47,7 @@ class TravisLogEventListener implements TestListener {
 
   public function endTest(Test $test, $time) {
     if ($this->errors) {
-      file_put_contents(TRAVIS_BUILD_DIR . '/solr.error.log', file_get_contents(TRAVIS_BUILD_DIR . '/solr.query.log'), FILE_APPEND);
+      file_put_contents(TRAVIS_BUILD_DIR . '/solr.error.log', file_get_contents(TRAVIS_BUILD_DIR . '/solr.query.log'), FILE_APPEND | LOCK_EX);
     }
     file_put_contents(TRAVIS_BUILD_DIR . '/solr.query.log', '');
   }
