@@ -1,5 +1,10 @@
 <?php
 
+use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Query\ResultSetInterface;
+use Solarium\Core\Query\QueryInterface as SolariumQueryInterface;
+use Solarium\Core\Query\Result\QueryType;
+
 /**
  * Implements hook_entity_type_alter().
  */
@@ -15,7 +20,7 @@ function search_api_solr_devel_entity_type_alter(array &$entity_types) {
 /**
  * Implements hook_search_api_solr_query_alter().
  */
-function search_api_solr_devel_search_api_solr_query_alter(\Solarium\Core\Query\QueryInterface $solarium_query, \Drupal\search_api\Query\QueryInterface $query) {
+function search_api_solr_devel_search_api_solr_query_alter(SolariumQueryInterface $solarium_query, QueryInterface $query) {
   $solarium_query->getDebug();
   $solarium_query->addParam('echoParams', 'all');
   $solarium_query->setOmitHeader(FALSE);
@@ -24,7 +29,7 @@ function search_api_solr_devel_search_api_solr_query_alter(\Solarium\Core\Query\
 /**
  * Implements hook_search_api_solr_search_results_alter().
  */
-function search_api_solr_devel_search_api_solr_search_results_alter(\Drupal\search_api\Query\ResultSetInterface $result_set, \Drupal\search_api\Query\QueryInterface $query, \Solarium\QueryType\Select\Result\Result $result) {
+function search_api_solr_devel_search_api_solr_search_results_alter(ResultSetInterface $result_set, QueryInterface $query, QueryType $result) {
   $result_data = $result->getData();
   if (isset($result_data['debug'])) {
     /** @var \Drupal\devel\DevelDumperManagerInterface $dumper */

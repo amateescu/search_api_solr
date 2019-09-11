@@ -1,4 +1,4 @@
-id: solr_search_index
+id: solr_search_index_cloud
 name: 'Test index'
 description: 'An index used for testing'
 read_only: false
@@ -112,7 +112,7 @@ datasource_settings:
   'entity:entity_test_mulrev_changed': {  }
 tracker_settings:
   'default': { }
-server: solr_search_server
+server: solr_search_server_cloud
 status: true
 langcode: en
 dependencies:

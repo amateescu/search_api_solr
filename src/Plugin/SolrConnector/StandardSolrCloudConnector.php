@@ -69,7 +69,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
         'org.apache.solr.search.stats.ExactSharedStatsCache' => 'ExactSharedStatsCache',
         'org.apache.solr.search.stats.LRUStatsCache' => 'LRUStatsCache',
       ],
-      '#description' => $this->t('Document and term statistics are needed in order to calculate relevancy. Solr provides four implementations out of the box when it comes to document stats calculation. LocalStatsCache: This only uses local term and document statistics to compute relevance. In cases with uniform term distribution across shards, this works reasonably well. ExactStatsCache: This implementation uses global values (across the collection) for document frequency. ExactSharedStatsCache: This is exactly like the exact stats cache in its functionality but the global stats are reused for subsequent requests with the same terms. LRUStatsCache: This implementation uses an LRU cache to hold global stats, which are shared between requests.'),
+      '#description' => $this->t('Document and term statistics are needed in order to calculate relevancy. Solr provides four implementations out of the box when it comes to document stats calculation. LocalStatsCache: This only uses local term and document statistics to compute relevance. In cases with uniform term distribution across shards, this works reasonably well. ExactStatsCache: This implementation uses global values (across the collection) for document frequency. ExactSharedStatsCache: This is exactly like the exact stats cache in its functionality but the global stats are reused for subsequent requests with the same terms. LRUStatsCache: This implementation uses an LRU cache to hold global stats, which are shared between requests. Formerly a limitation was that TF/IDF relevancy computations only used shard-local statistics. This is still the case by default or if LocalStatsCache is used. If your data isn’t randomly distributed, or if you want more exact statistics, then remember to configure the ExactStatsCache (or "better").'),
       '#default_value' => isset($this->configuration['stats_cache']) ? $this->configuration['stats_cache'] : 'org.apache.solr.search.stats.LRUStatsCache',
     ];
 
@@ -189,6 +189,22 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
   /**
    * {@inheritdoc}
    */
+  public function getSelectQuery() {
+    $query = parent::getSelectQuery();
+    return $query->setDistrib(TRUE);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMoreLikeThisQuery() {
+    $query = parent::getMoreLikeThisQuery();
+    return $query->setDistrib(TRUE);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getTermsQuery() {
     $query = parent::getTermsQuery();
     return $query->setDistrib(TRUE);
@@ -269,7 +285,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
     // Set the StatsCache.
     // @see https://lucene.apache.org/solr/guide/8_0/distributed-requests.html#configuring-statscache-distributed-idf
     if (!empty($this->configuration['stats_cache'])) {
-      $files['solrconfig_extra.xml'] .= '<statsCache class="' . $this->configuration['stats_cache'] . '"/>' . "\n";
+      $files['solrconfig_extra.xml'] .= '<statsCache class="' . $this->configuration['stats_cache'] . '" />' . "\n";
     }
   }
 }

@@ -37,7 +37,9 @@ class DateRangeTest extends ProcessorTestBase {
   public static $modules = [
     'datetime',
     'datetime_range',
+    'devel',
     'search_api_solr',
+    'search_api_solr_devel',
     'search_api_solr_test',
   ];
 
@@ -46,7 +48,7 @@ class DateRangeTest extends ProcessorTestBase {
    */
   public function setUp($processor = NULL) {
     parent::setUp('solr_date_range');
-    $this->enableSolrServer('search_api_solr_test', '/config/install/search_api.server.solr_search_server.yml');
+    $this->enableSolrServer();
 
     // Create a node type for testing.
     $type = NodeType::create(['type' => 'page', 'name' => 'page']);

@@ -200,7 +200,7 @@ class Utility {
       $snippets = [$snippets];
     }
 
-    $keys = [];
+    $keys = [[]];
 
     foreach ($snippets as $snippet) {
       if (preg_match_all('@\[HIGHLIGHT\](.+?)\[/HIGHLIGHT\]@', $snippet, $matches)) {

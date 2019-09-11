@@ -87,13 +87,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   use SolrCommitTrait;
 
   /**
-   * Metadata describing fields on the Solr/Lucene index.
-   *
-   * @var string[][]
-   */
-  protected $fieldNames = [];
-
-  /**
    * The module handler.
    *
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
@@ -1440,22 +1433,21 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $flatten_keys = '*:* ' . $flatten_keys;
           }
 
-          $solarium_query->setQuery(
-            ((!Utility::hasIndexJustSolrDocumentDatasource($index) && (!isset($params['defType']) || 'edismax' !== $params['defType'])) ? '{!boost b=boost_document}' : '') .
-            ($flatten_keys ?: '*:*')
-          );
-
-          // Apply term boosts if configured via a Search API processor and no
-          // sort is present.
-          if (
-            !$solarium_query->getSorts() &&
-            !Utility::hasIndexJustSolrDocumentDatasource($index) &&
-            $payload_score = Utility::flattenKeysToPayloadScore($keys, $parse_mode_id)
-          ) {
-            /** @var \Solarium\Component\ReRankQuery $rerank */
-            $rerank = $solarium_query->getReRankQuery();
-            $rerank->setQuery("'" . $payload_score . "'");
+          $flatten_query = [];
+          if (!Utility::hasIndexJustSolrDocumentDatasource($index) && (!isset($params['defType']) || 'edismax' !== $params['defType'])) {
+            // Apply term boosts if configured via a Search API processor if
+            // sort by search_api_relevance is present.
+            $sorts = $solarium_query->getSorts();
+            $relevance_field = reset($field_names['search_api_relevance']);
+            if (isset($sorts[$relevance_field])) {
+              $flatten_query[] = '{!boost b=boost_document}';
+              $flatten_query[] = Utility::flattenKeysToPayloadScore($keys, $parse_mode_id);
+            }
           }
+
+          $flatten_query[] = trim($flatten_keys ?: '*:*');
+
+          $solarium_query->setQuery(implode(' ', $flatten_query));
 
           if (!isset($params['defType']) || 'edismax' !== $params['defType']) {
             $solarium_query->removeComponent(ComponentAwareQueryInterface::COMPONENT_EDISMAX);
@@ -2257,13 +2249,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                   }
                   $boost = $token->getBoost();
                   if (0.0 != $boost && 1.0 != $boost) {
-                    // @todo These regexes are a first approach to isolate the
-                    //   terms to be boosted. We should consider to re-use the
-                    //   logic of the tokenizer processor. But this might
-                    //   require to turn some methods to public.
-                    $doc->addField('boost_term', preg_replace('/(\w{3,})/', '$1|' . $boost,
-                      preg_replace('/\W+/', ' ', $value)
-                    ));
+                    // @todo This regex is a first approach to isolate the terms
+                    //   to be boosted. We should consider to re-use the logic
+                    //   of the tokenizer processor. But this might require to
+                    //   turn some methods to public.
+                    $doc->addField('boost_term', preg_replace('/([^\s]{2,})/', '$1|' . sprintf('%.1f', $boost), $value));
                   }
                 }
               }

@@ -23,21 +23,9 @@ class SearchApiSolrLocationTest extends SolrBackendTestBase {
     'language',
     'search_api_location',
     'search_api_test_example_content',
-    'search_api_solr_test',
     'entity_test',
     'geofield',
   ];
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function installConfigs() {
-    parent::installConfigs();
-
-    $this->installConfig([
-      'search_api_solr_test',
-    ]);
-  }
 
   /**
    * Required parts of the setUp() function that are the same for all backends.

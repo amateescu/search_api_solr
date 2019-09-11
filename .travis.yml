@@ -40,9 +40,11 @@ before_install:
   - wget -nc --continue -v --tries=3 --directory-prefix=solr_downloads "http://archive.apache.org/dist/lucene/solr/${SOLR_VERSION}/solr-${SOLR_VERSION}.tgz"
   - tar -xzf solr_downloads/solr-${SOLR_VERSION}.tgz
   - mysql -e 'CREATE DATABASE drupal;'
+  - patch -p1 < tests/travis_no_deps.patch
+  - git commit -m 'no deps' search_api_solr.info.yml
+  - git tag 3.99
 
 install:
-  - git tag 999.3.0
   # Make sure we don't fail when checking out projects.
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
   - echo -e "Host git.drupal.org\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
@@ -56,7 +58,7 @@ install:
   - cd $TRAVIS_BUILD_DIR/../drupal
   - composer install
   - composer config repositories.search_api_solr vcs $TRAVIS_BUILD_DIR
-  - composer require drupal/search_api:1.x-dev drupal/search_api_autocomplete:1.x-dev drupal/search_api_solr:999.3.0 drupal/search_api_location:1.x-dev drupal/facets:1.x-dev drupal/geofield:1.x-dev drupal/composer_deploy drush/drush:$DRUSH_VERSION drupal/drush_language:1.x-dev
+  - composer require --no-suggest symfony/event-dispatcher:"4.3.3 as 3.4.99" solarium/solarium:"dev-master as 5.1.99" drupal/search_api:1.x-dev drupal/search_api_autocomplete:1.x-dev drupal/search_api_solr:3.99 drupal/search_api_location:1.x-dev drupal/facets:1.x-dev drupal/geofield:1.x-dev drupal/composer_deploy drush/drush:$DRUSH_VERSION drupal/drush_language:1.x-dev drupal/devel monolog/monolog
   - |
     if [ ${DRUPAL_BRANCH} != "8.8.x" ]; then
       composer run-script drupal-phpunit-upgrade
@@ -67,12 +69,11 @@ install:
   #- cd modules/contrib/search_api
   #- curl https://www.drupal.org/files/issues/2018-12-20/3021717.patch | patch -p1
   #- cd $TRAVIS_BUILD_DIR/../drupal
+  - cp $TRAVIS_BUILD_DIR/tests/travis.phpunit.xml $TRAVIS_BUILD_DIR/../drupal/core/phpunit.xml.dist
 
 before_script:
   - export SOLR_INDEX_WAIT=4
   - export SYMFONY_DEPRECATIONS_HELPER=disabled
-  - export SIMPLETEST_DB=mysql://root:@localhost/drupal
-  - export SIMPLETEST_BASE_URL=http://localhost:8888
   # Start the built-in php web server (mysql is already started) and suppress
   # web server access logs output.
   - php -S localhost:8888 >& /dev/null &
@@ -121,13 +122,19 @@ before_script:
   - cp -a modules/contrib/search_api/tests/search_api_test_example_content modules/contrib/search_api/search_api_test_example_content
   - cp -a modules/contrib/search_api_solr/tests/modules/search_api_solr_test modules/contrib/search_api_solr/search_api_solr_test
   - ./vendor/bin/drush en --yes search_api_solr_test
-  - ./vendor/bin/drush solr-gsc solr_search_server conf.zip $SOLR_VERSION
+  - |
+      if [ ${SOLR_CLOUD} == "true" ]; then
+        ./vendor/bin/drush solr-gsc solr_search_server_cloud conf.zip $SOLR_VERSION
+      else
+        ./vendor/bin/drush solr-gsc solr_search_server conf.zip $SOLR_VERSION
+      fi
   - rm -rf core/modules/system/entity_test modules/contrib/search_api/search_api_test_example_content modules/contrib/search_api_solr/search_api_solr_test
   - mkdir $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8
   - mkdir $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf
   - unzip -o conf.zip -d $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf
   - echo "solr.install.dir=$TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}" >> $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf/solrcore.properties
-  - ls -lh $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf
+  # - ls -lh $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf
+  # - cat $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf/solrconfig_extra.xml
   - |
     if [ ${SOLR_CLOUD} == "true" ]; then
        $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr start -e cloud -noprompt || travis_terminate 1;
@@ -136,7 +143,7 @@ before_script:
        $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/post -c techproducts $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/example/exampledocs/*.xml || travis_terminate 1;
        $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr create -c d8 -s 2 -rf 2 -d $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf -n d8 || travis_terminate 1;
        $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr create -c checkpoints -s 1 -rf 2 || travis_terminate 1;
-     else
+    else
        $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr start -e techproducts || travis_terminate 1;
        $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/bin/solr create -c d8 -d $TRAVIS_BUILD_DIR/solr-${SOLR_VERSION}/server/solr/d8/conf || travis_terminate 1;
     fi
@@ -144,11 +151,12 @@ before_script:
 script:
   # Run the tests within the drupal directory.
   - cd $TRAVIS_BUILD_DIR/../drupal
+  - vendor/bin/phpunit -c core --group search_api_solr modules/contrib/search_api_solr
+
+after_script:
   - |
-    if [ ${SOLR_CLOUD} == "true" ]; then
-      vendor/bin/phpunit -c core --group search_api_solr --verbose --debug --exclude-group solr_no_cloud modules/contrib/search_api_solr || travis_terminate 1;
-    else
-      vendor/bin/phpunit -c core --group search_api_solr --verbose --debug --exclude-group solr_cloud modules/contrib/search_api_solr || travis_terminate 1;
+    if [ -f $TRAVIS_BUILD_DIR/solr.error.log ]; then
+        cat $TRAVIS_BUILD_DIR/solr.error.log;
     fi
 
 matrix:

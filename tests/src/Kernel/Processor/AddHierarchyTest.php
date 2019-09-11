@@ -21,7 +21,9 @@ class AddHierarchyTest extends SearchApiAddHierarchyTest {
    * {@inheritdoc}
    */
   public static $modules = [
+    'devel',
     'search_api_solr',
+    'search_api_solr_devel',
     'search_api_solr_test',
   ];
 
@@ -30,7 +32,7 @@ class AddHierarchyTest extends SearchApiAddHierarchyTest {
    */
   public function setUp($processor = NULL) {
     parent::setUp();
-    $this->enableSolrServer('search_api_solr_test', '/config/install/search_api.server.solr_search_server.yml');
+    $this->enableSolrServer();
   }
 
   public function testRegression3059312() {

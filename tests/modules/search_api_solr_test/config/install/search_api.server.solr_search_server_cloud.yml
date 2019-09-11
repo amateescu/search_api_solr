@@ -1,27 +1,29 @@
-id: techproducts
-name: techproducts
-description: techproducts
+id: solr_search_server_cloud
+name: 'Solr search server'
+description: 'A server used for testing.'
 backend: search_api_solr
 backend_config:
-  site_hash: false
-  retrieve_data: true
+  site_hash: true
+  retrieve_data: false
   highlight_data: false
-  skip_schema_check: true
+  skip_schema_check: false
   domain: generic
-  server_prefix: ''
-  connector: solr_cloud
+  server_prefix: 'server_prefix'
+  connector: solr_cloud_basic_auth_test
   connector_config:
     scheme: http
     host: localhost
     port: 8983
     path: /
-    core: techproducts
+    core: d8
     timeout: 5
-    index_timeout: 5
-    optimize_timeout: 10
+    index_timeout: 20
+    optimize_timeout: 5
     finalize_timeout: 30
     solr_version: ''
     http_method: AUTO
+    username: ''
+    password: ''
     commit_within: 1000
     jmx: false
     solr_install_dir: ../../..
