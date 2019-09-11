@@ -28,7 +28,6 @@
         "consolidation/annotated-command": "^2.12",
         "maennchen/zipstream-php": "^1.1.0",
         "solarium/solarium": "~5.1.2",
-        "symfony/event-dispatcher": "4.3.3 as 3.4.99 || ^4.3",
         "zendframework/zend-stdlib": "^3.0.1"
     },
     "require-dev": {
