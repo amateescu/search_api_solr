@@ -50,10 +50,12 @@ class TravisLogEventListener implements TestListener {
   }
 
   public function endTest(Test $test, $time) {
-    if ($this->errors) {
-      file_put_contents(TRAVIS_BUILD_DIR . '/solr.error.log', file_get_contents(TRAVIS_BUILD_DIR . '/solr.query.log'), FILE_APPEND | LOCK_EX);
+    if (file_exists(TRAVIS_BUILD_DIR . '/solr.query.log')) {
+      if ($this->errors) {
+        file_put_contents(TRAVIS_BUILD_DIR . '/solr.error.log', file_get_contents(TRAVIS_BUILD_DIR . '/solr.query.log'), FILE_APPEND | LOCK_EX);
+      }
+      unlink(TRAVIS_BUILD_DIR . '/solr.query.log');
     }
-    unlink(TRAVIS_BUILD_DIR . '/solr.query.log');
   }
 
   public function startTestSuite(TestSuite $suite) {
