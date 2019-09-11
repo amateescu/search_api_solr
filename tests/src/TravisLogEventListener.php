@@ -42,6 +42,10 @@ class TravisLogEventListener implements TestListener {
   }
 
   public function startTest(Test $test) {
+    // In case of a runtime error in the previous test, keep the log.
+    if (file_exists(TRAVIS_BUILD_DIR . '/solr.query.log')) {
+      file_put_contents(TRAVIS_BUILD_DIR . '/solr.error.log', file_get_contents(TRAVIS_BUILD_DIR . '/solr.query.log'), FILE_APPEND | LOCK_EX);
+    }
     $this->errors = FALSE;
   }
 
@@ -49,7 +53,7 @@ class TravisLogEventListener implements TestListener {
     if ($this->errors) {
       file_put_contents(TRAVIS_BUILD_DIR . '/solr.error.log', file_get_contents(TRAVIS_BUILD_DIR . '/solr.query.log'), FILE_APPEND | LOCK_EX);
     }
-    file_put_contents(TRAVIS_BUILD_DIR . '/solr.query.log', '');
+    unlink(TRAVIS_BUILD_DIR . '/solr.query.log');
   }
 
   public function startTestSuite(TestSuite $suite) {
