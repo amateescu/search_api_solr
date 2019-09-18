@@ -12,6 +12,14 @@ cd $DRUPAL
 composer require drupal/search_api_solr
 ```
 
+**Warning!** Unless https://www.drupal.org/project/drupal/issues/2876675 is
+committed to Drupal Core and released you need to modify the composer command:
+
+```
+cd $DRUPAL
+composer require symfony/event-dispatcher:"4.3.4 as 3.4.99" drupal/search_api_solr
+```
+
 Solr search
 -----------
 
