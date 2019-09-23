@@ -34,6 +34,13 @@ interface SolrCloudConnectorInterface extends SolrConnectorInterface {
   public function getCheckpointsCollectionName();
 
   /**
+   * Returns the Solr collection endpoint used to store topic checkpoints.
+   *
+   * @return \Solarium\Core\Client\Endpoint|null
+   */
+  public function getCheckpointsCollectionEndpoint(): ?Endpoint;
+
+  /**
    * Returns a link to the Solr collection, if the necessary options are set.
    *
    * @return \Drupal\Core\Link

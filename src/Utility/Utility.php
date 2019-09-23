@@ -967,4 +967,20 @@ class Utility {
     );
   }
 
+  /**
+   * Formats a checkpoint ID for topic() or _topic() streaming expressions.
+   *
+   * The checkpoint name gets suffixed by targeted index and site hash to avoid
+   * collisions.
+   *
+   * @param string $checkpoint
+   * @param string $index_id
+   * @param string $site_hash
+   *
+   * @return string
+   */
+  public static function formatCheckpointId(string $checkpoint, string $index_id, string $site_hash): string {
+    return $checkpoint . '-' . $index_id . '-' . $site_hash;
+  }
+
 }

@@ -7,6 +7,7 @@ use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrCloudConnectorInterface;
 use Solarium\Core\Client\Endpoint;
 use Solarium\Exception\HttpException;
+use Solarium\Exception\OutOfBoundsException;
 use Solarium\QueryType\Graph\Query as GraphQuery;
 use Solarium\QueryType\Ping\Query as PingQuery;
 use Solarium\QueryType\Stream\Query as StreamQuery;
@@ -129,6 +130,22 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getCheckpointsCollectionEndpoint(): ?Endpoint {
+    $checkpoints_collection = $this->getCheckpointsCollectionName();
+    if ($checkpoints_collection) {
+      try {
+        return $this->getEndpoint($checkpoints_collection);
+      } catch (OutOfBoundsException $e) {
+        $additional_config['core'] = $checkpoints_collection;
+        return $this->createEndpoint($checkpoints_collection, $additional_config);
+      }
+    }
+    return null;
+  }
+
+    /**
    * {@inheritdoc}
    */
   public function getCollectionLink() {

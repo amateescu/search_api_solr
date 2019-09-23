@@ -1086,14 +1086,28 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Since the index ID we use for indexing can contain arbitrary
     // prefixes, we have to escape it for use in the query.
     $connector = $this->getSolrConnector();
-    $query = '+index_id:' . $this->queryHelper->escapeTerm($this->getTargetedIndexId($index));
-    $query .= ' +hash:' . $this->queryHelper->escapeTerm($this->getTargetedSiteHash($index));
+    $index_id = $this->queryHelper->escapeTerm($this->getTargetedIndexId($index));
+    $site_hash = $this->queryHelper->escapeTerm($this->getTargetedSiteHash($index));
+    $query = '+index_id:' . $index_id;
+    $query .= ' +hash:' . $site_hash;
     if ($datasource_id) {
       $query .= ' +' . $this->getSolrFieldNames($index)['search_api_datasource'] . ':' . $this->queryHelper->escapeTerm($datasource_id);
     }
     $update_query = $connector->getUpdateQuery();
     $update_query->addDeleteQuery($query);
     $connector->update($update_query, $this->getCollectionEndpoint($index));
+
+    // Delete corresponding checkpoints.
+    if ($connector->isCloud()) {
+      /** @var SolrCloudConnectorInterface $connector */
+      $checkpoints_collection = $connector->getCheckpointsCollectionEndpoint();
+      if ($checkpoints_collection) {
+        $update_query = $connector->getUpdateQuery();
+        $update_query->addDeleteQuery('id:/' . Utility::formatCheckpointId('.*', $index_id, $site_hash) . '/');
+        $connector->update($update_query, $checkpoints_collection);
+      }
+    }
+
     \Drupal::state()->set('search_api_solr.' . $index->id() . '.last_update', \Drupal::time()->getCurrentTime());
   }
 

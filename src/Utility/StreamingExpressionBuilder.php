@@ -732,7 +732,7 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    * @return string
    */
   public function _checkpoint($checkpoint) {
-    return 'id="' . $checkpoint . '-' . $this->targeted_index_id . '-' . $this->targeted_site_hash . '"';
+    return 'id="' . Utility::formatCheckpointId($checkpoint, $this->targeted_index_id, $this->targeted_site_hash) . '"';
   }
 
   /**
