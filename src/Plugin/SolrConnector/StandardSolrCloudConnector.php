@@ -5,6 +5,7 @@ namespace Drupal\search_api_solr\Plugin\SolrConnector;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrCloudConnectorInterface;
+use Drupal\search_api_solr\Utility\Utility;
 use Solarium\Core\Client\Endpoint;
 use Solarium\Exception\HttpException;
 use Solarium\Exception\OutOfBoundsException;
@@ -142,10 +143,22 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
         return $this->createEndpoint($checkpoints_collection, $additional_config);
       }
     }
-    return null;
+    return NULL;
   }
 
-    /**
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteCheckpoints(string $index_id, string $site_hash) {
+    if ($checkpoints_collection_endpoint = $this->getCheckpointsCollectionEndpoint()) {
+      $update_query = $this->getUpdateQuery();
+      // id:/.*-INDEX_ID-SITE_HASH/ is a regex.
+      $update_query->addDeleteQuery('id:/' . Utility::formatCheckpointId('.*', $index_id, $site_hash) . '/');
+      $this->update($update_query, $checkpoints_collection_endpoint);
+    }
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getCollectionLink() {

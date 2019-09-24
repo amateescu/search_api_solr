@@ -41,6 +41,16 @@ interface SolrCloudConnectorInterface extends SolrConnectorInterface {
   public function getCheckpointsCollectionEndpoint(): ?Endpoint;
 
   /**
+   * Deletes all checkpoints for given index/site.
+   *
+   * @param string $index_id
+   * @param string $site_hash
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   */
+  public function deleteCheckpoints(string $index_id, string $site_hash);
+
+    /**
    * Returns a link to the Solr collection, if the necessary options are set.
    *
    * @return \Drupal\Core\Link

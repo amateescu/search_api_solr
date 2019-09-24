@@ -1100,12 +1100,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // Delete corresponding checkpoints.
     if ($connector->isCloud()) {
       /** @var SolrCloudConnectorInterface $connector */
-      $checkpoints_collection = $connector->getCheckpointsCollectionEndpoint();
-      if ($checkpoints_collection) {
-        $update_query = $connector->getUpdateQuery();
-        $update_query->addDeleteQuery('id:/' . Utility::formatCheckpointId('.*', $index_id, $site_hash) . '/');
-        $connector->update($update_query, $checkpoints_collection);
-      }
+      $connector->deleteCheckpoints($index_id, $site_hash);
     }
 
     \Drupal::state()->set('search_api_solr.' . $index->id() . '.last_update', \Drupal::time()->getCurrentTime());

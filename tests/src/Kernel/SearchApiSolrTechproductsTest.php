@@ -170,6 +170,18 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
     $queryHelper->setStreamingExpression($query, $topic_expression);
     $results = $query->execute();
     $this->assertEquals(0, $results->getResultCount());
+
+    /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
+    $backend = $index->getServerInstance()->getBackend();
+    /** @var \Drupal\search_api_solr\SolrCloudConnectorInterface $connector */
+    $connector = $backend->getSolrConnector();
+    $connector->deleteCheckpoints($exp->_index_id(), $exp->_site_hash());
+
+    $query = $queryHelper->createQuery($index);
+    $queryHelper->setStreamingExpression($query, $topic_expression);
+    $results = $query->execute();
+    // We have two shards for techproducts. Both return 10 rows.
+    $this->assertEquals(20, $results->getResultCount());
   }
 
   /**
