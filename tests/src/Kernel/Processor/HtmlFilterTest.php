@@ -129,12 +129,12 @@ class HtmlFilterTest extends ProcessorTestBase {
 
     $this->createNode([
       'type' => 'page',
-      'title' => '<b>More strange " characters 😀😎👾<b>',
+      'title' => '<b>More | strange " characters 😀😎👾<b>',
     ]);
 
     $this->createNode([
       'type' => 'page',
-      'title' => 'More strange " characters 😀😎👾',
+      'title' => 'More | strange " characters 😀😎👾',
     ]);
 
     $this->indexItems();
