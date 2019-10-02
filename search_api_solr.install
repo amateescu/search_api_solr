@@ -8,6 +8,7 @@ use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Solarium\Client;
 
 /**
  * Implements hook_requirements().
@@ -98,7 +99,7 @@ function search_api_solr_requirements($phase) {
     foreach ($servers as $server) {
       /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
       $backend = $server->getBackend();
-      $requirements['search_api_solr'][$server->id()] = [
+      $requirements['search_api_solr_' . $server->id()] = [
         'title' => t('Solr Server %server_id', ['%server_id' => $server->id()]),
         'value' => t('Schema complete'),
         'severity' => REQUIREMENT_OK,
@@ -113,9 +114,9 @@ function search_api_solr_requirements($phase) {
         if ($missing_languages = array_filter($stats, function ($state) {
           return !$state;
         })) {
-          $requirements['search_api_solr'][$server->id()]['value'] = t('Schema incomplete');
-          $requirements['search_api_solr'][$server->id()]['severity'] = REQUIREMENT_WARNING;
-          $requirements['search_api_solr'][$server->id()]['description'] = t(
+          $requirements['search_api_solr_' . $server->id()]['value'] = t('Schema incomplete');
+          $requirements['search_api_solr_' . $server->id()]['severity'] = REQUIREMENT_WARNING;
+          $requirements['search_api_solr_' . $server->id()]['description'] = t(
             'There are some language-specific field types missing in schema of Solr server <a href=":url">@server</a>: @languages.', [
             ':url' => $server->toUrl('canonical')->toString(),
             '@server' => $server->label(),
@@ -124,15 +125,38 @@ function search_api_solr_requirements($phase) {
         }
       }
       else {
-        $requirements['search_api_solr'][$server->id()]['value'] = t('Not reachable');
-        $requirements['search_api_solr'][$server->id()]['severity'] = REQUIREMENT_ERROR;
-        $requirements['search_api_solr'][$server->id()]['description'] = t(
+        $requirements['search_api_solr_' . $server->id()]['value'] = t('Not reachable');
+        $requirements['search_api_solr_' . $server->id()]['severity'] = REQUIREMENT_ERROR;
+        $requirements['search_api_solr_' . $server->id()]['description'] = t(
           'Solr server <a href=":url">@server</a> is not reachable.', [
           ':url' => $server->toUrl('canonical')->toString(),
           '@server' => $server->label(),
         ]);
       }
     }
+
+    if (Client::checkMinimal('5.1.4')) {
+      $requirements['search_api_solr_' . 'solarium'] = [
+        'title' => t('solarium library'),
+        'value' => t('Up to date'),
+        'description' => t('Solarium @version is installed.', ['@version' => Client::VERSION]),
+        'severity' => REQUIREMENT_OK,
+      ];
+    }
+    else {
+      $requirements['search_api_solr_' . 'solarium'] = [
+        'title' => t('solarium library'),
+        'value' => t('Outdated'),
+        'description' => t('Solarium @version is too old and has known issues. In order to get composer to upgrade solarium to a recent version a core patch or a workaround is required. Have a look at this <a href=":core">Core issue</a> and this <a href=":search_api_solr">Search API Solr issue</a>.',
+          [
+            '@version' => Client::VERSION,
+            ':core' => 'https://www.drupal.org/project/drupal/issues/2876675',
+            ':search_api_solr' => 'https://www.drupal.org/project/search_api_solr/issues/3085196',
+          ]),
+        'severity' => REQUIREMENT_ERROR,
+      ];
+    }
+
   }
 
   return $requirements;
