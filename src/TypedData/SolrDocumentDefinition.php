@@ -38,10 +38,11 @@ class SolrDocumentDefinition extends ComplexDataDefinitionBase implements SolrDo
    * {@inheritdoc}
    */
   public static function createFromDataType($data_type) {
-    // The data type should be in the form of "solr_document:$index_id".
+    // The data type should be in the form of "solr_document:$index_id" or
+    // "solr_multisite_document:$index_id"
     $parts = explode(':', $data_type, 2);
-    if ($parts[0] !== 'solr_document') {
-      throw new \InvalidArgumentException('Data type must be in the form of "solr_document:INDEX_ID".');
+    if (!in_array($parts[0], ['solr_document', 'solr_multisite_document'])) {
+      throw new \InvalidArgumentException('Data type must be in the form of "solr_document:INDEX_ID" or solr_multisite_document:INDEX_ID.');
     }
 
     return self::create($parts[1]);
