@@ -82,7 +82,10 @@ class SolariumRequestLogger implements EventSubscriberInterface {
       $this->t('Received Solr response')
     );
 
-    $this->getLogger()->debug($response->getBody());
+    $this->getLogger()->debug(
+      '@solr_request_body',
+      ['@solr_request_body' => $response->getBody()]
+    );
     $this->showLoggerHint();
   }
 
