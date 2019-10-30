@@ -785,6 +785,14 @@ class Utility {
           // No break! Execute 'default', too.
 
         default:
+          if ($sloppiness) {
+            foreach ($k as &$term_or_phrase) {
+              if (strpos($term_or_phrase, ' ') && strpos($term_or_phrase, '"') === 0) {
+                $term_or_phrase .= $sloppiness;
+              }
+            }
+          }
+
           if (count($fields) > 0) {
             foreach ($fields as $f) {
               $field = $f;
@@ -796,12 +804,11 @@ class Utility {
                 $field = array_shift($split);
                 $boost = implode('', $split);
               }
-              $query_parts[] = $field . ':(' . $pre . implode(' ' . $pre, $k) . $sloppiness . ')' . $boost;
+              $query_parts[] = $field . ':(' . $pre . implode(' ' . $pre, $k) . ')' . $boost;
             }
           }
           else {
-            $terms_or_phrase = implode(' ' . $pre, $k);
-            $query_parts[] = '(' . $pre . $terms_or_phrase . ((strpos($terms_or_phrase, ' ') && strpos($terms_or_phrase, '"') === 0) ? $sloppiness : '') . ')';
+            $query_parts[] = '(' . $pre . implode(' ' . $pre, $k) . ')';
           }
       }
     }
