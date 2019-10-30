@@ -602,6 +602,9 @@ class Utility {
    * ensure that stop words in boolean combinations don't lead to zero results.
    * Therefore this function will produce these queries:
    *
+   * Careful interpreting this, phrase  and sloppy phrase queries will represent
+   * different phrases as A & B. To be very clear, A could equal multiple words.
+   *
    * @code
    * #conjunction | #negation | fields | parse mode     | return value
    * ---------------------------------------------------------------------------
@@ -621,6 +624,10 @@ class Utility {
    * OR           | FALSE     | [x,y]  | phrase         | +(x:(A B)^1 y:(A B)^1)
    * OR           | TRUE      | [x,y]  | terms          | -(((x:A^1 y:A^1) (x:B^1 y:B^1)) x:(A B)^1 y:(A B)^1)
    * OR           | TRUE      | [x,y]  | phrase         | -(x:(A B)^1 y:(A B)^1)
+   * AND          | FALSE     | [x,y]  | sloppy_phrase  | +(x:(+"A"~10000000 +"B"~10000000)^1 y:(+"A"~10000000 +"B"~10000000)^1)
+   * AND          | TRUE      | [x,y]  | sloppy_phrase  | -(x:(+"A"~10000000 +"B"~10000000)^1 y:(+"A"~10000000 +"B"~10000000)^1)
+   * OR           | FALSE     | [x,y]  | sloppy_phrase  | +(x:("A"~10000000 "B"~10000000)^1 y:("A"~10000000 "B"~10000000)^1)
+   * OR           | TRUE      | [x,y]  | sloppy_phrase  | -(x:("A"~10000000 "B"~10000000)^1 y:("A"~10000000 "B"~10000000)^1)
    * AND          | FALSE     | [x,y]  | edismax        | +({!edismax qf=x^1,y^1}+A +B)
    * AND          | TRUE      | [x,y]  | edismax        | -({!edismax qf=x^1,y^1}+A +B)
    * OR           | FALSE     | [x,y]  | edismax        | +({!edismax qf=x^1,y^1}A B)
@@ -668,6 +675,7 @@ class Utility {
     $pre = '+';
     $neg = '';
     $query_parts = [];
+    $sloppiness = '';
 
     if (is_array($keys)) {
       $queryHelper = \Drupal::service('solarium.query_helper');
@@ -701,16 +709,19 @@ class Utility {
         }
         else {
           switch ($parse_mode_id) {
-            // Using the 'phrase' parse mode, Search API provides one big phrase
-            // as keys. Using the 'terms' parse mode, Search API provides chunks
-            // of single terms as keys. But these chunks might contain not just
-            // real terms but again a phrase if you enter something like this in
-            // the search box: term1 "term2 as phrase" term3. This will be
-            // converted in this keys array: ['term1', 'term2 as phrase',
-            // 'term3']. To have Solr behave like the database backend, these
-            // three "terms" should be handled like three phrases.
+            // Using the 'phrase' or 'sloppy_phrase' parse mode, Search API
+            // provides one big phrase as keys. Using the 'terms' parse mode,
+            // Search API provides chunks of single terms as keys. But these
+            // chunks might contain not just real terms but again a phrase if
+            // you enter something like this in the search box:
+            // term1 "term2 as phrase" term3.
+            // This will be converted in this keys array:
+            // ['term1', 'term2 as phrase', 'term3'].
+            // To have Solr behave like the database backend, these three
+            // "terms" should be handled like three phrases.
             case 'terms':
             case 'phrase':
+            case 'sloppy_phrase':
             case 'edismax':
             case 'keys':
               $k[] = $queryHelper->escapePhrase(trim($key));
@@ -744,44 +755,53 @@ class Utility {
           $query_parts[] = $pre . implode(' ' . $pre, $k);
           break;
 
-        case "terms":
+        case 'sloppy_phrase':
+          // @todo Factor should be configurable.
+          $sloppiness = '~10000000';
+          // No break! Execute 'default', too. 'terms' will be skipped as $k
+          // just contains one element.
+
+        case 'terms':
           if (count($k) > 1 && count($fields) > 0) {
             $key_parts = [];
             foreach ($k as $l) {
               $field_parts = [];
               foreach ($fields as $f) {
                 $field = $f;
-                $boost_or_fuzzy = '';
+                $boost = '';
                 // Split on operators:
-                // - boost (^),
-                // - fixed score (^=),
-                // - fuzzy/term proximity (~).
-                if ($split = preg_split('/([\^~])/', $f, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE)) {
+                // - boost (^)
+                // - fixed score (^=)
+                if ($split = preg_split('/([\^])/', $f, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE)) {
                   $field = array_shift($split);
-                  $boost_or_fuzzy = implode('', $split);
+                  $boost = implode('', $split);
                 }
-                $field_parts[] = $field . ':' . $l . $boost_or_fuzzy;
+                $field_parts[] = $field . ':' . $l . $boost;
               }
               $key_parts[] = $pre . '(' . implode(' ', $field_parts) . ')';
             }
             $query_parts[] = '(' . implode(' ', $key_parts) . ')';
           }
-        // No break! Execute 'default', too.
+          // No break! Execute 'default', too.
+
         default:
           if (count($fields) > 0) {
             foreach ($fields as $f) {
               $field = $f;
-              $boost_or_fuzzy = '';
-              // Split on operators for boost (^), fixed score (^=), fuzzy/term proximity (~).
-              if ($split = preg_split('/([\^~])/', $f, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE)) {
+              $boost = '';
+              // Split on operators:
+              // - boost (^)
+              // - fixed score (^=)
+              if ($split = preg_split('/([\^])/', $f, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE)) {
                 $field = array_shift($split);
-                $boost_or_fuzzy = implode('', $split);
+                $boost = implode('', $split);
               }
-              $query_parts[] = $field . ':(' . $pre . implode(' ' . $pre, $k) . ')' . $boost_or_fuzzy;
+              $query_parts[] = $field . ':(' . $pre . implode(' ' . $pre, $k) . $sloppiness . ')' . $boost;
             }
           }
           else {
-            $query_parts[] = '(' . $pre . implode(' ' . $pre, $k) . ')';
+            $terms_or_phrase = implode(' ' . $pre, $k);
+            $query_parts[] = '(' . $pre . $terms_or_phrase . ((strpos($terms_or_phrase, ' ') && strpos($terms_or_phrase, '"') === 0) ? $sloppiness : '') . ')';
           }
       }
     }
@@ -836,6 +856,7 @@ class Utility {
           switch ($parse_mode_id) {
             case 'terms':
             case 'phrase':
+            case "sloppy_phrase":
             case 'edismax':
               $k[] = $queryHelper->escapePhrase(trim($key));
               break;

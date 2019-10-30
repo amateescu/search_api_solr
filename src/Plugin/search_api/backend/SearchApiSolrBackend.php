@@ -2742,6 +2742,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
               // @see https://www.drupal.org/project/search_api/issues/2991134
               case 'terms':
               case 'phrase':
+              case 'sloppy_phrase':
               case 'edismax':
                 if (is_array($value)) {
                   $keys += $value;
