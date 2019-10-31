@@ -808,6 +808,31 @@
     </lst>
   </requestHandler>
 
+  <!-- Solr Replication
+
+     The SolrReplicationHandler supports replicating indexes from a
+     "master" used for indexing and "slaves" used for queries.
+
+     http://wiki.apache.org/solr/SolrReplication
+
+     In the example below, remove the <lst name="master"> section if
+     this is just a slave and remove  the <lst name="slave"> section
+     if this is just a master.
+-->
+  <requestHandler name="/replication" class="solr.ReplicationHandler" >
+    <lst name="master">
+      <str name="enable">${solr.replication.master:false}</str>
+      <str name="replicateAfter">commit</str>
+      <str name="replicateAfter">startup</str>
+      <str name="confFiles">${solr.replication.confFiles:schema.xml,schema_extra_types.xml,schema_extra_fields.xml,elevate.xml}</str>
+    </lst>
+    <lst name="slave">
+      <str name="enable">${solr.replication.slave:false}</str>
+      <str name="masterUrl">${solr.replication.masterUrl:http://localhost:8983/solr}/replication</str>
+      <str name="pollInterval">${solr.replication.pollInterval:00:00:60}</str>
+    </lst>
+  </requestHandler>
+
   <!-- Search Components
 
        Search components are registered to SolrCore and used by
