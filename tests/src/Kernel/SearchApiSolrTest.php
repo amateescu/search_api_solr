@@ -252,7 +252,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       [],
       'phrase'
     );
-    $this->assertEquals('(+"foo" +"apple pie" +"bar")', $flat);
+    $this->assertEquals('(+"foo \"apple pie\" bar")', $flat);
 
     $query->setParseMode($parse_mode_sloppy_terms);
     $flat = SolrUtility::flattenKeys(
@@ -268,7 +268,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       [],
       'sloppy_phrase'
     );
-    $this->assertEquals('(+"foo" +"apple pie"~10000000 +"bar")', $flat);
+    $this->assertEquals('(+"foo \"apple pie\" bar"~10000000)', $flat);
 
     $query->setParseMode($parse_mode_terms);
     $flat = SolrUtility::flattenKeys(
@@ -312,7 +312,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       ['solr_field'],
       'phrase'
     );
-    $this->assertEquals('solr_field:(+"foo" +"apple pie" +"bar")', $flat);
+    $this->assertEquals('solr_field:(+"foo \"apple pie\" bar")', $flat);
 
     $query->setParseMode($parse_mode_terms);
     $flat = SolrUtility::flattenKeys(
@@ -336,7 +336,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       ['solr_field_1', 'solr_field_2'],
       'phrase'
     );
-    $this->assertEquals('(solr_field_1:(+"foo" +"apple pie" +"bar") solr_field_2:(+"foo" +"apple pie" +"bar"))', $flat);
+    $this->assertEquals('(solr_field_1:(+"foo \"apple pie\" bar") solr_field_2:(+"foo \"apple pie\" bar"))', $flat);
 
     $query->setParseMode($parse_mode_terms);
     $flat = SolrUtility::flattenKeys(
