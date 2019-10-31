@@ -1662,3 +1662,19 @@ function search_api_solr_update_8326() {
     }
   }
 }
+
+/**
+ * Update the Portuguese, Portugal config locale from 'pt' to 'pt-pt'
+ */
+function search_api_solr_update_8327() {
+  foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+    if (!empty($field_type_config['field_type'])) {
+      if ('pt' === $field_type_config['field_type_language_code']) {
+        $config_factory = \Drupal::configFactory();
+        $config = $config_factory->getEditable('search_api_solr.solr_field_type.text_pt_7_0_0.yml');
+        $config->delete();
+      }
+    }
+  }
+  search_api_solr_update_helper_install_configs();
+}
