@@ -1384,7 +1384,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       $this->assertNotContains('"/replication"', $config_files['solrconfig.xml']);
       $this->assertNotContains('"/get"', $config_files['solrconfig.xml']);
     }
-    else {
+    elseif ('6' !== $solr_major_version) {
       $this->assertContains('solr.replication', $config_files['solrcore.properties']);
       $this->assertContains('"/replication"', $config_files['solrconfig.xml']);
       $this->assertContains('"/get"', $config_files['solrconfig.xml']);
