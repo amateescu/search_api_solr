@@ -237,11 +237,16 @@ class SearchApiSolrTest extends SolrBackendTestBase {
    * Tests the conversion of Search API queries into Solr queries.
    */
   protected function checkQueryParsers() {
-    /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
-    $backend = Server::load($this->serverId)->getBackend();
+    $parse_mode_manager = \Drupal::service('plugin.manager.search_api.parse_mode');
+    $parse_mode_terms = $parse_mode_manager->createInstance('terms');
+    $parse_mode_phrase = $parse_mode_manager->createInstance('phrase');
+    $parse_mode_sloppy_terms = $parse_mode_manager->createInstance('sloppy_terms');
+    $parse_mode_sloppy_phrase = $parse_mode_manager->createInstance('sloppy_phrase');
+    $parse_mode_direct = $parse_mode_manager->createInstance('direct');
+    $parse_mode_edismax = $parse_mode_manager->createInstance('edismax');
 
     $query = $this->buildSearch('foo "apple pie" bar');
-
+    $query->setParseMode($parse_mode_phrase);
     $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       [],
@@ -249,6 +254,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     );
     $this->assertEquals('(+"foo" +"apple pie" +"bar")', $flat);
 
+    $query->setParseMode($parse_mode_sloppy_terms);
     $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       [],
@@ -256,6 +262,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     );
     $this->assertEquals('(+"foo" +"apple pie"~10000000 +"bar")', $flat);
 
+    $query->setParseMode($parse_mode_sloppy_phrase);
     $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       [],
@@ -263,6 +270,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     );
     $this->assertEquals('(+"foo" +"apple pie"~10000000 +"bar")', $flat);
 
+    $query->setParseMode($parse_mode_terms);
     $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       [],
@@ -270,6 +278,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     );
     $this->assertEquals('(+"foo" +"apple pie" +"bar")', $flat);
 
+    $query->setParseMode($parse_mode_edismax);
     $exception = FALSE;
     try {
       $flat = SolrUtility::flattenKeys(
@@ -283,6 +292,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     }
     $this->assertTrue($exception);
 
+    $query->setParseMode($parse_mode_direct);
     $exception = FALSE;
     try {
       $flat = SolrUtility::flattenKeys(
@@ -296,6 +306,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     }
     $this->assertTrue($exception);
 
+    $query->setParseMode($parse_mode_phrase);
     $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       ['solr_field'],
@@ -303,6 +314,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     );
     $this->assertEquals('solr_field:(+"foo" +"apple pie" +"bar")', $flat);
 
+    $query->setParseMode($parse_mode_terms);
     $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       ['solr_field'],
@@ -310,6 +322,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     );
     $this->assertEquals('((+(solr_field:"foo") +(solr_field:"apple pie") +(solr_field:"bar")) solr_field:(+"foo" +"apple pie" +"bar"))', $flat);
 
+    $query->setParseMode($parse_mode_edismax);
     $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       ['solr_field'],
@@ -317,6 +330,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     );
     $this->assertEquals('({!edismax qf=\'solr_field\'}+"foo" +"apple pie" +"bar")', $flat);
 
+    $query->setParseMode($parse_mode_phrase);
     $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       ['solr_field_1', 'solr_field_2'],
@@ -324,6 +338,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     );
     $this->assertEquals('(solr_field_1:(+"foo" +"apple pie" +"bar") solr_field_2:(+"foo" +"apple pie" +"bar"))', $flat);
 
+    $query->setParseMode($parse_mode_terms);
     $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       ['solr_field_1', 'solr_field_2'],
@@ -331,6 +346,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     );
     $this->assertEquals('((+(solr_field_1:"foo" solr_field_2:"foo") +(solr_field_1:"apple pie" solr_field_2:"apple pie") +(solr_field_1:"bar" solr_field_2:"bar")) solr_field_1:(+"foo" +"apple pie" +"bar") solr_field_2:(+"foo" +"apple pie" +"bar"))', $flat);
 
+    $query->setParseMode($parse_mode_edismax);
     $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       ['solr_field_1', 'solr_field_2'],
@@ -338,6 +354,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     );
     $this->assertEquals('({!edismax qf=\'solr_field_1 solr_field_2\'}+"foo" +"apple pie" +"bar")', $flat);
 
+    $query->setParseMode($parse_mode_terms);
     $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       [],
@@ -346,7 +363,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertEquals('+"foo" +"apple pie" +"bar"', $flat);
 
     $query = $this->buildSearch('foo apple pie bar');
-
+    $query->setParseMode($parse_mode_sloppy_phrase);
     $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       [],
