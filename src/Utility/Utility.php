@@ -624,6 +624,10 @@ class Utility {
    * OR           | FALSE     | [x,y]  | phrase         | +(x:(A B)^1 y:(A B)^1)
    * OR           | TRUE      | [x,y]  | terms          | -(((x:A^1 y:A^1) (x:B^1 y:B^1)) x:(A B)^1 y:(A B)^1)
    * OR           | TRUE      | [x,y]  | phrase         | -(x:(A B)^1 y:(A B)^1)
+   * AND          | FALSE     | [x,y]  | sloppy_terms   | +(x:(+"A"~10000000 +"B"~10000000)^1 y:(+"A"~10000000 +"B"~10000000)^1)
+   * AND          | TRUE      | [x,y]  | sloppy_terms   | -(x:(+"A"~10000000 +"B"~10000000)^1 y:(+"A"~10000000 +"B"~10000000)^1)
+   * OR           | FALSE     | [x,y]  | sloppy_terms   | +(x:("A"~10000000 "B"~10000000)^1 y:("A"~10000000 "B"~10000000)^1)
+   * OR           | TRUE      | [x,y]  | sloppy_terms   | -(x:("A"~10000000 "B"~10000000)^1 y:("A"~10000000 "B"~10000000)^1)
    * AND          | FALSE     | [x,y]  | sloppy_phrase  | +(x:(+"A"~10000000 +"B"~10000000)^1 y:(+"A"~10000000 +"B"~10000000)^1)
    * AND          | TRUE      | [x,y]  | sloppy_phrase  | -(x:(+"A"~10000000 +"B"~10000000)^1 y:(+"A"~10000000 +"B"~10000000)^1)
    * OR           | FALSE     | [x,y]  | sloppy_phrase  | +(x:("A"~10000000 "B"~10000000)^1 y:("A"~10000000 "B"~10000000)^1)
@@ -867,6 +871,7 @@ class Utility {
         else {
           switch ($parse_mode_id) {
             case 'terms':
+            case "sloppy_terms":
             case 'phrase':
             case "sloppy_phrase":
             case 'edismax':

@@ -252,6 +252,13 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $flat = SolrUtility::flattenKeys(
       $query->getKeys(),
       [],
+      'sloppy_terms'
+    );
+    $this->assertEquals('(+"foo" +"apple pie"~10000000 +"bar")', $flat);
+
+    $flat = SolrUtility::flattenKeys(
+      $query->getKeys(),
+      [],
       'sloppy_phrase'
     );
     $this->assertEquals('(+"foo" +"apple pie"~10000000 +"bar")', $flat);
@@ -337,6 +344,16 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       'keys'
     );
     $this->assertEquals('+"foo" +"apple pie" +"bar"', $flat);
+
+    $query = $this->buildSearch('foo apple pie bar');
+
+    $flat = SolrUtility::flattenKeys(
+      $query->getKeys(),
+      [],
+      'sloppy_phrase'
+    );
+    $this->assertEquals('(+"foo apple pie bar"~10000000)', $flat);
+
   }
 
   /**
