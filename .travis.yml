@@ -93,6 +93,7 @@ before_script:
   - ./vendor/bin/drush language-add fa
   - ./vendor/bin/drush language-add fi
   - ./vendor/bin/drush language-add fr
+  - ./vendor/bin/drush language-add ga
   - ./vendor/bin/drush language-add hi
   - ./vendor/bin/drush language-add hr
   - ./vendor/bin/drush language-add id
