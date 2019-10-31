@@ -789,21 +789,6 @@
     </lst>
   </requestHandler>
 
-  <!-- A minimal query type for doing lucene queries -->
-  <requestHandler name="standard" class="solr.SearchHandler">
-     <lst name="defaults">
-       <str name="df">id</str>
-       <str name="echoParams">explicit</str>
-       <bool name="omitHeader">true</bool>
-     </lst>
-  </requestHandler>
-
-  <initParams path="/update/**,/query,/select,/tvrh,/elevate,/spell,/browse">
-    <lst name="defaults">
-      <str name="df">id</str>
-    </lst>
-  </initParams>
-
   <!-- Solr Cell Update Request Handler
 
        http://wiki.apache.org/solr/ExtractingRequestHandler
@@ -820,109 +805,6 @@
       <str name="captureAttr">true</str>
       <str name="fmap.a">links</str>
       <str name="fmap.div">ignored_</str>
-    </lst>
-  </requestHandler>
-
-
-  <!-- Field Analysis Request Handler
-
-       RequestHandler that provides much the same functionality as
-       analysis.jsp. Provides the ability to specify multiple field
-       types and field names in the same request and outputs
-       index-time and query-time analysis for each of them.
-
-       Request parameters are:
-       analysis.fieldname - field name whose analyzers are to be used
-
-       analysis.fieldtype - field type whose analyzers are to be used
-       analysis.fieldvalue - text for index-time analysis
-       q (or analysis.q) - text for query time analysis
-       analysis.showmatch (true|false) - When set to true and when
-           query analysis is performed, the produced tokens of the
-           field value analysis will be marked as "matched" for every
-           token that is produces by the query analysis
-   -->
-  <requestHandler name="/analysis/field"
-                  startup="lazy"
-                  class="solr.FieldAnalysisRequestHandler" />
-
-
-  <!-- Document Analysis Handler
-
-       http://wiki.apache.org/solr/AnalysisRequestHandler
-
-       An analysis handler that provides a breakdown of the analysis
-       process of provided documents. This handler expects a (single)
-       content stream with the following format:
-
-       <docs>
-         <doc>
-           <field name="id">1</field>
-           <field name="name">The Name</field>
-           <field name="text">The Text Value</field>
-         </doc>
-         <doc>...</doc>
-         <doc>...</doc>
-         ...
-       </docs>
-
-    Note: Each document must contain a field which serves as the
-    unique key. This key is used in the returned response to associate
-    an analysis breakdown to the analyzed document.
-
-    Like the FieldAnalysisRequestHandler, this handler also supports
-    query analysis by sending either an "analysis.query" or "q"
-    request parameter that holds the query text to be analyzed. It
-    also supports the "analysis.showmatch" parameter which when set to
-    true, all field tokens that match the query tokens will be marked
-    as a "match".
-  -->
-  <requestHandler name="/analysis/document"
-                  class="solr.DocumentAnalysisRequestHandler"
-                  startup="lazy" />
-
-  <!-- Echo the request contents back to the client -->
-  <requestHandler name="/debug/dump" class="solr.DumpRequestHandler" >
-    <lst name="defaults">
-     <str name="echoParams">explicit</str>
-     <str name="echoHandler">true</str>
-    </lst>
-  </requestHandler>
-
-  <!-- Solr Replication
-
-       The SolrReplicationHandler supports replicating indexes from a
-       "master" used for indexing and "slaves" used for queries.
-
-       http://wiki.apache.org/solr/SolrReplication
-
-       In the example below, remove the <lst name="master"> section if
-       this is just a slave and remove  the <lst name="slave"> section
-       if this is just a master.
-  -->
-  <requestHandler name="/replication" class="solr.ReplicationHandler" >
-    <lst name="master">
-      <str name="enable">${solr.replication.master:false}</str>
-      <str name="replicateAfter">commit</str>
-      <str name="replicateAfter">startup</str>
-      <str name="confFiles">${solr.replication.confFiles:schema.xml,elevate.xml}</str>
-    </lst>
-    <lst name="slave">
-      <str name="enable">${solr.replication.slave:false}</str>
-      <str name="masterUrl">${solr.replication.masterUrl:http://localhost:8983/solr}/replication</str>
-      <str name="pollInterval">${solr.replication.pollInterval:00:00:60}</str>
-    </lst>
-  </requestHandler>
-
-  <!-- Realtime get handler, guaranteed to return the latest stored fields of
-       any document, without the need to commit or open a new searcher.  The
-       current implementation relies on the updateLog feature being enabled.
-  -->
-  <requestHandler name="/get" class="solr.RealTimeGetHandler">
-    <lst name="defaults">
-      <str name="omitHeader">true</str>
-      <str name="wt">json</str>
-      <str name="indent">true</str>
     </lst>
   </requestHandler>
 
@@ -1035,26 +917,6 @@
     </lst>
     <arr name="last-components">
       <str>tvComponent</str>
-    </arr>
-  </requestHandler>
-
-  <!-- Terms Component
-
-       http://wiki.apache.org/solr/TermsComponent
-
-       A component to return terms and document frequency of those
-       terms
-    -->
-  <searchComponent name="terms" class="solr.TermsComponent"/>
-
-  <!-- A request handler for demonstrating the terms component -->
-  <requestHandler name="/terms" class="solr.SearchHandler" startup="lazy">
-     <lst name="defaults">
-      <bool name="terms">true</bool>
-      <bool name="distrib">false</bool>
-    </lst>
-    <arr name="components">
-      <str>terms</str>
     </arr>
   </requestHandler>
 

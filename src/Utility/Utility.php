@@ -720,6 +720,7 @@ class Utility {
             // To have Solr behave like the database backend, these three
             // "terms" should be handled like three phrases.
             case 'terms':
+            case 'sloppy_terms':
             case 'phrase':
             case 'sloppy_phrase':
             case 'edismax':
@@ -755,10 +756,11 @@ class Utility {
           $query_parts[] = $pre . implode(' ' . $pre, $k);
           break;
 
+        case 'sloppy_terms':
         case 'sloppy_phrase':
           // @todo Factor should be configurable.
           $sloppiness = '~10000000';
-          // No break! Execute 'default', too. 'terms' will be skipped as $k
+          // No break! Execute 'default', too. 'terms' will be skipped when $k
           // just contains one element.
 
         case 'terms':
@@ -787,10 +789,13 @@ class Utility {
         default:
           if ($sloppiness) {
             foreach ($k as &$term_or_phrase) {
+              // Just add sloppiness when if we really have a phrase, indicated
+              // by double quotes and terms separated by blanks.
               if (strpos($term_or_phrase, ' ') && strpos($term_or_phrase, '"') === 0) {
                 $term_or_phrase .= $sloppiness;
               }
             }
+            unset($term_or_phrase);
           }
 
           if (count($fields) > 0) {
