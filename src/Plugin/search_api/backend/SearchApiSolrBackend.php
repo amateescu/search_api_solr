@@ -4160,7 +4160,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $available = $this->getSolrConnector()->pingCore();
     $stats = [];
     foreach (\Drupal::languageManager()->getLanguages() as $language) {
-      $solr_field_type_name = Utility::encodeSolrName('text' . '_' . $language->getId());
+      $solr_field_type_name = 'text' . '_' . $language->getId();
       $stats[$language->getId()] = $available ? $this->isPartOfSchema('fieldTypes', $solr_field_type_name) : FALSE;
     }
     return $stats;
