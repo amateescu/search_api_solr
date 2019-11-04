@@ -33,6 +33,11 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
       label: 'Disabled Solr Field Types'
       sequence:
         type: string
+    disabled_caches:
+      type: sequence
+      label: 'Disabled Solr Caches'
+      sequence:
+        type: string
     rows:
       type: integer
       label: 'The default result rows limit if no limit is set as query option'

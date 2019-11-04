@@ -161,8 +161,9 @@ class SolrFieldTypeController extends ControllerBase {
    * @param \Drupal\search_api\ServerInterface $search_api_server
    * @param \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type
    *
+   * @return RedirectResponse
+   *
    * @throws \Drupal\Core\Entity\EntityStorageException
-   * @throws \Drupal\search_api\SearchApiException
    */
   public function disableOnServer(ServerInterface $search_api_server, SolrFieldTypeInterface $solr_field_type) {
     $backend_config = $search_api_server->getBackendConfig();
@@ -174,13 +175,14 @@ class SolrFieldTypeController extends ControllerBase {
   }
 
   /**
-   * Disables a Solr Field Type on this server.
+   * Enables a Solr Field Type on this server.
    *
    * @param \Drupal\search_api\ServerInterface $search_api_server
    * @param \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type
    *
+   * @return RedirectResponse
+   *
    * @throws \Drupal\Core\Entity\EntityStorageException
-   * @throws \Drupal\search_api\SearchApiException
    */
   public function enableOnServer(ServerInterface $search_api_server, SolrFieldTypeInterface $solr_field_type) {
     $backend_config = $search_api_server->getBackendConfig();

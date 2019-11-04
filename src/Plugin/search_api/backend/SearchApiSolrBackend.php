@@ -39,6 +39,7 @@ use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility as SearchApiUtility;
 use Drupal\search_api_autocomplete\SearchInterface;
 use Drupal\search_api_autocomplete\Suggestion\SuggestionFactory;
+use Drupal\search_api_solr\Entity\SolrCache;
 use Drupal\search_api_solr\Entity\SolrFieldType;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\Solarium\Autocomplete\Query as AutocompleteQuery;
@@ -186,12 +187,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'site_hash' => FALSE,
       'server_prefix' => '',
       'domain' => 'generic',
+      'environment' => 'default',
       // Set the default for new servers to NULL to force "safe" un-selected
       // radios. @see https://www.drupal.org/node/2820244
       'connector' => NULL,
       'connector_config' => [],
       'optimize' => FALSE,
       'disabled_field_types' => [],
+      'disabled_caches' => [],
       // 10 is Solr's default limit if rows is not set.
       'rows' => 10,
     ];
@@ -293,6 +296,15 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#default_value' => isset($this->configuration['domain']) ? $this->configuration['domain'] : 'generic',
     ];
 
+    $environments = SolrCache::getAvailableEnvironments();
+    $form['advanced']['environment'] = [
+      '#type' => 'select',
+      '#options' => array_combine($environments, $environments),
+      '#title' => $this->t('Targeted environment'),
+      '#description' => $this->t('For example "dev", "stage" or "prod".'),
+      '#default_value' => isset($this->configuration['environment']) ? $this->configuration['environment'] : 'default',
+    ];
+
     $form['advanced']['i_know_what_i_do'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Optimize the Solr index'),
@@ -325,6 +337,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $form['disabled_field_types'] = [
       '#type' => 'value',
       '#value' => $this->configuration['disabled_field_types'],
+    ];
+
+    $form['disabled_caches'] = [
+      '#type' => 'value',
+      '#value' => $this->configuration['disabled_caches'],
     ];
 
     return $form;
@@ -828,6 +845,21 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $info[] = [
         'label' => $this->t('Disabled Solr Field Types'),
         'info' => implode(', ', $this->configuration['disabled_field_types']),
+      ];
+    }
+
+    $info[] = [
+      'label' => $this->t('Targeted environment'),
+      'info' => $this->getEnvironment(),
+    ];
+
+    if (!empty($this->configuration['disabled_caches'])) {
+      \Drupal::messenger()
+        ->addWarning($this->t('You disabled some Solr Caches for this server.'));
+
+      $info[] = [
+        'label' => $this->t('Disabled Solr Caches'),
+        'info' => implode(', ', $this->configuration['disabled_caches']),
       ];
     }
 
@@ -4126,6 +4158,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
+  public function getEnvironment() {
+    return (isset($this->configuration['environment']) && !empty($this->configuration['environment'])) ? $this->configuration['environment'] : 'default';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isManagedSchema() {
     return FALSE;
   }
@@ -4483,5 +4522,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function getDisabledFieldTypes(): array {
     return $this->configuration['disabled_field_types'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDisabledCaches(): array {
+    return $this->configuration['disabled_caches'];
   }
 }

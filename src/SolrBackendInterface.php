@@ -151,6 +151,14 @@ interface SolrBackendInterface extends BackendInterface {
   public function getDomain();
 
   /**
+   * Returns the targeted environment of the server.
+   *
+   * @return string
+   *   The environment.
+   */
+  public function getEnvironment();
+
+  /**
    * Indicates if the Solr server uses a managed schema.
    *
    * @return bool

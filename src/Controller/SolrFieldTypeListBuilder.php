@@ -4,11 +4,14 @@ namespace Drupal\search_api_solr\Controller;
 
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\Utility\Utility;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use ZipStream\Option\Archive;
 use ZipStream\ZipStream;
 
@@ -42,6 +45,37 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    * @var bool
    */
   protected $reset = FALSE;
+
+  protected $entity_type_manger;
+
+  /**
+   * {@inheritdoc}
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
+    return new static(
+      $entity_type,
+      $container->get('entity_type.manager')
+    );
+  }
+
+  /**
+   * Constructs a new EntityListBuilder object.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type definition.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manger
+   *   The entity storage class.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  public function __construct(EntityTypeInterface $entity_type, EntityTypeManagerInterface $entity_type_manger) {
+    $this->entity_type_manger = $entity_type_manger;
+    parent::__construct($entity_type, $entity_type_manger->getStorage($entity_type->id()));
+  }
 
   /**
    * {@inheritdoc}
@@ -395,10 +429,14 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     $search_api_solr_conf_path = drupal_get_path('module', 'search_api_solr') . '/solr-conf-templates/' . $solr_branch;
     $solrcore_properties = parse_ini_file($search_api_solr_conf_path . '/solrcore.properties', FALSE, INI_SCANNER_RAW);
 
+    /** @var \Drupal\search_api_solr\Controller\SolrCacheListBuilder $caches_list_builder */
+    $caches_list_builder = $this->entity_type_manger->getListBuilder('solr_cache');
+
     $files = [
       'schema_extra_types.xml' => $this->getSchemaExtraTypesXml(),
       'schema_extra_fields.xml' => $this->getSchemaExtraFieldsXml(),
       'solrconfig_extra.xml' => $this->getSolrconfigExtraXml(),
+      'solrconfig_query.xml' => $caches_list_builder->getCachesXml(),
     ];
 
     // Add language specific text files.
