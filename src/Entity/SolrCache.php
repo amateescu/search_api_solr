@@ -39,34 +39,6 @@ class SolrCache extends AbstractSolrConfig implements SolrCacheInterface {
   protected $cache;
 
   /**
-   * Solr filterCache definition.
-   *
-   * @var array
-   */
-  protected $filter_cache;
-
-  /**
-   * Solr queryResultCache definition.
-   *
-   * @var array
-   */
-  protected $query_result_cache;
-
-  /**
-   * Solr documentCache definition.
-   *
-   * @var array
-   */
-  protected $document_cache;
-
-  /**
-   * Solr fieldValueCache definition.
-   *
-   * @var array
-   */
-  protected $field_value_cache;
-
-  /**
    * The targeted environments.
    *
    * @var string[]
@@ -77,18 +49,14 @@ class SolrCache extends AbstractSolrConfig implements SolrCacheInterface {
    * {@inheritdoc}
    */
   public function getCache() {
-    return $this->cache ?? ($this->filter_cache ?? ($this->query_result_cache ?? ($this->document_cache ?? $this->field_value_cache)));
+    return $this->cache;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getCacheName() {
-    $root = $this->getRootElementName();
-    if ('cache' === $root && isset($this->cache['name'])) {
-      return $this->cache['name'];
-    }
-    return $root;
+    return $this->cache['name'];
   }
 
   /**
@@ -105,13 +73,15 @@ class SolrCache extends AbstractSolrConfig implements SolrCacheInterface {
    *   An array of environments as strings.
    */
   public static function getAvailableEnvironments() {
-    $environments = [];
+    $environments = [['default']];
     $config_factory = \Drupal::configFactory();
     foreach ($config_factory->listAll('search_api_solr.solr_cache.') as $cache) {
       $config = $config_factory->get($cache);
-      $environments = array_merge($environments, $config->get('environments'));
+      $environments[] = $config->get('environments');
     }
-    return array_unique($environments);
+    $environments = array_unique(array_merge(...$environments));
+    sort($environments);
+    return $environments;
   }
 
   /**
@@ -125,25 +95,20 @@ class SolrCache extends AbstractSolrConfig implements SolrCacheInterface {
         "\n-->\n";
     }
 
-    $formatted_xml_string = $this->buildXmlFromArray($this->getRootElementName(), $this->getCache());
+    $copy = $this->cache;
+    $root = 'cache';
+    switch ($this->cache['name']) {
+      case 'filter':
+      case 'queryResult':
+      case 'document':
+      case 'fieldValue':
+        $root = $this->cache['name'] . 'Cache';
+        unset($copy['name']);
+        break;
+    }
+
+    $formatted_xml_string = $this->buildXmlFromArray($root, $copy);
 
     return $comment . $formatted_xml_string;
-  }
-
-  protected function getRootElementName() {
-    $root = 'cache';
-    if ($this->filter_cache) {
-      $root = 'filterCache';
-    }
-    elseif ($this->query_result_cache) {
-      $root = 'queryResultCache';
-    }
-    elseif ($this->document_cache) {
-      $root = 'documentCache';
-    }
-    elseif ($this->field_value_cache) {
-      $root = 'fieldValueCache';
-    }
-    return $root;
   }
 }

@@ -16,57 +16,33 @@ search_api_solr.solr_cache.*:
       sequence:
         type: string
     cache:
-      type: search_api_solr.solr_common_cache
-      nullable: true
-    document_cache:
-      type: search_api_solr.solr_common_cache
-      nullable: true
-    field_value_cache:
-      type: search_api_solr.solr_common_cache
-      nullable: true
-    filter_cache:
-      type: search_api_solr.solr_common_cache
-      nullable: true
-    query_result_cache:
-      type: search_api_solr.solr_common_cache
-      nullable: true
-    solr_configs:
       type: mapping
       mapping:
-        query:
-          type: sequence
-            sequence:
-              type: mapping
-              mapping:
-                name:
-                  type: string
-                  label: 'name'
-                str:
-                  type: search_api_solr.solr_field_type_scalar_values
-
-search_api_solr.solr_common_cache:
-  type: mapping
-  mapping:
-    name:
-      type: string
-      label: 'The Solr custom cache name'
-      nullable: true
-    class:
-      type: string
-      label: 'The Solr cache class'
-    size:
-      type: integer
-      label: 'The Solr cache size'
-      nullable: true
-    initialSize:
-      type: integer
-      label: 'The initial Solr cache size'
-      nullable: true
-    autowarmCount:
-      type: integer
-      label: 'The initial Solr cache size'
-      nullable: true
-    regenerator:
-      type: string
-      label: 'The regenerator class'
-      nullable: true
+        name:
+          type: string
+          label: 'The Solr cache name'
+        class:
+          type: string
+          label: 'The Solr cache class'
+        size:
+          type: integer
+          label: 'The Solr cache size'
+          nullable: true
+        initialSize:
+          type: integer
+          label: 'The initial Solr cache size'
+          nullable: true
+        autowarmCount:
+          type: integer
+          label: 'The initial Solr cache size'
+          nullable: true
+        regenerator:
+          type: string
+          label: 'The regenerator class'
+          nullable: true
+        solr_configs:
+          type: mapping
+          nullable: true
+          mapping:
+            query:
+              type: search_api_solr.solr_field_type_scalar_values

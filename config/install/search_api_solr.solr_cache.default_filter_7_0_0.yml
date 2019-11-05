@@ -3,11 +3,12 @@ status: true
 dependencies:
   module:
     - search_api_solr
-id: default_document_7_0_0
+id: default_filter_7_0_0
 label: 'Default Filter Cache'
 minimum_solr_version: 7.0.0
 environments: {}
-filter_cache:
+cache:
+  name: filter
   class: solr.FastLRUCache
   size: 512
   initialSize: 512

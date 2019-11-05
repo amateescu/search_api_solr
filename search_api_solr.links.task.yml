@@ -4,6 +4,12 @@ search_api_solr.solr_config_form:
   title: 'Files'
   weight: 5
 
+entity.solr_cache.collection:
+  route_name: entity.solr_cache.collection
+  base_route: entity.search_api_server.canonical
+  title: 'Caches'
+  weight: 9
+
 entity.solr_field_type.collection:
   route_name: entity.solr_field_type.collection
   base_route: entity.search_api_server.canonical
