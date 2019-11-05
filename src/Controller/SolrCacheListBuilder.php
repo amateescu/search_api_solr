@@ -7,9 +7,6 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
-use Drupal\search_api_solr\Utility\Utility;
-use ZipStream\Option\Archive;
-use ZipStream\ZipStream;
 
 /**
  * Provides a listing of SolrCache.
@@ -63,7 +60,7 @@ class SolrCacheListBuilder extends ConfigEntityListBuilder {
     /** @var \Drupal\search_api_solr\SolrCacheInterface $solr_cache */
     $environments = $solr_cache->getEnvironments();
     if (empty($environments)) {
-      $domains = ['default'];
+      $environments = ['default'];
     }
 
     $enabled_label = $solr_cache->disabledOnServer ? $this->t('Disabled') : $this->t('Enabled');
@@ -207,7 +204,7 @@ class SolrCacheListBuilder extends ConfigEntityListBuilder {
    * @return array
    * @throws \Drupal\search_api\SearchApiException
    */
-  protected function getEnabledSolrCaches(): array {
+  public function getEnabledSolrCaches(): array {
     $solr_caches = [];
     foreach ($this->load() as $solr_cache) {
       if (!$solr_cache->disabledOnServer) {

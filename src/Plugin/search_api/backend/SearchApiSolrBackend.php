@@ -209,7 +209,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $configuration['skip_schema_check'] = (bool) $configuration['skip_schema_check'];
     $configuration['site_hash'] = (bool) $configuration['site_hash'];
     $configuration['optimize'] = (bool) $configuration['optimize'];
-    $configuration['rows'] = (int) $configuration['rows'];
+    $configuration['rows'] = (int) ($configuration['rows'] ?? 10);
 
     parent::setConfiguration($configuration);
 
@@ -3611,13 +3611,22 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $connector = $this->getSolrConnector();
     $this->calculatePluginDependencies($connector);
 
+    $entity_tyoe_manager = \Drupal::entityTypeManager();
     /** @var \Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
-    $list_builder = \Drupal::entityTypeManager()->getListBuilder('solr_field_type');
-    $list_builder->setBackend($this);
-    $solr_field_types = $list_builder->load();
+    $field_type_list_builder = $entity_tyoe_manager->getListBuilder('solr_field_type');
+    $field_type_list_builder->setBackend($this);
+    $solr_field_types = $field_type_list_builder->getEnabledSolrFieldTypes();
     /** @var \Drupal\search_api_solr\Entity\SolrFieldType $solr_field_type */
     foreach ($solr_field_types as $solr_field_type) {
       $this->addDependency('config', $solr_field_type->getConfigDependencyName());
+    }
+    /** @var \Drupal\search_api_solr\Controller\SolrCacheListBuilder $cache_list_builder */
+    $cache_list_builder = $entity_tyoe_manager->getListBuilder('solr_cache');
+    $cache_list_builder->setBackend($this);
+    $solr_caches = $cache_list_builder->getEnabledSolrCaches();
+    /** @var \Drupal\search_api_solr\Entity\SolrFieldType $solr_field_type */
+    foreach ($solr_caches as $solr_cache) {
+      $this->addDependency('config', $solr_cache->getConfigDependencyName());
     }
 
     return $this->dependencies;

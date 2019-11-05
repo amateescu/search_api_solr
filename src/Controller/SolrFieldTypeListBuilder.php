@@ -260,7 +260,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
    * @return array
    * @throws \Drupal\search_api\SearchApiException
    */
-  protected function getEnabledSolrFieldTypes(): array {
+  public function getEnabledSolrFieldTypes(): array {
     $solr_field_types = [];
     foreach ($this->load() as $solr_field_type) {
       if (!$solr_field_type->disabledOnServer) {
@@ -431,6 +431,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
 
     /** @var \Drupal\search_api_solr\Controller\SolrCacheListBuilder $caches_list_builder */
     $caches_list_builder = $this->entity_type_manger->getListBuilder('solr_cache');
+    $caches_list_builder->setBackend($this->backend);
 
     $files = [
       'schema_extra_types.xml' => $this->getSchemaExtraTypesXml(),

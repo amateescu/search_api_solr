@@ -63,7 +63,7 @@ class SolrCache extends AbstractSolrConfig implements SolrCacheInterface {
    * {@inheritdoc}
    */
   public function getEnvironments() {
-    return $this->environments;
+    return empty($this->environments) ? ['default'] : $this->environments;
   }
 
   /**
