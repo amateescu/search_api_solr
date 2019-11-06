@@ -40,9 +40,9 @@ search_api_solr.solr_cache.*:
           type: string
           label: 'The regenerator class'
           nullable: true
-        solr_configs:
-          type: mapping
-          nullable: true
-          mapping:
-            query:
-              type: search_api_solr.solr_field_type_scalar_values
+    solr_configs:
+      type: mapping
+      nullable: true
+      mapping:
+        query:
+          type: search_api_solr.solr_field_type_scalar_values

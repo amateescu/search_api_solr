@@ -109,6 +109,6 @@ class SolrCache extends AbstractSolrConfig implements SolrCacheInterface {
 
     $formatted_xml_string = $this->buildXmlFromArray($root, $copy);
 
-    return $comment . $formatted_xml_string;
+    return $comment . $formatted_xml_string . "\n";
   }
 }

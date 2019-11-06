@@ -153,6 +153,10 @@ class AbstractSolrConfig extends ConfigEntityBase {
    * {@inheritdoc}
    */
   public function getSolrConfigsAsXml($add_comment = TRUE) {
+    if (!$this->solr_configs) {
+      return '';
+    }
+
     $formatted_xml_string = $this->buildXmlFromArray('solrconfigs', $this->solr_configs);
 
     $comment = '';
@@ -163,7 +167,7 @@ class AbstractSolrConfig extends ConfigEntityBase {
     }
 
     // Remove the fake root element the XML fragment.
-    return $comment . preg_replace('@</?solrconfigs/?>@', '', $formatted_xml_string);
+    return $comment . trim(preg_replace('@</?solrconfigs/?>@', '', $formatted_xml_string),  "\n") . "\n";
   }
 
   /**

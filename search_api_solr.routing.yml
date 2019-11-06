@@ -139,6 +139,20 @@ entity.solr_cache.enable_for_server:
   requirements:
     _permission: 'administer search_api'
 
+entity.solr_cache.solrconfig_query_collection:
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_cachee/solrconfig-query-collection'
+  defaults:
+    _title: 'solrconfig_query.xml'
+    _controller: '\Drupal\search_api_solr\Controller\SolrCacheController::getSolrconfigQueryXml'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
+        with_config_overrides: TRUE
+  requirements:
+    _permission: 'administer search_api'
+    _search_api_solr_local_action_access_check: 'TRUE'
+
 entity.search_api_index.solr_multisite_clone_form:
   path: '/admin/config/search/search-api/index/{search_api_index}/solr_multisite_clone'
   defaults:

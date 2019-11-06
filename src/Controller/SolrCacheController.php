@@ -80,6 +80,28 @@ class SolrCacheController extends ControllerBase {
   }
 
   /**
+   * Provides an XML snippet containing all query cache settings as XML.
+   *
+   * @param \Drupal\search_api\ServerInterface $search_api_server
+   *   The Search API server entity.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   The HTTP response object.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   */
+  public function getSolrconfigQueryXml(ServerInterface $search_api_server) {
+    return new Response(
+      $this->getListBuilder($search_api_server)->getCachesXml(),
+      200,
+      [
+        'Content-Type' => 'application/xml',
+        'Content-Disposition' => 'attachment; filename=ssolrconfig_query.xml',
+      ]
+    );
+  }
+
+  /**
    * Disables a Solr Cache on this server.
    *
    * @param \Drupal\search_api\ServerInterface $search_api_server
