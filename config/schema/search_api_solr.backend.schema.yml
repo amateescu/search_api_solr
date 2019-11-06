@@ -20,6 +20,9 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
     domain:
       type: string
       label: 'The targeted content domain'
+    environment:
+      type: string
+      label: 'The targeted environment'
     connector:
       type: string
       label: 'The connector plugin ID'
