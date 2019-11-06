@@ -34,7 +34,11 @@ search_api_solr.solr_cache.*:
           nullable: true
         autowarmCount:
           type: integer
-          label: 'The initial Solr cache size'
+          label: 'The autowarm Solr cache size'
+          nullable: true
+        showItems:
+          type: integer
+          label: 'showItems'
           nullable: true
         regenerator:
           type: string
