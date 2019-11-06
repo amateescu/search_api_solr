@@ -17,4 +17,4 @@ solr_configs:
   query:
     -
       name: enableLazyFieldLoading
-      VALUE: true
+      VALUE: 'true'

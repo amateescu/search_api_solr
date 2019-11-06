@@ -17,10 +17,10 @@ solr_configs:
   query:
     -
       name: queryResultWindowSize
-      VALUE: 20
+      VALUE: '20'
     -
       name: queryResultMaxDocsCached
-      VALUE: 200
+      VALUE: '200'
     -
       name: maxBooleanClauses
-      VALUE: 1024
+      VALUE: '1024'

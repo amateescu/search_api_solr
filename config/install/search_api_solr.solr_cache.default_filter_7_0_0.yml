@@ -17,4 +17,4 @@ solr_configs:
   query:
     -
       name: useFilterForSortedQuery
-      VALUE: false
+      VALUE: 'false'
