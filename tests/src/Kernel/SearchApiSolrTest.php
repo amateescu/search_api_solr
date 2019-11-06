@@ -1362,7 +1362,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
 
     $backend_config['connector_config']['jmx'] = TRUE;
     $backend_config['disabled_field_types'] = ['text_foo_en_6_0_0', 'text_de_6_0_0', 'text_de_7_0_0'];
-    $backend_config['disabled_caches'] = ['generic_document_7_0_0', 'generic_filter_7_0_0'];
+    $backend_config['disabled_caches'] = ['default_document_7_0_0', 'default_filter_7_0_0'];
     $server->setBackendConfig($backend_config);
     $server->save();
     // Reset list builder's static cache.
