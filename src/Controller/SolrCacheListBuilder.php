@@ -168,7 +168,7 @@ class SolrCacheListBuilder extends ConfigEntityListBuilder {
             $selection[$name] = [
               'version' => $version,
               'key' => $key,
-              'domain' => in_array($environment, $environments) ? $environment : 'default',
+              'environment' => in_array($environment, $environments) ? $environment : 'default',
             ];
           }
         }
@@ -263,6 +263,8 @@ class SolrCacheListBuilder extends ConfigEntityListBuilder {
     /** @var \Drupal\search_api_solr\SolrCacheInterface $solr_cache */
     foreach ($this->getEnabledSolrCaches() as $solr_cache) {
       $xml .= $solr_cache->getCacheAsXml();
+    }
+    foreach ($this->load() as $solr_cache) {
       $xml .= $solr_cache->getSolrConfigsAsXml();
     }
     return $xml;

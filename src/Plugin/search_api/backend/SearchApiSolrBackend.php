@@ -3623,7 +3623,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     /** @var \Drupal\search_api_solr\Controller\SolrCacheListBuilder $cache_list_builder */
     $cache_list_builder = $entity_tyoe_manager->getListBuilder('solr_cache');
     $cache_list_builder->setBackend($this);
-    $solr_caches = $cache_list_builder->getEnabledSolrCaches();
+    $solr_caches = $cache_list_builder->load();
     /** @var \Drupal\search_api_solr\Entity\SolrFieldType $solr_field_type */
     foreach ($solr_caches as $solr_cache) {
       $this->addDependency('config', $solr_cache->getConfigDependencyName());
@@ -4511,11 +4511,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
           foreach ($site_hash_bucket->getFacetSet()->getFacet('indexes') as $index_bucket) {
             $index = $index_bucket->getValue();
             /** @var \Solarium\Component\Result\Facet\Bucket $datasource_bucket */
-            foreach ($index_bucket->getFacetSet()->getFacet('dataSources') as $datasource_bucket) {
-              $datasource = $datasource_bucket->getValue();
-              /** @var \Solarium\Component\Result\Facet\Aggregation $maxVersionPerDataSource */
-              if ($maxVersionPerDataSource = $datasource_bucket->getFacetSet()->getFacet('maxVersionPerDataSource')) {
-                $document_versions[$site_hash][$index][$datasource] = $maxVersionPerDataSource->getValue();
+            if ($datsources_facet = $index_bucket->getFacetSet()->getFacet('dataSources')) {
+              foreach ($datsources_facet as $datasource_bucket) {
+                $datasource = $datasource_bucket->getValue();
+                /** @var \Solarium\Component\Result\Facet\Aggregation $maxVersionPerDataSource */
+                if ($maxVersionPerDataSource = $datasource_bucket->getFacetSet()
+                  ->getFacet('maxVersionPerDataSource')) {
+                  $document_versions[$site_hash][$index][$datasource] = $maxVersionPerDataSource->getValue();
+                }
               }
             }
           }
