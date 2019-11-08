@@ -116,3 +116,45 @@ search_api.index.*.third_party.search_api_solr:
         include_language_independent:
           type: boolean
           label: 'Include languages independent content in search results'
+
+search_api_solr.solr_configs:
+  type: mapping
+  mapping:
+    searchComponents:
+      type: sequence
+      nullable: true
+      sequence:
+        type: mapping
+        mapping:
+          name:
+            type: string
+            label: 'The search component name'
+          class:
+            type: string
+            label: 'The search component class'
+          lst:
+            type: search_api_solr.list
+
+search_api_solr.list:
+  type: sequence
+  sequence:
+    type: mapping
+    mapping:
+      name:
+        type: string
+        label: 'name'
+      str:
+        type: search_api_solr.scalar_values
+
+search_api_solr.scalar_values:
+  type: sequence
+  sequence:
+    type: mapping
+    mapping:
+      name:
+        type: string
+        label: 'property name'
+        nullable: true
+      VALUE:
+        type: string
+        label: 'property value'

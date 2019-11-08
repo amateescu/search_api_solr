@@ -38,7 +38,7 @@ use Drupal\search_api_solr\SolrFieldTypeInterface;
  *   }
  * )
  */
-class SolrFieldType extends AbstractSolrConfig implements SolrFieldTypeInterface {
+class SolrFieldType extends AbstractSolrEntity implements SolrFieldTypeInterface {
 
   /**
    * Solr Field Type definition.
@@ -102,6 +102,13 @@ class SolrFieldType extends AbstractSolrConfig implements SolrFieldTypeInterface
   public function setFieldType(array $field_type) {
     $this->field_type = $field_type;
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getName(): string {
+    return $this->field_type['name'];
   }
 
   /**
@@ -171,21 +178,20 @@ class SolrFieldType extends AbstractSolrConfig implements SolrFieldTypeInterface
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getOptions() {
+    return $this->getDomains();
+  }
+
+  /**
    * Get all available domains form solr filed type configs.
    *
    * @return string[]
    *   An array of domains as strings.
    */
   public static function getAvailableDomains() {
-    $domains = [['generic']];
-    $config_factory = \Drupal::configFactory();
-    foreach ($config_factory->listAll('search_api_solr.solr_field_type.') as $field_type_name) {
-      $config = $config_factory->get($field_type_name);
-      $domains[] = $config->get('domains');
-    }
-    $domains = array_unique(array_merge(...$domains));
-    sort($domains);
-    return $domains;
+    return parent::getAvailableOptions('domains', 'generic', 'search_api_solr.solr_field_type.');
   }
 
   /**
@@ -338,7 +344,7 @@ class SolrFieldType extends AbstractSolrConfig implements SolrFieldTypeInterface
   /**
    * {@inheritdoc}
    */
-  public function getFieldTypeAsXml($add_comment = TRUE) {
+  public function getAsXml(bool $add_comment = TRUE): string {
     return $this->getSubFieldTypeAsXml($this->field_type);
   }
 

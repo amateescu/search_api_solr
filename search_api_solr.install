@@ -1683,7 +1683,7 @@ function search_api_solr_update_8327() {
  * Install Solr Cache Configs.
  */
 function search_api_solr_update_8328() {
-  search_api_solr_update_helper_install_configs();
+  // search_api_solr_update_helper_install_configs();
 
   foreach (search_api_solr_update_helper_get_backend_configs() as $server_name => $backend_config) {
     if (!isset($backend_config['environment'])) {
@@ -1691,4 +1691,11 @@ function search_api_solr_update_8328() {
       search_api_solr_update_helper_save_backend_config($server_name, $backend_config);
     }
   }
+}
+
+/**
+ * Install Solr Request Handler Configs.
+ */
+function search_api_solr_update_8329() {
+  search_api_solr_update_helper_install_configs();
 }

@@ -2,20 +2,20 @@
 
 namespace Drupal\search_api_solr\Entity;
 
-use Drupal\search_api_solr\SolrCacheInterface;
+use Drupal\search_api_solr\SolrRequestHandlerInterface;
 
 /**
- * Defines the SolrCache entity.
+ * Defines the SolrRequestHandler entity.
  *
  * @ConfigEntityType(
- *   id = "solr_cache",
- *   label = @Translation("Solr Cache"),
+ *   id = "solr_request_handler",
+ *   label = @Translation("Solr Request Handler"),
  *   handlers = {
- *     "list_builder" = "Drupal\search_api_solr\Controller\SolrCacheListBuilder",
+ *     "list_builder" = "Drupal\search_api_solr\Controller\SolrRequestHandlerListBuilder",
  *     "form" = {
  *     }
  *   },
- *   config_prefix = "solr_cache",
+ *   config_prefix = "solr_request_handler",
  *   admin_permission = "administer search_api",
  *   entity_keys = {
  *     "id" = "id",
@@ -23,20 +23,20 @@ use Drupal\search_api_solr\SolrCacheInterface;
  *     "uuid" = "uuid"
  *   },
  *   links = {
- *     "disable-for-server" = "/admin/config/search/search-api/server/{search_api_server}/solr_cache/{solr_cache}/disable",
- *     "enable-for-server" = "/admin/config/search/search-api/server/{search_api_server}/solr_cache/{solr_cache}/enable",
- *     "collection" = "/admin/config/search/search-api/server/{search_api_server}/solr_cache"
+ *     "disable-for-server" = "/admin/config/search/search-api/server/{search_api_server}/solr_request_handler/{solr_request_handler}/disable",
+ *     "enable-for-server" = "/admin/config/search/search-api/server/{search_api_server}/solr_request_handler/{solr_request_handler}/enable",
+ *     "collection" = "/admin/config/search/search-api/server/{search_api_server}/solr_request_handler"
  *   }
  * )
  */
-class SolrCache extends AbstractSolrEntity implements SolrCacheInterface {
+class SolrRequestHandler extends AbstractSolrEntity implements SolrRequestHandlerInterface {
 
   /**
-   * Solr custom cache definition.
+   * Solr custom request_handler definition.
    *
    * @var array
    */
-  protected $cache;
+  protected $request_handler;
 
   /**
    * The targeted environments.
@@ -48,15 +48,15 @@ class SolrCache extends AbstractSolrEntity implements SolrCacheInterface {
   /**
    * {@inheritdoc}
    */
-  public function getCache() {
-    return $this->cache;
+  public function getRequestHandler() {
+    return $this->request_handler;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getName(): string {
-    return $this->cache['name'];
+    return $this->request_handler['name'];
   }
 
   /**
@@ -94,19 +94,7 @@ class SolrCache extends AbstractSolrEntity implements SolrCacheInterface {
         "\n-->\n";
     }
 
-    $copy = $this->cache;
-    $root = 'cache';
-    switch ($this->cache['name']) {
-      case 'filter':
-      case 'queryResult':
-      case 'document':
-      case 'fieldValue':
-        $root = $this->cache['name'] . 'Cache';
-        unset($copy['name']);
-        break;
-    }
-
-    $formatted_xml_string = $this->buildXmlFromArray($root, $copy);
+    $formatted_xml_string = $this->buildXmlFromArray('requestHandler', $this->request_handler);
 
     return $comment . $formatted_xml_string . "\n";
   }

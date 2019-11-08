@@ -2,12 +2,10 @@
 
 namespace Drupal\search_api_solr\Controller;
 
-use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageInterface;
-use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\Utility\Utility;
@@ -18,34 +16,11 @@ use ZipStream\ZipStream;
 /**
  * Provides a listing of SolrFieldType.
  */
-class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
+class SolrFieldTypeListBuilder extends AbstractSolrEntityListBuilder {
 
   /**
-   * The Search API server backend.
-   *
-   * @var \Drupal\search_api_solr\SolrBackendInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $backend;
-
-  /**
-   * The Search API server ID.
-   *
-   * @var string
-   */
-  protected $serverId = '';
-
-  /**
-   * The Solr minimum version string.
-   *
-   * @var string
-   */
-  protected $assumed_minimum_version = '';
-
-  /**
-   * @var bool
-   */
-  protected $reset = FALSE;
-
   protected $entity_type_manger;
 
   /**
@@ -157,7 +132,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       try {
         /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
         $backend = $this->getBackend();
-        $disabled_field_types = $backend->getDisabledFieldTypes();
+        $disabled_field_types = $this->getDisabledEntities();
         $domain = $backend->getDomain();
         $solr_version = $backend->getSolrConnector()->getSolrVersion();
         if (version_compare($solr_version, '0.0.0', '==')) {
@@ -255,19 +230,15 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   }
 
   /**
-   * Returns a list of all enabled field types for current server.
+   * Returns a list of all disabled request handlers for current server.
    *
    * @return array
    * @throws \Drupal\search_api\SearchApiException
    */
-  public function getEnabledSolrFieldTypes(): array {
-    $solr_field_types = [];
-    foreach ($this->load() as $solr_field_type) {
-      if (!$solr_field_type->disabledOnServer) {
-        $solr_field_types[] = $solr_field_type;
-      }
-    }
-    return $solr_field_types;
+  protected function getDisabledEntities(): array {
+    /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
+    $backend = $this->getBackend();
+    return $backend->getDisabledFieldTypes();
   }
 
   /**
@@ -293,37 +264,6 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   }
 
   /**
-   * {@inheritdoc}
-   *
-   * @throws \Drupal\Core\Entity\EntityMalformedException
-   */
-  public function getDefaultOperations(EntityInterface $solr_field_type) {
-    /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
-    $operations = parent::getDefaultOperations($solr_field_type);
-    unset($operations['delete']);
-
-    if (strpos($solr_field_type->id(), 'text_und') !== 0) {
-      if (!$solr_field_type->disabledOnServer && $solr_field_type->access('view') && $solr_field_type->hasLinkTemplate('disable-for-server')) {
-        $operations['disable_for_server'] = [
-          'title' => $this->t('Disable'),
-          'weight' => 10,
-          'url' => $solr_field_type->toUrl('disable-for-server'),
-        ];
-      }
-
-      if ($solr_field_type->disabledOnServer && $solr_field_type->access('view') && $solr_field_type->hasLinkTemplate('enable-for-server')) {
-        $operations['enable_for_server'] = [
-          'title' => $this->t('Enable'),
-          'weight' => 10,
-          'url' => $solr_field_type->toUrl('enable-for-server'),
-        ];
-      }
-    }
-
-    return $operations;
-  }
-
-  /**
    * Returns the formatted XML for schema_extra_types.xml.
    *
    * @throws \Drupal\search_api\SearchApiException
@@ -331,8 +271,8 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   public function getSchemaExtraTypesXml() {
     $xml = '';
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
-    foreach ($this->getEnabledSolrFieldTypes() as $solr_field_type) {
-      $xml .= $solr_field_type->getFieldTypeAsXml();
+    foreach ($this->getEnabledEntities() as $solr_field_type) {
+      $xml .= $solr_field_type->getAsXml();
       $xml .= $solr_field_type->getSpellcheckFieldTypeAsXml();
       $xml .= $solr_field_type->getCollatedFieldTypeAsXml();
       $xml .= $solr_field_type->getUnstemmedFieldTypeAsXml();
@@ -348,7 +288,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   public function getSchemaExtraFieldsXml() {
     $xml = '';
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
-    foreach ($this->getEnabledSolrFieldTypes() as $solr_field_type) {
+    foreach ($this->getEnabledEntities() as $solr_field_type) {
       foreach ($solr_field_type->getStaticFields() as $static_field) {
         $xml .= '<field ';
         foreach ($static_field as $attribute => $value) {
@@ -386,7 +326,7 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
   public function getSolrconfigExtraXml() {
     $search_components = [];
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
-    foreach ($this->getEnabledSolrFieldTypes() as $solr_field_type) {
+    foreach ($this->getEnabledEntities() as $solr_field_type) {
       $xml = $solr_field_type->getSolrConfigsAsXml();
       if (preg_match_all('@(<searchComponent name="[^"]+"[^>]*?>)(.*?)</searchComponent>@sm', $xml, $matches)) {
         foreach ($matches[1] as $key => $search_component) {
@@ -403,6 +343,13 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
       }
       $xml .= "</searchComponent>\n";
     }
+
+    /** @var \Drupal\search_api_solr\Controller\SolrRequestHandlerListBuilder $request_handler_list_builder */
+    $request_handler_list_builder = $this->entity_type_manger->getListBuilder('solr_request_handler');
+    $request_handler_list_builder->setBackend($this->backend);
+
+    $xml .= $request_handler_list_builder->getXml() . "\n";
+
     return $xml;
   }
 
@@ -429,19 +376,19 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     $search_api_solr_conf_path = drupal_get_path('module', 'search_api_solr') . '/solr-conf-templates/' . $solr_branch;
     $solrcore_properties = parse_ini_file($search_api_solr_conf_path . '/solrcore.properties', FALSE, INI_SCANNER_RAW);
 
-    /** @var \Drupal\search_api_solr\Controller\SolrCacheListBuilder $caches_list_builder */
-    $caches_list_builder = $this->entity_type_manger->getListBuilder('solr_cache');
-    $caches_list_builder->setBackend($this->backend);
+    /** @var \Drupal\search_api_solr\Controller\SolrCacheListBuilder $cache_list_builder */
+    $cache_list_builder = $this->entity_type_manger->getListBuilder('solr_cache');
+    $cache_list_builder->setBackend($this->backend);
 
     $files = [
       'schema_extra_types.xml' => $this->getSchemaExtraTypesXml(),
       'schema_extra_fields.xml' => $this->getSchemaExtraFieldsXml(),
       'solrconfig_extra.xml' => $this->getSolrconfigExtraXml(),
-      'solrconfig_query.xml' => $caches_list_builder->getCachesXml(),
+      'solrconfig_query.xml' => $cache_list_builder->getXml(),
     ];
 
     // Add language specific text files.
-    $solr_field_types = $this->getEnabledSolrFieldTypes();
+    $solr_field_types = $this->getEnabledEntities();
     /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
     foreach ($solr_field_types as $solr_field_type) {
       $text_files = $solr_field_type->getTextFiles();
@@ -510,42 +457,6 @@ class SolrFieldTypeListBuilder extends ConfigEntityListBuilder {
     }
 
     return $zip;
-  }
-
-  /**
-   * Sets the Search API server and calls setBackend() afterwards.
-   *
-   * @param \Drupal\search_api\ServerInterface $server
-   *   The Search API server entity.
-   *
-   * @throws \Drupal\search_api\SearchApiException
-   */
-  public function setServer(ServerInterface $server) {
-    /** @var SolrBackendInterface $backend */
-    $backend = $server->getBackend();
-    $this->setBackend($backend);
-    $this->serverId = $server->id();
-  }
-
-  /**
-   * Sets the Search API server backend.
-   *
-   * @param \Drupal\search_api_solr\SolrBackendInterface $backend
-   *   The Search API server backend.
-   */
-  public function setBackend(SolrBackendInterface $backend) {
-    $this->backend = $backend;
-    $this->reset = TRUE;
-  }
-
-  /**
-   * Returns the Search API server backend.
-   *
-   * @return \Drupal\search_api_solr\SolrBackendInterface
-   *   The Search API server backend.
-   */
-  protected function getBackend() {
-    return $this->backend;
   }
 
 }

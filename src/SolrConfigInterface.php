@@ -61,4 +61,26 @@ interface SolrConfigInterface extends ConfigEntityInterface {
    */
   public function setMinimumSolrVersion($minimum_solr_version);
 
+  /**
+   * Gets the Solr Entity name.
+   *
+   * @return string
+   *   The Solr Entity name.
+   */
+  public function getName(): string;
+
+  /**
+   * Gets the Solr Entity definition as XML fragment.
+   *
+   * The XML format is used as part of a solrconfig.xml.
+   *
+   * @param bool $add_comment
+   *   Wether to add a comment to the XML or not to explain the purpose of this
+   *   Solr Entity.
+   *
+   * @return string
+   *   The Solr RequestHandler definition as XML.
+   */
+  public function getAsXml(bool $add_comment = TRUE): string;
+
 }

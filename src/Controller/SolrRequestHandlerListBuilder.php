@@ -3,17 +3,17 @@
 namespace Drupal\search_api_solr\Controller;
 
 /**
- * Provides a listing of SolrCache.
+ * Provides a listing of SolrRequestHandler.
  */
-class SolrCacheListBuilder extends AbstractSolrEntityListBuilder {
+class SolrRequestHandlerListBuilder extends AbstractSolrEntityListBuilder {
 
   /**
    * @var string
    */
-  protected $label = 'Solr Cache';
+  protected $label = 'Solr Request Handler';
 
   /**
-   * Returns a list of all disabled caches for current server.
+   * Returns a list of all disabled request handlers for current server.
    *
    * @return array
    * @throws \Drupal\search_api\SearchApiException
@@ -21,7 +21,7 @@ class SolrCacheListBuilder extends AbstractSolrEntityListBuilder {
   protected function getDisabledEntities(): array {
     /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
     $backend = $this->getBackend();
-    return $backend->getDisabledCaches();
+    return $backend->getDisabledRequestHandlers();
   }
 
 }

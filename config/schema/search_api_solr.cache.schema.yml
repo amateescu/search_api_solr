@@ -49,4 +49,4 @@ search_api_solr.solr_cache.*:
       nullable: true
       mapping:
         query:
-          type: search_api_solr.solr_field_type_scalar_values
+          type: search_api_solr.scalar_values

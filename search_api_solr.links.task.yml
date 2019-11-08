@@ -10,8 +10,14 @@ entity.solr_cache.collection:
   title: 'Caches'
   weight: 9
 
+entity.solr_request_handler.collection:
+  route_name: entity.solr_request_handler.collection
+  base_route: entity.search_api_server.canonical
+  title: 'Request Handlers'
+  weight: 10
+
 entity.solr_field_type.collection:
   route_name: entity.solr_field_type.collection
   base_route: entity.search_api_server.canonical
   title: 'Custom Field Types'
-  weight: 10
+  weight: 11

@@ -1,0 +1,155 @@
+<?php
+
+namespace Drupal\search_api_solr\Controller;
+
+use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Url;
+use Drupal\search_api\ServerInterface;
+use Drupal\search_api_solr\SolrConfigInterface;
+use Drupal\search_api_solr\SolrRequestHandlerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Response;
+
+/**
+ * Provides different listings of Solr Entities.
+ */
+abstract class AbstractSolrEntityController extends ControllerBase {
+
+  /**
+   * The messenger.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
+   * @var string
+   */
+  protected $entity_type_id;
+
+  /**
+   * @var string
+   */
+  protected $disabled_key;
+
+  /**
+   * @var string
+   */
+  protected $collection_route;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('messenger')
+    );
+  }
+
+  /**
+   * Constructs a SolrRequestHandlerController object.
+   *
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger service.
+   */
+  public function __construct(MessengerInterface $messenger) {
+    $this->messenger = $messenger;
+  }
+
+  /**
+   * Provides the listing page.
+   *
+   * @param \Drupal\search_api\ServerInterface $search_api_server
+   *   The Search API server entity.
+   *
+   * @return array
+   *   A render array as expected by drupal_render().
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   */
+  public function listing(ServerInterface $search_api_server) {
+    return $this->getListBuilder($search_api_server)->render();
+  }
+
+  /**
+   * Gets the list builder.
+   *
+   * Ensures that the list builder uses the correct Solr backend.
+   *
+   * @param \Drupal\search_api\ServerInterface $search_api_server
+   *   The Search API server entity.
+   *
+   * @return \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder
+   *   The SolrRequestHandler list builder object.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   */
+  protected function getListBuilder(ServerInterface $search_api_server) {
+    /** @var \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder $list_builder */
+    $list_builder = $this->entityTypeManager()->getListBuilder($this->entity_type_id);
+    $list_builder->setServer($search_api_server);
+    return $list_builder;
+  }
+
+  /**
+   * Provides an XML snippet containing all query cache settings as XML.
+   *
+   * @param \Drupal\search_api\ServerInterface $search_api_server
+   *   The Search API server entity.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   The HTTP response object.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   */
+  protected function streamXml(string $file_name, string $xml) {
+    return new Response(
+      $xml,
+      200,
+      [
+        'Content-Type' => 'application/xml',
+        'Content-Disposition' => 'attachment; filename=' . $file_name,
+      ]
+    );
+  }
+
+  /**
+   * Disables a Solr Entity on this server.
+   *
+   * @param \Drupal\search_api\ServerInterface $search_api_server
+   * @param \Drupal\search_api_solr\SolrConfigInterface $solr_entity
+   *
+   * @return RedirectResponse
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function disableOnServer(ServerInterface $search_api_server, SolrConfigInterface $solr_entity) {
+    $backend_config = $search_api_server->getBackendConfig();
+    $backend_config[$this->disabled_key][] = $solr_entity->id();
+    $backend_config[$this->disabled_key] = array_unique($backend_config[$this->disabled_key]);
+    $search_api_server->setBackendConfig($backend_config);
+    $search_api_server->save();
+    return new RedirectResponse(Url::fromRoute($this->collection_route, ['search_api_server' => $search_api_server->id()], ['query' => ['time' => \Drupal::time()->getRequestTime()]])->toString());
+  }
+
+  /**
+   * Enables a Solr Entity on this server.
+   *
+   * @param \Drupal\search_api\ServerInterface $search_api_server
+   * @param \Drupal\search_api_solr\SolrConfigInterface $solr_cache
+   *
+   * @return RedirectResponse
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function enableOnServer(ServerInterface $search_api_server, SolrConfigInterface $solr_entity) {
+    $backend_config = $search_api_server->getBackendConfig();
+    $backend_config[$this->disabled_key] = array_values(array_diff($backend_config[$this->disabled_key], [$solr_entity->id()]));
+    $search_api_server->setBackendConfig($backend_config);
+    $search_api_server->save();
+    return new RedirectResponse(Url::fromRoute($this->collection_route, ['search_api_server' => $search_api_server->id()], ['query' => ['time' => \Drupal::time()->getRequestTime()]])->toString());
+  }
+
+}

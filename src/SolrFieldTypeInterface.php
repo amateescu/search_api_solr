@@ -85,20 +85,6 @@ interface SolrFieldTypeInterface extends SolrConfigInterface {
   public function setFieldTypeAsJson($field_type);
 
   /**
-   * Gets the Solr Field Type definition as XML fragment.
-   *
-   * The XML format is used as part of a classic Solr schema.
-   *
-   * @param bool $add_comment
-   *   Wether to add a comment to the XML or not to explain the purpose of this
-   *   Solr Field Type.
-   *
-   * @return string
-   *   The Solr Field Type definition as XML.
-   */
-  public function getFieldTypeAsXml($add_comment = TRUE);
-
-  /**
    * Gets the Solr Spellcheck Field Type definition as nested associative array.
    *
    * @return array|null

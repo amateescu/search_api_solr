@@ -349,4 +349,18 @@ interface SolrBackendInterface extends BackendInterface {
    */
   public function getDisabledFieldTypes(): array;
 
+  /**
+   * Gets a list of Solr Caches that are disabled for this backend.
+   *
+   * @return String[]
+   */
+  public function getDisabledCaches(): array;
+
+  /**
+   * Gets a list of Solr Request Handlers that are disabled for this backend.
+   *
+   * @return String[]
+   */
+  public function getDisabledRequestHandlers(): array;
+
 }

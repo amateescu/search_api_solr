@@ -86,30 +86,7 @@ search_api_solr.solr_field_type.*:
           type: boolean
           label: 'The Solr collate caseLevel'
     solr_configs:
-      type: mapping
-      mapping:
-        searchComponents:
-          type: sequence
-          nullable: true
-          sequence:
-            type: mapping
-            mapping:
-              name:
-                type: string
-                label: 'The search component name'
-              class:
-                type: string
-                label: 'The search component class'
-              lst:
-                type: sequence
-                sequence:
-                  type: mapping
-                  mapping:
-                    name:
-                      type: string
-                      label: 'name'
-                    str:
-                      type: search_api_solr.solr_field_type_scalar_values
+      type: search_api_solr.solr_configs
     text_files:
       type: mapping
       mapping:
@@ -181,11 +158,11 @@ search_api_solr.solr_common_field_type:
           type: string
           label: 'The similarity class'
         str:
-          type: search_api_solr.solr_field_type_scalar_values
+          type: search_api_solr.scalar_values
         int:
-          type: search_api_solr.solr_field_type_scalar_values
+          type: search_api_solr.scalar_values
         float:
-          type: search_api_solr.solr_field_type_scalar_values
+          type: search_api_solr.scalar_values
 
 search_api_solr.solr_field_type_filters:
   type: sequence
@@ -528,15 +505,3 @@ search_api_solr.solr_field_type_filters:
         type: string
         label: 'SerbianNormalizationFilter::haircut'
         nullable: true
-
-search_api_solr.solr_field_type_scalar_values:
-  type: sequence
-  sequence:
-    type: mapping
-    mapping:
-      name:
-        type: string
-        label: 'property name'
-      VALUE:
-        type: string
-        label: 'property value'

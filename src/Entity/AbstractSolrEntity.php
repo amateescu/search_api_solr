@@ -3,11 +3,12 @@
 namespace Drupal\search_api_solr\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\search_api_solr\SolrConfigInterface;
 
 /**
  * Defines the abstract base class for Solr config entities.
  */
-class AbstractSolrConfig extends ConfigEntityBase {
+abstract class AbstractSolrEntity extends ConfigEntityBase implements SolrConfigInterface {
 
   /**
    * The ID.
@@ -45,6 +46,11 @@ class AbstractSolrConfig extends ConfigEntityBase {
   protected $text_files;
 
   /**
+   * {@inheritdoc}
+   */
+  abstract public function getName(): string;
+
+    /**
    * Formats a given array to an XML string.
    */
   protected function buildXmlFromArray($root_element_name, array $attributes) {
@@ -184,6 +190,34 @@ class AbstractSolrConfig extends ConfigEntityBase {
     $this->minimum_solr_version = $minimum_solr_version;
     return $this;
   }
+
+  /**
+   * Get all available options.
+   *
+   * @param string $key
+   * @param string $default
+   * @param string $prefix
+   *
+   * @return string[]
+   *   An array of options as strings.
+   */
+  protected static function getAvailableOptions(string $key, string $default, string $prefix) {
+    $options = [[$default]];
+    $config_factory = \Drupal::configFactory();
+    foreach ($config_factory->listAll($prefix) as $config_name) {
+      $config = $config_factory->get($config_name);
+      $options[] = $config->get($key);
+    }
+    $options = array_unique(array_merge(...$options));
+    sort($options);
+    return $options;
+  }
+
+  /**
+  * @return string[]
+  *   An array of environments as strings.
+  */
+  abstract public function getOptions();
 
   /**
    * {@inheritdoc}
