@@ -1362,7 +1362,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
 
     $backend_config['connector_config']['jmx'] = TRUE;
     $backend_config['disabled_field_types'] = ['text_foo_en_6_0_0', 'text_de_6_0_0', 'text_de_7_0_0'];
-    $backend_config['disabled_caches'] = ['default_document_7_0_0', 'default_filter_7_0_0'];
+    $backend_config['disabled_caches'] = ['cache_document_default_7_0_0', 'cache_filter_default_7_0_0'];
     $server->setBackendConfig($backend_config);
     $server->save();
     // Reset list builder's static cache.
@@ -1384,17 +1384,17 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $backend = $server->getBackend();
     if ($backend->getSolrConnector()->isCloud()) {
       $this->assertNotContains('solr.replication', $config_files['solrcore.properties']);
-      $this->assertNotContains('"/replication"', $config_files['solrconfig.xml']);
-      $this->assertNotContains('"/get"', $config_files['solrconfig.xml']);
+      $this->assertNotContains('"/replication"', $config_files['solrconfig_extra.xml']);
+      $this->assertNotContains('"/get"', $config_files['solrconfig_extra.xml']);
     }
     else {
       $this->assertContains('solr.replication', $config_files['solrcore.properties']);
-      $this->assertContains('"/replication"', $config_files['solrconfig.xml']);
+      $this->assertContains('"/replication"', $config_files['solrconfig_extra.xml']);
       if ('6' !== $solr_major_version) {
-        $this->assertNotContains('"/get"', $config_files['solrconfig.xml']);
+        $this->assertNotContains('"/get"', $config_files['solrconfig_extra.xml']);
       }
       else {
-        $this->assertContains('"/get"', $config_files['solrconfig.xml']);
+        $this->assertContains('"/get"', $config_files['solrconfig_extra.xml']);
       }
     }
   }

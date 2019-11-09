@@ -308,8 +308,8 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
     // Leverage the implicit Solr request handlers with default settings for
     // Solr Cloud.
     // @see https://lucene.apache.org/solr/guide/8_0/implicit-requesthandlers.html
-    $files['solrconfig.xml'] = preg_replace("@<requestHandler\s+name=\"/replication\".*?</requestHandler>@ms", '', $files['solrconfig.xml']);
-    $files['solrconfig.xml'] = preg_replace("@<requestHandler\s+name=\"/get\".*?</requestHandler>@ms", '', $files['solrconfig.xml']);
+    $files['solrconfig_extra.xml'] = preg_replace("@<requestHandler\s+name=\"/replication\".*?</requestHandler>@ms", '', $files['solrconfig_extra.xml']);
+    $files['solrconfig_extra.xml'] = preg_replace("@<requestHandler\s+name=\"/get\".*?</requestHandler>@ms", '', $files['solrconfig_extra.xml']);
     $files['solrcore.properties'] = preg_replace("/solr\.replication.*\n/", '', $files['solrcore.properties']);
 
     // Set the StatsCache.
