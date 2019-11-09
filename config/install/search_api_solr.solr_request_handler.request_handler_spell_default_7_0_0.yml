@@ -32,13 +32,13 @@ request_handler:
           VALUE: 'false'
         -
           name: spellcheck.count
-          VALUE: 1
+          VALUE: '1'
         -
           name: spellcheck.alternativeTermCount
-          VALUE: 5
+          VALUE: '5'
         -
           name: spellcheck.maxResultsForSuggest
-          VALUE: 5
+          VALUE: '5'
         -
           name: spellcheck.collate
           VALUE: 'true'
@@ -47,10 +47,10 @@ request_handler:
           VALUE: 'true'
         -
           name: spellcheck.maxCollationTries
-          VALUE: 10
+          VALUE: '10'
         -
           name: spellcheck.maxCollations
-          VALUE: 5
+          VALUE: '5'
   arr:
     -
       name: last-components

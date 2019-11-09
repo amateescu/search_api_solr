@@ -25,4 +25,4 @@ request_handler:
           VALUE: startup
         -
           name: confFiles
-          VALUE: ${solr.replication.confFiles:schema.xml,schema_extra_types.xml,schema_extra_fields.xml,elevate.xml}
+          VALUE: '${solr.replication.confFiles:schema.xml,schema_extra_types.xml,schema_extra_fields.xml,elevate.xml}'

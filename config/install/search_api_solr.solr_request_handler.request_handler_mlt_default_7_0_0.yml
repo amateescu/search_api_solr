@@ -16,10 +16,10 @@ request_handler:
       str:
         -
           name: mlt.mintf
-          VALUE: 1
+          VALUE: '1'
         -
           name: mlt.mindf
-          VALUE: 1
+          VALUE: '1'
         -
           name: mlt.match.include
           VALUE: 'false'
