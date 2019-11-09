@@ -134,6 +134,10 @@ search_api_solr.solr_configs:
             label: 'The search component class'
           lst:
             type: search_api_solr.list
+            nullable: true
+          str:
+            type: search_api_solr.scalar_values
+            nullable: true
 
 search_api_solr.list:
   type: sequence
