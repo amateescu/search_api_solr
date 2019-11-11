@@ -66,11 +66,11 @@ entity.solr_field_type.enable_for_server:
   requirements:
     _permission: 'administer search_api'
 
-entity.solr_field_type.schema_extra_types_collection:
-  path: '/admin/config/search/search-api/server/{search_api_server}/solr_field_type/schema-extra-types-collection'
+solr_configset.schema_extra_types:
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_configset/schema-extra-types'
   defaults:
     _title: 'schema_extra_types.xml'
-    _controller: '\Drupal\search_api_solr\Controller\SolrFieldTypeController::getSchemaExtraTypesXml'
+    _controller: '\Drupal\search_api_solr\Controller\SolrConfigSetController::streamSchemaExtraTypesXml'
   options:
     parameters:
       search_api_server:
@@ -80,11 +80,11 @@ entity.solr_field_type.schema_extra_types_collection:
     _permission: 'administer search_api'
     _search_api_solr_local_action_access_check: 'TRUE'
 
-entity.solr_field_type.schema_extra_fields_collection:
-  path: '/admin/config/search/search-api/server/{search_api_server}/solr_field_type/schema-extra-fields-collection'
+solr_configset.schema_extra_fields:
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_configset/schema-extra-fields'
   defaults:
     _title: 'schema_extra_fields.xml'
-    _controller: '\Drupal\search_api_solr\Controller\SolrFieldTypeController::getSchemaExtraFieldsXml'
+    _controller: '\Drupal\search_api_solr\Controller\SolrConfigSetController::streamSchemaExtraFieldsXml'
   options:
     parameters:
       search_api_server:
@@ -94,11 +94,11 @@ entity.solr_field_type.schema_extra_fields_collection:
     _permission: 'administer search_api'
     _search_api_solr_local_action_access_check: 'TRUE'
 
-entity.solr_field_type.solrconfig_extra_collection:
-  path: '/admin/config/search/search-api/server/{search_api_server}/solr_field_type/solrconfig-extra-collection'
+solr_configset.solrconfig_extra:
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_configset/solrconfig-extra'
   defaults:
     _title: 'solrconfig_extra.xml'
-    _controller: '\Drupal\search_api_solr\Controller\SolrFieldTypeController::getSolrconfigExtraXml'
+    _controller: '\Drupal\search_api_solr\Controller\SolrConfigSetController::streamSolrconfigExtraXml'
   options:
     parameters:
       search_api_server:
@@ -108,11 +108,25 @@ entity.solr_field_type.solrconfig_extra_collection:
     _permission: 'administer search_api'
     _search_api_solr_local_action_access_check: 'TRUE'
 
-entity.solr_field_type.config_zip_collection:
-  path: '/admin/config/search/search-api/server/{search_api_server}/solr_field_type/config-zip-collection'
+solr_configset.solrconfig_query:
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_cconfigset/solrconfig-query'
+  defaults:
+    _title: 'solrconfig_query.xml'
+    _controller: '\Drupal\search_api_solr\Controller\SolrConfigSetController::streamSolrconfigQueryXml'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
+        with_config_overrides: TRUE
+  requirements:
+    _permission: 'administer search_api'
+    _search_api_solr_local_action_access_check: 'TRUE'
+
+solr_configset.config_zip:
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_configset/config-zip'
   defaults:
     _title: 'config.zip'
-    _controller: '\Drupal\search_api_solr\Controller\SolrFieldTypeController::getConfigZip'
+    _controller: '\Drupal\search_api_solr\Controller\SolrConfigSetController::streamConfigZip'
   options:
     parameters:
       search_api_server:
@@ -152,20 +166,6 @@ entity.solr_cache.enable_for_server:
     _controller: '\Drupal\search_api_solr\Controller\SolrCacheController::enableOnServer'
   requirements:
     _permission: 'administer search_api'
-
-entity.solr_cache.solrconfig_query_collection:
-  path: '/admin/config/search/search-api/server/{search_api_server}/solr_cache/solrconfig-query-collection'
-  defaults:
-    _title: 'solrconfig_query.xml'
-    _controller: '\Drupal\search_api_solr\Controller\SolrCacheController::getSolrconfigQueryXml'
-  options:
-    parameters:
-      search_api_server:
-        type: entity:search_api_server
-        with_config_overrides: TRUE
-  requirements:
-    _permission: 'administer search_api'
-    _search_api_solr_local_action_access_check: 'TRUE'
 
 # Solr RequestHandler routing definition
 entity.solr_request_handler.collection:

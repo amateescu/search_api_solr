@@ -7,10 +7,8 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SolrConfigInterface;
-use Drupal\search_api_solr\SolrRequestHandlerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Provides different listings of Solr Entities.
@@ -91,28 +89,6 @@ abstract class AbstractSolrEntityController extends ControllerBase {
     $list_builder = $this->entityTypeManager()->getListBuilder($this->entity_type_id);
     $list_builder->setServer($search_api_server);
     return $list_builder;
-  }
-
-  /**
-   * Provides an XML snippet containing all query cache settings as XML.
-   *
-   * @param \Drupal\search_api\ServerInterface $search_api_server
-   *   The Search API server entity.
-   *
-   * @return \Symfony\Component\HttpFoundation\Response
-   *   The HTTP response object.
-   *
-   * @throws \Drupal\search_api\SearchApiException
-   */
-  protected function streamXml(string $file_name, string $xml) {
-    return new Response(
-      $xml,
-      200,
-      [
-        'Content-Type' => 'application/xml',
-        'Content-Disposition' => 'attachment; filename=' . $file_name,
-      ]
-    );
   }
 
   /**

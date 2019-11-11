@@ -601,7 +601,7 @@ function search_api_solr_entity_operation(\Drupal\Core\Entity\EntityInterface $e
   ) {
     $operations['get_config_zip'] = [
       'title' => t('Get config.zip'),
-      'url' => \Drupal\Core\Url::fromRoute('entity.solr_field_type.config_zip_collection', ['search_api_server' => $entity->id()]),
+      'url' => \Drupal\Core\Url::fromRoute('solr_configset.config_zip', ['search_api_server' => $entity->id()]),
       'weight' => 50,
     ];
   }

@@ -7,50 +7,12 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
-use Drupal\search_api_solr\SolrBackendInterface;
-use Drupal\search_api_solr\Utility\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use ZipStream\Option\Archive;
-use ZipStream\ZipStream;
 
 /**
  * Provides a listing of SolrFieldType.
  */
 class SolrFieldTypeListBuilder extends AbstractSolrEntityListBuilder {
-
-  /**
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entity_type_manger;
-
-  /**
-   * {@inheritdoc}
-   *
-   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-   */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    return new static(
-      $entity_type,
-      $container->get('entity_type.manager')
-    );
-  }
-
-  /**
-   * Constructs a new EntityListBuilder object.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type definition.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manger
-   *   The entity storage class.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-   */
-  public function __construct(EntityTypeInterface $entity_type, EntityTypeManagerInterface $entity_type_manger) {
-    $this->entity_type_manger = $entity_type_manger;
-    parent::__construct($entity_type, $entity_type_manger->getStorage($entity_type->id()));
-  }
 
   /**
    * {@inheritdoc}
@@ -319,7 +281,7 @@ class SolrFieldTypeListBuilder extends AbstractSolrEntityListBuilder {
   }
 
   /**
-   * Returns the formatted XML for schema_extra_fields.xml.
+   * Returns the formatted XML for solrconfig_extra.xml.
    *
    * @throws \Drupal\search_api\SearchApiException
    */
@@ -344,119 +306,7 @@ class SolrFieldTypeListBuilder extends AbstractSolrEntityListBuilder {
       $xml .= "</searchComponent>\n";
     }
 
-    /** @var \Drupal\search_api_solr\Controller\SolrRequestHandlerListBuilder $request_handler_list_builder */
-    $request_handler_list_builder = $this->entity_type_manger->getListBuilder('solr_request_handler');
-    $request_handler_list_builder->setBackend($this->backend);
-
-    $xml .= $request_handler_list_builder->getXml() . "\n";
-
     return $xml;
-  }
-
-  /**
-   * Returns the configuration files names and content.
-   *
-   * @return array
-   *   An associative array of files names and content.
-   *
-   * @throws \Drupal\search_api\SearchApiException
-   */
-  public function getConfigFiles() {
-    /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
-    $backend = $this->getBackend();
-    $connector = $backend->getSolrConnector();
-    $solr_branch = $real_solr_branch = $connector->getSolrBranch($this->assumed_minimum_version);
-
-    // Solr 8.x uses the same schema and solrconf as 7.x. So we can use the same
-    // templates and only adjust luceneMatchVersion to 8.
-    if ('8.x' === $solr_branch) {
-      $solr_branch = '7.x';
-    }
-
-    $search_api_solr_conf_path = drupal_get_path('module', 'search_api_solr') . '/solr-conf-templates/' . $solr_branch;
-    $solrcore_properties = parse_ini_file($search_api_solr_conf_path . '/solrcore.properties', FALSE, INI_SCANNER_RAW);
-
-    /** @var \Drupal\search_api_solr\Controller\SolrCacheListBuilder $cache_list_builder */
-    $cache_list_builder = $this->entity_type_manger->getListBuilder('solr_cache');
-    $cache_list_builder->setBackend($this->backend);
-
-    $files = [
-      'schema_extra_types.xml' => $this->getSchemaExtraTypesXml(),
-      'schema_extra_fields.xml' => $this->getSchemaExtraFieldsXml(),
-      'solrconfig_extra.xml' => $this->getSolrconfigExtraXml(),
-      'solrconfig_query.xml' => $cache_list_builder->getXml(),
-    ];
-
-    // Add language specific text files.
-    $solr_field_types = $this->getEnabledEntities();
-    /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
-    foreach ($solr_field_types as $solr_field_type) {
-      $text_files = $solr_field_type->getTextFiles();
-      foreach ($text_files as $text_file_name => $text_file) {
-        $text_file_name = Utility::completeTextFileName($text_file_name, $solr_field_type);
-        $files[$text_file_name] = $text_file;
-        $solrcore_properties['solr.replication.confFiles'] .= ',' . $text_file_name;
-      }
-    }
-
-    $solrcore_properties['solr.luceneMatchVersion'] = $connector->getLuceneMatchVersion($this->assumed_minimum_version ?: '');
-    // @todo
-    // $solrcore_properties['solr.replication.masterUrl']
-    $solrcore_properties_string = '';
-    foreach ($solrcore_properties as $property => $value) {
-      $solrcore_properties_string .= $property . '=' . $value . "\n";
-    }
-    $files['solrcore.properties'] = $solrcore_properties_string;
-
-    // Now add all remaining static files from the conf dir that have not been
-    // generated dynamically above.
-    foreach (scandir($search_api_solr_conf_path) as $file) {
-      if (strpos($file, '.') !== 0) {
-        foreach (array_keys($files) as $existing_file) {
-          if ($file == $existing_file) {
-            continue 2;
-          }
-        }
-        $files[$file] = str_replace(
-          ['SEARCH_API_SOLR_MIN_SCHEMA_VERSION', 'SEARCH_API_SOLR_BRANCH'],
-          [SolrBackendInterface::SEARCH_API_SOLR_MIN_SCHEMA_VERSION, $real_solr_branch],
-          file_get_contents($search_api_solr_conf_path . '/' . $file)
-        );
-      }
-    }
-
-    $connector->alterConfigFiles($files, $solrcore_properties['solr.luceneMatchVersion'], $this->serverId);
-    $this->moduleHandler->alter('search_api_solr_config_files', $files, $solrcore_properties['solr.luceneMatchVersion'], $this->serverId);
-    return $files;
-  }
-
-  /**
-   * Returns a ZipStream of all configuration files.
-   *
-   * @param \ZipStream\Option\Archive $archive_options
-   *
-   * @return \ZipStream\ZipStream
-   *   The ZipStream that contains all configuration files.
-   *
-   * @throws \Drupal\search_api\SearchApiException
-   * @throws \ZipStream\Exception\FileNotFoundException
-   * @throws \ZipStream\Exception\FileNotReadableException
-   */
-  public function getConfigZip(Archive $archive_options): ZipStream {
-    /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
-    $backend = $this->getBackend();
-    $connector = $backend->getSolrConnector();
-    $solr_branch = $connector->getSolrBranch($this->assumed_minimum_version);
-
-    $zip = new ZipStream('solr_' . $solr_branch . '_config.zip', $archive_options);
-
-    $files = $this->getConfigFiles();
-
-    foreach ($files as $name => $content) {
-      $zip->addFile($name, $content);
-    }
-
-    return $zip;
   }
 
 }

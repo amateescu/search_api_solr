@@ -26,21 +26,6 @@ class SolrCacheController extends AbstractSolrEntityController {
   }
 
   /**
-   * Provides an XML snippet containing all query cache settings as XML.
-   *
-   * @param \Drupal\search_api\ServerInterface $search_api_server
-   *   The Search API server entity.
-   *
-   * @return \Symfony\Component\HttpFoundation\Response
-   *   The HTTP response object.
-   *
-   * @throws \Drupal\search_api\SearchApiException
-   */
-  public function getSolrconfigQueryXml(ServerInterface $search_api_server) {
-    return parent::streamXml('solrconfig_query.xml', $this->getListBuilder($search_api_server)->getXml());
-  }
-
-  /**
    * Disables a Solr Entity on this server.
    *
    * @param \Drupal\search_api\ServerInterface $search_api_server

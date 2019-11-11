@@ -8,7 +8,7 @@ label: 'Autocomplete'
 minimum_solr_version: 7.0.0
 environments: {}
 request_handler:
-  name: /spell
+  name: /autocomplete
   class: solr.SearchHandler
   startup: lazy
   lst:

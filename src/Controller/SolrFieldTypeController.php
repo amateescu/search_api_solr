@@ -27,51 +27,6 @@ class SolrFieldTypeController extends AbstractSolrEntityController {
   }
 
   /**
-   * Provides an XML snippet containing all extra Solr field types.
-   *
-   * @param \Drupal\search_api\ServerInterface $search_api_server
-   *   The Search API server entity.
-   *
-   * @return \Symfony\Component\HttpFoundation\Response
-   *   The HTTP response object.
-   *
-   * @throws \Drupal\search_api\SearchApiException
-   */
-  public function getSchemaExtraTypesXml(ServerInterface $search_api_server) {
-    return parent::streamXml('schema_extra_types.xml', $this->getListBuilder($search_api_server)->getSchemaExtraTypesXml());
-  }
-
-  /**
-   * Provides an XML snippet containing all extra Solr fields.
-   *
-   * @param \Drupal\search_api\ServerInterface $search_api_server
-   *   The Search API server entity.
-   *
-   * @return \Symfony\Component\HttpFoundation\Response
-   *   The HTTP response object.
-   *
-   * @throws \Drupal\search_api\SearchApiException
-   */
-  public function getSchemaExtraFieldsXml(ServerInterface $search_api_server) {
-    return parent::streamXml('schema_extra_fields.xml', $this->getListBuilder($search_api_server)->getSchemaExtraFieldsXml());
-  }
-
-  /**
-   * Provides an XML snippet containing all extra solrconfig.
-   *
-   * @param \Drupal\search_api\ServerInterface $search_api_server
-   *   The Search API server entity.
-   *
-   * @return \Symfony\Component\HttpFoundation\Response
-   *   The HTTP response object.
-   *
-   * @throws \Drupal\search_api\SearchApiException
-   */
-  public function getSolrconfigExtraXml(ServerInterface $search_api_server) {
-    return parent::streamXml('solrconfig_extra.xml', $this->getListBuilder($search_api_server)->getSolrconfigExtraXml());
-  }
-
-  /**
    * Provides a zip archive containing a complete Solr configuration.
    *
    * @param \Drupal\search_api\ServerInterface $search_api_server
