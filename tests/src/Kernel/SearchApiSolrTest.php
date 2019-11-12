@@ -1369,7 +1369,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     // Reset static caches.
     $solr_configset_controller->setServer($server);
 
-    $config_files = $list_builder->getConfigFiles();
+    $config_files = $solr_configset_controller->getConfigFiles();
     $this->assertContains('<jmx />', $config_files['solrconfig_extra.xml']);
     $this->assertContains('solr.install.dir=' . $solr_install_dir, $config_files['solrcore.properties']);
     $this->assertContains('text_en', $config_files['schema_extra_types.xml']);
