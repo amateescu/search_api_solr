@@ -10,6 +10,7 @@ use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\Utility;
 use Drupal\search_api_autocomplete\Entity\Search;
+use Drupal\search_api_solr\Controller\SolrConfigSetController;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\Tests\search_api_solr\Traits\InvokeMethodTrait;
@@ -1312,6 +1313,9 @@ class SearchApiSolrTest extends SolrBackendTestBase {
    * Test generation of Solr configuration files.
    *
    * @dataProvider configGenerationDataProvider
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function testConfigGeneration(array $files) {
     $server = $this->getServer();
@@ -1325,13 +1329,10 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $server->setBackendConfig($backend_config);
     $server->save();
 
-    /** @var \Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
-    $list_builder = \Drupal::entityTypeManager()
-      ->getListBuilder('solr_field_type');
+    $solr_configset_controller = new SolrConfigSetController();
+    $solr_configset_controller->setServer($server);
 
-    $list_builder->setServer($server);
-
-    $config_files = $list_builder->getConfigFiles();
+    $config_files = $solr_configset_controller->getConfigFiles();
 
     foreach ($files as $file_name => $expected_strings) {
       $this->assertArrayHasKey($file_name, $config_files);
@@ -1365,8 +1366,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $backend_config['disabled_caches'] = ['cache_document_default_7_0_0', 'cache_filter_default_7_0_0'];
     $server->setBackendConfig($backend_config);
     $server->save();
-    // Reset list builder's static cache.
-    $list_builder->setServer($server);
+    // Reset static caches.
+    $solr_configset_controller->setServer($server);
 
     $config_files = $list_builder->getConfigFiles();
     $this->assertContains('<jmx />', $config_files['solrconfig_extra.xml']);
