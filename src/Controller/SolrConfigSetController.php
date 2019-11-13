@@ -172,8 +172,11 @@ class SolrConfigSetController extends ControllerBase {
       'schema_extra_types.xml' => $this->getSchemaExtraTypesXml(),
       'schema_extra_fields.xml' => $this->getSchemaExtraFieldsXml(),
       'solrconfig_extra.xml' => $this->getSolrconfigExtraXml(),
-      'solrconfig_query.xml' => $this->getSolrconfigQueryXml(),
     ];
+
+    if ('6.x' !== $solr_branch) {
+      $files['solrconfig_query.xml'] = $this->getSolrconfigQueryXml();
+    }
 
     // Add language specific text files.
     $list_builder = $this->getListBuilder('solr_field_type');

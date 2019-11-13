@@ -1385,17 +1385,17 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $backend = $server->getBackend();
     if ($backend->getSolrConnector()->isCloud()) {
       $this->assertNotContains('solr.replication', $config_files['solrcore.properties']);
-      $this->assertNotContains('"/replication"', $config_files['solrconfig_extra.xml']);
-      $this->assertNotContains('"/get"', $config_files['solrconfig_extra.xml']);
+      $this->assertNotContains('"/replication"', $config_files[('6' !== $solr_major_version) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
+      $this->assertNotContains('"/get"', $config_files[('6' !== $solr_major_version) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
     }
     else {
       $this->assertContains('solr.replication', $config_files['solrcore.properties']);
-      $this->assertContains('"/replication"', $config_files['solrconfig_extra.xml']);
+      $this->assertContains('"/replication"', $config_files[('6' !== $solr_major_version) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
       if ('6' !== $solr_major_version) {
         $this->assertNotContains('"/get"', $config_files['solrconfig_extra.xml']);
       }
       else {
-        $this->assertContains('"/get"', $config_files['solrconfig_extra.xml']);
+        $this->assertContains('"/get"', $config_files['solrconfig.xml']);
       }
     }
   }
