@@ -16,7 +16,7 @@ search_api_solr.solr_request_handler.*:
       sequence:
         type: string
     recommended:
-      type: bool
+      type: boolean
     request_handler:
       type: mapping
       mapping:
