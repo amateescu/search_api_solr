@@ -83,4 +83,10 @@ interface SolrConfigInterface extends ConfigEntityInterface {
    */
   public function getAsXml(bool $add_comment = TRUE): string;
 
+  /**
+   * Indicates if a Config Entity is recommended to be used.
+   * @return bool
+   */
+  public function isRecommended(): bool;
+
 }

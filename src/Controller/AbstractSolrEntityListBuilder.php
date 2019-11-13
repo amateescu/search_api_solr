@@ -29,11 +29,6 @@ abstract class AbstractSolrEntityListBuilder extends ConfigEntityListBuilder {
   protected $default_option = 'default';
 
   /**
-   * @var bool
-   */
-  protected $reset = FALSE;
-
-  /**
    * {@inheritdoc}
    */
   public function buildHeader() {
@@ -266,4 +261,33 @@ abstract class AbstractSolrEntityListBuilder extends ConfigEntityListBuilder {
     }
     return $xml;
   }
+
+  /**
+   * @return array
+   * @throws \Drupal\search_api\SearchApiException
+   */
+  public function getRecommendedEntities(): array {
+    $entities = $this->load();
+    foreach ($entities as $key => $entity) {
+      if (!$entity->isRecommended()) {
+        unset($entities[$key]);
+      }
+    }
+    return $entities;
+  }
+
+  /**
+   * @return array
+   * @throws \Drupal\search_api\SearchApiException
+   */
+  public function getNotRecommendedEntities(): array {
+    $entities = $this->load();
+    foreach ($entities as $key => $entity) {
+      if ($entity->isRecommended()) {
+        unset($entities[$key]);
+      }
+    }
+    return $entities;
+  }
+
 }

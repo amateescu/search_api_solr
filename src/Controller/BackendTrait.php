@@ -32,6 +32,11 @@ trait BackendTrait {
   protected $assumed_minimum_version = '';
 
   /**
+   * @var bool
+   */
+  protected $reset = FALSE;
+
+  /**
    * Sets the Search API server and calls setBackend() afterwards.
    *
    * @param \Drupal\search_api\ServerInterface $server

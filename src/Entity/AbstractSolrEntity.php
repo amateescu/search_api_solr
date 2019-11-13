@@ -238,4 +238,10 @@ abstract class AbstractSolrEntity extends ConfigEntityBase implements SolrConfig
     return $uri_route_parameters;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function isRecommended(): bool {
+    return TRUE;
+  }
 }

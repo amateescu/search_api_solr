@@ -3,11 +3,8 @@
 namespace Drupal\search_api_solr\Controller;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a listing of SolrFieldType.
