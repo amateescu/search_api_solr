@@ -27,7 +27,7 @@ request_handler:
           VALUE: '10'
   arr:
     -
-      name: last-components
+      name: components
       str:
         -
           VALUE: suggest
