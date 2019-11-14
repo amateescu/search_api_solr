@@ -1355,7 +1355,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     }
 
     // Write files for docker to disk.
-    if ('8' === $solr_major_version) {
+    if (8 === $solr_major_version) {
       foreach ($config_files as $file_name => $content) {
         file_put_contents(__DIR__ . '/../../solr-conf/' . $solr_major_version . '.x/' . $file_name, $content);
       }
@@ -1375,7 +1375,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertContains('text_en', $config_files['schema_extra_types.xml']);
     $this->assertNotContains('text_foo_en', $config_files['schema_extra_types.xml']);
     $this->assertNotContains('text_de', $config_files['schema_extra_types.xml']);
-    if ('6' !== $solr_major_version) {
+    if (6 !== $solr_major_version) {
       $this->assertNotContains('documentCache', $config_files['solrconfig_query.xml']);
       $this->assertNotContains('filterCache', $config_files['solrconfig_query.xml']);
     }
@@ -1386,13 +1386,13 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $backend = $server->getBackend();
     if ($backend->getSolrConnector()->isCloud()) {
       $this->assertNotContains('solr.replication', $config_files['solrcore.properties']);
-      $this->assertNotContains('"/replication"', $config_files[('6' !== $solr_major_version) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
-      $this->assertNotContains('"/get"', $config_files[('6' !== $solr_major_version) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
+      $this->assertNotContains('"/replication"', $config_files[(6 !== $solr_major_version) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
+      $this->assertNotContains('"/get"', $config_files[(6 !== $solr_major_version) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
     }
     else {
       $this->assertContains('solr.replication', $config_files['solrcore.properties']);
-      $this->assertContains('"/replication"', $config_files[('6' !== $solr_major_version) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
-      if ('6' !== $solr_major_version) {
+      $this->assertContains('"/replication"', $config_files[(6 !== $solr_major_version) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
+      if (6 !== $solr_major_version) {
         $this->assertNotContains('"/get"', $config_files['solrconfig_extra.xml']);
       }
       else {

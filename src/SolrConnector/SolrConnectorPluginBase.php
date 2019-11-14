@@ -404,9 +404,9 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function getSolrMajorVersion($version = '') {
+  public function getSolrMajorVersion($version = ''): int {
     list($major, ,) = explode('.', $version ?: $this->getSolrVersion());
-    return $major;
+    return (int) $major;
   }
 
   /**

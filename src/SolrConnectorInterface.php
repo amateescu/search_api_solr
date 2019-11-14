@@ -61,7 +61,7 @@ interface SolrConnectorInterface extends ConfigurablePluginInterface {
    * @return int
    *   The Solr major version.
    */
-  public function getSolrMajorVersion($version = '');
+  public function getSolrMajorVersion($version = ''): int;
 
   /**
    * Gets the current Solr branch name.
