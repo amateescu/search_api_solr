@@ -32,6 +32,11 @@ abstract class AbstractSolrEntity extends ConfigEntityBase implements SolrConfig
   protected $minimum_solr_version;
 
   /**
+   * @var bool
+   */
+  protected $recommended = TRUE;
+
+  /**
    * Solr Field Type specific additions to solrconfig.xml.
    *
    * @var array
@@ -242,6 +247,6 @@ abstract class AbstractSolrEntity extends ConfigEntityBase implements SolrConfig
    * {@inheritdoc}
    */
   public function isRecommended(): bool {
-    return TRUE;
+    return $this->recommended;
   }
 }

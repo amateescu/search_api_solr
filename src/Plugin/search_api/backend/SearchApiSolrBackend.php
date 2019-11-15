@@ -180,6 +180,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
+    $entityTypeManager = \Drupal::entityTypeManager();
+    /** @var \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder $solr_field_type_list_builder */
+    $solr_field_type_list_builder = $entityTypeManager->getListBuilder('solr_field_type');
+    /** @var \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder $solr_cache_list_builder */
+    $solr_cache_list_builder = $entityTypeManager->getListBuilder('solr_cache');
+    /** @var \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder $solr_request_handler_list_builder */
+    $solr_request_handler_list_builder = $entityTypeManager->getListBuilder('solr_request_handler');
+
     return [
       'retrieve_data' => FALSE,
       'highlight_data' => FALSE,
@@ -193,9 +201,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'connector' => NULL,
       'connector_config' => [],
       'optimize' => FALSE,
-      'disabled_field_types' => [],
-      'disabled_caches' => [],
-      'disabled_request_handlers' => [],
+      'disabled_field_types' => array_keys($solr_field_type_list_builder->getAllNotRecommendedEntities()),
+      'disabled_caches' => array_keys($solr_cache_list_builder->getAllNotRecommendedEntities()),
+      'disabled_request_handlers' => array_keys($solr_request_handler_list_builder->getAllNotRecommendedEntities()),
       // 10 is Solr's default limit if rows is not set.
       'rows' => 10,
     ];

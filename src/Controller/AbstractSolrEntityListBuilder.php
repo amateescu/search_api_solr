@@ -290,4 +290,30 @@ abstract class AbstractSolrEntityListBuilder extends ConfigEntityListBuilder {
     return $entities;
   }
 
+  /**
+   * @return array
+   */
+  public function getAllRecommendedEntities(): array {
+    $entities = ConfigEntityListBuilder::load();
+    foreach ($entities as $key => $entity) {
+      if (!$entity->isRecommended()) {
+        unset($entities[$key]);
+      }
+    }
+    return $entities;
+  }
+
+  /**
+   * @return array
+   */
+  public function getAllNotRecommendedEntities(): array {
+    $entities = ConfigEntityListBuilder::load();
+    foreach ($entities as $key => $entity) {
+      if ($entity->isRecommended()) {
+        unset($entities[$key]);
+      }
+    }
+    return $entities;
+  }
+
 }

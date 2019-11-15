@@ -99,10 +99,4 @@ class SolrRequestHandler extends AbstractSolrEntity implements SolrRequestHandle
     return $comment . $formatted_xml_string . "\n";
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function isRecommended(): bool {
-    return $this->request_handler['recommended'];
-  }
 }
