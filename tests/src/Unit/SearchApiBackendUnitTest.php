@@ -3,12 +3,14 @@
 namespace Drupal\Tests\search_api_solr\Unit;
 
 use Drupal\Core\Config\Config;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\search_api\Plugin\search_api\data_type\value\TextToken;
 use Drupal\search_api\Plugin\search_api\data_type\value\TextValue;
 use Drupal\search_api\Utility\DataTypeHelperInterface;
 use Drupal\search_api\Utility\FieldsHelperInterface;
+use Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder;
 use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
 use Drupal\search_api_solr\Plugin\search_api\data_type\value\DateRangeValue;
 use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginManager;
@@ -71,6 +73,8 @@ class SearchApiBackendUnitTest extends UnitTestCase {
       $type,
     ];
 
+    $listBuilder = $this->prophesize(AbstractSolrEntityListBuilder::class);
+    $listBuilder->getAllNotRecommendedEntities()->willReturn([]);
     // Get dummies for most constructor args of SearchApiSolrBackend.
     $module_handler = $this->prophesize(ModuleHandlerInterface::class)->reveal();
     $config = $this->prophesize(Config::class)->reveal();
@@ -78,11 +82,15 @@ class SearchApiBackendUnitTest extends UnitTestCase {
     $solr_connector_plugin_manager = $this->prophesize(SolrConnectorPluginManager::class)->reveal();
     $fields_helper = $this->prophesize(FieldsHelperInterface::class)->reveal();
     $data_type_helper = $this->prophesize(DataTypeHelperInterface::class)->reveal();
+    $entity_type_manager = $this->prophesize(EntityTypeManagerInterface::class);
+    $entity_type_manager->getListBuilder('solr_field_type')->willReturn($listBuilder->reveal());
+    $entity_type_manager->getListBuilder('solr_cache')->willReturn($listBuilder->reveal());
+    $entity_type_manager->getListBuilder('solr_request_handler')->willReturn($listBuilder->reveal());
 
     // This helper is actually used.
     $query_helper = new Helper();
 
-    $backend = new SearchApiSolrBackend([], NULL, [], $module_handler, $config, $language_manager, $solr_connector_plugin_manager, $fields_helper, $data_type_helper, $query_helper);
+    $backend = new SearchApiSolrBackend([], NULL, [], $module_handler, $config, $language_manager, $solr_connector_plugin_manager, $fields_helper, $data_type_helper, $query_helper, $entity_type_manager->reveal());
 
     // addIndexField() should convert the $input according to $type and call
     // Document::addField() with the correctly converted $input.

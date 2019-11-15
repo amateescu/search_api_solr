@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\TypedData\EntityDataDefinitionInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -144,11 +145,16 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected $queryHelper;
 
   /**
+   * The entity type manager.
+   *
+   * @var EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, ModuleHandlerInterface $module_handler, Config $search_api_solr_settings, LanguageManagerInterface $language_manager, SolrConnectorPluginManager $solr_connector_plugin_manager, FieldsHelperInterface $fields_helper, DataTypeHelperInterface $dataTypeHelper, Helper $query_helper) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, ModuleHandlerInterface $module_handler, Config $search_api_solr_settings, LanguageManagerInterface $language_manager, SolrConnectorPluginManager $solr_connector_plugin_manager, FieldsHelperInterface $fields_helper, DataTypeHelperInterface $dataTypeHelper, Helper $query_helper, EntityTypeManagerInterface $entityTypeManager) {
     $this->moduleHandler = $module_handler;
     $this->searchApiSolrSettings = $search_api_solr_settings;
     $this->languageManager = $language_manager;
@@ -156,6 +162,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $this->fieldsHelper = $fields_helper;
     $this->dataTypeHelper = $dataTypeHelper;
     $this->queryHelper = $query_helper;
+    $this->entityTypeManager = $entityTypeManager;
+
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
 
   /**
@@ -172,7 +181,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $container->get('plugin.manager.search_api_solr.connector'),
       $container->get('search_api.fields_helper'),
       $container->get('search_api.data_type_helper'),
-      $container->get('solarium.query_helper')
+      $container->get('solarium.query_helper'),
+      $container->get('entity_type.manager')
     );
   }
 
@@ -180,13 +190,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    $entityTypeManager = \Drupal::entityTypeManager();
     /** @var \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder $solr_field_type_list_builder */
-    $solr_field_type_list_builder = $entityTypeManager->getListBuilder('solr_field_type');
+    $solr_field_type_list_builder = $this->entityTypeManager->getListBuilder('solr_field_type');
     /** @var \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder $solr_cache_list_builder */
-    $solr_cache_list_builder = $entityTypeManager->getListBuilder('solr_cache');
+    $solr_cache_list_builder = $this->entityTypeManager->getListBuilder('solr_cache');
     /** @var \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder $solr_request_handler_list_builder */
-    $solr_request_handler_list_builder = $entityTypeManager->getListBuilder('solr_request_handler');
+    $solr_request_handler_list_builder = $this->entityTypeManager->getListBuilder('solr_request_handler');
 
     return [
       'retrieve_data' => FALSE,
