@@ -46,6 +46,11 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
       label: 'Disabled Solr Request Handlers'
       sequence:
         type: string
+    disabled_request_dispatchers:
+      type: sequence
+      label: 'Disabled Solr Request Dispatchers'
+      sequence:
+        type: string
     rows:
       type: integer
       label: 'The default result rows limit if no limit is set as query option'
