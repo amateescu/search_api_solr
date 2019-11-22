@@ -86,6 +86,7 @@ class SearchApiBackendUnitTest extends UnitTestCase {
     $entity_type_manager->getListBuilder('solr_field_type')->willReturn($listBuilder->reveal());
     $entity_type_manager->getListBuilder('solr_cache')->willReturn($listBuilder->reveal());
     $entity_type_manager->getListBuilder('solr_request_handler')->willReturn($listBuilder->reveal());
+    $entity_type_manager->getListBuilder('solr_request_dispatcher')->willReturn($listBuilder->reveal());
 
     // This helper is actually used.
     $query_helper = new Helper();
