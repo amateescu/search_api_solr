@@ -2,7 +2,6 @@
 
 namespace Drupal\search_api_solr\Controller;
 
-use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SolrConfigInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;

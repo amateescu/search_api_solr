@@ -4,7 +4,7 @@
   <!ENTITY extra SYSTEM "solrconfig_extra.xml">
   <!ENTITY index SYSTEM "solrconfig_index.xml">
   <!ENTITY query SYSTEM "solrconfig_query.xml">
-  <!ENTITY query SYSTEM "solrconfig_requestdispatcher.xml">
+  <!ENTITY requestdispatcher SYSTEM "solrconfig_requestdispatcher.xml">
 ]>
 
 <!--
