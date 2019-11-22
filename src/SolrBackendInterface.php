@@ -363,4 +363,11 @@ interface SolrBackendInterface extends BackendInterface {
    */
   public function getDisabledRequestHandlers(): array;
 
+  /**
+   * Gets a list of Solr Request Dispatchers that are disabled for this backend.
+   *
+   * @return String[]
+   */
+  public function getDisabledRequestDispatchers(): array;
+
 }

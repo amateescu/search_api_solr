@@ -109,10 +109,24 @@ solr_configset.solrconfig_extra:
     _search_api_solr_local_action_access_check: 'TRUE'
 
 solr_configset.solrconfig_query:
-  path: '/admin/config/search/search-api/server/{search_api_server}/solr_cconfigset/solrconfig-query'
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_configset/solrconfig-query'
   defaults:
     _title: 'solrconfig_query.xml'
     _controller: '\Drupal\search_api_solr\Controller\SolrConfigSetController::streamSolrconfigQueryXml'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
+        with_config_overrides: TRUE
+  requirements:
+    _permission: 'administer search_api'
+    _search_api_solr_local_action_access_check: 'TRUE'
+
+solr_configset.solrconfig_requestdispatcher:
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_cconfigset/solrconfig-requestdispatcher'
+  defaults:
+    _title: 'solrconfig_requestdispatcher.xml'
+    _controller: '\Drupal\search_api_solr\Controller\SolrConfigSetController::streamSolrconfigRequestDispatcherXml'
   options:
     parameters:
       search_api_server:
@@ -195,6 +209,37 @@ entity.solr_request_handler.enable_for_server:
   defaults:
     _title: 'Enable SolrRequestHandler for server'
     _controller: '\Drupal\search_api_solr\Controller\SolrRequestHandlerController::enableOnServer'
+  requirements:
+    _permission: 'administer search_api'
+
+# Solr RequestDispatcher routing definition
+entity.solr_request_dispatcher.collection:
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_request_dispatcher'
+  defaults:
+    _title: 'SolrRequestDispatcher Configuration'
+    _controller: '\Drupal\search_api_solr\Controller\SolrRequestDispatcherController::listing'
+  options:
+    parameters:
+      search_api_server:
+        type: entity:search_api_server
+        with_config_overrides: TRUE
+  requirements:
+    _permission: 'administer search_api'
+    _search_api_solr_local_action_access_check: 'TRUE'
+
+entity.solr_request_dispatcher.disable_for_server:
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_request_dispatcher/{solr_request_dispatcher}/disable'
+  defaults:
+    _title: 'Disable SolrRequestDispatcher for server'
+    _controller: '\Drupal\search_api_solr\Controller\SolrRequestDispatcherController::disableOnServer'
+  requirements:
+    _permission: 'administer search_api'
+
+entity.solr_request_dispatcher.enable_for_server:
+  path: '/admin/config/search/search-api/server/{search_api_server}/solr_request_dispatcher/{solr_request_dispatcher}/enable'
+  defaults:
+    _title: 'Enable SolrRequestDispatcher for server'
+    _controller: '\Drupal\search_api_solr\Controller\SolrRequestDispatcherController::enableOnServer'
   requirements:
     _permission: 'administer search_api'
 

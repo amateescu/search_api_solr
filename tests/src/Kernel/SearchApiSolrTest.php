@@ -1378,6 +1378,12 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     if (6 !== $solr_major_version) {
       $this->assertNotContains('documentCache', $config_files['solrconfig_query.xml']);
       $this->assertNotContains('filterCache', $config_files['solrconfig_query.xml']);
+      $this->assertContains('httpCaching', $config_files['solrconfig_requestdispatcher.xml']);
+      $this->assertContains('never304="true"', $config_files['solrconfig_requestdispatcher.xml']);
+    }
+    else {
+      $this->assertContains('httpCaching', $config_files['solrconfig.xml']);
+      $this->assertContains('never304="true"', $config_files['solrconfig.xml']);
     }
     $this->assertContains('ts_X3b_en_*', $config_files['schema_extra_fields.xml']);
     $this->assertNotContains('ts_X3b_de_*', $config_files['schema_extra_fields.xml']);

@@ -16,8 +16,14 @@ entity.solr_request_handler.collection:
   title: 'Request Handlers'
   weight: 10
 
+entity.solr_request_dispatcher.collection:
+  route_name: entity.solr_request_dispatcher.collection
+  base_route: entity.search_api_server.canonical
+  title: 'Request Dispatchers'
+  weight: 11
+
 entity.solr_field_type.collection:
   route_name: entity.solr_field_type.collection
   base_route: entity.search_api_server.canonical
   title: 'Custom Field Types'
-  weight: 11
+  weight: 12

@@ -13,17 +13,9 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 class SolrCacheController extends AbstractSolrEntityController {
 
   /**
-   * Constructs a SolrCacheController object.
-   *
-   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
-   *   The messenger service.
+   * @var string
    */
-  public function __construct(MessengerInterface $messenger) {
-    parent::__construct($messenger);
-    $this->entity_type_id = 'solr_cache';
-    $this->disabled_key = 'disabled_caches';
-    $this->collection_route = 'entity.solr_cache.collection';
-  }
+  protected $entity_type_id = 'solr_cache';
 
   /**
    * Disables a Solr Entity on this server.

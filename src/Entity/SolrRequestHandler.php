@@ -20,7 +20,8 @@ use Drupal\search_api_solr\SolrRequestHandlerInterface;
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "label",
- *     "uuid" = "uuid"
+ *     "uuid" = "uuid",
+ *     "disabled" = "disabled_request_handlers"
  *   },
  *   links = {
  *     "disable-for-server" = "/admin/config/search/search-api/server/{search_api_server}/solr_request_handler/{solr_request_handler}/disable",
@@ -56,6 +57,11 @@ class SolrRequestHandler extends AbstractSolrEntity implements SolrRequestHandle
    * {@inheritdoc}
    */
   public function getName(): string {
+    $nested_name = $this->request_handler['lst'][0]['name'] ?? 'default';
+    return  $this->request_handler['name'] . '_' . $nested_name;
+  }
+
+  public function getPurposeId(): string {
     return $this->request_handler['name'];
   }
 
@@ -80,7 +86,7 @@ class SolrRequestHandler extends AbstractSolrEntity implements SolrRequestHandle
    *   An array of environments as strings.
    */
   public static function getAvailableEnvironments() {
-    return parent::getAvailableOptions('environments', 'default', 'search_api_solr.solr_cache.');
+    return parent::getAvailableOptions('environments', 'default', 'search_api_solr.solr_request_handler.');
   }
 
   /**

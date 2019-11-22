@@ -7,6 +7,10 @@ use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\ServerInterface;
+use Drupal\search_api_solr\Entity\AbstractSolrEntity;
+use Drupal\search_api_solr\Entity\SolrCache;
+use Drupal\search_api_solr\Entity\SolrRequestDispatcher;
+use Drupal\search_api_solr\Entity\SolrRequestHandler;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrFieldTypeInterface;
@@ -1019,6 +1023,22 @@ class Utility {
    */
   public static function formatCheckpointId(string $checkpoint, string $index_id, string $site_hash): string {
     return $checkpoint . '-' . $index_id . '-' . $site_hash;
+  }
+
+  /**
+   * Get all available environments.
+   *
+   * @return string[]
+   *   An array of environments as strings.
+   */
+  public static function getAvailableEnvironments() {
+    $options = array_unique(array_merge(
+      SolrCache::getAvailableEnvironments(),
+      SolrRequestHandler::getAvailableEnvironments(),
+      SolrRequestDispatcher::getAvailableEnvironments()
+    ));
+    sort($options);
+    return $options;
   }
 
 }

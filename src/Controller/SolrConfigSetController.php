@@ -2,10 +2,13 @@
 
 namespace Drupal\search_api_solr\Controller;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\search_api\ServerInterface;
+use Drupal\search_api_solr\SearchApiSolrConflictingEntitiesException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\Utility\Utility;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use ZipStream\Option\Archive;
 use ZipStream\ZipStream;
@@ -43,9 +46,16 @@ class SolrConfigSetController extends ControllerBase {
    *   The HTTP response object.
    *
    * @throws \Drupal\search_api\SearchApiException
+   * @throws \Drupal\Core\Entity\EntityMalformedException
    */
   public function streamSchemaExtraTypesXml(ServerInterface $search_api_server): Response {
-    return $this->streamXml('schema_extra_types.xml', $this->getSchemaExtraTypesXml($search_api_server));
+    try {
+      return $this->streamXml('schema_extra_types.xml', $this->getSchemaExtraTypesXml($search_api_server));
+    }
+    catch (SearchApiSolrConflictingEntitiesException $e) {
+      $this->messenger()->addError($this->t('Some enabled parts of the configuration conflict with others: :conflicts', ['@conflicts' => new FormattableMarkup($e, [])]));
+    }
+    return new RedirectResponse($search_api_server->toUrl('canonical')->toString());
   }
 
   /**
@@ -76,7 +86,13 @@ class SolrConfigSetController extends ControllerBase {
    * @throws \Drupal\search_api\SearchApiException
    */
   public function streamSchemaExtraFieldsXml(ServerInterface $search_api_server): Response {
-    return $this->streamXml('schema_extra_fields.xml', $this->getSchemaExtraFieldsXml($search_api_server));
+    try {
+      return $this->streamXml('schema_extra_fields.xml', $this->getSchemaExtraFieldsXml($search_api_server));
+    }
+    catch (SearchApiSolrConflictingEntitiesException $e) {
+      $this->messenger()->addError($this->t('Some enabled parts of the configuration conflict with others: @conflicts', ['@conflicts' => new FormattableMarkup($e, [])]));
+    }
+    return new RedirectResponse($search_api_server->toUrl('canonical')->toString());
   }
 
   /**
@@ -111,7 +127,13 @@ class SolrConfigSetController extends ControllerBase {
    * @throws \Drupal\search_api\SearchApiException
    */
   public function streamSolrconfigExtraXml(ServerInterface $search_api_server): Response {
-    return $this->streamXml('solrconfig_extra.xml', $this->getSolrconfigExtraXml($search_api_server));
+    try {
+      return $this->streamXml('solrconfig_extra.xml', $this->getSolrconfigExtraXml($search_api_server));
+    }
+    catch (SearchApiSolrConflictingEntitiesException $e) {
+      $this->messenger()->addError($this->t('Some enabled parts of the configuration conflict with others: @conflicts', ['@conflicts' => new FormattableMarkup($e, [])]));
+    }
+    return new RedirectResponse($search_api_server->toUrl('canonical')->toString());
   }
 
   /**
@@ -131,7 +153,7 @@ class SolrConfigSetController extends ControllerBase {
   }
 
   /**
-   * Provides an XML snippet containing all query cache settings as XML.
+   * Streams solrconfig_query.xml.
    *
    * @param \Drupal\search_api\ServerInterface $search_api_server
    *   The Search API server entity.
@@ -142,7 +164,50 @@ class SolrConfigSetController extends ControllerBase {
    * @throws \Drupal\search_api\SearchApiException
    */
   public function streamSolrconfigQueryXml(ServerInterface $search_api_server): Response {
-    return $this->streamXml('solrconfig_query.xml', $this->getSolrconfigQueryXml($search_api_server));
+    try {
+      return $this->streamXml('solrconfig_query.xml', $this->getSolrconfigQueryXml($search_api_server));
+    }
+    catch (SearchApiSolrConflictingEntitiesException $e) {
+      $this->messenger()->addError($this->t('Some enabled parts of the configuration conflict with others: @conflicts', ['@conflicts' => new FormattableMarkup($e, [])]));
+    }
+    return new RedirectResponse($search_api_server->toUrl('canonical')->toString());
+  }
+
+  /**
+   * Provides an XML snippet containing all request dispatcher settings as XML.
+   *
+   * @param \Drupal\search_api\ServerInterface $search_api_server
+   *   The Search API server entity.
+   *
+   * @return string
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   */
+  public function getSolrconfigRequestDispatcherXml(?ServerInterface $search_api_server = NULL): string {
+    /** @var \Drupal\search_api_solr\Controller\SolrRequestDispatcherListBuilder $list_builder */
+    $list_builder = $this->getListBuilder('solr_request_dispatcher', $search_api_server);
+    return $list_builder->getXml();
+  }
+
+  /**
+   * Streams solrconfig_requestdispatcher.xml.
+   *
+   * @param \Drupal\search_api\ServerInterface $search_api_server
+   *   The Search API server entity.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   The HTTP response object.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   */
+  public function streamSolrconfigRequestDispatcherXml(ServerInterface $search_api_server): Response {
+    try {
+      return $this->streamXml('solrconfig_requestdispatcher.xml', $this->getSolrconfigRequestDispatcherXml($search_api_server));
+    }
+    catch (SearchApiSolrConflictingEntitiesException $e) {
+      $this->messenger()->addError($this->t('Some enabled parts of the configuration conflict with others: @conflicts', ['@conflicts' => new FormattableMarkup($e, [])]));
+    }
+    return new RedirectResponse($search_api_server->toUrl('canonical')->toString());
   }
 
   /**
@@ -176,6 +241,7 @@ class SolrConfigSetController extends ControllerBase {
 
     if ('6.x' !== $solr_branch) {
       $files['solrconfig_query.xml'] = $this->getSolrconfigQueryXml();
+      $files['solrconfig_requestdispatcher.xml'] = $this->getSolrconfigRequestDispatcherXml();
     }
 
     // Add language specific text files.
@@ -258,12 +324,12 @@ class SolrConfigSetController extends ControllerBase {
    * @param \Drupal\search_api\ServerInterface $search_api_server
    *   The Search API server entity.
    *
-   * @return array|void
-   *   A render array as expected by drupal_render().
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   The HTTP response object.
    *
    * @throws \Drupal\search_api\SearchApiException
    */
-  public function streamConfigZip(ServerInterface $search_api_server): ?array {
+  public function streamConfigZip(ServerInterface $search_api_server): Response {
     $this->setServer($search_api_server);
 
     try {
@@ -281,12 +347,15 @@ class SolrConfigSetController extends ControllerBase {
 
       exit();
     }
+    catch (SearchApiSolrConflictingEntitiesException $e) {
+      $this->messenger()->addError($this->t('Some enabled parts of the configuration conflict with others: @conflicts', ['@conflicts' => new FormattableMarkup($e, [])]));
+    }
     catch (\Exception $e) {
       watchdog_exception('search_api', $e);
-      $this->messenger->addError($this->t('An error occured during the creation of the config.zip. Look at the logs for details.'));
+      $this->messenger()->addError($this->t('An error occured during the creation of the config.zip. Look at the logs for details.'));
     }
 
-    return [];
+    return new RedirectResponse($search_api_server->toUrl('canonical')->toString());
   }
 
   /**

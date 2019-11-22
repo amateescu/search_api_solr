@@ -4,7 +4,9 @@ namespace Drupal\search_api_solr\Controller;
 
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\search_api_solr\SearchApiSolrConflictingEntitiesException;
 use Drupal\search_api_solr\SearchApiSolrException;
+use Drupal\search_api_solr\SolrConfigInterface;
 
 /**
  * Provides a listing of Solr Entities.
@@ -46,7 +48,7 @@ abstract class AbstractSolrEntityListBuilder extends ConfigEntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $solr_entity) {
-    /** @var \Drupal\search_api_solr\Entity\AbstractSolrEntity $solr_entity */
+    /** @var SolrConfigInterface $solr_entity */
     $options = $solr_entity->getOptions();
     if (empty($options)) {
       $options = [$this->default_option];
@@ -80,15 +82,26 @@ abstract class AbstractSolrEntityListBuilder extends ConfigEntityListBuilder {
    * Returns a list of all enabled caches for current server.
    *
    * @return array
+   *
+   * @throws SearchApiSolrConflictingEntitiesException
    * @throws \Drupal\search_api\SearchApiException
    */
   public function getEnabledEntities(): array {
     $solr_entities = [];
-    foreach ($this->load() as $solr_emtity) {
-      if (!$solr_emtity->disabledOnServer) {
-        $solr_entities[] = $solr_emtity;
+    /** @var SolrConfigInterface[] $entities */
+    $entities = $this->load();
+    foreach ($this->load() as $solr_entity) {
+      if (!$solr_entity->disabledOnServer) {
+        $solr_entities[] = $solr_entity;
       }
     }
+
+    if ($conflicting_entities = $this->getConflictingEntities($solr_entities)) {
+      $exception = new SearchApiSolrConflictingEntitiesException();
+      $exception->setConflictingEntities($conflicting_entities);
+      throw $exception;
+    }
+
     return $solr_entities;
   }
 
@@ -98,7 +111,7 @@ abstract class AbstractSolrEntityListBuilder extends ConfigEntityListBuilder {
    * @throws \Drupal\Core\Entity\EntityMalformedException
    */
   public function getDefaultOperations(EntityInterface $solr_entity) {
-    /** @var \Drupal\search_api_solr\Entity\AbstractSolrEntity $solr_entity */
+    /** @var SolrConfigInterface $solr_entity */
     $operations = parent::getDefaultOperations($solr_entity);
     unset($operations['delete']);
 
@@ -314,6 +327,24 @@ abstract class AbstractSolrEntityListBuilder extends ConfigEntityListBuilder {
       }
     }
     return $entities;
+  }
+
+  /**
+   * @return array
+   */
+  public function getConflictingEntities(array $entities): array {
+    $conflicting_entities = [];
+    $purpose_ids = [];
+    foreach ($entities as $key => $entity) {
+      $purpose_id = $entity->getPurposeId();
+      if (!in_array($purpose_id, $purpose_ids)) {
+        $purpose_ids[] = $purpose_id;
+      }
+      else {
+        $conflicting_entities[$key] = $entity;
+      }
+    }
+    return $conflicting_entities;
   }
 
 }

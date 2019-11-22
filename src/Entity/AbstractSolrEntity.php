@@ -55,7 +55,14 @@ abstract class AbstractSolrEntity extends ConfigEntityBase implements SolrConfig
    */
   abstract public function getName(): string;
 
-    /**
+  /**
+   * {@inheritdoc}
+   */
+  public function getPurposeId(): string {
+    return $this->getName();
+  }
+
+  /**
    * Formats a given array to an XML string.
    */
   protected function buildXmlFromArray($root_element_name, array $attributes) {
@@ -211,7 +218,10 @@ abstract class AbstractSolrEntity extends ConfigEntityBase implements SolrConfig
     $config_factory = \Drupal::configFactory();
     foreach ($config_factory->listAll($prefix) as $config_name) {
       $config = $config_factory->get($config_name);
-      $options[] = $config->get($key);
+      $value = $config->get($key);
+      if (NULL !== $value) {
+        $options[] = $value;
+      }
     }
     $options = array_unique(array_merge(...$options));
     sort($options);

@@ -40,7 +40,6 @@ use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility as SearchApiUtility;
 use Drupal\search_api_autocomplete\SearchInterface;
 use Drupal\search_api_autocomplete\Suggestion\SuggestionFactory;
-use Drupal\search_api_solr\Entity\SolrCache;
 use Drupal\search_api_solr\Entity\SolrFieldType;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\Solarium\Autocomplete\Query as AutocompleteQuery;
@@ -196,6 +195,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $solr_cache_list_builder = $this->entityTypeManager->getListBuilder('solr_cache');
     /** @var \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder $solr_request_handler_list_builder */
     $solr_request_handler_list_builder = $this->entityTypeManager->getListBuilder('solr_request_handler');
+    /** @var \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder $solr_request_dispatcher_list_builder */
+    $solr_request_dispatcher_list_builder = $this->entityTypeManager->getListBuilder('solr_request_dispatcher');
 
     return [
       'retrieve_data' => FALSE,
@@ -213,6 +214,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'disabled_field_types' => array_keys($solr_field_type_list_builder->getAllNotRecommendedEntities()),
       'disabled_caches' => array_keys($solr_cache_list_builder->getAllNotRecommendedEntities()),
       'disabled_request_handlers' => array_keys($solr_request_handler_list_builder->getAllNotRecommendedEntities()),
+      'disabled_request_dispatchers' => array_keys($solr_request_dispatcher_list_builder->getAllNotRecommendedEntities()),
       // 10 is Solr's default limit if rows is not set.
       'rows' => 10,
     ];
@@ -314,7 +316,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       '#default_value' => isset($this->configuration['domain']) ? $this->configuration['domain'] : 'generic',
     ];
 
-    $environments = SolrCache::getAvailableEnvironments();
+    $environments = Utility::getAvailableEnvironments();
     $form['advanced']['environment'] = [
       '#type' => 'select',
       '#options' => array_combine($environments, $environments),
@@ -365,6 +367,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $form['disabled_request_handlers'] = [
       '#type' => 'value',
       '#value' => $this->configuration['disabled_request_handlers'],
+    ];
+
+    $form['disabled_request_dispatchers'] = [
+      '#type' => 'value',
+      '#value' => $this->configuration['disabled_request_dispatchers'],
     ];
 
     return $form;
@@ -3660,6 +3667,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $this->addDependency('config', $request_handler->getConfigDependencyName());
     }
 
+    /** @var \Drupal\search_api_solr\Controller\SolrCacheListBuilder $request_dispatcher_list_builder */
+    $request_dispatcher_list_builder = $entity_type_manager->getListBuilder('solr_request_dispatcher');
+    $request_dispatcher_list_builder->setBackend($this);
+    $solr_request_dispatchers = $request_dispatcher_list_builder->load();
+    foreach ($solr_request_dispatchers as $request_dispatcher) {
+      $this->addDependency('config', $request_dispatcher->getConfigDependencyName());
+    }
+
     return $this->dependencies;
   }
 
@@ -4579,5 +4594,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   public function getDisabledRequestHandlers(): array {
     return $this->configuration['disabled_request_handlers'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDisabledRequestDispatchers(): array {
+    return $this->configuration['disabled_request_dispatchers'];
   }
 }

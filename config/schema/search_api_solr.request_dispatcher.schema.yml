@@ -1,6 +1,6 @@
-search_api_solr.solr_request_handler.*:
+search_api_solr.solr_request_dispatcher.*:
   type: config_entity
-  label: 'Solr Request Handler Config'
+  label: 'Solr Request Dispatcher Config'
   mapping:
     id:
       type: string
@@ -17,25 +17,21 @@ search_api_solr.solr_request_handler.*:
         type: string
     recommended:
       type: boolean
-    request_handler:
+    request_dispatcher:
       type: mapping
       mapping:
         name:
           type: string
-          label: 'The Solr cache name'
-        class:
+          label: 'The Solr request dispatcher name'
+        never304:
+          type: boolean
+          nullable: true
+        lastModFrom:
           type: string
-          label: 'The Solr request handler class'
-        startup:
+          nullable: true
+        etagSeed:
           type: string
-          label: 'The startup behaviour'
           nullable: true
-        lst:
-          type: search_api_solr.list
+        cacheControl:
+          type: search_api_solr.scalar_values
           nullable: true
-        arr:
-          type: search_api_solr.list
-          nullable: true
-    solr_configs:
-      type: search_api_solr.solr_configs
-      nullable: true

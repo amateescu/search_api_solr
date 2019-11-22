@@ -1697,5 +1697,12 @@ function search_api_solr_update_8328() {
  * Install Solr Request Handler Configs.
  */
 function search_api_solr_update_8329() {
+  // search_api_solr_update_helper_install_configs();
+}
+
+/**
+ * Install Solr Request Dispatcher Configs.
+ */
+function search_api_solr_update_8330() {
   search_api_solr_update_helper_install_configs();
 }

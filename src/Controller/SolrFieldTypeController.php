@@ -14,17 +14,9 @@ use ZipStream\Option\Archive;
 class SolrFieldTypeController extends AbstractSolrEntityController {
 
   /**
-   * Constructs a SolrCacheController object.
-   *
-   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
-   *   The messenger service.
+   * @var string
    */
-  public function __construct(MessengerInterface $messenger) {
-    parent::__construct($messenger);
-    $this->entity_type_id = 'solr_field_type';
-    $this->disabled_key = 'disabled_field_types';
-    $this->collection_route = 'entity.solr_field_type.collection';
-  }
+  protected $entity_type_id = 'solr_field_type';
 
   /**
    * Provides a zip archive containing a complete Solr configuration.

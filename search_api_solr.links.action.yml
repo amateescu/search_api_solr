@@ -28,6 +28,12 @@ solr_configset.solrconfig_query:
   appears_on:
     - entity.solr_cache.collection
 
+solr_configset.solrconfig_requestdispatcher:
+  route_name: 'solr_configset.solrconfig_requestdispatcher'
+  title: 'Get solrconfig_requestdispatcher.xml'
+  appears_on:
+    - entity.solr_request_dispatcher.collection
+
 solr_configset.config_zip:
   route_name: 'solr_configset.config_zip'
   title: 'Get config.zip'
@@ -35,4 +41,5 @@ solr_configset.config_zip:
     - entity.solr_field_type.collection
     - entity.solr_cache.collection
     - entity.solr_request_handler.collection
+    - entity.solr_request_dispatcher.collection
     - entity.search_api_server.canonical

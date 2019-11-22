@@ -4,7 +4,6 @@ namespace Drupal\search_api_solr\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Messenger\MessengerInterface;
-use Drupal\Core\Url;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SolrConfigInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -26,16 +25,6 @@ abstract class AbstractSolrEntityController extends ControllerBase {
    * @var string
    */
   protected $entity_type_id;
-
-  /**
-   * @var string
-   */
-  protected $disabled_key;
-
-  /**
-   * @var string
-   */
-  protected $collection_route;
 
   /**
    * {@inheritdoc}
@@ -99,15 +88,17 @@ abstract class AbstractSolrEntityController extends ControllerBase {
    *
    * @return RedirectResponse
    *
+   * @throws \Drupal\Core\Entity\EntityMalformedException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function disableOnServer(ServerInterface $search_api_server, SolrConfigInterface $solr_entity) {
+    $disabled_key = $solr_entity->getEntityType()->getKey('disabled');
     $backend_config = $search_api_server->getBackendConfig();
-    $backend_config[$this->disabled_key][] = $solr_entity->id();
-    $backend_config[$this->disabled_key] = array_unique($backend_config[$this->disabled_key]);
+    $backend_config[$disabled_key][] = $solr_entity->id();
+    $backend_config[$disabled_key] = array_unique($backend_config[$disabled_key]);
     $search_api_server->setBackendConfig($backend_config);
     $search_api_server->save();
-    return new RedirectResponse(Url::fromRoute($this->collection_route, ['search_api_server' => $search_api_server->id()], ['query' => ['time' => \Drupal::time()->getRequestTime()]])->toString());
+    return new RedirectResponse($solr_entity->toUrl('collection')->toString());
   }
 
   /**
@@ -118,14 +109,16 @@ abstract class AbstractSolrEntityController extends ControllerBase {
    *
    * @return RedirectResponse
    *
+   * @throws \Drupal\Core\Entity\EntityMalformedException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function enableOnServer(ServerInterface $search_api_server, SolrConfigInterface $solr_entity) {
+    $disabled_key = $solr_entity->getEntityType()->getKey('disabled');
     $backend_config = $search_api_server->getBackendConfig();
-    $backend_config[$this->disabled_key] = array_values(array_diff($backend_config[$this->disabled_key], [$solr_entity->id()]));
+    $backend_config[$disabled_key] = array_values(array_diff($backend_config[$disabled_key], [$solr_entity->id()]));
     $search_api_server->setBackendConfig($backend_config);
     $search_api_server->save();
-    return new RedirectResponse(Url::fromRoute($this->collection_route, ['search_api_server' => $search_api_server->id()], ['query' => ['time' => \Drupal::time()->getRequestTime()]])->toString());
+    return new RedirectResponse($solr_entity->toUrl('collection')->toString());
   }
 
 }

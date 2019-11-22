@@ -27,7 +27,8 @@ use Drupal\search_api_solr\SolrFieldTypeInterface;
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "label",
- *     "uuid" = "uuid"
+ *     "uuid" = "uuid",
+ *     "disabled" = "disabled_field_types"
  *   },
  *   links = {
  *     "edit-form" = "/admin/config/search/search-api/solr_field_type/{solr_field_type}",
