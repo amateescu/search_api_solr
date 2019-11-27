@@ -31,6 +31,51 @@ class SearchApiBackendUnitTest extends UnitTestCase {
   use InvokeMethodTrait;
 
   /**
+   * @var \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder|\Prophecy\Prophecy\ObjectProphecy
+   */
+  protected $listBuilder;
+
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
+  protected $entityTypeManager;
+
+  /**
+   * @var \Solarium\Core\Query\Helper
+   */
+  protected $queryHelper;
+
+  /**
+   * @var \Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend
+   */
+  protected $backend;
+
+  public function setUp() {
+    parent::setUp();
+
+    $this->listBuilder = $this->prophesize(AbstractSolrEntityListBuilder::class);
+    $this->listBuilder->getAllNotRecommendedEntities()->willReturn([]);
+    $this->entityTypeManager = $this->prophesize(EntityTypeManagerInterface::class);
+    $this->entityTypeManager->getListBuilder('solr_field_type')->willReturn($this->listBuilder->reveal());
+    $this->entityTypeManager->getListBuilder('solr_cache')->willReturn($this->listBuilder->reveal());
+    $this->entityTypeManager->getListBuilder('solr_request_handler')->willReturn($this->listBuilder->reveal());
+    $this->entityTypeManager->getListBuilder('solr_request_dispatcher')->willReturn($this->listBuilder->reveal());
+
+    // This helper is actually used.
+    $this->queryHelper = new Helper();
+
+    $this->backend = new SearchApiSolrBackend([], NULL, [],
+      $this->prophesize(ModuleHandlerInterface::class)->reveal(),
+      $this->prophesize(Config::class)->reveal(),
+      $this->prophesize(LanguageManagerInterface::class)->reveal(),
+      $this->prophesize(SolrConnectorPluginManager::class)->reveal(),
+      $this->prophesize(FieldsHelperInterface::class)->reveal(),
+      $this->prophesize(DataTypeHelperInterface::class)->reveal(),
+      $this->queryHelper,
+      $this->entityTypeManager->reveal());
+  }
+
+  /**
    * @covers       ::addIndexField
    *
    * @dataProvider addIndexFieldDataProvider
@@ -73,34 +118,19 @@ class SearchApiBackendUnitTest extends UnitTestCase {
       $type,
     ];
 
-    $listBuilder = $this->prophesize(AbstractSolrEntityListBuilder::class);
-    $listBuilder->getAllNotRecommendedEntities()->willReturn([]);
-    // Get dummies for most constructor args of SearchApiSolrBackend.
-    $module_handler = $this->prophesize(ModuleHandlerInterface::class)->reveal();
-    $config = $this->prophesize(Config::class)->reveal();
-    $language_manager = $this->prophesize(LanguageManagerInterface::class)->reveal();
-    $solr_connector_plugin_manager = $this->prophesize(SolrConnectorPluginManager::class)->reveal();
-    $fields_helper = $this->prophesize(FieldsHelperInterface::class)->reveal();
-    $data_type_helper = $this->prophesize(DataTypeHelperInterface::class)->reveal();
-    $entity_type_manager = $this->prophesize(EntityTypeManagerInterface::class);
-    $entity_type_manager->getListBuilder('solr_field_type')->willReturn($listBuilder->reveal());
-    $entity_type_manager->getListBuilder('solr_cache')->willReturn($listBuilder->reveal());
-    $entity_type_manager->getListBuilder('solr_request_handler')->willReturn($listBuilder->reveal());
-    $entity_type_manager->getListBuilder('solr_request_dispatcher')->willReturn($listBuilder->reveal());
-
-    // This helper is actually used.
-    $query_helper = new Helper();
-
-    $backend = new SearchApiSolrBackend([], NULL, [], $module_handler, $config, $language_manager, $solr_connector_plugin_manager, $fields_helper, $data_type_helper, $query_helper, $entity_type_manager->reveal());
-
     // addIndexField() should convert the $input according to $type and call
     // Document::addField() with the correctly converted $input.
     $this->invokeMethod(
-      $backend,
+      $this->backend,
       'addIndexField',
       $args,
       []
     );
+  }
+
+  public function testFormatDate() {
+    $this->assertFalse($this->backend->formatDate('asdf'));
+    $this->assertEquals('1992-08-27T00:00:00Z', $this->backend->formatDate('1992-08-27'));
   }
 
   /**

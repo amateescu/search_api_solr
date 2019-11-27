@@ -3103,7 +3103,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   The formatted date as string or FALSE in case of invalid input.
    */
   public function formatDate($input) {
-    $input = is_numeric($input) ? (int) $input : new \DateTime($input, timezone_open(DateTimeItemInterface::STORAGE_TIMEZONE));
+    try {
+      $input = is_numeric($input) ? (int) $input : new \DateTime($input, timezone_open(DateTimeItemInterface::STORAGE_TIMEZONE));
+    }
+    catch (\Exception $e) {
+      return FALSE;
+    }
     return $this->queryHelper->formatDate($input);
   }
 
