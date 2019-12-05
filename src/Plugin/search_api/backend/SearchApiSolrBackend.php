@@ -15,6 +15,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Plugin\PluginDependencyTrait;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\DataDefinition;
@@ -84,6 +85,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   use PluginFormTrait {
     submitConfigurationForm as traitSubmitConfigurationForm;
   }
+
+  use PluginDependencyTrait;
 
   use SolrCommitTrait;
 
