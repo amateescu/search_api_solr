@@ -5,7 +5,7 @@ dist: trusty
 php:
   - 7.1
   - 7.3
-  - 7.4
+  - 7.4snapshot
 
 env:
   - SOLR_VERSION=8.3.1 DRUPAL_BRANCH=9.0.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=true
@@ -189,38 +189,38 @@ matrix:
       env: SOLR_VERSION=7.7.2 DRUPAL_BRANCH=8.8.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=true
     - php: 7.1
       env: SOLR_VERSION=7.7.2 DRUPAL_BRANCH=8.8.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=false
-    - php: 7.4
+    - php: 7.4snapshot
       env: SOLR_VERSION=8.3.1 DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=true
-    - php: 7.4
+    - php: 7.4snapshot
       env: SOLR_VERSION=8.3.1 DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=false
-    - php: 7.4
+    - php: 7.4snapshot
       env: SOLR_VERSION=7.7.2 DRUPAL_BRANCH=8.8.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=true
-    - php: 7.4
+    - php: 7.4snapshot
       env: SOLR_VERSION=7.7.2 DRUPAL_BRANCH=8.8.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=false
-    - php: 7.4
+    - php: 7.4snapshot
       env: SOLR_VERSION=7.7.2 DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=true
-    - php: 7.4
+    - php: 7.4snapshot
       env: SOLR_VERSION=7.7.2 DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=false
-    - php: 7.4
+    - php: 7.4snapshot
       env: SOLR_VERSION=7.7.2 DRUPAL_BRANCH=8.6.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=false
-    - php: 7.4
+    - php: 7.4snapshot
       env: SOLR_VERSION=6.6.6 DRUPAL_BRANCH=8.8.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=true
-    - php: 7.4
+    - php: 7.4snapshot
       env: SOLR_VERSION=6.6.6 DRUPAL_BRANCH=8.8.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=false
-    - php: 7.4
+    - php: 7.4snapshot
       env: SOLR_VERSION=6.6.6 DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=true
-    - php: 7.4
+    - php: 7.4snapshot
       env: SOLR_VERSION=6.6.6 DRUPAL_BRANCH=8.7.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=false
   allow_failures:
     - php: 7.3
       env: SOLR_VERSION=8.3.1 DRUPAL_BRANCH=9.0.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=true
     - php: 7.3
       env: SOLR_VERSION=8.3.1 DRUPAL_BRANCH=9.0.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=false
-    - php: 7.4
+    - php: 7.4snapshot
       env: SOLR_VERSION=8.3.1 DRUPAL_BRANCH=9.0.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=true
-    - php: 7.4
+    - php: 7.4snapshot
       env: SOLR_VERSION=8.3.1 DRUPAL_BRANCH=9.0.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=false
-    - php: 7.4
+    - php: 7.4snapshot
       env: SOLR_VERSION=8.3.1 DRUPAL_BRANCH=8.8.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=true
-    - php: 7.4
+    - php: 7.4snapshot
       env: SOLR_VERSION=8.3.1 DRUPAL_BRANCH=8.8.x DRUSH_VERSION=~10.1.0 SOLR_CLOUD=false
