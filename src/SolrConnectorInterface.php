@@ -2,7 +2,7 @@
 
 namespace Drupal\search_api_solr;
 
-use Drupal\Component\Plugin\ConfigurablePluginInterface;
+use Drupal\Component\Plugin\ConfigurableInterface;
 use Solarium\Core\Client\Endpoint;
 use Solarium\Core\Client\Request;
 use Solarium\Core\Client\Response;
@@ -15,7 +15,7 @@ use Solarium\QueryType\Select\Query\Query;
 /**
  * The Solr connector interface.
  */
-interface SolrConnectorInterface extends ConfigurablePluginInterface {
+interface SolrConnectorInterface extends ConfigurableInterface {
 
   /**
    * Returns TRUE for Cloud.
