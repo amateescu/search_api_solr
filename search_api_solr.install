@@ -1704,5 +1704,127 @@ function search_api_solr_update_8329() {
  * Install Solr Request Dispatcher Configs.
  */
 function search_api_solr_update_8330() {
+  // search_api_solr_update_helper_install_configs();
+}
+
+/**
+ * Install Solr Cache, Request Handler, Request Dispatcher config entity types.
+ */
+function search_api_solr_update_8331() {
+  $manager = \Drupal::entityDefinitionUpdateManager();
+
+  if ($manager->getEntityType('solr_cache') === NULL) {
+    $manager->installEntityType(new ConfigEntityType([
+      'id' => 'solr_cache',
+      'label' => new TranslatableMarkup('Solr Cache'),
+      'handlers' => [
+        'list_builder' => 'Drupal\search_api_solr\Controller\SolrCacheListBuilder',
+        'form' => [],
+      ],
+      'config_prefix' => 'solr_cache',
+      'admin_permission' => 'administer search_api',
+      'entity_keys' => [
+        'id' => 'id',
+        'label' => 'label',
+        'uuid' => 'uuid',
+        'disabled' => 'disabled_caches',
+      ],
+      'links' => [
+        'disable-for-server' => '/admin/config/search/search-api/server/{search_api_server}/solr_cache/{solr_cache}/disable',
+        'enable-for-server' => '/admin/config/search/search-api/server/{search_api_server}/solr_cache/{solr_cache}/enable',
+        'collection' => '/admin/config/search/search-api/server/{search_api_server}/solr_cache',
+      ],
+    ]));
+  }
+
+  if ($manager->getEntityType('solr_request_dispatcher') === NULL) {
+    $manager->installEntityType(new ConfigEntityType([
+      'id' => 'solr_request_dispatcher',
+      'label' => new TranslatableMarkup('Solr Request Dispatcher'),
+      'handlers' => [
+        'list_builder' => 'Drupal\search_api_solr\Controller\SolrRequestDispatcherListBuilder',
+        'form' => [],
+      ],
+      'config_prefix' => 'solr_request_dispatcher',
+      'admin_permission' => 'administer search_api',
+      'entity_keys' => [
+        'id' => 'id',
+        'label' => 'label',
+        'uuid' => 'uuid',
+        'disabled' => 'disabled_request_dispatchers',
+      ],
+      'links' => [
+        'disable-for-server' => '/admin/config/search/search-api/server/{search_api_server}/solr_request_dispatcher/{solr_request_dispatcher}/disable',
+        'enable-for-server' => '/admin/config/search/search-api/server/{search_api_server}/solr_request_dispatcher/{solr_request_dispatcher}/enable',
+        'collection' => '/admin/config/search/search-api/server/{search_api_server}/solr_request_dispatcher',
+      ],
+    ]));
+  }
+
+  if ($manager->getEntityType('solr_request_handler') === NULL) {
+    $manager->installEntityType(new ConfigEntityType([
+      'id' => 'solr_request_handler',
+      'label' => new TranslatableMarkup('Solr Request Handler'),
+      'handlers' => [
+        'list_builder' => 'Drupal\search_api_solr\Controller\SolrRequestHandlerListBuilder',
+        'form' => [],
+      ],
+      'config_prefix' => 'solr_request_handler',
+      'admin_permission' => 'administer search_api',
+      'entity_keys' => [
+        'id' => 'id',
+        'label' => 'label',
+        'uuid' => 'uuid',
+        'disabled' => 'disabled_request_handlers',
+      ],
+      'links' => [
+        'disable-for-server' => '/admin/config/search/search-api/server/{search_api_server}/solr_request_handler/{solr_request_handler}/disable',
+        'enable-for-server' => '/admin/config/search/search-api/server/{search_api_server}/solr_request_handler/{solr_request_handler}/enable',
+        'collection' => '/admin/config/search/search-api/server/{search_api_server}/solr_request_handler',
+      ],
+    ]));
+  }
+
+  // For people who upgrade from 8.x-1.x using core >= 8.7.
+  if ($manager->getEntityType('solr_field_type') === NULL) {
+    $manager->installEntityType(new ConfigEntityType([
+      'id' => 'solr_field_type',
+      'label' => new TranslatableMarkup('Solr Field Type'),
+      'handlers' => [
+        'list_builder' => 'Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder',
+        'form' => [
+          'add' => 'Drupal\search_api_solr\Form\SolrFieldTypeForm',
+          'edit' => 'Drupal\search_api_solr\Form\SolrFieldTypeForm',
+          'delete' => 'Drupal\search_api_solr\Form\SolrFieldTypeDeleteForm',
+        ],
+      ],
+      'config_prefix' => 'solr_field_type',
+      'admin_permission' => 'administer search_api',
+      'entity_keys' => [
+        'id' => 'id',
+        'label' => 'label',
+        'uuid' => 'uuid',
+        'disabled' => 'disabled_field_types',
+      ],
+      'links' => [
+        'edit-form' => '/admin/config/search/search-api/solr_field_type/{solr_field_type}',
+        'delete-form' => '/admin/config/search/search-api/solr_field_type/{solr_field_type}/delete',
+        'disable-for-server' => '/admin/config/search/search-api/server/{search_api_server}/solr_field_type/{solr_field_type}/disable',
+        'enable-for-server' => '/admin/config/search/search-api/server/{search_api_server}/solr_field_type/{solr_field_type}/enable',
+        'collection' => '/admin/config/search/search-api/server/{search_api_server}/solr_field_type',
+      ],
+    ]));
+  } else {
+    $entity_type = $manager->getEntityType('solr_field_type');
+    $entity_keys = $entity_type->get('entity_keys');
+    $entity_keys['disabled'] = 'disabled_field_types';
+    $entity_type->set('entity_keys', $entity_keys);
+    $links = $entity_type->get('links');
+    $links['disable-for-server'] = '/admin/config/search/search-api/server/{search_api_server}/solr_field_type/{solr_field_type}/disable';
+    $links['enable-for-server'] = '/admin/config/search/search-api/server/{search_api_server}/solr_field_type/{solr_field_type}/enable';
+    $entity_type->set('links', $links);
+    $manager->updateEntityType($entity_type);
+  }
+
   search_api_solr_update_helper_install_configs();
 }
