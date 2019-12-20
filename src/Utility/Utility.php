@@ -15,6 +15,7 @@ use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrFieldTypeInterface;
 use Solarium\Core\Client\Request;
+use Drupal\Component\Utility\Crypt;
 
 /**
  * Provides various helper functions for Solr backends.
@@ -135,7 +136,7 @@ class Utility {
     // Copied from apachesolr_site_hash().
     if (!($hash = \Drupal::state()->get('search_api_solr.site_hash', FALSE))) {
       global $base_url;
-      $hash = substr(base_convert(sha1(uniqid($base_url, TRUE)), 16, 36), 0, 6);
+      $hash = substr(base_convert(Crypt::hashBase64(uniqid($base_url, TRUE)), 16, 36), 0, 6);
       \Drupal::state()->set('search_api_solr.site_hash', $hash);
     }
     return $hash;
