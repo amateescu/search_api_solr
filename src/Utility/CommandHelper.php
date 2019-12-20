@@ -32,7 +32,7 @@ class CommandHelper extends \Drupal\search_api\Utility\CommandHelper {
    * @throws \ZipStream\Exception\FileNotReadableException
    * @throws \ZipStream\Exception\OverflowException
    */
-  public function getServerConfigCommand($server_id, $file_name, $solr_version = NULL) {
+  public function getServerConfigCommand($server_id, $file_name = NULL, $solr_version = NULL) {
     $servers = $this->loadServers([$server_id]);
     $server = reset($servers);
     if ($solr_version) {
@@ -44,14 +44,20 @@ class CommandHelper extends \Drupal\search_api\Utility\CommandHelper {
     $solr_configset_controller = new SolrConfigSetController();
     $solr_configset_controller->setServer($server);
 
-    $stream = fopen($file_name, 'w+b');
     $archive_options = new Archive();
-    $archive_options->setOutputStream($stream);
+    $stream = FALSE;
+    if ($file_name != NULL) {
+      // If no filename is provided, output stream is standard output.
+      $stream = fopen($file_name, 'w+b');
+      $archive_options->setOutputStream($stream);
+    }
 
     $zip = $solr_configset_controller->getConfigZip($archive_options);
     $zip->finish();
 
-    fclose($stream);
+    if ($stream) {
+      fclose($stream);
+    }
   }
 
   /**

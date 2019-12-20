@@ -6,6 +6,7 @@ use Consolidation\AnnotatedCommand\Input\StdinAwareInterface;
 use Consolidation\AnnotatedCommand\Input\StdinAwareTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\search_api\ConsoleException;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrCloudConnectorInterface;
@@ -107,10 +108,12 @@ class SearchApiSolrCommands extends DrushCommands implements StdinAwareInterface
    * @throws \ZipStream\Exception\FileNotFoundException
    * @throws \ZipStream\Exception\FileNotReadableException
    */
-  public function getServerConfig($server_id, $file_name, $solr_version = NULL) {
+  public function getServerConfig($server_id, $file_name = NULL, $solr_version = NULL, $options = []) {
+    if (!$options['pipe'] && ($file_name == NULL)) {
+      throw new ConsoleException('Required argument missing ("file_name"), and no --pipe option specified.');
+    }
     $this->commandHelper->getServerConfigCommand($server_id, $file_name, $solr_version);
   }
-
 
   /**
    * Indexes items for one or all enabled search indexes.
