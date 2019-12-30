@@ -78,11 +78,6 @@ install:
   #- curl https://www.drupal.org/files/issues/2018-12-20/3021717.patch | patch -p1
   #- cd $TRAVIS_BUILD_DIR/../drupal
   #########################################
-  # to be removed once #3099001 is resolved
-  - cd modules/contrib/search_api
-  - curl https://www.drupal.org/files/issues/2019-12-05/3099001-2--deprecate_PluginDependencyTrait_in_ConfigurablePluginBase.patch | patch -p1
-  - cd $TRAVIS_BUILD_DIR/../drupal
-  #########################################
   - cp $TRAVIS_BUILD_DIR/tests/travis.phpunit.xml $TRAVIS_BUILD_DIR/../drupal/core/phpunit.xml.dist
 
 before_script:
