@@ -3664,7 +3664,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $cache_list_builder->setBackend($this);
     $solr_caches = $cache_list_builder->load();
     foreach ($solr_caches as $solr_cache) {
-      $this->addDependency('config', $solr_cache->getConfigDependencyName());
+      if (!$solr_cache->disabledOnServer) {
+        $this->addDependency('config', $solr_cache->getConfigDependencyName());
+      }
     }
 
     /** @var \Drupal\search_api_solr\Controller\SolrCacheListBuilder $request_handler_list_builder */
@@ -3672,7 +3674,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $request_handler_list_builder->setBackend($this);
     $solr_request_handlers = $request_handler_list_builder->load();
     foreach ($solr_request_handlers as $request_handler) {
-      $this->addDependency('config', $request_handler->getConfigDependencyName());
+      if (!$request_handler->disabledOnServer) {
+        $this->addDependency('config', $request_handler->getConfigDependencyName());
+      }
     }
 
     /** @var \Drupal\search_api_solr\Controller\SolrCacheListBuilder $request_dispatcher_list_builder */
@@ -3680,7 +3684,9 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $request_dispatcher_list_builder->setBackend($this);
     $solr_request_dispatchers = $request_dispatcher_list_builder->load();
     foreach ($solr_request_dispatchers as $request_dispatcher) {
-      $this->addDependency('config', $request_dispatcher->getConfigDependencyName());
+      if (!$request_dispatcher->disabledOnServer) {
+        $this->addDependency('config', $request_dispatcher->getConfigDependencyName());
+      }
     }
 
     return $this->dependencies;
