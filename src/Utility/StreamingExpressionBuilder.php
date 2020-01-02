@@ -153,19 +153,17 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
       }
     }
     foreach ($language_ids as $language_id) {
-      if (!Utility::hasIndexJustSolrDocumentDatasource($index)) {
-        $this->all_fields_mapped[$language_id] += [
-          // Search API Solr Search specific fields.
-          'id' => 'id',
-          'index_id' => 'index_id',
-          'hash' => 'hash',
-          'site' => 'site',
-          'timestamp' => 'timestamp',
-          'context_tags' => 'sm_context_tags',
-          // @todo to be removed
-          'spell' => 'spell',
-        ];
-      }
+      $this->all_fields_mapped[$language_id] += [
+        // Search API Solr Search specific fields.
+        'id' => Utility::hasIndexJustSolrDocumentDatasource($index) ? $index->get('datasource_settings')['solr_document']['id_field'] : 'id',
+        'index_id' => 'index_id',
+        'hash' => 'hash',
+        'site' => 'site',
+        'timestamp' => 'timestamp',
+        'context_tags' => 'sm_context_tags',
+        // @todo to be removed
+        'spell' => 'spell',
+      ];
 
       $this->all_fields_including_graph_fields_mapped[$language_id] = $this->all_fields_mapped[$language_id] + [
         // Graph traversal reserved names. We can't get a conflict here since
