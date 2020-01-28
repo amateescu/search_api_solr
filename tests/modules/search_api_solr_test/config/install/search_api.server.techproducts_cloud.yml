@@ -24,7 +24,7 @@ backend_config:
     http_method: AUTO
     commit_within: 1000
     jmx: false
-    solr_install_dir: ../../..
+    solr_install_dir: ''
     checkpoints_collection: checkpoints
   optimize: false
 status: true

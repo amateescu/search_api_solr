@@ -20,7 +20,7 @@ backend_config:
     solr_version: ''
     http_method: AUTO
     jmx: false
-    solr_install_dir: ../../..
+    solr_install_dir: ''
   retrieve_data: false
   highlight_data: false
   skip_schema_check: false
