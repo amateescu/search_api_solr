@@ -1,2 +1,0 @@
-hook_search_api_solr_config_files_alter() works
-solr_search_server
