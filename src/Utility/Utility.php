@@ -1042,4 +1042,34 @@ class Utility {
     return $options;
   }
 
+  /**
+   * Removes comments from an xml file and removes the 'name' attribute of the
+   * root node.
+   *
+   * @param string $xml
+   *
+   *
+   * @return array
+   */
+  public static function normalizeXML($xml): array {
+    $document = new \DOMDocument();
+    if (@$document->loadXML($xml) === FALSE) {
+      $document->loadXML("<root>$xml</root>");
+    }
+    $version_number = '';
+    $root = $document->documentElement;
+    if (isset($root) && $root->hasAttribute('name')) {
+      $version_number = $root->getAttribute('name');
+      $root->removeAttribute('name'); ////remove name attribute of the root
+    }
+    $xpath = new \DOMXPath($document);
+    foreach ($xpath->query("//comment()") as $comment) { //remove comments
+      $comment->parentNode->removeChild($comment);
+    }
+    foreach ($xpath->query('//text()') as $whitespace) { //trims whitespace
+      $whitespace->data = trim($whitespace->nodeValue);
+    }
+    return [$version_number, $document->saveXML()];
+  }
+
 }

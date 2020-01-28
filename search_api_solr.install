@@ -9,6 +9,8 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Solarium\Client;
+use Drupal\search_api_solr\Controller\SolrConfigSetController;
+use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
 
 /**
  * Implements hook_requirements().
@@ -133,8 +135,69 @@ function search_api_solr_requirements($phase) {
           '@server' => $server->label(),
         ]);
       }
-    }
+      if ($backend->isAvailable()) {
+        $requirements['search_api_solr_schema_' . $server->id()] = [
+          'title' => t('Solr Server %server_id', ['%server_id' => $server->id()]),
+          'value' => t('Schema up to date'),
+          'severity' => REQUIREMENT_OK,
+          'description' => t('Schema on server <a href=":url">@server</a> is up to date.', [
+            ':url' => $server->toUrl('canonical')->toString(),
+            '@server' => $server->label(),
+          ]),
+        ];
 
+        $config_schema = new SolrConfigSetController;
+        $config_schema->setServer($server);
+        $new_config_set = $config_schema->getConfigFiles(); //the freshly generated files
+        $server_files_list = SearchApiSolrUtility::getServerFiles($server); //the files that are already on the server
+        if (!empty($new_config_set)) {
+          foreach ($new_config_set as $new_file_name => $new_file_body) {
+            if (stripos(strrev($new_file_name), 'lmx.') === 0) {
+              $server_file_data = $backend->getSolrConnector()->getFile($new_file_name);
+              $server_file_body = $server_file_data->getBody();
+              $normalized_server_file_body = SearchApiSolrUtility::normalizeXML($server_file_body);
+              $normalized_new_file_body = SearchApiSolrUtility::normalizeXML($new_file_body);
+              list($version_number_server, $xml_server) = $normalized_server_file_body;
+              list($version_number_new, $xml_new) = $normalized_new_file_body;
+              $server_file_names = array_keys($server_files_list);
+              $new_config_file_names = array_keys($new_config_set);
+              $extra_release_files = array_diff($new_config_file_names, $server_file_names);
+              $comparison = strcmp($xml_server, $xml_new);
+              if ($comparison != 0) {
+                if ($version_number_server !== $version_number_new) {
+                  $requirements['search_api_solr_schema_' . $server->id()]['value'] = t('Schema not up to date');
+                  $requirements['search_api_solr_schema_' . $server->id()]['severity'] = REQUIREMENT_ERROR;
+                  $requirements['search_api_solr_schema_' . $server->id()]['description'] = t(
+                    'There are some configuration elements missing in the Solr server schema <a href=":url">@server</a>. An updated config.zip should be downloaded and deployed to your Solr server.', [
+                    ':url' => $server->toUrl('canonical')->toString(),
+                    '@server' => $server->label(),
+                  ]);
+                }
+                elseif ($version_number_server === $version_number_new) {
+                  $requirements['search_api_solr_schema_' . $server->id()]['value'] = t('Schema not up to date');
+                  $requirements['search_api_solr_schema_' . $server->id()]['severity'] = REQUIREMENT_WARNING;
+                  $requirements['search_api_solr_schema_' . $server->id()]['description'] = t(
+                    'Your config-set contains manually added customizations. Be aware that these will be lost when the config-set needs to be regenerated.', [
+                  ]);
+                }
+              }
+              if (!empty($extra_release_files)) {
+                $requirements['search_api_solr_schema_' . $server->id()]['value'] = t('Outdated server config');
+                $requirements['search_api_solr_schema_' . $server->id()]['severity'] = REQUIREMENT_WARNING;
+                $requirements['search_api_solr_schema_' . $server->id()]['description'] = t(
+                  'There are some files missing in the Solr server schema <a href=":url">@server</a>: @files. An updated config.zip should be downloaded and deployed to your Solr server.', [
+                  ':url' => $server->toUrl('canonical')->toString(),
+                  '@server' => $server->label(),
+                  '@files' => implode(', ', array_keys($extra_release_files)),
+                ]);
+              }
+
+            }
+
+          }
+        }
+      }
+    }
     if (Client::checkMinimal('5.1.4')) {
       $requirements['search_api_solr_' . 'solarium'] = [
         'title' => t('solarium library'),
