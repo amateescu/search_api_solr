@@ -1060,13 +1060,15 @@ class Utility {
     $root = $document->documentElement;
     if (isset($root) && $root->hasAttribute('name')) {
       $version_number = $root->getAttribute('name');
-      $root->removeAttribute('name'); ////remove name attribute of the root
+      $root->removeAttribute('name');
     }
     $xpath = new \DOMXPath($document);
-    foreach ($xpath->query("//comment()") as $comment) { //remove comments
+    // Remove all comments.
+    foreach ($xpath->query("//comment()") as $comment) {
       $comment->parentNode->removeChild($comment);
     }
-    foreach ($xpath->query('//text()') as $whitespace) { //trims whitespace
+    // Trim all whitespaces.
+    foreach ($xpath->query('//text()') as $whitespace) {
       $whitespace->data = trim($whitespace->nodeValue);
     }
     return [$version_number, $document->saveXML()];
