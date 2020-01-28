@@ -23,6 +23,14 @@ use Drupal\search_api_solr\SolrCacheInterface;
  *     "uuid" = "uuid",
  *     "disabled" = "disabled_caches"
  *   },
+ *   config_export = {
+ *     "id",
+ *     "label",
+ *     "minimum_solr_version",
+ *     "environments",
+ *     "cache",
+ *     "solr_configs"
+ *   },
  *   links = {
  *     "disable-for-server" = "/admin/config/search/search-api/server/{search_api_server}/solr_cache/{solr_cache}/disable",
  *     "enable-for-server" = "/admin/config/search/search-api/server/{search_api_server}/solr_cache/{solr_cache}/enable",

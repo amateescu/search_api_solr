@@ -30,6 +30,20 @@ use Drupal\search_api_solr\SolrFieldTypeInterface;
  *     "uuid" = "uuid",
  *     "disabled" = "disabled_field_types"
  *   },
+ *   config_export = {
+ *     "id",
+ *     "label",
+ *     "minimum_solr_version",
+ *     "custom_code",
+ *     "field_type_language_code",
+ *     "domains",
+ *     "field_type",
+ *     "unstemmed_field_type",
+ *     "spellcheck_field_type",
+ *     "collated_field_type",
+ *     "solr_configs",
+ *     "text_files"
+ *   },
  *   links = {
  *     "edit-form" = "/admin/config/search/search-api/solr_field_type/{solr_field_type}",
  *     "delete-form" = "/admin/config/search/search-api/solr_field_type/{solr_field_type}/delete",

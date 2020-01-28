@@ -23,6 +23,15 @@ use Drupal\search_api_solr\SolrRequestHandlerInterface;
  *     "uuid" = "uuid",
  *     "disabled" = "disabled_request_handlers"
  *   },
+ *   config_export = {
+ *     "id",
+ *     "label",
+ *     "minimum_solr_version",
+ *     "environments",
+ *     "recommended",
+ *     "request_handler",
+ *     "solr_configs"
+ *   },
  *   links = {
  *     "disable-for-server" = "/admin/config/search/search-api/server/{search_api_server}/solr_request_handler/{solr_request_handler}/disable",
  *     "enable-for-server" = "/admin/config/search/search-api/server/{search_api_server}/solr_request_handler/{solr_request_handler}/enable",

@@ -23,6 +23,14 @@ use Drupal\search_api_solr\SolrRequestDispatcherInterface;
  *     "uuid" = "uuid",
  *     "disabled" = "disabled_request_dispatchers"
  *   },
+ *   config_export = {
+ *     "id",
+ *     "label",
+ *     "minimum_solr_version",
+ *     "environments",
+ *     "recommended",
+ *     "request_dispatcher"
+ *   },
  *   links = {
  *     "disable-for-server" = "/admin/config/search/search-api/server/{search_api_server}/solr_request_dispatcher/{solr_request_dispatcher}/disable",
  *     "enable-for-server" = "/admin/config/search/search-api/server/{search_api_server}/solr_request_dispatcher/{solr_request_dispatcher}/enable",
