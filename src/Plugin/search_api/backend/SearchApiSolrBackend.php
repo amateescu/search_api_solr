@@ -388,7 +388,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     $form['disabled_request_handlers'] = [
       '#type' => 'value',
-      '#value' => $this->getDisabledRequestDispatchers(),
+      '#value' => $this->getDisabledRequestHandlers(),
     ];
 
     $form['disabled_request_dispatchers'] = [
