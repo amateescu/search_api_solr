@@ -31,6 +31,13 @@ abstract class AbstractSolrEntityListBuilder extends ConfigEntityListBuilder {
   protected $default_option = 'default';
 
   /**
+   * The number of entities to list per page, or FALSE to list all entities.
+   *
+   * @var int|false
+   */
+  protected $limit = FALSE;
+
+  /**
    * {@inheritdoc}
    */
   public function buildHeader() {

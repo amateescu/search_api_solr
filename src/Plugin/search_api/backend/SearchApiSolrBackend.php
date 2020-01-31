@@ -192,15 +192,6 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    /** @var \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder $solr_field_type_list_builder */
-    $solr_field_type_list_builder = $this->entityTypeManager->getListBuilder('solr_field_type');
-    /** @var \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder $solr_cache_list_builder */
-    $solr_cache_list_builder = $this->entityTypeManager->getListBuilder('solr_cache');
-    /** @var \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder $solr_request_handler_list_builder */
-    $solr_request_handler_list_builder = $this->entityTypeManager->getListBuilder('solr_request_handler');
-    /** @var \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder $solr_request_dispatcher_list_builder */
-    $solr_request_dispatcher_list_builder = $this->entityTypeManager->getListBuilder('solr_request_dispatcher');
-
     return [
       'retrieve_data' => FALSE,
       'highlight_data' => FALSE,
@@ -214,13 +205,41 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       'connector' => NULL,
       'connector_config' => [],
       'optimize' => FALSE,
-      'disabled_field_types' => array_keys($solr_field_type_list_builder->getAllNotRecommendedEntities()),
-      'disabled_caches' => array_keys($solr_cache_list_builder->getAllNotRecommendedEntities()),
-      'disabled_request_handlers' => array_keys($solr_request_handler_list_builder->getAllNotRecommendedEntities()),
-      'disabled_request_dispatchers' => array_keys($solr_request_dispatcher_list_builder->getAllNotRecommendedEntities()),
       // 10 is Solr's default limit if rows is not set.
       'rows' => 10,
     ];
+  }
+
+  /**
+   * Add the default configuration for config-set generation.
+   *
+   * defaultConfiguration() is called on any search. Loading the defaults only
+   * required for config-set generation is an overhead that isn't required.
+   */
+  protected function addDefaultConfigurationForConfigGeneration() {
+    if (!isset($this->configuration['disabled_field_types'])) {
+      /** @var \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder $solr_field_type_list_builder */
+      $solr_field_type_list_builder = $this->entityTypeManager->getListBuilder('solr_field_type');
+      $this->configuration['disabled_field_types'] = array_keys($solr_field_type_list_builder->getAllNotRecommendedEntities());
+    }
+
+    if (!isset($this->configuration['disabled_caches'])) {
+      /** @var \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder $solr_cache_list_builder */
+      $solr_cache_list_builder = $this->entityTypeManager->getListBuilder('solr_cache');
+      $this->configuration['disabled_caches'] = array_keys($solr_cache_list_builder->getAllNotRecommendedEntities());
+    }
+
+    if (!isset($this->configuration['disabled_request_handlers'])) {
+      /** @var \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder $solr_request_handler_list_builder */
+      $solr_request_handler_list_builder = $this->entityTypeManager->getListBuilder('solr_request_handler');
+      $this->configuration['disabled_request_handlers'] = array_keys($solr_request_handler_list_builder->getAllNotRecommendedEntities());
+    }
+
+    if (!isset($this->configuration['disabled_request_dispatchers'])) {
+      /** @var \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder $solr_request_dispatcher_list_builder */
+      $solr_request_dispatcher_list_builder = $this->entityTypeManager->getListBuilder('solr_request_dispatcher');
+      $this->configuration['disabled_request_dispatchers'] = array_keys($solr_request_dispatcher_list_builder->getAllNotRecommendedEntities());
+    }
   }
 
   /**
@@ -359,22 +378,22 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     $form['disabled_field_types'] = [
       '#type' => 'value',
-      '#value' => $this->configuration['disabled_field_types'],
+      '#value' => $this->getDisabledFieldTypes(),
     ];
 
     $form['disabled_caches'] = [
       '#type' => 'value',
-      '#value' => $this->configuration['disabled_caches'],
+      '#value' => $this->getDisabledCaches(),
     ];
 
     $form['disabled_request_handlers'] = [
       '#type' => 'value',
-      '#value' => $this->configuration['disabled_request_handlers'],
+      '#value' => $this->getDisabledRequestDispatchers(),
     ];
 
     $form['disabled_request_dispatchers'] = [
       '#type' => 'value',
-      '#value' => $this->configuration['disabled_request_dispatchers'],
+      '#value' => $this->getDisabledRequestDispatchers(),
     ];
 
     return $form;
@@ -591,7 +610,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     static $custom_codes = [];
 
     if (strpos($type, 'solr_text_custom') === 0) {
-      list(, $custom_code) = explode(':', $type);
+      [, $custom_code] = explode(':', $type);
       if (empty($custom_codes)) {
         $custom_codes = SolrFieldType::getAvailableCustomCodes();
       }
@@ -2148,7 +2167,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   The cardinality.
    */
   protected function getPropertyPathCardinality($property_path, array $properties, $cardinality = 1) {
-    list($key, $nested_path) = SearchApiUtility::splitPropertyPath($property_path, FALSE);
+    [$key, $nested_path] = SearchApiUtility::splitPropertyPath($property_path, FALSE);
     if (isset($properties[$key])) {
       $property = $properties[$key];
       if ($property instanceof FieldDefinitionInterface) {
@@ -4593,6 +4612,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getDisabledFieldTypes(): array {
+    $this->addDefaultConfigurationForConfigGeneration();
     return $this->configuration['disabled_field_types'];
   }
 
@@ -4600,6 +4620,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getDisabledCaches(): array {
+    $this->addDefaultConfigurationForConfigGeneration();
     return $this->configuration['disabled_caches'];
   }
 
@@ -4607,6 +4628,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getDisabledRequestHandlers(): array {
+    $this->addDefaultConfigurationForConfigGeneration();
     return $this->configuration['disabled_request_handlers'];
   }
 
@@ -4614,6 +4636,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getDisabledRequestDispatchers(): array {
+    $this->addDefaultConfigurationForConfigGeneration();
     return $this->configuration['disabled_request_dispatchers'];
   }
 }
