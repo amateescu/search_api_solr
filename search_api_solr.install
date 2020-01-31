@@ -101,9 +101,10 @@ function search_api_solr_requirements($phase) {
     foreach ($servers as $server) {
       /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
       $backend = $server->getBackend();
-      $requirements['search_api_solr_' . $server->id()] = [
+
+      $requirements['search_api_solr_' . $server->id() . '_languages'] = [
         'title' => t('Solr Server %server_id', ['%server_id' => $server->id()]),
-        'value' => t('Schema complete'),
+        'value' => t('Schema covers all languages'),
         'severity' => REQUIREMENT_OK,
         'description' => t('Schema on server <a href=":url">@server</a> contains all required language-specific fields.', [
           ':url' => $server->toUrl('canonical')->toString(),
@@ -111,32 +112,10 @@ function search_api_solr_requirements($phase) {
         ]),
       ];
 
-      if ($backend->isAvailable()) {
-        $stats = $backend->getSchemaLanguageStatistics();
-        if ($missing_languages = array_filter($stats, function ($state) {
-          return !$state;
-        })) {
-          $requirements['search_api_solr_' . $server->id()]['value'] = t('Schema incomplete');
-          $requirements['search_api_solr_' . $server->id()]['severity'] = REQUIREMENT_WARNING;
-          $requirements['search_api_solr_' . $server->id()]['description'] = t(
-            'There are some language-specific field types missing in schema of Solr server <a href=":url">@server</a>: @languages.', [
-            ':url' => $server->toUrl('canonical')->toString(),
-            '@server' => $server->label(),
-            '@languages' => implode(', ', array_keys($missing_languages)),
-          ]);
-        }
-      }
-      else {
-        $requirements['search_api_solr_' . $server->id()]['value'] = t('Not reachable');
-        $requirements['search_api_solr_' . $server->id()]['severity'] = REQUIREMENT_ERROR;
-        $requirements['search_api_solr_' . $server->id()]['description'] = t(
-          'Solr server <a href=":url">@server</a> is not reachable.', [
-          ':url' => $server->toUrl('canonical')->toString(),
-          '@server' => $server->label(),
-        ]);
-      }
-      if ($backend->isAvailable()) {
-        $requirements['search_api_solr_schema_' . $server->id()] = [
+      $connector = $backend->getSolrConnector();
+      if ($backend->isAvailable() && $connector->pingCore()) {
+
+        $requirements['search_api_solr_schema_' . $server->id() . '_modifications'] = [
           'title' => t('Solr Server %server_id', ['%server_id' => $server->id()]),
           'value' => t('Schema up to date'),
           'severity' => REQUIREMENT_OK,
@@ -146,13 +125,27 @@ function search_api_solr_requirements($phase) {
           ]),
         ];
 
+        $stats = $backend->getSchemaLanguageStatistics();
+        if ($missing_languages = array_filter($stats, function ($state) {
+          return !$state;
+        })) {
+          $requirements['search_api_solr_' . $server->id() . '_languages']['value'] = t('Schema incomplete');
+          $requirements['search_api_solr_' . $server->id() . '_languages']['severity'] = REQUIREMENT_WARNING;
+          $requirements['search_api_solr_' . $server->id() . '_languages']['description'] = t(
+            'There are some language-specific field types missing in schema of Solr server <a href=":url">@server</a>: @languages.', [
+            ':url' => $server->toUrl('canonical')->toString(),
+            '@server' => $server->label(),
+            '@languages' => implode(', ', array_keys($missing_languages)),
+          ]);
+        }
+
         $config_set_controller = new SolrConfigSetController();
         $config_set_controller->setServer($server);
         $new_config_set = $config_set_controller->getConfigFiles(); //the freshly generated files
         if (empty($new_config_set)) {
-          $requirements['search_api_solr_schema_' . $server->id()]['value'] = t('Schema not generated');
-          $requirements['search_api_solr_schema_' . $server->id()]['severity'] = REQUIREMENT_ERROR;
-          $requirements['search_api_solr_schema_' . $server->id()]['description'] = t(
+          $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['value'] = t('Schema not generated');
+          $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['severity'] = REQUIREMENT_ERROR;
+          $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['description'] = t(
             'The config-set for the Solr server <a href=":url">@server</a> could not be generated.', [
             ':url' => $server->toUrl('canonical')->toString(),
             '@server' => $server->label(),
@@ -164,9 +157,9 @@ function search_api_solr_requirements($phase) {
           $new_config_file_names = array_keys($new_config_set);
           $extra_release_files = array_diff($new_config_file_names, $server_file_names);
           if (!empty($extra_release_files)) {
-            $requirements['search_api_solr_schema_' . $server->id()]['value'] = t('Schema incomplete');
-            $requirements['search_api_solr_schema_' . $server->id()]['severity'] = REQUIREMENT_WARNING;
-            $requirements['search_api_solr_schema_' . $server->id()]['description'] = t(
+            $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['value'] = t('Schema incomplete');
+            $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['severity'] = REQUIREMENT_WARNING;
+            $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['description'] = t(
               'There are some files missing in the Solr server schema <a href=":url">@server</a>: @files. An updated config.zip should be downloaded and deployed to your Solr server.', [
               ':url' => $server->toUrl('canonical')->toString(),
               '@server' => $server->label(),
@@ -175,15 +168,21 @@ function search_api_solr_requirements($phase) {
           }
           foreach ($new_config_set as $new_file_name => $new_file_body) {
             if (stripos(strrev($new_file_name), 'lmx.') === 0) {
-              $server_file_data = $backend->getSolrConnector()->getFile($new_file_name);
-              $server_file_body = $server_file_data->getBody();
+              try {
+                $server_file_data = $connector->getFile($new_file_name);
+                $server_file_body = $server_file_data->getBody();
+              }
+              catch (\Drupal\search_api_solr\SearchApiSolrException $e) {
+                $server_file_body = '';
+              }
+
               [$version_number_server, $xml_server] = SearchApiSolrUtility::normalizeXML($server_file_body);
               [$version_number_new, $xml_new] = SearchApiSolrUtility::normalizeXML($new_file_body);
               if (strcmp($xml_server, $xml_new) !== 0) {
                 if ($version_number_server !== $version_number_new) {
-                  $requirements['search_api_solr_schema_' . $server->id()]['value'] = t('Schema not up to date');
-                  $requirements['search_api_solr_schema_' . $server->id()]['severity'] = REQUIREMENT_ERROR;
-                  $requirements['search_api_solr_schema_' . $server->id()]['description'] = t(
+                  $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['value'] = t('Schema not up to date');
+                  $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['severity'] = REQUIREMENT_ERROR;
+                  $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['description'] = t(
                     'There are some configuration elements missing in the Solr server schema <a href=":url">@server</a>. An updated config.zip should be downloaded and deployed to your Solr server.', [
                     ':url' => $server->toUrl('canonical')->toString(),
                     '@server' => $server->label(),
@@ -191,9 +190,9 @@ function search_api_solr_requirements($phase) {
                   break;
                 }
                 elseif ($version_number_server === $version_number_new) {
-                  $requirements['search_api_solr_schema_' . $server->id()]['value'] = t('Schema modified');
-                  $requirements['search_api_solr_schema_' . $server->id()]['severity'] = REQUIREMENT_WARNING;
-                  $requirements['search_api_solr_schema_' . $server->id()]['description'] = t(
+                  $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['value'] = t('Schema modified');
+                  $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['severity'] = REQUIREMENT_WARNING;
+                  $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['description'] = t(
                     'Your config-set contains manually added customizations. Be aware that these will be lost when the config-set needs to be regenerated.', [
                   ]);
                 }
@@ -201,6 +200,15 @@ function search_api_solr_requirements($phase) {
             }
           }
         }
+      }
+      else {
+        $requirements['search_api_solr_' . $server->id() . '_languages']['value'] = t('Not reachable');
+        $requirements['search_api_solr_' . $server->id() . '_languages']['severity'] = REQUIREMENT_ERROR;
+        $requirements['search_api_solr_' . $server->id() . '_languages']['description'] = t(
+          'Solr server <a href=":url">@server</a> is not reachable.', [
+          ':url' => $server->toUrl('canonical')->toString(),
+          '@server' => $server->label(),
+        ]);
       }
     }
 
