@@ -75,7 +75,11 @@ class ConfigSubscriber implements EventSubscriberInterface {
     }
     elseif (preg_match('@^search_api_solr\.solr_field_type\..+@', $saved_config->getName(), $matches)) {
       \Drupal::messenger()
-        ->addMessage(t("A new Solr field type has been installed due to configuration changes. It is advisable to download and deploy an updated config.zip to your Solr server."), MessengerInterface::TYPE_WARNING);
+        ->addMessage(t('A new Solr field type has been installed due to configuration changes. It is advisable to download and deploy an updated config.zip to your Solr server.'), MessengerInterface::TYPE_WARNING);
+    }
+    elseif (preg_match('@^search_api_solr\.solr_cache\..+@', $saved_config->getName(), $matches) || preg_match('@^search_api_solr\.solr_request\..+@', $saved_config->getName(), $matches)) {
+      \Drupal::messenger()
+        ->addMessage(t('There have been some configuration changes. It is advisable to download and deploy an updated config.zip to your Solr server.'), MessengerInterface::TYPE_WARNING);
     }
   }
 
