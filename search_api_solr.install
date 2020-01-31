@@ -1,5 +1,6 @@
 <?php
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Config\Entity\ConfigEntityType;
 use Drupal\Core\Config\FileStorage;
@@ -141,18 +142,33 @@ function search_api_solr_requirements($phase) {
 
         $config_set_controller = new SolrConfigSetController();
         $config_set_controller->setServer($server);
-        $new_config_set = $config_set_controller->getConfigFiles(); //the freshly generated files
-        if (empty($new_config_set)) {
+        $new_config_set = [];
+        try {
+          // The freshly generated files.
+          $new_config_set = $config_set_controller->getConfigFiles();
+        }
+        catch (\Exception $e) {
           $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['value'] = t('Schema not generated');
           $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['severity'] = REQUIREMENT_ERROR;
-          $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['description'] = t(
-            'The config-set for the Solr server <a href=":url">@server</a> could not be generated.', [
-            ':url' => $server->toUrl('canonical')->toString(),
-            '@server' => $server->label(),
-          ]);
+
+          if ($e instanceof \Drupal\search_api_solr\SearchApiSolrConflictingEntitiesException) {
+            $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['description'] = t(
+              'Some enabled parts of the configuration conflict with others: @conflicts', [
+                '@conflicts' => new FormattableMarkup(str_replace('core_issue_2919648_workaround', $server->id(), $e), []),
+            ]);
+          }
+          else {
+            $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['description'] = t(
+              'The config-set for the Solr server <a href=":url">@server</a> could not be generated.', [
+              ':url' => $server->toUrl('canonical')->toString(),
+              '@server' => $server->label(),
+            ]);
+          }
         }
-        else {
-          $server_files_list = SearchApiSolrUtility::getServerFiles($server); //the files that are already on the server
+
+        if (empty($new_config_set)) {
+          $server_files_list = SearchApiSolrUtility::getServerFiles($server);
+          //the files that are already on the server
           $server_file_names = array_keys($server_files_list);
           $new_config_file_names = array_keys($new_config_set);
           $extra_release_files = array_diff($new_config_file_names, $server_file_names);
@@ -171,13 +187,18 @@ function search_api_solr_requirements($phase) {
               try {
                 $server_file_data = $connector->getFile($new_file_name);
                 $server_file_body = $server_file_data->getBody();
-              }
-              catch (\Drupal\search_api_solr\SearchApiSolrException $e) {
+              } catch (\Drupal\search_api_solr\SearchApiSolrException $e) {
                 $server_file_body = '';
               }
 
-              [$version_number_server, $xml_server] = SearchApiSolrUtility::normalizeXML($server_file_body);
-              [$version_number_new, $xml_new] = SearchApiSolrUtility::normalizeXML($new_file_body);
+              [
+                $version_number_server,
+                $xml_server
+              ] = SearchApiSolrUtility::normalizeXML($server_file_body);
+              [
+                $version_number_new,
+                $xml_new
+              ] = SearchApiSolrUtility::normalizeXML($new_file_body);
               if (strcmp($xml_server, $xml_new) !== 0) {
                 if ($version_number_server !== $version_number_new) {
                   $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['value'] = t('Schema not up to date');
