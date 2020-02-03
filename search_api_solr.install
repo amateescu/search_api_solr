@@ -166,7 +166,7 @@ function search_api_solr_requirements($phase) {
           }
         }
 
-        if (empty($new_config_set)) {
+        if (!empty($new_config_set)) {
           $server_files_list = SearchApiSolrUtility::getServerFiles($server);
           //the files that are already on the server
           $server_file_names = array_keys($server_files_list);
@@ -204,9 +204,10 @@ function search_api_solr_requirements($phase) {
                   $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['value'] = t('Schema not up to date');
                   $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['severity'] = REQUIREMENT_ERROR;
                   $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['description'] = t(
-                    'There are some configuration elements missing in the Solr server schema <a href=":url">@server</a>. An updated config.zip should be downloaded and deployed to your Solr server.', [
+                    'There are some configuration elements missing in the Solr server schema <a href=":url">@server</a>. This is likely due to using an outdated version of either Drupal or Solr. The recommended version is: @version. An updated config.zip should be downloaded and deployed to your Solr server.', [
                     ':url' => $server->toUrl('canonical')->toString(),
                     '@server' => $server->label(),
+                    '@version' => $version_number_new,
                   ]);
                   break;
                 }
