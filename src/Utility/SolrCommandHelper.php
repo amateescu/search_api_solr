@@ -3,6 +3,7 @@
 namespace Drupal\search_api_solr\Utility;
 
 use Drupal\search_api_solr\Controller\SolrConfigSetController;
+use Drupal\search_api_solr\SearchApiSolrException;
 use ZipStream\Option\Archive;
 use Drupal\search_api\Utility\CommandHelper;
 
@@ -36,6 +37,10 @@ class SolrCommandHelper extends CommandHelper {
   public function getServerConfigCommand($server_id, $file_name = NULL, $solr_version = NULL) {
     $servers = $this->loadServers([$server_id]);
     $server = reset($servers);
+    if (!$server) {
+      throw new SearchApiSolrException('Unknown server');
+    }
+
     if ($solr_version) {
       $config = $server->getBackendConfig();
       // Temporarily switch the Solr version but don't save!
@@ -47,7 +52,7 @@ class SolrCommandHelper extends CommandHelper {
 
     $archive_options = new Archive();
     $stream = FALSE;
-    if ($file_name != NULL) {
+    if ($file_name !== NULL) {
       // If no filename is provided, output stream is standard output.
       $stream = fopen($file_name, 'w+b');
       $archive_options->setOutputStream($stream);

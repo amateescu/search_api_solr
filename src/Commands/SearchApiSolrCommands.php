@@ -96,8 +96,6 @@ class SearchApiSolrCommands extends DrushCommands implements StdinAwareInterface
    *   The file name of the config zip that should be created.
    * @param string $solr_version
    *   The targeted Solr version.
-   * @param array $options
-   *   Array with the Solr config.
    *
    * @throws \Drupal\search_api\ConsoleException
    * @throws \Drupal\search_api\SearchApiException
@@ -113,7 +111,7 @@ class SearchApiSolrCommands extends DrushCommands implements StdinAwareInterface
    * @aliases solr-gsc,sasm-gsc,search-api-solr-get-server-config,search-api-solr-multilingual-get-server-config
    */
   public function getServerConfig($server_id, $file_name = NULL, $solr_version = NULL, array $options = []) {
-    if (!$options['pipe'] && ($file_name == NULL)) {
+    if (!$options['pipe'] && ($file_name === NULL)) {
       throw new ConsoleException('Required argument missing ("file_name"), and no --pipe option specified.');
     }
     $this->commandHelper->getServerConfigCommand($server_id, $file_name, $solr_version);
@@ -125,8 +123,6 @@ class SearchApiSolrCommands extends DrushCommands implements StdinAwareInterface
    * @param string $indexId
    *   (optional) A search index ID, or NULL to index items for all enabled
    *   indexes.
-   * @param array $options
-   *   Array with the Solr config.
    *
    * @command search-api-solr:finalize-index
    *
@@ -140,6 +136,8 @@ class SearchApiSolrCommands extends DrushCommands implements StdinAwareInterface
    *   Finalize the index with the ID node_index.
    * @usage drush search-api-solr:finalize-index node_index --force
    *   Index a maximum number of 100 items for the index with the ID node_index.
+   *
+   * @option force Start the finalization even if the internal tracker indicates that no finalization is required.
    *
    * @aliases solr-finalize
    *
