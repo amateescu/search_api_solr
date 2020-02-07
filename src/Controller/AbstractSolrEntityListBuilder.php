@@ -6,7 +6,7 @@ use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\search_api_solr\SearchApiSolrConflictingEntitiesException;
 use Drupal\search_api_solr\SearchApiSolrException;
-use Drupal\search_api_solr\SolrCacheInterface;
+use Drupal\search_api_solr\SolrConfigInterface;
 
 /**
  * Provides a listing of Solr Entities.
@@ -92,10 +92,10 @@ abstract class AbstractSolrEntityListBuilder extends ConfigEntityListBuilder {
   }
 
   /**
-   * Returns a list of all enabled caches for current server.
+   * Returns a list of all enabled Solr config entities for current server.
    *
    * @return array
-   *   An array of all enabled caches for current server.
+   *   An array of all enabled Solr config entities for current server.
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrConflictingEntitiesException
    * @throws \Drupal\search_api\SearchApiException
@@ -188,12 +188,12 @@ abstract class AbstractSolrEntityListBuilder extends ConfigEntityListBuilder {
       $entity_ids = $this->getEntityIds();
       /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $storage */
       $storage = $this->getStorage();
-      /** @var \Drupal\search_api_solr\Entity\SolrCache[] $entities */
+      /** @var \Drupal\search_api_solr\SolrConfigInterface[] $entities */
       $entities = $storage->loadMultipleOverrideFree($entity_ids);
 
-      // We filter those caches that are relevant for the current server. There
-      // are multiple entities having the same cache.name but different values
-      // for minimum_solr_version and environment.
+      // We filter those entities that are relevant for the current server.
+      // There are multiple entities having the same entity name but different
+      // values for minimum_solr_version and environment.
       $selection = [];
       foreach ($entities as $key => $entity) {
         $entities[$key]->disabledOnServer = in_array($entity->id(), $disabled_entities);
@@ -267,14 +267,14 @@ abstract class AbstractSolrEntityListBuilder extends ConfigEntityListBuilder {
   }
 
   /**
-   * Merge two Solr cache entities.
+   * Merge two Solr config entities.
    *
-   * @param \Drupal\search_api_solr\SolrCacheInterface $target
-   *   The target Solr cache entity.
-   * @param \Drupal\search_api_solr\SolrCacheInterface $source
-   *   The source Solr cache entity.
+   * @param \Drupal\search_api_solr\SolrConfigInterface $target
+   *   The target Solr config entity.
+   * @param \Drupal\search_api_solr\SolrConfigInterface $source
+   *   The source Solr config entity.
    */
-  protected function mergeSolrConfigs(SolrCacheInterface $target, SolrCacheInterface $source) {
+  protected function mergeSolrConfigs(SolrConfigInterface $target, SolrConfigInterface $source) {
     if (empty($target->getSolrConfigs()) && !empty($source->getSolrConfigs())) {
       $target->setSolrConfigs($source->getSolrConfigs());
     }
@@ -290,7 +290,7 @@ abstract class AbstractSolrEntityListBuilder extends ConfigEntityListBuilder {
    */
   public function getXml() {
     $xml = '';
-    /** @var \Drupal\search_api_solr\SolrCacheInterface $solr_entities */
+    /** @var \Drupal\search_api_solr\SolrConfigInterface $solr_entities */
     foreach ($this->getEnabledEntities() as $solr_entities) {
       $xml .= $solr_entities->getAsXml();
     }
@@ -343,6 +343,9 @@ abstract class AbstractSolrEntityListBuilder extends ConfigEntityListBuilder {
    *   An array of all recommended entities.
    */
   public function getAllRecommendedEntities(): array {
+    // Bypass AbstractSolrEntityListBuilder::load() by calling the parent. But
+    // don't use parent::load() in case someone copies this function in an
+    // inherited class.
     $entities = ConfigEntityListBuilder::load();
     foreach ($entities as $key => $entity) {
       if (!$entity->isRecommended()) {
@@ -359,6 +362,9 @@ abstract class AbstractSolrEntityListBuilder extends ConfigEntityListBuilder {
    *   An array of all not recommended entities.
    */
   public function getAllNotRecommendedEntities(): array {
+    // Bypass AbstractSolrEntityListBuilder::load() by calling the parent. But
+    // don't use parent::load() in case someone copies this function in an
+    // inherited class.
     $entities = ConfigEntityListBuilder::load();
     foreach ($entities as $key => $entity) {
       if ($entity->isRecommended()) {
