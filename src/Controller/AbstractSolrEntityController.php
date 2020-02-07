@@ -22,9 +22,11 @@ abstract class AbstractSolrEntityController extends ControllerBase {
   protected $messenger;
 
   /**
+   * Entity type id.
+   *
    * @var string
    */
-  protected $entity_type_id;
+  protected $entityTypeId;
 
   /**
    * {@inheritdoc}
@@ -75,7 +77,7 @@ abstract class AbstractSolrEntityController extends ControllerBase {
    */
   protected function getListBuilder(ServerInterface $search_api_server) {
     /** @var \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder $list_builder */
-    $list_builder = $this->entityTypeManager()->getListBuilder($this->entity_type_id);
+    $list_builder = $this->entityTypeManager()->getListBuilder($this->entityTypeId);
     $list_builder->setServer($search_api_server);
     return $list_builder;
   }
@@ -84,9 +86,12 @@ abstract class AbstractSolrEntityController extends ControllerBase {
    * Disables a Solr Entity on this server.
    *
    * @param \Drupal\search_api\ServerInterface $search_api_server
+   *   Search API server.
    * @param \Drupal\search_api_solr\SolrConfigInterface $solr_entity
+   *   Solr entity.
    *
-   * @return RedirectResponse
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   Redirect response.
    *
    * @throws \Drupal\Core\Entity\EntityMalformedException
    * @throws \Drupal\Core\Entity\EntityStorageException
@@ -105,9 +110,12 @@ abstract class AbstractSolrEntityController extends ControllerBase {
    * Enables a Solr Entity on this server.
    *
    * @param \Drupal\search_api\ServerInterface $search_api_server
-   * @param \Drupal\search_api_solr\SolrConfigInterface $solr_cache
+   *   Search API server.
+   * @param \Drupal\search_api_solr\SolrConfigInterface $solr_entity
+   *   Solr entity.
    *
-   * @return RedirectResponse
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   Redirect response.
    *
    * @throws \Drupal\Core\Entity\EntityMalformedException
    * @throws \Drupal\Core\Entity\EntityStorageException

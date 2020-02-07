@@ -4,7 +4,6 @@ namespace Drupal\search_api_solr\Controller;
 
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SolrConfigInterface;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Provides different listings of SolrRequestDispatcher.
@@ -12,17 +11,22 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 class SolrRequestDispatcherController extends AbstractSolrEntityController {
 
   /**
+   * Entity type id.
+   *
    * @var string
    */
-  protected $entity_type_id = 'solr_request_dispatcher';
+  protected $entityTypeId = 'solr_request_dispatcher';
 
   /**
    * Disables a Solr Entity on this server.
    *
    * @param \Drupal\search_api\ServerInterface $search_api_server
+   *   Search API server.
    * @param \Drupal\search_api_solr\SolrConfigInterface $solr_request_dispatcher
+   *   Solr request dispatcher.
    *
-   * @return RedirectResponse
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   Redirect response.
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
@@ -34,13 +38,17 @@ class SolrRequestDispatcherController extends AbstractSolrEntityController {
    * Enables a Solr Entity on this server.
    *
    * @param \Drupal\search_api\ServerInterface $search_api_server
+   *   Serach API server.
    * @param \Drupal\search_api_solr\SolrConfigInterface $solr_request_dispatcher
+   *   Solr request dispatcher.
    *
-   * @return RedirectResponse
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   Redirect response.
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function enableOnServer(ServerInterface $search_api_server, SolrConfigInterface $solr_request_dispatcher) {
     return parent::enableOnServer($search_api_server, $solr_request_dispatcher);
   }
+
 }

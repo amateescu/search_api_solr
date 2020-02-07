@@ -17,6 +17,12 @@ namespace Drupal\search_api_solr\Plugin\DataType;
  */
 class SolrMultisiteField extends SolrField {
 
-  protected static $solr_field = 'solr_multisite_field';
+
+  /**
+   * Field name.
+   *
+   * @var string
+   */
+  protected static $solrField = 'solr_multisite_field';
 
 }

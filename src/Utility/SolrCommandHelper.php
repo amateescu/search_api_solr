@@ -4,11 +4,12 @@ namespace Drupal\search_api_solr\Utility;
 
 use Drupal\search_api_solr\Controller\SolrConfigSetController;
 use ZipStream\Option\Archive;
+use Drupal\search_api\Utility\CommandHelper;
 
 /**
  * Provides functionality to be used by CLI tools.
  */
-class CommandHelper extends \Drupal\search_api\Utility\CommandHelper {
+class SolrCommandHelper extends CommandHelper {
 
   /**
    * Re-install all Solr Field Types from their yml files.

@@ -28,26 +28,26 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    *
    * @var string
    */
-  protected $checkpoints_collection;
+  protected $checkpointsCollection;
 
   /**
    * @var string
    */
-  protected $index_filter_query;
+  protected $indexFilterQuery;
 
   /**
    * The targeted Index ID.
    *
    * @var string
    */
-  protected $targeted_index_id;
+  protected $targetedIndexId;
 
   /**
    * The targeted site hash.
    *
    * @var string
    */
-  protected $targeted_site_hash;
+  protected $targetedSiteHash;
 
   /**
    * The Search API index entity.
@@ -61,60 +61,63 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    *
    * @var string
    */
-  protected $server_id;
+  protected $serverId;
 
   /**
    * The formatted request time.
    *
    * @var string
    */
-  protected $request_time;
+  protected $requestTime;
 
   /**
    * The array of all mapped fields including graph fields.
    *
    * @var string[][]
    */
-  protected $all_fields_including_graph_fields_mapped;
+  protected $allFieldsIncludingGraphFieldsMapped;
 
   /**
    * The array of all mapped fields.
    *
    * @var string[][]
    */
-  protected $all_fields_mapped;
+  protected $allFieldsMapped;
 
   /**
    * The array of all mapped fields that have docValues.
    *
    * @var string[][]
    */
-  protected $all_doc_value_fields_mapped;
+  protected $allDocValueFieldsMapped;
 
   /**
    * The array of all mapped sorting fields.
    *
    * @var string[][]
    */
-  protected $sort_fields_mapped;
+  protected $sortFieldsMapped;
 
   /**
    * The Solarium query helper.
    *
    * @var \Solarium\Core\Query\Helper
    */
-  protected $query_helper;
+  protected $queryHelper;
 
   /**
-   * The _search_all() and _topic_all() streaming expressions need a row limit
-   * is equal to or higher then the real number of rows.
+   * The _search_all() and _topic_all() streaming expressions need a row limit.
+   *
+   * The row limit is equal to or higher then the real number of rows.
    *
    * @var int
    */
-  protected $search_all_rows;
+  protected $searchAllRows;
 
   /**
-   * @var SolrBackendInterface
+   * The Solr backend.
+   *
+   * @var \Drupal\search_api_solr\SolrBackendInterface
    */
   protected $backend;
 
@@ -129,7 +132,7 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    */
   public function __construct(IndexInterface $index) {
     $server = $index->getServerInstance();
-    $this->server_id = $server->id();
+    $this->serverId = $server->id();
     $this->backend = $server->getBackend();
     $connector = $this->backend->getSolrConnector();
     $index_settings = Utility::getIndexSolrSettings($index);
@@ -140,20 +143,20 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
 
     $language_ids = array_merge(array_keys(\Drupal::languageManager()->getLanguages()), [LanguageInterface::LANGCODE_NOT_SPECIFIED]);
     $this->collection = $index_settings['advanced']['collection'] ?: $connector->getCollectionName();
-    $this->checkpoints_collection = $connector->getCheckpointsCollectionName();
-    $this->index_filter_query = $this->backend->getIndexFilterQueryString($index);
-    $this->targeted_index_id = $this->backend->getTargetedIndexId($index);
-    $this->targeted_site_hash = $this->backend->getTargetedSiteHash($index);
+    $this->checkpointsCollection = $connector->getCheckpointsCollectionName();
+    $this->indexFilterQuery = $this->backend->getIndexFilterQueryString($index);
+    $this->targetedIndexId = $this->backend->getTargetedIndexId($index);
+    $this->targetedSiteHash = $this->backend->getTargetedSiteHash($index);
     $this->index = $index;
-    $this->request_time = $this->backend->formatDate(\Drupal::time()->getRequestTime());
-    $this->all_fields_mapped = [];
+    $this->requestTime = $this->backend->formatDate(\Drupal::time()->getRequestTime());
+    $this->allFieldsMapped = [];
     foreach ($this->backend->getSolrFieldNamesKeyedByLanguage($language_ids, $index) as $search_api_field => $solr_field) {
       foreach ($solr_field as $language_id => $solr_field_name) {
-        $this->all_fields_mapped[$language_id][$search_api_field] = $solr_field_name;
+        $this->allFieldsMapped[$language_id][$search_api_field] = $solr_field_name;
       }
     }
     foreach ($language_ids as $language_id) {
-      $this->all_fields_mapped[$language_id] += [
+      $this->allFieldsMapped[$language_id] += [
         // Search API Solr Search specific fields.
         'id' => Utility::hasIndexJustSolrDocumentDatasource($index) ? $index->get('datasource_settings')['solr_document']['id_field'] : 'id',
         'index_id' => 'index_id',
@@ -165,7 +168,7 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
         'spell' => 'spell',
       ];
 
-      $this->all_fields_including_graph_fields_mapped[$language_id] = $this->all_fields_mapped[$language_id] + [
+      $this->allFieldsIncludingGraphFieldsMapped[$language_id] = $this->allFieldsMapped[$language_id] + [
         // Graph traversal reserved names. We can't get a conflict here since
         // all dynamic fields are prefixed.
         'node' => 'node',
@@ -175,31 +178,32 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
         'ancestors' => 'ancestors',
       ];
 
-      $this->sort_fields_mapped[$language_id] = [];
+      $this->sortFieldsMapped[$language_id] = [];
       if (!Utility::hasIndexJustSolrDocumentDatasource($index)) {
-        foreach ($this->all_fields_mapped[$language_id] as $search_api_field => $solr_field) {
+        foreach ($this->allFieldsMapped[$language_id] as $search_api_field => $solr_field) {
           if (strpos($solr_field, 't') === 0 || strpos($solr_field, 's') === 0) {
-            $this->sort_fields_mapped[$language_id]['sort_' . $search_api_field] = Utility::encodeSolrName('sort' . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $language_id . '_' . $search_api_field);
+            $this->sortFieldsMapped[$language_id]['sort_' . $search_api_field] = Utility::encodeSolrName('sort' . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $language_id . '_' . $search_api_field);
           }
           elseif (preg_match('/^([a-z]+)m(_.*)/', $solr_field, $matches) && strpos($solr_field, 'random_') !== 0) {
-            $this->sort_fields_mapped[$language_id]['sort' . Utility::decodeSolrName($matches[2])] = $matches[1] . 's' . $matches[2];
+            $this->sortFieldsMapped[$language_id]['sort' . Utility::decodeSolrName($matches[2])] = $matches[1] . 's' . $matches[2];
           }
 
           if (
-            strpos($solr_field, 's') === 0 || // Covers sort_*, too.
+            // Covers sort_*, too.
+            strpos($solr_field, 's') === 0 ||
             strpos($solr_field, 'i') === 0 ||
             strpos($solr_field, 'f') === 0 ||
             strpos($solr_field, 'p') === 0 ||
             strpos($solr_field, 'b') === 0 ||
             strpos($solr_field, 'h') === 0
           ) {
-            $this->all_doc_value_fields_mapped[$language_id][$search_api_field] = $solr_field;
+            $this->allDocValueFieldsMapped[$language_id][$search_api_field] = $solr_field;
           }
         }
       }
     }
 
-    $this->query_helper = $connector->getQueryHelper();
+    $this->queryHelper = $connector->getQueryHelper();
   }
 
   /**
@@ -219,7 +223,7 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    *   The checkpoints collection name.
    */
   public function _checkpoints_collection() {
-    return $this->checkpoints_collection;
+    return $this->checkpointsCollection;
   }
 
   /**
@@ -236,14 +240,14 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    * @throws \InvalidArgumentException
    */
   public function _field(string $search_api_field_name, string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
-    if (!isset($this->all_fields_including_graph_fields_mapped[$language_id][$search_api_field_name])) {
-      if (isset($this->sort_fields_mapped[$language_id][$search_api_field_name])) {
-        return $this->sort_fields_mapped[$language_id][$search_api_field_name];
+    if (!isset($this->allFieldsIncludingGraphFieldsMapped[$language_id][$search_api_field_name])) {
+      if (isset($this->sortFieldsMapped[$language_id][$search_api_field_name])) {
+        return $this->sortFieldsMapped[$language_id][$search_api_field_name];
       }
 
-      throw new \InvalidArgumentException(sprintf('Field %s does not exist in index %s.', $search_api_field_name, $this->targeted_index_id));
+      throw new \InvalidArgumentException(sprintf('Field %s does not exist in index %s.', $search_api_field_name, $this->targetedIndexId));
     }
-    return $this->all_fields_including_graph_fields_mapped[$language_id][$search_api_field_name];
+    return $this->allFieldsIncludingGraphFieldsMapped[$language_id][$search_api_field_name];
   }
 
   /**
@@ -287,7 +291,7 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
   public function _all_fields_list(string $delimiter = ',', bool $include_sorts = TRUE, array $blacklist = [], string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
     $blacklist = array_merge($blacklist, ['search_api_relevance', 'search_api_random']);
     return implode($delimiter, array_diff_key(
-      ($include_sorts ? array_merge($this->all_fields_mapped[$language_id], $this->sort_fields_mapped[$language_id]) : $this->all_fields_mapped[$language_id]),
+      ($include_sorts ? array_merge($this->allFieldsMapped[$language_id], $this->sortFieldsMapped[$language_id]) : $this->allFieldsMapped[$language_id]),
       array_flip($blacklist))
     );
   }
@@ -311,7 +315,7 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
     $blacklist = array_merge($blacklist, ['search_api_relevance', 'search_api_random']);
     return implode($delimiter, array_diff_key(
       // All sort fields have docValues.
-      ($include_sorts ? array_merge($this->all_doc_value_fields_mapped[$language_id], $this->sort_fields_mapped[$language_id]) : $this->all_doc_value_fields_mapped[$language_id]),
+      ($include_sorts ? array_merge($this->allDocValueFieldsMapped[$language_id], $this->sortFieldsMapped[$language_id]) : $this->allDocValueFieldsMapped[$language_id]),
       array_flip($blacklist))
     );
   }
@@ -344,8 +348,8 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
       }
     }
     $escaped_string = $single_term ?
-      $this->query_helper->escapeTerm($value) :
-      $this->query_helper->escapePhrase($value);
+      $this->queryHelper->escapeTerm($value) :
+      $this->queryHelper->escapePhrase($value);
     // If the escaped strings are to be used inside a streaming expression
     // double quotes need to be escaped once more.
     // (e.g. q="field:\"word1 word2\"").
@@ -643,7 +647,7 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    *   The filter query ready to use for the 'fq' parameter.
    */
   public function _index_filter_query() {
-    return $this->index_filter_query;
+    return $this->indexFilterQuery;
   }
 
   /**
@@ -653,7 +657,7 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    *   The index ID.
    */
   public function _index_id() {
-    return $this->targeted_index_id;
+    return $this->targetedIndexId;
   }
 
   /**
@@ -665,7 +669,7 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    *   The site hash.
    */
   public function _site_hash() {
-    return $this->targeted_site_hash;
+    return $this->targetedSiteHash;
   }
 
   /**
@@ -675,7 +679,7 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    *   The formatted date.
    */
   public function _request_time() {
-    return $this->request_time;
+    return $this->requestTime;
   }
 
   /**
@@ -685,14 +689,14 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    *   The timestamp expression.
    */
   public function _timestamp_value() {
-    return 'val(' . $this->request_time . ') as timestamp';
+    return 'val(' . $this->requestTime . ') as timestamp';
   }
 
   /**
    * Eases topic() expressions if there's no specific checkpoint collection.
    *
    * @return string
-   *  A chainable streaming expression as string.
+   *   A chainable streaming expression as string.
    */
   public function _topic() {
     return $this->topic(
@@ -707,7 +711,7 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    * Eases topic() expressions if there's no specific checkpoint collection.
    *
    * @return string
-   *  A chainable streaming expression as string.
+   *   A chainable streaming expression as string.
    */
   public function _topic_all() {
     return $this->topic(
@@ -725,12 +729,13 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    * The checkpoint name gets suffixed by targeted index and site hash to avoid
    * collisions.
    *
-   * @param $checkpoint
+   * @param string $checkpoint
    *
    * @return string
+   *   Formatted checkpoint parameter.
    */
   public function _checkpoint($checkpoint) {
-    return 'id="' . Utility::formatCheckpointId($checkpoint, $this->targeted_index_id, $this->targeted_site_hash) . '"';
+    return 'id="' . Utility::formatCheckpointId($checkpoint, $this->targetedIndexId, $this->targetedSiteHash) . '"';
   }
 
   /**
@@ -745,6 +750,7 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    * 1024 as fallback.
    *
    * @return int
+   *   Integer of the row limit.
    *
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    * @throws \Drupal\search_api\SearchApiException
@@ -753,16 +759,17 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    * @see search_api_solr_cron()
    */
   public function getSearchAllRows() {
-    if (!$this->search_all_rows) {
+    if (!$this->searchAllRows) {
       $rows = \Drupal::state()->get('search_api_solr.search_all_rows', []);
-      $this->search_all_rows = $rows[$this->server_id][$this->targeted_site_hash][$this->targeted_index_id] ?? FALSE;
-      if (FALSE === $this->search_all_rows) {
+      $this->searchAllRows = $rows[$this->serverId][$this->targetedSiteHash][$this->targetedIndexId] ?? FALSE;
+      if (FALSE === $this->searchAllRows) {
         $counts = $this->backend->getDocumentCounts();
-        $this->search_all_rows = $rows[$this->server_id][$this->targeted_site_hash][$this->targeted_index_id] =
-          Utility::normalizeMaxRows($counts[$this->targeted_site_hash][$this->targeted_index_id] ?? ($counts['#total'] ?? 512));
+        $this->searchAllRows = $rows[$this->serverId][$this->targetedSiteHash][$this->targetedIndexId] =
+          Utility::normalizeMaxRows($counts[$this->targetedSiteHash][$this->targetedIndexId] ?? ($counts['#total'] ?? 512));
         \Drupal::state()->set('search_api_solr.search_all_rows', $rows);
       }
     }
-    return $this->search_all_rows;
+    return $this->searchAllRows;
   }
+
 }

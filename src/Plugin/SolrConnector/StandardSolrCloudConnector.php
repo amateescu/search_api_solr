@@ -138,7 +138,8 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
     if ($checkpoints_collection) {
       try {
         return $this->getEndpoint($checkpoints_collection);
-      } catch (OutOfBoundsException $e) {
+      }
+      catch (OutOfBoundsException $e) {
         $additional_config['core'] = $checkpoints_collection;
         return $this->createEndpoint($checkpoints_collection, $additional_config);
       }
@@ -274,7 +275,8 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
   /**
    * Reloads collection.
    *
-   * @param string $collection
+   * @param string|null $collection
+   *   Collection.
    *
    * @return bool
    *   TRUE if successful, FALSE otherwise.
@@ -324,4 +326,5 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
       $files['solrconfig_extra.xml'] .= '<statsCache class="' . $this->configuration['stats_cache'] . '" />' . "\n";
     }
   }
+
 }

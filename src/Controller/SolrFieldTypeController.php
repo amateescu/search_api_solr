@@ -4,7 +4,6 @@ namespace Drupal\search_api_solr\Controller;
 
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SolrConfigInterface;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use ZipStream\Option\Archive;
 
 /**
@@ -13,9 +12,11 @@ use ZipStream\Option\Archive;
 class SolrFieldTypeController extends AbstractSolrEntityController {
 
   /**
+   * Entity type id.
+   *
    * @var string
    */
-  protected $entity_type_id = 'solr_field_type';
+  protected $entityTypeId = 'solr_field_type';
 
   /**
    * Provides a zip archive containing a complete Solr configuration.
@@ -54,9 +55,12 @@ class SolrFieldTypeController extends AbstractSolrEntityController {
    * Disables a Solr Entity on this server.
    *
    * @param \Drupal\search_api\ServerInterface $search_api_server
+   *   Search API server.
    * @param \Drupal\search_api_solr\SolrConfigInterface $solr_field_type
+   *   Solr field type.
    *
-   * @return RedirectResponse
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   Redirect response.
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
@@ -68,9 +72,12 @@ class SolrFieldTypeController extends AbstractSolrEntityController {
    * Enables a Solr Entity on this server.
    *
    * @param \Drupal\search_api\ServerInterface $search_api_server
+   *   Search API server.
    * @param \Drupal\search_api_solr\SolrConfigInterface $solr_field_type
+   *   Solr field type.
    *
-   * @return RedirectResponse
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   Redirect response.
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */

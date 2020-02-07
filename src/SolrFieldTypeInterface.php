@@ -54,6 +54,7 @@ interface SolrFieldTypeInterface extends SolrConfigInterface {
    *   The Solr Field Type definition as nested associative array.
    *
    * @return self
+   *   Field type.
    */
   public function setFieldType(array $field_type);
 
@@ -81,6 +82,7 @@ interface SolrFieldTypeInterface extends SolrConfigInterface {
    *   The Solr Field Type definition as JSON.
    *
    * @return self
+   *   Field type as json.
    */
   public function setFieldTypeAsJson($field_type);
 
@@ -100,6 +102,7 @@ interface SolrFieldTypeInterface extends SolrConfigInterface {
    *   The Solr SpellcheckField Type definition as nested associative array.
    *
    * @return self
+   *   Spellcheck field type.
    */
   public function setSpellcheckFieldType(array $spellcheck_field_type);
 
@@ -128,6 +131,7 @@ interface SolrFieldTypeInterface extends SolrConfigInterface {
    *   doesn't exist.
    *
    * @return self
+   *   Spellcheck field type as json.
    */
   public function setSpellcheckFieldTypeAsJson($spellcheck_field_type);
 
@@ -162,6 +166,7 @@ interface SolrFieldTypeInterface extends SolrConfigInterface {
    *   The Solr Collated Type definition as nested associative array.
    *
    * @return self
+   *   Collated field type
    */
   public function setCollatedFieldType(array $collated_field_type);
 
@@ -190,6 +195,7 @@ interface SolrFieldTypeInterface extends SolrConfigInterface {
    *   doesn't exist.
    *
    * @return self
+   *   Collated field type as json.
    */
   public function setCollatedFieldTypeAsJson($collated_field_type);
 
@@ -211,7 +217,7 @@ interface SolrFieldTypeInterface extends SolrConfigInterface {
   /**
    * Gets the Solr Unstemmed Field Type definition as nested associative array.
    *
-   * @return array|NULL
+   * @return array|null
    *   The Solr Unstemmed Field Type definition as nested associative array or
    *   NULL if it doesn't exist.
    */
@@ -224,6 +230,7 @@ interface SolrFieldTypeInterface extends SolrConfigInterface {
    *   The Solr Unstemmed Field Type definition as nested associative array.
    *
    * @return self
+   *   Unstemmed field type.
    */
   public function setUnstemmedFieldType(array $unstemmed_field_type);
 
@@ -252,6 +259,7 @@ interface SolrFieldTypeInterface extends SolrConfigInterface {
    *   doesn't exist.
    *
    * @return self
+   *   Untemmed field type as json.
    */
   public function setUnstemmedFieldTypeAsJson($unstemmed_field_type);
 
@@ -265,8 +273,8 @@ interface SolrFieldTypeInterface extends SolrConfigInterface {
    *   Solr Field Type.
    *
    * @return string
-   *    The Solr Unstemmed Field Type definition as XML, might be empty if it
-   *    doesn't exist.
+   *   The Solr Unstemmed Field Type definition as XML, might be empty if it
+   *   doesn't exist.
    */
   public function getUnstemmedFieldTypeAsXml($add_comment = TRUE);
 
@@ -321,6 +329,7 @@ interface SolrFieldTypeInterface extends SolrConfigInterface {
    *   as values.
    *
    * @return self
+   *   Text File.
    */
   public function setTextFiles(array $text_files);
 

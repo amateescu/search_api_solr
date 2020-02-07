@@ -25,8 +25,19 @@ use Solarium\Core\Query\DocumentInterface;
  */
 class SolrDocument extends TypedData implements \IteratorAggregate, ComplexDataInterface {
 
-  protected $solr_field = 'solr_field';
-  protected $solr_document = 'solr_document';
+  /**
+   * Field name.
+   *
+   * @var string
+   */
+  protected $solrField = 'solr_field';
+
+  /**
+   * Document name.
+   *
+   * @var string
+   */
+  protected $solrDocument = 'solr_document';
 
   /**
    * The wrapped Search API Item.
@@ -78,8 +89,8 @@ class SolrDocument extends TypedData implements \IteratorAggregate, ComplexDataI
     // First, verify that this field actually exists in the Solr server. If we
     // can't get a definition for it, it doesn't exist.
     /** @var \Drupal\search_api_solr\Plugin\DataType\SolrField $plugin */
-    $plugin = \Drupal::typedDataManager()->getDefinition($this->solr_field)['class'];
-    $field_manager = \Drupal::getContainer()->get($this->solr_field . '.manager');
+    $plugin = \Drupal::typedDataManager()->getDefinition($this->solrField)['class'];
+    $field_manager = \Drupal::getContainer()->get($this->solrField . '.manager');
     $fields = $field_manager->getFieldDefinitions($this->item->getIndex());
     if (empty($fields[$property_name])) {
       throw new \InvalidArgumentException("The Solr field $property_name could not be found on the server.");
@@ -92,7 +103,7 @@ class SolrDocument extends TypedData implements \IteratorAggregate, ComplexDataI
     $found = FALSE;
     foreach ($this->item->getFields(FALSE) as $field) {
       if (
-        $field->getDatasourceId() === $this->solr_document &&
+        $field->getDatasourceId() === $this->solrDocument &&
         $field->getPropertyPath() === $property_name
       ) {
         $property->setValue($field->getValues());

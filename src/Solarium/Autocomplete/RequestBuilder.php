@@ -14,7 +14,7 @@ class RequestBuilder extends AbstractRequestBuilder {
   /**
    * Build request for an autocomplete query.
    *
-   * @param AbstractQuery $query
+   * @param \Solarium\Core\Query\AbstractQuery $query
    *   The Solarium query.
    *
    * @return \Solarium\Core\Client\Request

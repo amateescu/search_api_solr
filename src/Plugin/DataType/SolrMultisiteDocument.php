@@ -17,7 +17,18 @@ namespace Drupal\search_api_solr\Plugin\DataType;
  */
 class SolrMultisiteDocument extends SolrDocument {
 
-  protected $solr_field = 'solr_multisite_field';
-  protected $solr_document = 'solr_multisite_document';
+  /**
+   * Field name.
+   *
+   * @var string
+   */
+  protected $solrField = 'solr_multisite_field';
+
+  /**
+   * Document name.
+   *
+   * @var string
+   */
+  protected $solrDocument = 'solr_multisite_document';
 
 }

@@ -5,7 +5,9 @@ namespace Drupal\search_api_solr\Plugin\search_api\parse_mode;
 use Drupal\search_api\Plugin\search_api\parse_mode\Phrase;
 
 /**
- * Represents a parse mode that parses the sentence into a sloppy search for the sentence.
+ * Represents a parse mode.
+ *
+ * A parse mode that parses the sentence into a sloppy search for the sentence.
  *
  * @SearchApiParseMode(
  *   id = "sloppy_phrase",

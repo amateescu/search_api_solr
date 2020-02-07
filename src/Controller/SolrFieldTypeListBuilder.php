@@ -5,6 +5,7 @@ namespace Drupal\search_api_solr\Controller;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
+use Drupal\search_api_solr\SolrFieldTypeInterface;
 
 /**
  * Provides a listing of SolrFieldType.
@@ -78,7 +79,7 @@ class SolrFieldTypeListBuilder extends AbstractSolrEntityListBuilder {
     // returns as we provide language fallbacks. For example, 'de' should be
     // used for 'de-at' if there's no dedicated 'de-at' field type.
     array_walk($active_languages, function (&$value) {
-      list($value, ) = explode('-', $value);
+      list($value,) = explode('-', $value);
     });
     $active_languages[] = LanguageInterface::LANGCODE_NOT_SPECIFIED;
 
@@ -121,7 +122,7 @@ class SolrFieldTypeListBuilder extends AbstractSolrEntityListBuilder {
         /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
         $version = $solr_field_type->getMinimumSolrVersion();
         $domains = $solr_field_type->getDomains();
-        list($language, ) = explode('-', $solr_field_type->getFieldTypeLanguageCode());
+        list($language,) = explode('-', $solr_field_type->getFieldTypeLanguageCode());
         if (
           $solr_field_type->requiresManagedSchema() != $this->getBackend()->isManagedSchema() ||
           version_compare($version, $solr_version, '>') ||
@@ -165,7 +166,7 @@ class SolrFieldTypeListBuilder extends AbstractSolrEntityListBuilder {
       }
 
       if ($warning) {
-        $this->assumed_minimum_version = array_reduce($selection, function ($version, $item) {
+        $this->assumedMinimumVersion = array_reduce($selection, function ($version, $item) {
           if (version_compare($item['version'], $version, '<')) {
             return $item['version'];
           }
@@ -175,7 +176,7 @@ class SolrFieldTypeListBuilder extends AbstractSolrEntityListBuilder {
         \Drupal::messenger()->addWarning(
           $this->t(
             'Unable to reach the Solr server (yet). Therefore the lowest supported Solr version %version is assumed. Once the connection works and the real Solr version could be detected it might be necessary to deploy an adjusted config to the server to get the best search results. If the server does not start using the downloadable config, you should edit the server and manually set the Solr version override temporarily that fits your server best and download the config again. But it is recommended to remove this override once the server is running.',
-            ['%version' => $this->assumed_minimum_version])
+            ['%version' => $this->assumedMinimumVersion])
         );
       }
 
@@ -192,6 +193,8 @@ class SolrFieldTypeListBuilder extends AbstractSolrEntityListBuilder {
    * Returns a list of all disabled request handlers for current server.
    *
    * @return array
+   *   A list of all disabled request handlers for current server.
+   *
    * @throws \Drupal\search_api\SearchApiException
    */
   protected function getDisabledEntities(): array {
@@ -201,10 +204,14 @@ class SolrFieldTypeListBuilder extends AbstractSolrEntityListBuilder {
   }
 
   /**
+   * Merge two Solr field type entities.
+   *
    * @param \Drupal\search_api_solr\SolrFieldTypeInterface $target
+   *   The target Solr field type entity.
    * @param \Drupal\search_api_solr\SolrFieldTypeInterface $source
+   *   The source Solr field type entity.
    */
-  protected function mergeFieldTypes($target, $source) {
+  protected function mergeFieldTypes(SolrFieldTypeInterface $target, SolrFieldTypeInterface $source) {
     if (empty($target->getCollatedFieldType()) && !empty($source->getCollatedFieldType())) {
       $target->setCollatedFieldType($source->getCollatedFieldType());
     }
@@ -246,12 +253,12 @@ class SolrFieldTypeListBuilder extends AbstractSolrEntityListBuilder {
    */
   public function getSchemaExtraFieldsXml() {
     $xml = '';
-    /** @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
+    /* @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
     foreach ($this->getEnabledEntities() as $solr_field_type) {
       foreach ($solr_field_type->getStaticFields() as $static_field) {
         $xml .= '<field ';
         foreach ($static_field as $attribute => $value) {
-          /** @noinspection NestedTernaryOperatorInspection */
+          /* @noinspection NestedTernaryOperatorInspection */
           $xml .= $attribute . '="' . (is_bool($value) ? ($value ? 'true' : 'false') : $value) . '" ';
         }
         $xml .= "/>\n";
@@ -259,7 +266,7 @@ class SolrFieldTypeListBuilder extends AbstractSolrEntityListBuilder {
       foreach ($solr_field_type->getDynamicFields() as $dynamic_field) {
         $xml .= '<dynamicField ';
         foreach ($dynamic_field as $attribute => $value) {
-          /** @noinspection NestedTernaryOperatorInspection */
+          /* @noinspection NestedTernaryOperatorInspection */
           $xml .= $attribute . '="' . (is_bool($value) ? ($value ? 'true' : 'false') : $value) . '" ';
         }
         $xml .= "/>\n";
@@ -268,7 +275,7 @@ class SolrFieldTypeListBuilder extends AbstractSolrEntityListBuilder {
       foreach ($solr_field_type->getCopyFields() as $copy_field) {
         $xml .= '<copyField ';
         foreach ($copy_field as $attribute => $value) {
-          /** @noinspection NestedTernaryOperatorInspection */
+          /* @noinspection NestedTernaryOperatorInspection */
           $xml .= $attribute . '="' . (is_bool($value) ? ($value ? 'true' : 'false') : $value) . '" ';
         }
         $xml .= "/>\n";

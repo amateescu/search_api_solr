@@ -29,9 +29,11 @@ trait BackendTrait {
    *
    * @var string
    */
-  protected $assumed_minimum_version = '';
+  protected $assumedMinimumVersion = '';
 
   /**
+   * Reset.
+   *
    * @var bool
    */
   protected $reset = FALSE;
@@ -45,7 +47,7 @@ trait BackendTrait {
    * @throws \Drupal\search_api\SearchApiException
    */
   public function setServer(ServerInterface $server) {
-    /** @var SolrBackendInterface $backend */
+    /* @var SolrBackendInterface $backend */
     $backend = $server->getBackend();
     $this->setBackend($backend);
     $this->serverId = $server->id();
@@ -72,7 +74,14 @@ trait BackendTrait {
     return $this->backend;
   }
 
-  public function setAssumedMinimumVersion(string $assumed_minimum_version) {
-    $this->assumed_minimum_version = $assumed_minimum_version;
+  /**
+   * Set assumed minimum version.
+   *
+   * @param \Drupal\search_api_solr\Controller\string $assumedMinimumVersion
+   *   Assumed minimum version.
+   */
+  public function setAssumedMinimumVersion(string $assumedMinimumVersion) {
+    $this->assumedMinimumVersion = $assumedMinimumVersion;
   }
+
 }

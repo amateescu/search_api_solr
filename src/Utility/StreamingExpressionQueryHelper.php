@@ -31,8 +31,10 @@ class StreamingExpressionQueryHelper extends QueryHelper {
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The Search API query.
-   * @param string $streaming_expression
+   * @param \Drupal\search_api_solr\Utility\string $streaming_expression
    *   The streaming expression to set for this query.
+   * @param \Drupal\search_api_solr\Utility\string $comment
+   *   A comment of the streaming expression.
    */
   public function setStreamingExpression(QueryInterface $query, string $streaming_expression, string $comment = '') {
     if ($comment) {

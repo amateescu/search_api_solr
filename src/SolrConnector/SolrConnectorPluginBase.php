@@ -19,6 +19,7 @@ use Solarium\Exception\HttpException;
 use Solarium\QueryType\Extract\Result as ExtractResult;
 use Solarium\QueryType\Update\Query\Query as UpdateQuery;
 use Solarium\QueryType\Select\Query\Query;
+use Drupal\search_api_solr\Solarium\Autocomplete\Query as AutocompleteQuery;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -714,7 +715,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    */
   public function getAutocompleteQuery() {
     $this->connect();
-    $this->solr->registerQueryType('autocomplete', \Drupal\search_api_solr\Solarium\Autocomplete\Query::class);
+    $this->solr->registerQueryType('autocomplete', AutocompleteQuery::class);
     return $this->solr->createQuery('autocomplete');
   }
 
@@ -865,7 +866,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    *
    * @param \Solarium\Exception\HttpException $e
    *   The HttpException object.
-   * @param \Solarium\Core\Client\Endpoint $endpoint
+   * @param \Solarium\Core\Client\Endpoint|null $endpoint
    *   The Solarium endpoint.
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException

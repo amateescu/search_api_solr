@@ -4,23 +4,29 @@ namespace Drupal\search_api_solr\Controller;
 
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SolrConfigInterface;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Provides different listings of SolrRequestHandler.
  */
 class SolrRequestHandlerController extends AbstractSolrEntityController {
+
   /**
+   * Entity type id.
+   *
    * @var string
    */
-  protected $entity_type_id = 'solr_request_handler';
+  protected $entityTypeId = 'solr_request_handler';
 
   /**
    * Disables a Solr Entity on this server.
    *
    * @param \Drupal\search_api\ServerInterface $search_api_server
+   *   Search API server.
    * @param \Drupal\search_api_solr\SolrConfigInterface $solr_request_handler
-   * @return RedirectResponse
+   *   Solr request handler.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   Redirect response.
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
@@ -32,9 +38,12 @@ class SolrRequestHandlerController extends AbstractSolrEntityController {
    * Enables a Solr Entity on this server.
    *
    * @param \Drupal\search_api\ServerInterface $search_api_server
+   *   Search API server.
    * @param \Drupal\search_api_solr\SolrConfigInterface $solr_request_handler
+   *   Solr request handler.
    *
-   * @return RedirectResponse
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   Redirect response.
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */

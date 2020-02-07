@@ -8,6 +8,8 @@ namespace Drupal\search_api_solr\Controller;
 class SolrRequestHandlerListBuilder extends AbstractSolrEntityListBuilder {
 
   /**
+   * Request handler label.
+   *
    * @var string
    */
   protected $label = 'Solr Request Handler';
@@ -16,6 +18,8 @@ class SolrRequestHandlerListBuilder extends AbstractSolrEntityListBuilder {
    * Returns a list of all disabled request handlers for current server.
    *
    * @return array
+   *   List of all disqbled request handlers for current server.
+   *
    * @throws \Drupal\search_api\SearchApiException
    */
   protected function getDisabledEntities(): array {

@@ -21,7 +21,6 @@ class Terms extends Server {
   /**
    * {@inheritdoc}
    *
-   *
    * @throws \Drupal\search_api\SearchApiException
    * @throws \Drupal\search_api_autocomplete\SearchApiAutocompleteException
    */

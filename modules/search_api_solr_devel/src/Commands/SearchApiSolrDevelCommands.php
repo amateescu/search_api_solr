@@ -7,7 +7,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
-use Drupal\search_api_solr\Utility\CommandHelper;
+use Drupal\search_api_solr\Utility\SolrCommandHelper;
 use Drush\Commands\DrushCommands;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -20,7 +20,7 @@ class SearchApiSolrDevelCommands extends DrushCommands {
   /**
    * The command helper.
    *
-   * @var \Drupal\search_api_solr\Utility\CommandHelper
+   * @var \Drupal\search_api_solr\Utility\SolrCommandHelper
    */
   protected $commandHelper;
 
@@ -37,7 +37,7 @@ class SearchApiSolrDevelCommands extends DrushCommands {
    */
   public function __construct(EntityTypeManagerInterface $entityTypeManager, ModuleHandlerInterface $moduleHandler, EventDispatcherInterface $eventDispatcher) {
     parent::__construct();
-    $this->commandHelper = new CommandHelper($entityTypeManager, $moduleHandler, $eventDispatcher, 'dt');
+    $this->commandHelper = new SolrCommandHelper($entityTypeManager, $moduleHandler, $eventDispatcher, 'dt');
   }
 
   /**

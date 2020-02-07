@@ -8,6 +8,8 @@ namespace Drupal\search_api_solr\Controller;
 class SolrCacheListBuilder extends AbstractSolrEntityListBuilder {
 
   /**
+   * Cache label.
+   *
    * @var string
    */
   protected $label = 'Solr Cache';
@@ -16,6 +18,8 @@ class SolrCacheListBuilder extends AbstractSolrEntityListBuilder {
    * Returns a list of all disabled caches for current server.
    *
    * @return array
+   *   List of all disabled caches for current server.
+   *
    * @throws \Drupal\search_api\SearchApiException
    */
   protected function getDisabledEntities(): array {

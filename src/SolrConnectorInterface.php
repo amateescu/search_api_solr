@@ -7,7 +7,6 @@ use Solarium\Core\Client\Endpoint;
 use Solarium\Core\Client\Request;
 use Solarium\Core\Client\Response;
 use Solarium\Core\Query\QueryInterface;
-use Solarium\Exception\OutOfBoundsException;
 use Solarium\QueryType\Extract\Result as ExtractResult;
 use Solarium\QueryType\Update\Query\Query as UpdateQuery;
 use Solarium\QueryType\Select\Query\Query;
@@ -433,7 +432,7 @@ interface SolrConnectorInterface extends ConfigurableInterface {
    * @return \Solarium\Core\Client\Endpoint
    *   The Solarium endpoint object.
    *
-   * @throws OutOfBoundsException
+   * @throws \Solarium\Exception\OutOfBoundsException
    */
   public function getEndpoint($key = 'search_api_solr');
 

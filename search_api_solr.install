@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Install, update and uninstall functions for the Search API Solr module.
+ */
+
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Config\Entity\ConfigEntityType;
@@ -9,6 +14,8 @@ use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\search_api_solr\SearchApiSolrConflictingEntitiesException;
+use Drupal\search_api_solr\SearchApiSolrException;
 use Solarium\Client;
 use Drupal\search_api_solr\Controller\SolrConfigSetController;
 use Drupal\search_api_solr\Utility\Utility as SearchApiSolrUtility;
@@ -134,10 +141,11 @@ function search_api_solr_requirements($phase) {
           $requirements['search_api_solr_' . $server->id() . '_languages']['severity'] = REQUIREMENT_WARNING;
           $requirements['search_api_solr_' . $server->id() . '_languages']['description'] = t(
             'There are some language-specific field types missing in schema of Solr server <a href=":url">@server</a>: @languages.', [
-            ':url' => $server->toUrl('canonical')->toString(),
-            '@server' => $server->label(),
-            '@languages' => implode(', ', array_keys($missing_languages)),
-          ]);
+              ':url' => $server->toUrl('canonical')->toString(),
+              '@server' => $server->label(),
+              '@languages' => implode(', ', array_keys($missing_languages)),
+            ]
+          );
         }
 
         $config_set_controller = new SolrConfigSetController();
@@ -151,24 +159,26 @@ function search_api_solr_requirements($phase) {
           $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['value'] = t('Schema not generated');
           $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['severity'] = REQUIREMENT_ERROR;
 
-          if ($e instanceof \Drupal\search_api_solr\SearchApiSolrConflictingEntitiesException) {
+          if ($e instanceof SearchApiSolrConflictingEntitiesException) {
             $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['description'] = t(
               'Some enabled parts of the configuration conflict with others: @conflicts', [
                 '@conflicts' => new FormattableMarkup(str_replace('core_issue_2919648_workaround', $server->id(), $e), []),
-            ]);
+              ]
+            );
           }
           else {
             $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['description'] = t(
               'The config-set for the Solr server <a href=":url">@server</a> could not be generated.', [
-              ':url' => $server->toUrl('canonical')->toString(),
-              '@server' => $server->label(),
-            ]);
+                ':url' => $server->toUrl('canonical')->toString(),
+                '@server' => $server->label(),
+              ]
+            );
           }
         }
 
         if (!empty($new_config_set)) {
           $server_files_list = SearchApiSolrUtility::getServerFiles($server);
-          //the files that are already on the server
+          // The files that are already on the server.
           $server_file_names = array_keys($server_files_list);
           $new_config_file_names = array_keys($new_config_set);
           $extra_release_files = array_diff($new_config_file_names, $server_file_names);
@@ -177,46 +187,48 @@ function search_api_solr_requirements($phase) {
             $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['severity'] = REQUIREMENT_WARNING;
             $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['description'] = t(
               'There are some files missing in the Solr server schema <a href=":url">@server</a>: @files. An updated config.zip should be downloaded and deployed to your Solr server.', [
-              ':url' => $server->toUrl('canonical')->toString(),
-              '@server' => $server->label(),
-              '@files' => implode(', ', array_keys($extra_release_files)),
-            ]);
+                ':url' => $server->toUrl('canonical')->toString(),
+                '@server' => $server->label(),
+                '@files' => implode(', ', array_keys($extra_release_files)),
+              ]
+            );
           }
           foreach ($new_config_set as $new_file_name => $new_file_body) {
             if (stripos(strrev($new_file_name), 'lmx.') === 0) {
               try {
                 $server_file_data = $connector->getFile($new_file_name);
                 $server_file_body = $server_file_data->getBody();
-              } catch (\Drupal\search_api_solr\SearchApiSolrException $e) {
+              }
+              catch (SearchApiSolrException $e) {
                 $server_file_body = '';
               }
 
               [
                 $version_number_server,
-                $xml_server
-              ] = SearchApiSolrUtility::normalizeXML($server_file_body);
+                $xml_server,
+              ] = SearchApiSolrUtility::normalizeXml($server_file_body);
               [
                 $version_number_new,
-                $xml_new
-              ] = SearchApiSolrUtility::normalizeXML($new_file_body);
+                $xml_new,
+              ] = SearchApiSolrUtility::normalizeXml($new_file_body);
               if (strcmp($xml_server, $xml_new) !== 0) {
                 if ($version_number_server !== $version_number_new) {
                   $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['value'] = t('Schema not up to date');
                   $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['severity'] = REQUIREMENT_ERROR;
                   $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['description'] = t(
                     'There are some configuration elements missing in the Solr server schema <a href=":url">@server</a>. This is likely due to using an outdated version of either Drupal or Solr. The recommended version is: @version. An updated config.zip should be downloaded and deployed to your Solr server.', [
-                    ':url' => $server->toUrl('canonical')->toString(),
-                    '@server' => $server->label(),
-                    '@version' => $version_number_new,
-                  ]);
+                      ':url' => $server->toUrl('canonical')->toString(),
+                      '@server' => $server->label(),
+                      '@version' => $version_number_new,
+                    ]
+                  );
                   break;
                 }
                 elseif ($version_number_server === $version_number_new) {
                   $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['value'] = t('Schema modified');
                   $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['severity'] = REQUIREMENT_WARNING;
                   $requirements['search_api_solr_schema_' . $server->id() . '_modifications']['description'] = t(
-                    'Your config-set contains manually added customizations. Be aware that these will be lost when the config-set needs to be regenerated.', [
-                  ]);
+                    'Your config-set contains manually added customizations. Be aware that these will be lost when the config-set needs to be regenerated.', []);
                 }
               }
             }
@@ -228,14 +240,15 @@ function search_api_solr_requirements($phase) {
         $requirements['search_api_solr_' . $server->id() . '_languages']['severity'] = REQUIREMENT_ERROR;
         $requirements['search_api_solr_' . $server->id() . '_languages']['description'] = t(
           'Solr server <a href=":url">@server</a> is not reachable.', [
-          ':url' => $server->toUrl('canonical')->toString(),
-          '@server' => $server->label(),
-        ]);
+            ':url' => $server->toUrl('canonical')->toString(),
+            '@server' => $server->label(),
+          ]
+        );
       }
     }
 
     if (Client::checkMinimal('5.1.4')) {
-      $requirements['search_api_solr_' . 'solarium'] = [
+      $requirements['search_api_solr_solarium'] = [
         'title' => t('solarium library'),
         'value' => t('Up to date'),
         'description' => t('Solarium @version is installed.', ['@version' => Client::VERSION]),
@@ -243,7 +256,7 @@ function search_api_solr_requirements($phase) {
       ];
     }
     else {
-      $requirements['search_api_solr_' . 'solarium'] = [
+      $requirements['search_api_solr_solarium'] = [
         'title' => t('solarium library'),
         'value' => t('Outdated'),
         'description' => t('Solarium @version is too old and has known issues. In order to get composer to upgrade solarium to a recent version a core patch or a workaround is required. Have a look at this <a href=":core">Core issue</a> and this <a href=":search_api_solr">Search API Solr issue</a>.',
@@ -308,7 +321,9 @@ function search_api_solr_update_helper_get_backend_configs($pattern = 'solr') {
  * Saves a modified backend config for a given Solr server.
  *
  * @param string $server_name
+ *   Name of the solr server.
  * @param array $backend_config
+ *   Solr backend configuration.
  * @param bool $trusted_data
  */
 function search_api_solr_update_helper_save_backend_config($server_name, array $backend_config, $trusted_data = TRUE) {
@@ -343,6 +358,7 @@ function search_api_solr_update_helper_get_index_third_party_settings($pattern =
  * Saves a modified backend config for a given Solr server.
  *
  * @param string $index_id
+ *   Id of the solr index.
  * @param array $third_party_settings
  * @param bool $trusted_data
  */
@@ -379,7 +395,8 @@ function search_api_solr_update_helper_get_indexes($pattern = 'solr') {
  * Saves a modified index config.
  *
  * @param string $index_id
- * @param array $third_party_settings
+ *   Id of the Solr Index.
+ * @param array $settings
  * @param bool $trusted_data
  */
 function search_api_solr_update_helper_save_indexes($index_id, array $settings, $trusted_data = TRUE) {
@@ -428,8 +445,8 @@ function search_api_solr_update_helper_install_configs($directory = InstallStora
   $config_installer->installDefaultConfig('module', 'search_api_solr');
 
   $optional_install_path = \Drupal::moduleHandler()
-      ->getModule('search_api_solr')
-      ->getPath() . '/' . $directory;
+    ->getModule('search_api_solr')
+    ->getPath() . '/' . $directory;
   if (is_dir($optional_install_path)) {
     // Install any optional config the module provides.
     $storage = new FileStorage($optional_install_path, StorageInterface::DEFAULT_COLLECTION);
@@ -488,19 +505,19 @@ function search_api_solr_update_8004() {
     $backend_config['connector'] = 'basic_auth';
     $backend_config['connector_config'] = [];
     foreach ([
-               'scheme',
-               'host',
-               'port',
-               'path',
-               'core',
-               'timeout',
-               'index_timeout',
-               'optimize_timeout',
-               'solr_version',
-               'http_method',
-               'username',
-               'password',
-             ] as $key) {
+      'scheme',
+      'host',
+      'port',
+      'path',
+      'core',
+      'timeout',
+      'index_timeout',
+      'optimize_timeout',
+      'solr_version',
+      'http_method',
+      'username',
+      'password',
+    ] as $key) {
       $backend_config['connector_config'][$key] = $backend_config[$key];
       unset($backend_config[$key]);
     }
@@ -562,7 +579,6 @@ function search_api_solr_update_8008() {
 function search_api_solr_update_8200() {
   // 8.x-1.x to 8.x-2.x migration path is obsolete and therefore removed. Just
   // install the latest field types.
-
   \Drupal::entityDefinitionUpdateManager()
     ->installEntityType(new ConfigEntityType([
       'id' => 'solr_field_type',
@@ -728,7 +744,6 @@ function search_api_solr_update_8208() {
 }
 
 // Removed search_api_solr_update_8209().
-
 // Removed search_api_solr_update_8210().
 
 /**
@@ -889,7 +904,7 @@ function search_api_solr_update_8302() {
  * Remove obsolete setting in config.
  */
 function search_api_solr_update_8303() {
-  // obsolete because of search_api_solr_update_8304().
+  // Obsolete because of search_api_solr_update_8304().
 }
 
 /**
@@ -969,9 +984,11 @@ function search_api_solr_update_8306() {
             case 'solr.WordDelimiterFilterFactory':
               $filter['class'] = 'solr.WordDelimiterGraphFilterFactory';
               break;
+
             case 'solr.SynonymFilterFactory':
               $filter['class'] = 'solr.SynonymGraphFilterFactory';
               break;
+
             case 'solr.StopFilterFactory':
               unset($filter['enablePositionIncrements']);
               break;
@@ -1261,7 +1278,7 @@ function search_api_solr_update_8312() {
 
 /**
  * Distinguish between simplified and traditional Chinese.
- **/
+ */
 function search_api_solr_update_8313() {
   foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
     if ('zh-hans' === $field_type_config['field_type_language_code']) {
@@ -1316,6 +1333,8 @@ function search_api_solr_update_8314() {
 }
 
 /**
+ * Avoid Solr exceptions.
+ *
  * Avoid Solr exceptions when multilingual spell checking by using unified
  * analyzer.
  */
@@ -1396,7 +1415,6 @@ function search_api_solr_update_8317() {
     }
   }
 }
-
 
 /**
  * Replace solr.MorphologikFilterFactory by solr.MorfologikFilterFactory.
@@ -1698,7 +1716,7 @@ function search_api_solr_update_8323() {
  * Install new Norwegian configs if required.
  */
 function search_api_solr_update_8324() {
-  //search_api_solr_update_helper_install_configs();
+  // search_api_solr_update_helper_install_configs();
 }
 
 /**
@@ -1732,8 +1750,7 @@ function search_api_solr_update_8325() {
 }
 
 /**
- * Replace the solr.StempelPolishStemFilterFactory by the
- * solr.MorfologikFilterFactory
+ * Replace the StempelPolishStemFilterFactory by the MorfologikFilterFactory.
  */
 function search_api_solr_update_8326() {
   foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
@@ -1763,7 +1780,7 @@ function search_api_solr_update_8326() {
 }
 
 /**
- * Update the Portuguese, Portugal config locale from 'pt' to 'pt-pt'
+ * Update the Portuguese, Portugal config locale from 'pt' to 'pt-pt'.
  */
 function search_api_solr_update_8327() {
   foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
@@ -1775,7 +1792,7 @@ function search_api_solr_update_8327() {
       }
     }
   }
-  //search_api_solr_update_helper_install_configs();
+  // search_api_solr_update_helper_install_configs();
 }
 
 /**
@@ -1783,7 +1800,6 @@ function search_api_solr_update_8327() {
  */
 function search_api_solr_update_8328() {
   // search_api_solr_update_helper_install_configs();
-
   foreach (search_api_solr_update_helper_get_backend_configs() as $server_name => $backend_config) {
     if (!isset($backend_config['environment'])) {
       $backend_config['environment'] = 'default';
@@ -1913,7 +1929,8 @@ function search_api_solr_update_8331() {
         'collection' => '/admin/config/search/search-api/server/{search_api_server}/solr_field_type',
       ],
     ]));
-  } else {
+  }
+  else {
     $entity_type = $manager->getEntityType('solr_field_type');
     $entity_keys = $entity_type->get('entity_keys');
     $entity_keys['disabled'] = 'disabled_field_types';

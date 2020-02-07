@@ -7,7 +7,6 @@ use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\ServerInterface;
-use Drupal\search_api_solr\Entity\AbstractSolrEntity;
 use Drupal\search_api_solr\Entity\SolrCache;
 use Drupal\search_api_solr\Entity\SolrRequestDispatcher;
 use Drupal\search_api_solr\Entity\SolrRequestHandler;
@@ -587,8 +586,10 @@ class Utility {
    * the available memory is 2147483629. So we use this a cut-off.
    *
    * @param int $rows
+   *   The number of rows.
    *
    * @return int
+   *   Normalized number of rows.
    */
   public static function normalizeMaxRows(int $rows) {
     $i = 2;
@@ -771,7 +772,6 @@ class Utility {
           $sloppiness = '~10000000';
           // No break! Execute 'default', too. 'terms' will be skipped when $k
           // just contains one element.
-
         case 'terms':
           if (count($k) > 1 && count($fields) > 0) {
             $key_parts = [];
@@ -794,7 +794,6 @@ class Utility {
             $query_parts[] = '(' . implode(' ', $key_parts) . ')';
           }
           // No break! Execute 'default', too.
-
         default:
           if ($sloppiness) {
             foreach ($k as &$term_or_phrase) {
@@ -974,8 +973,10 @@ class Utility {
    * 4. storage time zone (UTC)
    *
    * @param \Drupal\search_api\IndexInterface $index
+   *   The Solr index.
    *
    * @return string
+   *   The timezone.
    */
   public static function getTimeZone(IndexInterface $index): string {
     $settings = self::getIndexSolrSettings($index);
@@ -1021,6 +1022,7 @@ class Utility {
    * @param string $site_hash
    *
    * @return string
+   *   The formatted checkpoint ID.
    */
   public static function formatCheckpointId(string $checkpoint, string $index_id, string $site_hash): string {
     return $checkpoint . '-' . $index_id . '-' . $site_hash;
@@ -1043,15 +1045,18 @@ class Utility {
   }
 
   /**
+   * Normalize a XML file.
+   *
    * Removes comments from an xml file and removes the 'name' attribute of the
    * root node.
    *
    * @param string $xml
-   *
+   *   The XML file to normalize.
    *
    * @return array
+   *   An array with the version number and the normalized XML.
    */
-  public static function normalizeXML($xml): array {
+  public static function normalizeXml($xml): array {
     $document = new \DOMDocument();
     if (@$document->loadXML($xml) === FALSE) {
       $document->loadXML("<root>$xml</root>");

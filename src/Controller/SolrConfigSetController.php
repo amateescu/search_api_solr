@@ -23,10 +23,11 @@ class SolrConfigSetController extends ControllerBase {
   /**
    * Provides an XML snippet containing all extra Solr field types.
    *
-   * @param \Drupal\search_api\ServerInterface $search_api_server
+   * @param \Drupal\search_api\ServerInterface|null $search_api_server
    *   The Search API server entity.
    *
    * @return string
+   *   XML snippet containing all extra Solr field types.
    *
    * @throws \Drupal\search_api\SearchApiException
    */
@@ -61,10 +62,11 @@ class SolrConfigSetController extends ControllerBase {
   /**
    * Provides an XML snippet containing all extra Solr fields.
    *
-   * @param \Drupal\search_api\ServerInterface $search_api_server
+   * @param \Drupal\search_api\ServerInterface|null $search_api_server
    *   The Search API server entity.
    *
    * @return string
+   *   XML snippet containing all extra Solr fields.
    *
    * @throws \Drupal\search_api\SearchApiException
    */
@@ -98,10 +100,11 @@ class SolrConfigSetController extends ControllerBase {
   /**
    * Provides an XML snippet containing all extra solrconfig.
    *
-   * @param \Drupal\search_api\ServerInterface $search_api_server
+   * @param \Drupal\search_api\ServerInterface|null $search_api_server
    *   The Search API server entity.
    *
    * @return string
+   *   XML snippet containing all extra solrconfig.
    *
    * @throws \Drupal\search_api\SearchApiException
    */
@@ -139,10 +142,11 @@ class SolrConfigSetController extends ControllerBase {
   /**
    * Provides an XML snippet containing all query cache settings as XML.
    *
-   * @param \Drupal\search_api\ServerInterface $search_api_server
+   * @param \Drupal\search_api\ServerInterface|null $search_api_server
    *   The Search API server entity.
    *
    * @return string
+   *   XML snippet containing all query cache settings.
    *
    * @throws \Drupal\search_api\SearchApiException
    */
@@ -176,10 +180,11 @@ class SolrConfigSetController extends ControllerBase {
   /**
    * Provides an XML snippet containing all request dispatcher settings as XML.
    *
-   * @param \Drupal\search_api\ServerInterface $search_api_server
+   * @param \Drupal\search_api\ServerInterface|null $search_api_server
    *   The Search API server entity.
    *
    * @return string
+   *   The XML snippet containing all request dispatcher settings.
    *
    * @throws \Drupal\search_api\SearchApiException
    */
@@ -222,7 +227,7 @@ class SolrConfigSetController extends ControllerBase {
     /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
     $backend = $this->getBackend();
     $connector = $backend->getSolrConnector();
-    $solr_branch = $real_solr_branch = $connector->getSolrBranch($this->assumed_minimum_version);
+    $solr_branch = $real_solr_branch = $connector->getSolrBranch($this->assumedMinimumVersion);
 
     // Solr 8.x uses the same schema and solrconf as 7.x. So we can use the same
     // templates and only adjust luceneMatchVersion to 8.
@@ -258,7 +263,7 @@ class SolrConfigSetController extends ControllerBase {
       }
     }
 
-    $solrcore_properties['solr.luceneMatchVersion'] = $connector->getLuceneMatchVersion($this->assumed_minimum_version ?: '');
+    $solrcore_properties['solr.luceneMatchVersion'] = $connector->getLuceneMatchVersion($this->assumedMinimumVersion ?: '');
     // @todo
     // $solrcore_properties['solr.replication.masterUrl']
     $solrcore_properties_string = '';
@@ -293,6 +298,7 @@ class SolrConfigSetController extends ControllerBase {
    * Returns a ZipStream of all configuration files.
    *
    * @param \ZipStream\Option\Archive $archive_options
+   *   Archive options.
    *
    * @return \ZipStream\ZipStream
    *   The ZipStream that contains all configuration files.
@@ -305,7 +311,7 @@ class SolrConfigSetController extends ControllerBase {
     /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
     $backend = $this->getBackend();
     $connector = $backend->getSolrConnector();
-    $solr_branch = $connector->getSolrBranch($this->assumed_minimum_version);
+    $solr_branch = $connector->getSolrBranch($this->assumedMinimumVersion);
 
     $zip = new ZipStream('solr_' . $solr_branch . '_config.zip', $archive_options);
 
@@ -361,13 +367,13 @@ class SolrConfigSetController extends ControllerBase {
   /**
    * Provides an XML snippet containing all query cache settings as XML.
    *
-   * @param \Drupal\search_api\ServerInterface $search_api_server
-   *   The Search API server entity.
+   * @param \Drupal\search_api_solr\Controller\string $file_name
+   *   The file name.
+   * @param \Drupal\search_api_solr\Controller\string $xml
+   *   The XML.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The HTTP response object.
-   *
-   * @throws \Drupal\search_api\SearchApiException
    */
   protected function streamXml(string $file_name, string $xml): Response {
     return new Response(
@@ -384,9 +390,12 @@ class SolrConfigSetController extends ControllerBase {
    * Returns a ListBuilder.
    *
    * @param string $entity_type_id
+   *   Entity type id.
    * @param \Drupal\search_api\ServerInterface|null $search_api_server
+   *   Search API Server.
    *
    * @return \Drupal\search_api_solr\Controller\AbstractSolrEntityListBuilder
+   *   A ListBuilder.
    *
    * @throws \Drupal\search_api\SearchApiException
    */
@@ -395,7 +404,8 @@ class SolrConfigSetController extends ControllerBase {
     $list_builder = $this->entityTypeManager()->getListBuilder($entity_type_id);
     if ($search_api_server) {
       $list_builder->setServer($search_api_server);
-    } else {
+    }
+    else {
       $list_builder->setBackend($this->getBackend());
     }
     return $list_builder;

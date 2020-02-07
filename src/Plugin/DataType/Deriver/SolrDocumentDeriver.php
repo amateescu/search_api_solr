@@ -49,9 +49,9 @@ class SolrDocumentDeriver extends DeriverBase implements ContainerDeriverInterfa
    * SolrDocumentDeriver constructor.
    *
    * @param string $base_plugin_id
-   *    Base plugin ID.
+   *   Base plugin ID.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *    Entity type manager.
+   *   Entity type manager.
    */
   public function __construct($base_plugin_id, EntityTypeManagerInterface $entity_type_manager) {
     $this->basePluginId = $base_plugin_id;

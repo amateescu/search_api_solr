@@ -10,22 +10,30 @@ use Drupal\Component\Render\FormattableMarkup;
 class SearchApiSolrConflictingEntitiesException extends SearchApiSolrException {
 
   /**
+   * Array with the conflicting entities.
+   *
    * @var \Drupal\search_api_solr\SolrConfigInterface[]
    */
-  protected $conflicting_entities = [];
+  protected $conflictingEntities = [];
 
   /**
+   * Get the conflicting entities.
+   *
    * @return \Drupal\search_api_solr\SolrConfigInterface[]
+   *   Array with the conflicting entities.
    */
   public function getConflictingEntities(): array {
-    return $this->conflicting_entities;
+    return $this->conflictingEntities;
   }
 
   /**
-   * @param \Drupal\search_api_solr\SolrConfigInterface[] $conflicting_entities
+   * Set the conflicting entities.
+   *
+   * @param \Drupal\search_api_solr\SolrConfigInterface[] $conflictingEntities
+   *   Array with the conflicting entities.
    */
-  public function setConflictingEntities(array $conflicting_entities): void {
-    $this->conflicting_entities = $conflicting_entities;
+  public function setConflictingEntities(array $conflictingEntities): void {
+    $this->conflictingEntities = $conflictingEntities;
   }
 
   /**

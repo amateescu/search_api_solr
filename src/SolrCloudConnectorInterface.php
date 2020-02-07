@@ -23,6 +23,7 @@ interface SolrCloudConnectorInterface extends SolrConnectorInterface {
    * Temporarily set a different collection name for the connection.
    *
    * @param \Solarium\Core\Client\Endpoint|null $endpoint
+   *   Solr endpoint.
    */
   public function setCollectionNameFromEndpoint(Endpoint $endpoint);
 
@@ -30,6 +31,7 @@ interface SolrCloudConnectorInterface extends SolrConnectorInterface {
    * Returns the Solr collection name used to store topic checkpoints.
    *
    * @return string
+   *   Solr collection name.
    */
   public function getCheckpointsCollectionName();
 
@@ -37,6 +39,7 @@ interface SolrCloudConnectorInterface extends SolrConnectorInterface {
    * Returns the Solr collection endpoint used to store topic checkpoints.
    *
    * @return \Solarium\Core\Client\Endpoint|null
+   *   Solr endpoint.
    */
   public function getCheckpointsCollectionEndpoint(): ?Endpoint;
 
@@ -44,13 +47,15 @@ interface SolrCloudConnectorInterface extends SolrConnectorInterface {
    * Deletes all checkpoints for given index/site.
    *
    * @param string $index_id
+   *   Id of the index.
    * @param string $site_hash
+   *   The site hash.
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function deleteCheckpoints(string $index_id, string $site_hash);
 
-    /**
+  /**
    * Returns a link to the Solr collection, if the necessary options are set.
    *
    * @return \Drupal\Core\Link
