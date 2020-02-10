@@ -1944,3 +1944,41 @@ function search_api_solr_update_8331() {
 
   search_api_solr_update_helper_install_configs();
 }
+
+/**
+ * Adds missing solr.ElisionFilterFactory to text_fr field query analyzer.
+ */
+function search_api_solr_update_8332() {
+
+  foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+    if (strpos($field_type_name, 'search_api_solr.solr_field_type.text_fr') === 0) {
+      foreach ($field_type_config['field_type']['analyzers'] as $key => $analyzer) {
+        if ($analyzer['type'] === 'index') {
+          $index_analyzer = $analyzer;
+        }
+        if ($analyzer['type'] === 'query') {
+          $query_analyzer = $analyzer;
+          $query_analyzer_key = $key;
+        }
+      }
+      // Retrieve the filter position in the index analyzer:
+      foreach ($index_analyzer['filters'] as $filter_position => $filter) {
+        if ($filter['class'] === 'solr.ElisionFilterFactory') {
+          $elision_filter_position = $filter_position;
+        }
+      }
+      $proceed_update = TRUE;
+      foreach ($query_analyzer['filters'] as $filter_position => $filter) {
+        if ($filter['class'] === 'solr.ElisionFilterFactory') {
+          $proceed_update = FALSE;
+        }
+      }
+      // Adds the filter to the query if it isn't already in it:
+      if ($proceed_update) {
+        array_splice($query_analyzer['filters'], $elision_filter_position, 0, [['class' => 'solr.ElisionFilterFactory']]);
+        $field_type_config['field_type']['analyzers'][$query_analyzer_key] = $query_analyzer;
+        search_api_solr_update_helper_save_field_type_config($field_type_name, $field_type_config);
+      }
+    }
+  }
+}
