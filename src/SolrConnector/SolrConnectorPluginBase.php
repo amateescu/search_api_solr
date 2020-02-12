@@ -872,8 +872,8 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   protected function handleHttpException(HttpException $e, ?Endpoint $endpoint) {
-    $response_code = (string) $e->getCode();
-    switch ($response_code) {
+    $response_code = (int) $e->getCode();
+    switch ((string) $response_code) {
       case '404':
         $description = 'not found';
         break;
@@ -885,13 +885,13 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
 
       case '500':
       case '0':
-        $description = 'internal error. Check your Solr logs for more details';
+        $description = 'internal Solr server error';
         break;
 
       default:
         $description = 'unreachable or returned unexpected response code';
     }
-    throw new SearchApiSolrException(sprintf('Solr endpoint %s %s (%d). %s', $endpoint->getServerUri(), $description, $response_code, $e->getBody()), $e);
+    throw new SearchApiSolrException(sprintf('Solr endpoint %s %s (%d). %s', $endpoint->getServerUri(), $description, $response_code, $e->getBody()), $response_code, $e);
   }
 
   /**
