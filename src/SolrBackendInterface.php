@@ -370,4 +370,11 @@ interface SolrBackendInterface extends BackendInterface {
    */
   public function getDisabledRequestDispatchers(): array;
 
+  /**
+   * Indicates if the the current Solr config should not be verified.
+   *
+   * @return bool
+   */
+  public function isNonDrupalOrOutdatedConfigSetAllowed(): bool;
+
 }

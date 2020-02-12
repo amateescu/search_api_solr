@@ -802,7 +802,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                 ];
 
                 $status = 'ok';
-                if (empty($this->configuration['skip_schema_check'])) {
+                if (!$this->isNonDrupalOrOutdatedConfigSetAllowed()) {
                   $variables[':url'] = Url::fromUri('internal:/' . drupal_get_path('module', 'search_api_solr') . '/INSTALL.md')->toString();
                   if (
                     strpos($stats_summary['@schema_version'],'search-api') === 0 ||
@@ -4638,5 +4638,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   public function getDisabledRequestDispatchers(): array {
     $this->addDefaultConfigurationForConfigGeneration();
     return $this->configuration['disabled_request_dispatchers'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isNonDrupalOrOutdatedConfigSetAllowed(): bool {
+    return (bool) $this->configuration['skip_schema_check'];
   }
 }
