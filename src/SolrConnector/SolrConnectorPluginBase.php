@@ -872,25 +872,26 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   protected function handleHttpException(HttpException $e, ?Endpoint $endpoint) {
-    $response_code = $e->getCode();
+    $response_code = (string) $e->getCode();
     switch ($response_code) {
-      case 404:
+      case '404':
         $description = 'not found';
         break;
 
-      case 401:
-      case 403:
+      case '401':
+      case '403':
         $description = 'access denied';
         break;
 
-      case 500:
-        $description = 'internal error. Check your Solr logs for details!';
+      case '500':
+      case '0':
+        $description = 'internal error. Check your Solr logs for more details';
         break;
 
       default:
-        $description = sprintf('unreachable or returned unexpected response code "%d"', $response_code);
+        $description = 'unreachable or returned unexpected response code';
     }
-    throw new SearchApiSolrException('Solr endpoint ' . $endpoint->getServerUri() . " $description.", $response_code, $e);
+    throw new SearchApiSolrException(sprintf('Solr endpoint %s %s (%d). %s', $endpoint->getServerUri(), $description, $response_code, $e->getBody()), $e);
   }
 
   /**
