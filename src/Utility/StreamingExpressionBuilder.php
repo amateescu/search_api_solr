@@ -122,6 +122,13 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
   protected $backend;
 
   /**
+   * The Solr connector
+   *
+   * @var SolrBackendInterface
+   */
+  protected $connector;
+
+  /**
    * StreamingExpressionBuilder constructor.
    *
    * @param \Drupal\search_api\IndexInterface $index
@@ -134,16 +141,16 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
     $server = $index->getServerInstance();
     $this->serverId = $server->id();
     $this->backend = $server->getBackend();
-    $connector = $this->backend->getSolrConnector();
+    $this->connector = $this->backend->getSolrConnector();
     $index_settings = Utility::getIndexSolrSettings($index);
 
-    if (!($connector instanceof SolrCloudConnectorInterface)) {
+    if (!($this->connector instanceof SolrCloudConnectorInterface)) {
       throw new SearchApiSolrException('Streaming expressions are only supported by a Solr Cloud connector.');
     }
 
     $language_ids = array_merge(array_keys(\Drupal::languageManager()->getLanguages()), [LanguageInterface::LANGCODE_NOT_SPECIFIED]);
-    $this->collection = $index_settings['advanced']['collection'] ?: $connector->getCollectionName();
-    $this->checkpointsCollection = $connector->getCheckpointsCollectionName();
+    $this->collection = $index_settings['advanced']['collection'] ?: $this->connector->getCollectionName();
+    $this->checkpointsCollection = $this->connector->getCheckpointsCollectionName();
     $this->indexFilterQuery = $this->backend->getIndexFilterQueryString($index);
     $this->targetedIndexId = $this->backend->getTargetedIndexId($index);
     $this->targetedSiteHash = $this->backend->getTargetedSiteHash($index);
@@ -203,7 +210,7 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
       }
     }
 
-    $this->queryHelper = $connector->getQueryHelper();
+    $this->queryHelper = $this->connector->getQueryHelper();
   }
 
   /**
@@ -453,6 +460,14 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
    *   The expression as string.
    */
   public function _select_copied_field(string $search_api_field_name_source, string $search_api_field_name_target, string $language_id = LanguageInterface::LANGCODE_NOT_SPECIFIED) {
+    if (version_compare($this->connector->getSolrVersion(), '8.4.1', '>=')) {
+      return $this->concat(
+          $this->_field($search_api_field_name_source, $language_id)
+          // Delimiter must be set but is ignored if just one field is provided.
+          . ',delim=","'
+        ) . ' as ' . $this->_field($search_api_field_name_target, $language_id);
+    }
+
     return $this->concat(
       'fields="' . $this->_field($search_api_field_name_source, $language_id) . '"',
       // Delimiter must be set but is ignored if just one field is provided.
