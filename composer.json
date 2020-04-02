@@ -54,6 +54,9 @@
             "services": {
                 "drush.services.yml": "^9"
             }
+        },
+        "branch-alias": {
+            "dev-8.x-3.x": "3.x-dev"
         }
     }
 }

@@ -8,5 +8,5 @@ dependencies:
   - drupal:taxonomy
   - drupal:views
   - facets
-core_version_requirement: ^8.7.7 || ^9
+core_version_requirement: ^8.8 || ^9
 hidden: true
