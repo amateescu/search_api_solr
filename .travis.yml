@@ -162,6 +162,7 @@ before_script:
 script:
   # Run the tests within the drupal directory.
   - cd $TRAVIS_BUILD_DIR/../drupal
+  - vendor/bin/phpunit --version
   - vendor/bin/phpunit -c core --group search_api_solr modules/contrib/search_api_solr
 
 after_script:
