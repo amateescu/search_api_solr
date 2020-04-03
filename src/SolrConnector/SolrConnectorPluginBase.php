@@ -287,8 +287,9 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
 
     if (!$form_state->hasAnyErrors()) {
       // Try to orchestrate a server link from form values.
-      $solr = new Client(NULL, $this->eventDispatcher);
-      $solr->createEndpoint($values + ['key' => 'search_api_solr'], TRUE);
+      $values_copied = $values;
+      $solr = $this->createClient($values_copied);
+      $solr->createEndpoint($values_copied + ['key' => 'search_api_solr'], TRUE);
       try {
         $this->getServerLink();
       }
@@ -329,18 +330,23 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   protected function connect() {
     if (!$this->solr) {
       $configuration = $this->configuration;
-      $configuration[self::QUERY_TIMEOUT] = $configuration['timeout'];
-      if (Client::checkMinimal('5.2.0')) {
-        $adapter = extension_loaded('curl') ? new Curl($configuration) : new Http($configuration);
-        unset($configuration['timeout']);
-        $this->solr = new Client($adapter, $this->eventDispatcher);
-      }
-      else {
-        $this->solr = new Client(NULL, $this->eventDispatcher);
-      }
+      $this->solr = $this->createClient($configuration);
       $this->solr->createEndpoint($configuration + ['key' => 'search_api_solr'], TRUE);
     }
   }
+
+  /**
+   * Create a Client.
+   */
+  protected function createClient(array &$configuration) {
+    $configuration[self::QUERY_TIMEOUT] = $configuration['timeout'] ?? 5;
+    if (Client::checkMinimal('5.2.0')) {
+      $adapter = extension_loaded('curl') ? new Curl($configuration) : new Http($configuration);
+      unset($configuration['timeout']);
+      return new Client($adapter, $this->eventDispatcher);
+    }
+    return new Client(NULL, $this->eventDispatcher);
+   }
 
   /**
    * {@inheritdoc}
