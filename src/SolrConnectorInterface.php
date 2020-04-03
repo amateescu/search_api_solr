@@ -16,6 +16,11 @@ use Solarium\QueryType\Select\Query\Query;
  */
 interface SolrConnectorInterface extends ConfigurableInterface {
 
+  const QUERY_TIMEOUT = 'query_timeout';
+  const INDEX_TIMEOUT = 'index_timeout';
+  const OPTIMIZE_TIMEOUT = 'optimize_timeout';
+  const FINALIZE_TIMEOUT = 'finalize_timeout';
+
   /**
    * Returns TRUE for Cloud.
    *
@@ -507,8 +512,10 @@ interface SolrConnectorInterface extends ConfigurableInterface {
    *
    * @return int
    *   The previous query timeout value.
+   *
+   * @deprecated use useTim
    */
-  public function adjustTimeout(int $timeout, ?Endpoint $endpoint = NULL);
+  public function adjustTimeout(int $timeout, ?Endpoint &$endpoint = NULL);
 
   /**
    * Get the query timeout.
@@ -524,26 +531,35 @@ interface SolrConnectorInterface extends ConfigurableInterface {
   /**
    * Get the index timeout.
    *
+   * @param \Solarium\Core\Client\Endpoint|null $endpoint
+   *   (optional) The Solarium endpoint object.
+   *
    * @return int
    *   The current index timeout value.
    */
-  public function getIndexTimeout();
+  public function getIndexTimeout(?Endpoint $endpoint = NULL);
 
   /**
    * Get the optimize timeout.
    *
+   * @param \Solarium\Core\Client\Endpoint|null $endpoint
+   *   (optional) The Solarium endpoint object.
+   *
    * @return int
    *   The current optimize timeout value.
    */
-  public function getOptimizeTimeout();
+  public function getOptimizeTimeout(?Endpoint $endpoint = NULL);
 
   /**
    * Get the finalize timeout.
    *
+   * @param \Solarium\Core\Client\Endpoint|null $endpoint
+   *   (optional) The Solarium endpoint object.
+   *
    * @return int
    *   The current finalize timeout value.
    */
-  public function getFinalizeTimeout();
+  public function getFinalizeTimeout(?Endpoint $endpoint = NULL);
 
   /**
    * Alter the newly assembled Solr configuration files.
