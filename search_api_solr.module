@@ -17,7 +17,7 @@ use Zend\Stdlib\ArrayUtils;
  * Implements hook_help().
  */
 function search_api_solr_help($route_name, RouteMatchInterface $route_match) {
-  if ($route_name == 'search_api.overview') {
+  if ($route_name === 'search_api.overview') {
     // Included because we need the REQUIREMENT_* constants.
     include_once DRUPAL_ROOT . '/core/includes/install.inc';
     module_load_include('install', 'search_api_solr');
@@ -184,6 +184,11 @@ function search_api_solr_form_search_api_index_form_alter(&$form, FormStateInter
       '#type' => 'details',
       '#title' => t('Solr specific index options'),
       '#collapsed' => TRUE,
+      '#states' => [
+        'visible' => [
+          ':input[name="server"]' => _search_adi_solr_visibility(),
+        ],
+      ],
     ];
 
     $form['third_party_settings']['search_api_solr']['finalize'] = [
@@ -633,4 +638,25 @@ function search_api_solr_entity_type_alter(array &$entity_types) {
   /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
   $entity_types['search_api_index']->setFormClass('solr_multisite_clone', IndexSolrMultisiteCloneForm::class);
   $entity_types['search_api_index']->setFormClass('solr_multisite_update', IndexSolrMultisiteUpdateForm::class);
+}
+
+/**
+ * Returns visibility state status values.
+ *
+ * @return array
+ *
+ * @see \search_api_solr_form_search_api_index_form_alter
+ */
+function _search_adi_solr_visibility() {
+  $valid_option = [];
+  $servers = Server::loadMultiple();
+  foreach ($servers as $server) {
+    if ($server->getBackend() instanceof SolrBackendInterface) {
+      $valid_option[] = [
+        'value' => $server->id(),
+      ];
+    }
+  }
+
+  return $valid_option;
 }
