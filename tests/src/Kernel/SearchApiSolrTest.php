@@ -38,6 +38,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   public static $modules = [
     'language',
     'search_api_autocomplete',
+    'search_api_solr_legacy',
     'user',
   ];
 
@@ -976,6 +977,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
 
     /** @var \Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend $backend */
     $backend = Server::load($this->serverId)->getBackend();
+    $solr_major_version = $backend->getSolrConnector()->getSolrMajorVersion();
     $autocompleteSearch = new Search([], 'search_api_autocomplete_search');
 
     $query = $this->buildSearch(['artic'], [], ['body_unstemmed'], FALSE);
@@ -993,12 +995,14 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertEquals('l', $suggestions[0]->getSuggestionSuffix());
     $this->assertEquals(2, $suggestions[0]->getResultsCount());
 
-    $query = $this->buildSearch(['articel'], [], ['body'], FALSE);
-    $query->setLanguages(['en']);
-    $suggestions = $backend->getSpellcheckSuggestions($query, $autocompleteSearch, 'articel', 'articel');
-    $this->assertEquals(1, count($suggestions));
-    $this->assertEquals('article', $suggestions[0]->getSuggestedKeys());
-    $this->assertEquals(0, $suggestions[0]->getResultsCount());
+    if (version_compare($solr_major_version, '5', '>=')) {
+      $query = $this->buildSearch(['articel'], [], ['body'], FALSE);
+      $query->setLanguages(['en']);
+      $suggestions = $backend->getSpellcheckSuggestions($query, $autocompleteSearch, 'articel', 'articel');
+      $this->assertEquals(1, count($suggestions));
+      $this->assertEquals('article', $suggestions[0]->getSuggestedKeys());
+      $this->assertEquals(0, $suggestions[0]->getResultsCount());
+    }
 
     $query = $this->buildSearch(['article tre'], [], ['body_unstemmed'], FALSE);
     $query->setLanguages(['en']);
@@ -1030,26 +1034,28 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     // $this->assertEquals('es', $suggestions[1]->getSuggestionSuffix());
     // @codingStandardsIgnoreEnd
 
-    // @todo Add more suggester tests.
-    $query = $this->buildSearch(['artic'], [], ['body'], FALSE);
-    $query->setLanguages(['en']);
-    $suggestions = $backend->getSuggesterSuggestions($query, $autocompleteSearch, 'artic', 'artic');
-    $this->assertEquals(2, count($suggestions));
+    if (version_compare($solr_major_version, '6', '>=')) {
+      // @todo Add more suggester tests.
+      $query = $this->buildSearch(['artic'], [], ['body'], FALSE);
+      $query->setLanguages(['en']);
+      $suggestions = $backend->getSuggesterSuggestions($query, $autocompleteSearch, 'artic', 'artic');
+      $this->assertEquals(2, count($suggestions));
 
-    // Since we don't specify the result weights explicitly for this suggester
-    // we need to deal with a random order and need predictable array keys.
-    foreach ($suggestions as $suggestion) {
-      $suggestions[$suggestion->getSuggestedKeys()] = $suggestion;
+      // Since we don't specify the result weights explicitly for this suggester
+      // we need to deal with a random order and need predictable array keys.
+      foreach ($suggestions as $suggestion) {
+        $suggestions[$suggestion->getSuggestedKeys()] = $suggestion;
+      }
+      $this->assertEquals('artic', $suggestions['The test <b>artic</b>le number 1 about cats, dogs and trees.']->getUserInput());
+      $this->assertEquals('The test <b>', $suggestions['The test <b>artic</b>le number 1 about cats, dogs and trees.']->getSuggestionPrefix());
+      $this->assertEquals('</b>le number 1 about cats, dogs and trees.', $suggestions['The test <b>artic</b>le number 1 about cats, dogs and trees.']->getSuggestionSuffix());
+      $this->assertEquals('The test <b>artic</b>le number 1 about cats, dogs and trees.', $suggestions['The test <b>artic</b>le number 1 about cats, dogs and trees.']->getSuggestedKeys());
+
+      $this->assertEquals('artic', $suggestions['The test <b>artic</b>le number 2 about a tree.']->getUserInput());
+      $this->assertEquals('The test <b>', $suggestions['The test <b>artic</b>le number 2 about a tree.']->getSuggestionPrefix());
+      $this->assertEquals('</b>le number 2 about a tree.', $suggestions['The test <b>artic</b>le number 2 about a tree.']->getSuggestionSuffix());
+      $this->assertEquals('The test <b>artic</b>le number 2 about a tree.', $suggestions['The test <b>artic</b>le number 2 about a tree.']->getSuggestedKeys());
     }
-    $this->assertEquals('artic', $suggestions['The test <b>artic</b>le number 1 about cats, dogs and trees.']->getUserInput());
-    $this->assertEquals('The test <b>', $suggestions['The test <b>artic</b>le number 1 about cats, dogs and trees.']->getSuggestionPrefix());
-    $this->assertEquals('</b>le number 1 about cats, dogs and trees.', $suggestions['The test <b>artic</b>le number 1 about cats, dogs and trees.']->getSuggestionSuffix());
-    $this->assertEquals('The test <b>artic</b>le number 1 about cats, dogs and trees.', $suggestions['The test <b>artic</b>le number 1 about cats, dogs and trees.']->getSuggestedKeys());
-
-    $this->assertEquals('artic', $suggestions['The test <b>artic</b>le number 2 about a tree.']->getUserInput());
-    $this->assertEquals('The test <b>', $suggestions['The test <b>artic</b>le number 2 about a tree.']->getSuggestionPrefix());
-    $this->assertEquals('</b>le number 2 about a tree.', $suggestions['The test <b>artic</b>le number 2 about a tree.']->getSuggestionSuffix());
-    $this->assertEquals('The test <b>artic</b>le number 2 about a tree.', $suggestions['The test <b>artic</b>le number 2 about a tree.']->getSuggestedKeys());
 
     // Tests NGram and Edge NGram search result.
     foreach (['category_ngram', 'category_edge'] as $field) {
@@ -1356,7 +1362,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     */
 
     $backend_config['connector_config']['jmx'] = TRUE;
-    $backend_config['disabled_field_types'] = ['text_foo_en_6_0_0', 'text_de_6_0_0', 'text_de_7_0_0'];
+    $backend_config['disabled_field_types'] = ['text_foo_en_4_5_0', 'text_foo_en_6_0_0', 'text_de_4_5_0', 'text_de_6_0_0', 'text_de_7_0_0'];
     $backend_config['disabled_caches'] = ['cache_document_default_7_0_0', 'cache_filter_default_7_0_0'];
     $server->setBackendConfig($backend_config);
     $server->save();
@@ -1369,7 +1375,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertContains('text_en', $config_files['schema_extra_types.xml']);
     $this->assertNotContains('text_foo_en', $config_files['schema_extra_types.xml']);
     $this->assertNotContains('text_de', $config_files['schema_extra_types.xml']);
-    if (6 !== $solr_major_version) {
+    if (version_compare($solr_major_version, '7', '>=')) {
       $this->assertNotContains('documentCache', $config_files['solrconfig_query.xml']);
       $this->assertNotContains('filterCache', $config_files['solrconfig_query.xml']);
       $this->assertContains('httpCaching', $config_files['solrconfig_requestdispatcher.xml']);
@@ -1386,13 +1392,13 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $backend = $server->getBackend();
     if ($backend->getSolrConnector()->isCloud()) {
       $this->assertNotContains('solr.replication', $config_files['solrcore.properties']);
-      $this->assertNotContains('"/replication"', $config_files[(6 !== $solr_major_version) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
-      $this->assertNotContains('"/get"', $config_files[(6 !== $solr_major_version) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
+      $this->assertNotContains('"/replication"', $config_files[(version_compare($solr_major_version, '7', '>=')) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
+      $this->assertNotContains('"/get"', $config_files[(version_compare($solr_major_version, '7', '>=')) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
     }
     else {
       $this->assertContains('solr.replication', $config_files['solrcore.properties']);
-      $this->assertContains('"/replication"', $config_files[(6 !== $solr_major_version) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
-      if (6 !== $solr_major_version) {
+      $this->assertContains('"/replication"', $config_files[(version_compare($solr_major_version, '7', '>=')) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
+      if (version_compare($solr_major_version, '7', '>=')) {
         $this->assertNotContains('"/get"', $config_files['solrconfig_extra.xml']);
       }
       else {
@@ -1408,16 +1414,12 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     // @codingStandardsIgnoreStart
     return [[[
       'schema_extra_types.xml' => [
-        # phonetic is currently not available vor Solr 6.x.
+        # phonetic is currently not available for Solr <= 7.x.
         #'fieldType name="text_phonetic_en" class="solr.TextField"',
         'fieldType name="text_en" class="solr.TextField"',
         'fieldType name="text_de" class="solr.TextField"',
         '<fieldType name="collated_und" class="solr.ICUCollationField" locale="en" strength="primary" caseLevel="false"/>',
-'<!--
-  Fulltext Foo English
-  6.0.0
--->
-<fieldType name="text_foo_en" class="solr.TextField" positionIncrementGap="100">
+'<fieldType name="text_foo_en" class="solr.TextField" positionIncrementGap="100">
   <analyzer type="index">
     <tokenizer class="solr.WhitespaceTokenizerFactory"/>
     <filter class="solr.LengthFilterFactory" min="2" max="100"/>
@@ -1429,17 +1431,10 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     <filter class="solr.LengthFilterFactory" min="2" max="100"/>
     <filter class="solr.LowerCaseFilterFactory"/>
     <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
-  </analyzer>
-  <similarity class="solr.DFRSimilarityFactory">
-    <str name="basicModel">I(F)</str>
-    <str name="afterEffect">B</str>
-    <str name="normalization">H3</str>
-    <float name="mu">900</float>
-  </similarity>
-</fieldType>',
+  </analyzer>',
       ],
       'schema_extra_fields.xml' => [
-        # phonetic is currently not available vor Solr 6.x.
+        # phonetic is currently not available for Solr <= 7.x.
         #'<dynamicField name="tcphonetics_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />',
         #'<dynamicField name="tcphoneticm_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
         #'<dynamicField name="tocphonetics_X3b_en_*" type="text_phonetic_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />',
@@ -1466,10 +1461,10 @@ class SearchApiSolrTest extends SolrBackendTestBase {
         '<dynamicField name="tum_X3b_de_*" type="text_unstemmed_de" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />',
         '<dynamicField name="spellcheck_und*" type="text_spell_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
         '<dynamicField name="spellcheck_*" type="text_spell_und" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="true" />',
-        '<dynamicField name="sort_X3b_en_*" type="collated_en" stored="false" indexed="false" docValues="true" />',
-        '<dynamicField name="sort_X3b_de_*" type="collated_de" stored="false" indexed="false" docValues="true" />',
-        '<dynamicField name="sort_X3b_und_*" type="collated_und" stored="false" indexed="false" docValues="true" />',
-        '<dynamicField name="sort_*" type="collated_und" stored="false" indexed="false" docValues="true" />',
+        '<dynamicField name="sort_X3b_en_*" type="collated_en" stored="false"',
+        '<dynamicField name="sort_X3b_de_*" type="collated_de" stored="false"',
+        '<dynamicField name="sort_X3b_und_*" type="collated_und" stored="false"',
+        '<dynamicField name="sort_*" type="collated_und" stored="false" ',
       ],
       'solrconfig_extra.xml' => [
         '<str name="name">en</str>',

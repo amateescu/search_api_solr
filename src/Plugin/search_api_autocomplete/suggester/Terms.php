@@ -2,10 +2,8 @@
 
 namespace Drupal\search_api_solr\Plugin\search_api_autocomplete\suggester;
 
-use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api_autocomplete\Plugin\search_api_autocomplete\suggester\Server;
-use Drupal\search_api_solr\SolrAutocompleteInterface;
 
 /**
  * Provides a suggester that retrieves suggestions from Solr's Terms component.
@@ -17,6 +15,8 @@ use Drupal\search_api_solr\SolrAutocompleteInterface;
  * )
  */
 class Terms extends Server {
+
+  use BackendTrait;
 
   /**
    * {@inheritdoc}
@@ -37,23 +37,6 @@ class Terms extends Server {
     }
 
     return $backend->getAutocompleteSuggestions($query, $this->getSearch(), $incomplete_key, $user_input);
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * @throws \Drupal\search_api\SearchApiException
-   */
-  protected static function getBackend(IndexInterface $index) {
-    if (!$index->hasValidServer()) {
-      return NULL;
-    }
-    $server = $index->getServerInstance();
-    $backend = $server->getBackend();
-    if ($server->supportsFeature('search_api_autocomplete') && $backend instanceof SolrAutocompleteInterface) {
-      return $backend;
-    }
-    return NULL;
   }
 
 }

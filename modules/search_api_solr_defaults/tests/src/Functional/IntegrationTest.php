@@ -4,6 +4,8 @@ namespace Drupal\Tests\search_api_solr_defaults\Functional;
 
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
+use Drupal\search_api\IndexInterface;
+use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\Utility\SolrCommitTrait;
 use Drupal\Tests\BrowserTestBase;
 
@@ -77,10 +79,10 @@ class IntegrationTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains('The server was successfully saved.');
 
     $server = Server::load('default_solr_server');
-    $this->assertTrue($server, 'Server can be loaded');
+    $this->assertInstanceOf(ServerInterface::class, $server, 'Server can be loaded');
 
     $index = Index::load('default_solr_index');
-    $this->assertTrue($index, 'Index can be loaded');
+    $this->assertInstanceOf(IndexInterface::class, $index, 'Index can be loaded');
 
     $this->drupalLogin($this->authenticatedUser);
     $this->drupalGet('solr-search/content');

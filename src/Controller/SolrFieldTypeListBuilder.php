@@ -249,9 +249,11 @@ class SolrFieldTypeListBuilder extends AbstractSolrEntityListBuilder {
   /**
    * Returns the formatted XML for solrconfig_extra.xml.
    *
+   * @param int|null $solr_major_version
+   *
    * @throws \Drupal\search_api\SearchApiException
    */
-  public function getSchemaExtraFieldsXml() {
+  public function getSchemaExtraFieldsXml(?int $solr_major_version = NULL) {
     $xml = '';
     /* @var \Drupal\search_api_solr\SolrFieldTypeInterface $solr_field_type */
     foreach ($this->getEnabledEntities() as $solr_field_type) {
@@ -263,7 +265,7 @@ class SolrFieldTypeListBuilder extends AbstractSolrEntityListBuilder {
         }
         $xml .= "/>\n";
       }
-      foreach ($solr_field_type->getDynamicFields() as $dynamic_field) {
+      foreach ($solr_field_type->getDynamicFields($solr_major_version) as $dynamic_field) {
         $xml .= '<dynamicField ';
         foreach ($dynamic_field as $attribute => $value) {
           /* @noinspection NestedTernaryOperatorInspection */

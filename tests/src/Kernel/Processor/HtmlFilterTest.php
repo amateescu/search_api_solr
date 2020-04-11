@@ -59,6 +59,12 @@ class HtmlFilterTest extends ProcessorTestBase {
    * Tests term boosts.
    */
   public function testBoostTerms() {
+    $solr_major_version = $this->server->getBackend()->getSolrConnector()->getSolrMajorVersion();
+    if (version_compare($solr_major_version, '6', '<')) {
+      $this->markTestSkipped('Term boosting requires Solr >= 6.');
+      return;
+    }
+
     $this->assertArrayHasKey('html_filter', $this->index->getProcessors(), 'HTML filter processor is added.');
 
     $this->createNode([

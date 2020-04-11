@@ -28,7 +28,9 @@ Solr search server for indexing and searching. Before enabling or using this
 module, you'll have to follow the instructions given in INSTALL.md first.
 
 The minimum support version for Search API Solr Search 8.x-3.x is Solr 6.4.
-Any version below might work if you use your own Solr config.
+Any version below might work if you use your own Solr config or if you enable
+the optional search_api_solr_legacy sub-module that is included.
+
 
 Supported optional features
 ---------------------------
@@ -223,14 +225,6 @@ address:
 http://localhost:8983/solr/d8
 ```
 This represents a core named "d8" in a default installation of Solr.
-
-The easiest way to get it running properly configured for the tests is to use
-docker-compose. The required config is included in the module.
-Have a look at the first part of this [video](https://youtu.be/NkLBTiRiQiI).
-Simply run this command within the module folder:
-```
-docker-compose up
-```
 
 The tests themselves could be started by running something like this in your
 drupal folder:

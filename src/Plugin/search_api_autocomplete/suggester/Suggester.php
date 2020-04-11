@@ -5,12 +5,10 @@ namespace Drupal\search_api_solr\Plugin\search_api_autocomplete\suggester;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
-use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Plugin\PluginFormTrait;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api_autocomplete\SearchInterface;
 use Drupal\search_api_autocomplete\Suggester\SuggesterPluginBase;
-use Drupal\search_api_solr\SolrAutocompleteInterface;
 use Drupal\search_api_solr\Utility\Utility;
 
 /**
@@ -28,6 +26,7 @@ use Drupal\search_api_solr\Utility\Utility;
 class Suggester extends SuggesterPluginBase implements PluginFormInterface {
 
   use PluginFormTrait;
+  use BackendTrait;
 
   /**
    * {@inheritdoc}
@@ -36,7 +35,9 @@ class Suggester extends SuggesterPluginBase implements PluginFormInterface {
    * @throws \Drupal\search_api_autocomplete\SearchApiAutocompleteException
    */
   public static function supportsSearch(SearchInterface $search) {
-    return (bool) static::getBackend($search->getIndex());
+    /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
+    $backend = static::getBackend($search->getIndex());
+    return ($backend && version_compare($backend->getSolrConnector()->getSolrMajorVersion(), '6', '>='));
   }
 
   /**
@@ -130,30 +131,6 @@ class Suggester extends SuggesterPluginBase implements PluginFormInterface {
     }
 
     return $backend->getSuggesterSuggestions($query, $this->getSearch(), $incomplete_key, $user_input, $options);
-  }
-
-  /**
-   * Retrieves the backend for the given index, if it supports autocomplete.
-   *
-   * @param \Drupal\search_api\IndexInterface $index
-   *   The search index.
-   *
-   * @return \Drupal\search_api_solr\SolrAutocompleteInterface|null
-   *   The backend plugin of the index's server, if it exists and supports
-   *   autocomplete; NULL otherwise.
-   *
-   * @throws \Drupal\search_api\SearchApiException
-   */
-  protected static function getBackend(IndexInterface $index) {
-    if (!$index->hasValidServer()) {
-      return NULL;
-    }
-    $server = $index->getServerInstance();
-    $backend = $server->getBackend();
-    if ($server->supportsFeature('search_api_autocomplete') && $backend instanceof SolrAutocompleteInterface) {
-      return $backend;
-    }
-    return NULL;
   }
 
 }

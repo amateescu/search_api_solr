@@ -186,7 +186,7 @@ function search_api_solr_form_search_api_index_form_alter(&$form, FormStateInter
       '#collapsed' => TRUE,
       '#states' => [
         'visible' => [
-          ':input[name="server"]' => _search_adi_solr_visibility(),
+          ':input[name="server"]' => _search_api_solr_visibility(),
         ],
       ],
     ];
@@ -582,7 +582,7 @@ function search_api_solr_get_servers($only_active = TRUE) {
       $server->hasValidBackend() &&
       $server->getBackend() instanceof SolrBackendInterface
     ) {
-      $solr_servers[] = $server;
+      $solr_servers[$server->id()] = $server;
     }
   }
   return $solr_servers;
@@ -645,18 +645,19 @@ function search_api_solr_entity_type_alter(array &$entity_types) {
  *
  * @return array
  *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\search_api\SearchApiException
+ *
  * @see \search_api_solr_form_search_api_index_form_alter
  */
-function _search_adi_solr_visibility() {
+function _search_api_solr_visibility() {
   $valid_option = [];
-  $servers = Server::loadMultiple();
+  $servers = search_api_solr_get_servers(FALSE);
   foreach ($servers as $server) {
-    if ($server->getBackend() instanceof SolrBackendInterface) {
-      $valid_option[] = [
-        'value' => $server->id(),
-      ];
-    }
+    $valid_option[] = [
+      'value' => $server->id(),
+    ];
   }
-
   return $valid_option;
 }

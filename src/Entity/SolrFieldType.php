@@ -419,7 +419,7 @@ class SolrFieldType extends AbstractSolrEntity implements SolrFieldTypeInterface
   /**
    * {@inheritdoc}
    */
-  public function getDynamicFields() {
+  public function getDynamicFields(?int $solr_major_version = NULL) {
     $dynamic_fields = [];
 
     $prefixes = $this->custom_code ? [
@@ -462,7 +462,7 @@ class SolrFieldType extends AbstractSolrEntity implements SolrFieldTypeInterface
       }
     }
 
-    if ($collated_field = $this->getCollatedField()) {
+    if ($collated_field = $this->getCollatedField($solr_major_version)) {
       $dynamic_fields[] = $collated_field;
 
       if (LanguageInterface::LANGCODE_NOT_SPECIFIED === $this->field_type_language_code) {
@@ -515,11 +515,13 @@ class SolrFieldType extends AbstractSolrEntity implements SolrFieldTypeInterface
   /**
    * Returns the collated field definition.
    *
+   * @param int|null $solr_major_version
+   *
    * @return array|null
    *   The array containing the collated field definition or null if is
    *   not configured for this field type.
    */
-  protected function getCollatedField() {
+  protected function getCollatedField(?int $solr_major_version = NULL) {
     $collated_field = NULL;
 
     if ($this->collated_field_type) {
@@ -527,9 +529,12 @@ class SolrFieldType extends AbstractSolrEntity implements SolrFieldTypeInterface
         'name' => SearchApiSolrUtility::encodeSolrName('sort' . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . $this->field_type_language_code) . '_*',
         'type' => $this->collated_field_type['name'],
         'stored' => FALSE,
-        'indexed' => FALSE,
-        'docValues' => TRUE,
+        'indexed' => $solr_major_version === 4,
       ];
+
+      if ($solr_major_version !== 4) {
+        $collated_field['docValues'] = TRUE;
+      }
     }
 
     return $collated_field;

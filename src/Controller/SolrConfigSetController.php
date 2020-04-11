@@ -71,9 +71,16 @@ class SolrConfigSetController extends ControllerBase {
    * @throws \Drupal\search_api\SearchApiException
    */
   public function getSchemaExtraFieldsXml(?ServerInterface $search_api_server = NULL): string {
+    $solr_major_version = NULL;
+    if ($search_api_server) {
+      /** @var SolrBackendInterface $backend */
+      $backend = $search_api_server->getBackend();
+      $solr_major_version = $backend->getSolrConnector()->getSolrMajorVersion();
+    }
+
     /** @var \Drupal\search_api_solr\Controller\SolrFieldTypeListBuilder $list_builder */
     $list_builder = $this->getListBuilder('solr_field_type', $search_api_server);
-    return $list_builder->getSchemaExtraFieldsXml();
+    return $list_builder->getSchemaExtraFieldsXml($solr_major_version);
   }
 
   /**
@@ -228,23 +235,29 @@ class SolrConfigSetController extends ControllerBase {
     $backend = $this->getBackend();
     $connector = $backend->getSolrConnector();
     $solr_branch = $real_solr_branch = $connector->getSolrBranch($this->assumedMinimumVersion);
+    $solr_major_version = $connector->getSolrMajorVersion($this->assumedMinimumVersion);
 
-    // Solr 8.x uses the same schema and solrconf as 7.x. So we can use the same
-    // templates and only adjust luceneMatchVersion to 8.
-    if ('8.x' === $solr_branch) {
-      $solr_branch = '7.x';
-    }
+    $template_path = drupal_get_path('module', 'search_api_solr') . '/solr-conf-templates/';
+    $solr_configset_template_mapping = [
+      '6.x' => $template_path . '6.x',
+      '7.x' => $template_path . '7.x',
+      // Solr 8.x uses the same schema and solrconf as 7.x. So we can use the
+      // same templates and only adjusts luceneMatchVersion to 8.
+      '8.x' => $template_path . '7.x',
+    ];
 
-    $search_api_solr_conf_path = drupal_get_path('module', 'search_api_solr') . '/solr-conf-templates/' . $solr_branch;
+    $this->moduleHandler()->alter('search_api_solr_configset_template_mapping', $solr_configset_template_mapping);
+
+    $search_api_solr_conf_path = $solr_configset_template_mapping[$solr_branch];
     $solrcore_properties = parse_ini_file($search_api_solr_conf_path . '/solrcore.properties', FALSE, INI_SCANNER_RAW);
 
     $files = [
       'schema_extra_types.xml' => $this->getSchemaExtraTypesXml(),
-      'schema_extra_fields.xml' => $this->getSchemaExtraFieldsXml(),
+      'schema_extra_fields.xml' => $this->getSchemaExtraFieldsXml($backend->getServer()),
       'solrconfig_extra.xml' => $this->getSolrconfigExtraXml(),
     ];
 
-    if ('6.x' !== $solr_branch) {
+    if (version_compare($solr_major_version, '7', '>=')) {
       $files['solrconfig_query.xml'] = $this->getSolrconfigQueryXml();
       $files['solrconfig_requestdispatcher.xml'] = $this->getSolrconfigRequestDispatcherXml();
     }

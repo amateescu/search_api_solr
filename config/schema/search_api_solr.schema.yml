@@ -149,6 +149,12 @@ search_api_solr.list:
         label: 'name'
       str:
         type: search_api_solr.scalar_values
+      int:
+        type: search_api_solr.scalar_values
+      float:
+        type: search_api_solr.scalar_values
+      bool:
+        type: search_api_solr.scalar_values
 
 search_api_solr.scalar_values:
   type: sequence
