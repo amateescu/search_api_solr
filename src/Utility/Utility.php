@@ -135,7 +135,7 @@ class Utility {
     // Copied from apachesolr_site_hash().
     if (!($hash = \Drupal::state()->get('search_api_solr.site_hash', FALSE))) {
       global $base_url;
-      $hash = substr(base_convert(Crypt::hashBase64(uniqid($base_url, TRUE)), 16, 36), 0, 6);
+      $hash = substr(base_convert(hash('sha256', uniqid($base_url, TRUE)), 16, 36), 0, 6);
       \Drupal::state()->set('search_api_solr.site_hash', $hash);
     }
     return $hash;
