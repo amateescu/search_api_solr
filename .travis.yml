@@ -4,8 +4,8 @@ language: php
 dist: trusty
 
 php:
-  - 7.1
-  - 7.3
+#  - 7.1
+#  - 7.3
   - 7.4
 
 env:
@@ -72,6 +72,7 @@ install:
   - cd $TRAVIS_BUILD_DIR/..
   - git clone --depth=1 --branch $DRUPAL_BRANCH https://git.drupal.org/project/drupal.git
   - cd $TRAVIS_BUILD_DIR/../drupal
+  - patch -p1 < $TRAVIS_BUILD_DIR/tests/no_ext_dependencies.patch
   - composer install --ignore-platform-reqs
   - composer config repositories.search_api_solr vcs $TRAVIS_BUILD_DIR
   - |
