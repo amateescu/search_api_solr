@@ -1,24 +1,24 @@
 diff --git a/core/composer.json b/core/composer.json
-index cf64c7800f..0b94772a63 100644
+index cf64c7800f..5d5000a1e3 100644
 --- a/core/composer.json
 +++ b/core/composer.json
-@@ -4,19 +4,6 @@
-     "type": "drupal-core",
-     "license": "GPL-2.0-or-later",
-     "require": {
--        "ext-date": "*",
--        "ext-dom": "*",
--        "ext-filter": "*",
+@@ -7,7 +7,6 @@
+         "ext-date": "*",
+         "ext-dom": "*",
+         "ext-filter": "*",
 -        "ext-gd": "*",
--        "ext-hash": "*",
--        "ext-json": "*",
--        "ext-pcre": "*",
--        "ext-PDO": "*",
--        "ext-session": "*",
--        "ext-SimpleXML": "*",
--        "ext-SPL": "*",
--        "ext-tokenizer": "*",
--        "ext-xml": "*",
-         "php": ">=7.3",
-         "symfony/console": "^4.4",
-         "symfony/dependency-injection": "^4.4",
+         "ext-hash": "*",
+         "ext-json": "*",
+         "ext-pcre": "*",
+diff --git a/core/includes/install.core.inc b/core/includes/install.core.inc
+index 03c0d7e67a..b61d75ad81 100644
+--- a/core/includes/install.core.inc
++++ b/core/includes/install.core.inc
+@@ -2244,6 +2244,7 @@ function install_check_requirements($install_state) {
+  * @throws \Drupal\Core\Installer\Exception\InstallerException
+  */
+ function install_display_requirements($install_state, $requirements) {
++  return;
+   // Check the severity of the requirements reported.
+   $severity = drupal_requirements_severity($requirements);
+
