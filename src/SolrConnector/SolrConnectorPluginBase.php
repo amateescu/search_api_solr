@@ -346,7 +346,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       return new Client($adapter, $this->eventDispatcher);
     }
     return new Client(NULL, $this->eventDispatcher);
-   }
+  }
 
   /**
    * {@inheritdoc}
@@ -427,7 +427,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    * {@inheritdoc}
    */
   public function getSolrMajorVersion($version = ''): int {
-    [$major, ,] = explode('.', $version ?: $this->getSolrVersion());
+    [$major] = explode('.', $version ?: $this->getSolrVersion());
     return (int) $major;
   }
 
@@ -442,7 +442,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    * {@inheritdoc}
    */
   public function getLuceneMatchVersion($version = '') {
-    [$major, $minor,] = explode('.', $version ?: $this->getSolrVersion());
+    [$major, $minor] = explode('.', $version ?: $this->getSolrVersion());
     return $major . '.' . $minor;
   }
 

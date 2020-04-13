@@ -199,7 +199,8 @@ function search_api_solr_requirements($phase) {
                 try {
                   $server_file_data = $connector->getFile($new_file_name);
                   $server_file_body = $server_file_data->getBody();
-                } catch (SearchApiSolrException $e) {
+                }
+                catch (SearchApiSolrException $e) {
                   $server_file_body = '';
                 }
 

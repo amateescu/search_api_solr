@@ -67,9 +67,12 @@ class SolrRequestHandler extends AbstractSolrEntity implements SolrRequestHandle
    */
   public function getName(): string {
     $nested_name = $this->request_handler['lst'][0]['name'] ?? 'default';
-    return  $this->request_handler['name'] . '_' . $nested_name;
+    return $this->request_handler['name'] . '_' . $nested_name;
   }
 
+  /**
+   *
+   */
   public function getPurposeId(): string {
     return $this->request_handler['name'];
   }

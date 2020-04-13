@@ -1352,15 +1352,6 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       $this->assertStringNotContainsString('<statsCache', $config_files['solrconfig_extra.xml']);
     }
 
-    /*
-    // Write files for docker to disk.
-    if (8 === $solr_major_version) {
-      foreach ($config_files as $file_name => $content) {
-        file_put_contents(__DIR__ . '/../../solr-conf/' . $solr_major_version . '.x/' . $file_name, $content);
-      }
-    }
-    */
-
     $backend_config['connector_config']['jmx'] = TRUE;
     $backend_config['disabled_field_types'] = ['text_foo_en_4_5_0', 'text_foo_en_6_0_0', 'text_de_4_5_0', 'text_de_6_0_0', 'text_de_7_0_0'];
     $backend_config['disabled_caches'] = ['cache_document_default_7_0_0', 'cache_filter_default_7_0_0'];

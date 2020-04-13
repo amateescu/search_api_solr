@@ -1,6 +1,10 @@
 <?php
 
 /**
+ * @file
+ */
+
+/**
  * Delete Solr 4 and 5 field types.
  */
 function search_api_solr_post_update_8204_replace_solr_4_field_types() {

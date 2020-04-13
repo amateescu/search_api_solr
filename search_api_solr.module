@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * @file
+ */
+
+use Drupal\Core\Url;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -447,7 +453,6 @@ function search_api_solr_form_search_api_index_form_alter(&$form, FormStateInter
       '#default_value' => $settings['mlt']['interestingTerms'],
     ];
 
-
     $form['third_party_settings']['search_api_solr']['advanced'] = [
       '#tree' => TRUE,
       '#type' => 'details',
@@ -565,7 +570,7 @@ function search_api_solr_install_missing_field_types() {
  *
  * @param bool $only_active
  *
- * @return ServerInterface[]
+ * @return \Drupal\search_api\Entity\ServerInterface[]
  *
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
  * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
@@ -574,7 +579,7 @@ function search_api_solr_install_missing_field_types() {
 function search_api_solr_get_servers($only_active = TRUE) {
   $solr_servers = [];
   $storage = \Drupal::entityTypeManager()->getStorage('search_api_server');
-  /** @var ServerInterface[] $servers */
+  /** @var \Drupal\search_api\Entity\ServerInterface[] $servers */
   $servers = $only_active ? $storage->loadByProperties(['status' => TRUE]) :
     $storage->loadMultiple();
   foreach ($servers as $server) {
@@ -596,9 +601,10 @@ function search_api_solr_get_servers($only_active = TRUE) {
  * @param \Drupal\Core\Entity\EntityInterface $entity
  *
  * @return array
+ *
  * @throws \Drupal\search_api\SearchApiException
  */
-function search_api_solr_entity_operation(\Drupal\Core\Entity\EntityInterface $entity) {
+function search_api_solr_entity_operation(EntityInterface $entity) {
   $operations = [];
   if (
     $entity instanceof ServerInterface &&
@@ -606,7 +612,7 @@ function search_api_solr_entity_operation(\Drupal\Core\Entity\EntityInterface $e
   ) {
     $operations['get_config_zip'] = [
       'title' => t('Get config.zip'),
-      'url' => \Drupal\Core\Url::fromRoute('solr_configset.config_zip', ['search_api_server' => $entity->id()]),
+      'url' => Url::fromRoute('solr_configset.config_zip', ['search_api_server' => $entity->id()]),
       'weight' => 50,
     ];
   }
@@ -618,7 +624,7 @@ function search_api_solr_entity_operation(\Drupal\Core\Entity\EntityInterface $e
     ) {
       $operations['clone_for_multisite'] = [
         'title' => t('Clone for Multisite'),
-        'url' => \Drupal\Core\Url::fromRoute('entity.search_api_index.solr_multisite_clone_form', ['search_api_index' => $entity->id()]),
+        'url' => Url::fromRoute('entity.search_api_index.solr_multisite_clone_form', ['search_api_index' => $entity->id()]),
         'weight' => 50,
       ];
     }
@@ -626,7 +632,7 @@ function search_api_solr_entity_operation(\Drupal\Core\Entity\EntityInterface $e
       $operations['update_for_multisite'] = [
         'title' => t('Update for Multisite'),
         // @todo
-        'url' => \Drupal\Core\Url::fromRoute('entity.search_api_index.solr_multisite_update_form', ['search_api_index' => $entity->id()]),
+        'url' => Url::fromRoute('entity.search_api_index.solr_multisite_update_form', ['search_api_index' => $entity->id()]),
         'weight' => 50,
       ];
     }
@@ -634,6 +640,9 @@ function search_api_solr_entity_operation(\Drupal\Core\Entity\EntityInterface $e
   return $operations;
 }
 
+/**
+ *
+ */
 function search_api_solr_entity_type_alter(array &$entity_types) {
   /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
   $entity_types['search_api_index']->setFormClass('solr_multisite_clone', IndexSolrMultisiteCloneForm::class);

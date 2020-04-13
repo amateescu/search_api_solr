@@ -213,7 +213,7 @@ interface SolrBackendInterface extends BackendInterface {
    */
   public function getIndexSolrSettings(IndexInterface $index);
 
-    /**
+  /**
    * Prefixes an index ID as configured.
    *
    * The resulting ID will be a concatenation of the following strings:

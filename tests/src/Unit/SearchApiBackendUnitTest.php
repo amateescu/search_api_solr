@@ -50,6 +50,9 @@ class SearchApiBackendUnitTest extends UnitTestCase {
    */
   protected $backend;
 
+  /**
+   *
+   */
   public function setUp() {
     parent::setUp();
 
@@ -128,6 +131,9 @@ class SearchApiBackendUnitTest extends UnitTestCase {
     );
   }
 
+  /**
+   *
+   */
   public function testFormatDate() {
     $this->assertFalse($this->backend->formatDate('asdf'));
     $this->assertEquals('1992-08-27T00:00:00Z', $this->backend->formatDate('1992-08-27'));

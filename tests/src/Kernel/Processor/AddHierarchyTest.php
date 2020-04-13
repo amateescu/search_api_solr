@@ -35,7 +35,11 @@ class AddHierarchyTest extends SearchApiAddHierarchyTest {
     $this->enableSolrServer();
   }
 
+  /**
+   *
+   */
   public function testRegression3059312() {
     $this->markTestSkipped('This test makes no sense on Solr.');
   }
+
 }

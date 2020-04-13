@@ -73,7 +73,7 @@ class SolrConfigSetController extends ControllerBase {
   public function getSchemaExtraFieldsXml(?ServerInterface $search_api_server = NULL): string {
     $solr_major_version = NULL;
     if ($search_api_server) {
-      /** @var SolrBackendInterface $backend */
+      /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
       $backend = $search_api_server->getBackend();
       $solr_major_version = $backend->getSolrConnector()->getSolrMajorVersion();
     }

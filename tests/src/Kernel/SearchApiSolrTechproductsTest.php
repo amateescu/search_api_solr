@@ -36,7 +36,8 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
   public function testBackend() {
     try {
       $this->firstSearch();
-    } catch (\Exception $e) {
+    }
+    catch (\Exception $e) {
       $this->markTestSkipped('Techproducts example not reachable.');
     }
 
@@ -102,6 +103,9 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
     ], array_keys($result->getResultItems()), 'Search for all tech products, 3 rows limit via query');
   }
 
+  /**
+   *
+   */
   public function testStreamingExpressions() {
     if ('false' === SOLR_CLOUD) {
       $this->markTestSkipped('This test requires a Solr Cloud setup.');
@@ -109,7 +113,8 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
 
     try {
       $this->firstSearch();
-    } catch (\Exception $e) {
+    }
+    catch (\Exception $e) {
       $this->markTestSkipped('Techproducts example not reachable.');
     }
 

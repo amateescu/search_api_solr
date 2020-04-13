@@ -185,7 +185,7 @@ abstract class AbstractSolrEntity extends ConfigEntityBase implements SolrConfig
     }
 
     // Remove the fake root element the XML fragment.
-    return $comment . trim(preg_replace('@</?solrconfigs/?>@', '', $formatted_xml_string),  "\n") . "\n";
+    return $comment . trim(preg_replace('@</?solrconfigs/?>@', '', $formatted_xml_string), "\n") . "\n";
   }
 
   /**
@@ -229,9 +229,9 @@ abstract class AbstractSolrEntity extends ConfigEntityBase implements SolrConfig
   }
 
   /**
-  * @return string[]
-  *   An array of environments as strings.
-  */
+   * @return string[]
+   *   An array of environments as strings.
+   */
   abstract public function getOptions();
 
   /**
@@ -259,4 +259,5 @@ abstract class AbstractSolrEntity extends ConfigEntityBase implements SolrConfig
   public function isRecommended(): bool {
     return $this->recommended;
   }
+
 }

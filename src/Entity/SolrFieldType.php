@@ -79,7 +79,7 @@ class SolrFieldType extends AbstractSolrEntity implements SolrFieldTypeInterface
   /**
    * Solr Unstemmed Field Type definition.
    *
-   * @var  array
+   * @var array
    */
   protected $unstemmed_field_type;
 

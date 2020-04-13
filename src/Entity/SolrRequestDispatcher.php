@@ -68,6 +68,9 @@ class SolrRequestDispatcher extends AbstractSolrEntity implements SolrRequestDis
     return $this->request_dispatcher['name'] . '_' . $this->isRecommended();
   }
 
+  /**
+   *
+   */
   public function getPurposeId(): string {
     return $this->request_dispatcher['name'];
   }

@@ -119,4 +119,5 @@ class SolrCache extends AbstractSolrEntity implements SolrCacheInterface {
 
     return $comment . $formatted_xml_string . "\n";
   }
+
 }

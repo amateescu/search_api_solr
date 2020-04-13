@@ -65,6 +65,9 @@ class UtilitiesTest extends KernelTestBase {
     $this->assertEquals('text_de-CH-1901', Utility::decodeSolrName($encoded));
   }
 
+  /**
+   *
+   */
   public function testMergeDefaultIndexThirdPartySettings() {
     $third_party_settings = [
       'finalize' => TRUE,
@@ -147,4 +150,5 @@ class UtilitiesTest extends KernelTestBase {
 
     $this->assertEquals([], $highlighted_keys);
   }
+
 }

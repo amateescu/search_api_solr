@@ -33,7 +33,8 @@ trait BackendTrait {
       if ($backend instanceof SolrAutocompleteInterface && $server->supportsFeature('search_api_autocomplete')) {
         return $backend;
       }
-    } catch (\Exception $e) {
+    }
+    catch (\Exception $e) {
       $this->logException($e);
     }
     return NULL;

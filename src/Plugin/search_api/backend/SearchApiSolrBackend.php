@@ -151,7 +151,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * The entity type manager.
    *
-   * @var EntityTypeManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
 
@@ -215,7 +215,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * Add the default configuration for config-set generation.
    *
-   * defaultConfiguration() is called on any search. Loading the defaults only
+   * DefaultConfiguration() is called on any search. Loading the defaults only
    * required for config-set generation is an overhead that isn't required.
    */
   protected function addDefaultConfigurationForConfigGeneration() {
@@ -744,7 +744,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $endpoints[$index->id()] = $this->getCollectionEndpoint($index);
           }
 
-          /** @var Endpoint $endpoint */
+          /** @var \Solarium\Core\Client\Endpoint $endpoint */
           foreach ($endpoints as $index_id => $endpoint) {
             try {
               $key = $endpoint->getBaseUri();
@@ -756,12 +756,13 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                   'info' => $this->t("Default collection isn't set. Ensure that the collections are properly set on the indexes in their advanced section od the Solr specific index options."),
                   'status' => 'error',
                 ];
-              } else {
+              }
+              else {
                 $info[] = [
                   'label' => $this->t('Additional information'),
                   'info' => $this->t('Collection or core configuration for index %index is wrong or missing: %msg', [
                     '%index' => $index_id,
-                    '%msg' => $e->getMessage()
+                    '%msg' => $e->getMessage(),
                   ]),
                   'status' => 'error',
                 ];
@@ -807,8 +808,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                 if (!$this->isNonDrupalOrOutdatedConfigSetAllowed()) {
                   $variables[':url'] = Url::fromUri('internal:/' . drupal_get_path('module', 'search_api_solr') . '/INSTALL.md')->toString();
                   if (
-                    strpos($stats_summary['@schema_version'],'search-api') === 0 ||
-                    strpos($stats_summary['@schema_version'],'drupal') === 0
+                    strpos($stats_summary['@schema_version'], 'search-api') === 0 ||
+                    strpos($stats_summary['@schema_version'], 'drupal') === 0
                   ) {
                     if (strpos($stats_summary['@schema_version'], 'drupal-' . SolrBackendInterface::SEARCH_API_SOLR_MIN_SCHEMA_VERSION) !== 0) {
                       \Drupal::messenger()->addError($this->t('You are using outdated Solr configuration set. Please follow the instructions described in the <a href=":url">INSTALL.md</a> file for setting up Solr.', $variables));
@@ -857,7 +858,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                       'label' => $this->t('Max _version_ for datasource %datasource in index %index on site %site', [
                         '%datasource' => $datasource,
                         '%index' => $index,
-                        '%site' => $site_hash
+                        '%site' => $site_hash,
                       ]),
                       'info' => $max_version,
                     ];
@@ -871,7 +872,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
               'label' => $this->t('Max document _version_ for this server'),
               'info' => $this->t('Collection or core configuration for at least one index on this server is wrong or missing: %msg', [
                 '%index' => $index_id,
-                '%msg' => $e->getMessage()
+                '%msg' => $e->getMessage(),
               ]),
               'status' => 'error',
             ];
@@ -1185,7 +1186,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     // Delete corresponding checkpoints.
     if ($connector->isCloud()) {
-      /** @var SolrCloudConnectorInterface $connector */
+      /** @var \Drupal\search_api_solr\SolrCloudConnectorInterface $connector */
       $connector->deleteCheckpoints($index_id, $site_hash);
     }
 
@@ -1777,7 +1778,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         if ($highlight_config['highlight'] !== 'never') {
           $this->setHighlighting($solarium_query, $query, $highlight_fields);
         }
-      } catch (SearchApiException $exception) {
+      }
+      catch (SearchApiException $exception) {
         // Highlighting processor is not enabled for this index. Just use the
         // the index configuration.
         $this->setHighlighting($solarium_query, $query, $highlight_fields);
@@ -2346,7 +2348,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
                   $boost = 0.0;
                 }
               }
-              catch (\Exception $e) {}
+              catch (\Exception $e) {
+              }
 
               foreach ($tokens as $token) {
                 if ($value = $token->getText()) {
@@ -2892,10 +2895,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
 
         if ($filter_query) {
-          $fq[] = [[
-            'query' => $filter_query,
-            'tags' => $condition_group->getTags(),
-          ]];
+          $fq[] = [
+            [
+              'query' => $filter_query,
+              'tags' => $condition_group->getTags(),
+            ],
+          ];
         }
       }
       else {
@@ -3089,7 +3094,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * Create a single search query string.
    *
-   * @throws SearchApiSolrException
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   protected function createLocationFilterQuery(&$spatial) {
     $spatial_method = (isset($spatial['method']) && in_array($spatial['method'], ['geofilt', 'bbox'])) ? $spatial['method'] : 'geofilt';
@@ -3231,11 +3236,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
           if (in_array($info['field'], $index_fulltext_fields[$index_id])) {
             // @todo For sure Solr can handle it. But it was a trade-off for
-            //       3.x. For full multilingual support, fulltext fields are
-            //       indexed in language specific fields. In case of facets it
-            //       is hard to detect which language specific fields should be
-            //       considered. And the results have to be combined across
-            //       languages. One way to implement it might be facet queries.
+            //   3.x. For full multilingual support, fulltext fields are
+            //   indexed in language specific fields. In case of facets it is
+            //   hard to detect which language specific fields should be
+            //   considered. And the results have to be combined across
+            //   languages. One way to implement it might be facet queries.
             throw new SearchApiSolrException('Facetting on fulltext fields is not yet supported. Consider to add a string field to the index for that purpose.');
           }
           else {
@@ -4683,4 +4688,5 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   public function isNonDrupalOrOutdatedConfigSetAllowed(): bool {
     return (bool) $this->configuration['skip_schema_check'];
   }
+
 }

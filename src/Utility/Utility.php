@@ -14,7 +14,6 @@ use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\SolrFieldTypeInterface;
 use Solarium\Core\Client\Request;
-use Drupal\Component\Utility\Crypt;
 
 /**
  * Provides various helper functions for Solr backends.

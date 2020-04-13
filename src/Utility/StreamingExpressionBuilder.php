@@ -122,9 +122,9 @@ class StreamingExpressionBuilder extends ExpressionBuilder {
   protected $backend;
 
   /**
-   * The Solr connector
+   * The Solr connector.
    *
-   * @var SolrBackendInterface
+   * @var \Drupal\search_api_solr\SolrBackendInterface
    */
   protected $connector;
 
