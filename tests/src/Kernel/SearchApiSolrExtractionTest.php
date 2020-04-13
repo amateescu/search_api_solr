@@ -19,7 +19,7 @@ class SearchApiSolrExtractionTest extends SolrBackendTestBase {
     /** @var \Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend $backend */
     $backend = Server::load($this->serverId)->getBackend();
     $content = $backend->extractContentFromFile($filepath);
-    $this->assertContains('The extraction seems working!', $content);
+    $this->assertStringContainsString('The extraction seems working!', $content);
   }
 
 }

@@ -49,7 +49,7 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
     $this->assertEquals(1, $results->getResultCount(), 'Search for »Technology« returned correct number of results.');
     /** @var \Drupal\search_api\Item\ItemInterface $result */
     foreach ($results as $result) {
-      $this->assertContains('<strong>Technology</strong>', (string) $result->getExtraData('highlighted_fields', ['manu' => ['']])['manu'][0]);
+      $this->assertStringContainsString('<strong>Technology</strong>', (string) $result->getExtraData('highlighted_fields', ['manu' => ['']])['manu'][0]);
       $this->assertEmpty($result->getExtraData('highlighted_keys', []));
       $this->assertEquals('… A-DATA <strong>Technology</strong> Inc. …', $result->getExcerpt());
     }
@@ -64,7 +64,7 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
     $this->assertEquals(1, $results->getResultCount(), 'Search for »Technology« returned correct number of results.');
     /** @var \Drupal\search_api\Item\ItemInterface $result */
     foreach ($results as $result) {
-      $this->assertContains('<strong>Technology</strong>', (string) $result->getExtraData('highlighted_fields', ['manu' => ['']])['manu'][0]);
+      $this->assertStringContainsString('<strong>Technology</strong>', (string) $result->getExtraData('highlighted_fields', ['manu' => ['']])['manu'][0]);
       $this->assertEquals(['Technology'], $result->getExtraData('highlighted_keys', []));
       $this->assertEquals('… A-DATA <strong>Technology</strong> Inc. …', $result->getExcerpt());
     }

@@ -645,7 +645,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
       $this->assertEquals('en', $fields['ss_search_api_language']);
       $this->assertArrayHasKey('score', $fields);
       $this->assertArrayHasKey('tm_X3b_en_body', $fields);
-      $this->assertContains('search_index-entity:entity_test_mulrev_changed/3:en', $fields['id']);
+      $this->assertStringContainsString('search_index-entity:entity_test_mulrev_changed/3:en', $fields['id']);
       $this->assertEquals('3', $fields['its_id']);
       $this->assertArrayHasKey('twm_suggest', $fields);
     }
@@ -707,7 +707,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
     /** @var \Drupal\search_api\Item\ItemInterface $result */
     foreach ($results as $result) {
-      $this->assertContains('<strong>foobar</strong>', (string) $result->getExtraData('highlighted_fields', ['body' => ['']])['body'][0]);
+      $this->assertStringContainsString('<strong>foobar</strong>', (string) $result->getExtraData('highlighted_fields', ['body' => ['']])['body'][0]);
       $this->assertEquals(['foobar'], $result->getExtraData('highlighted_keys', []));
       $this->assertEquals('… bar … test <strong>foobar</strong> Case …', $result->getExcerpt());
     }
@@ -718,7 +718,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertEquals(1, $results->getResultCount(), 'Search for »foobar« returned correct number of results.');
     /** @var \Drupal\search_api\Item\ItemInterface $result */
     foreach ($results as $result) {
-      $this->assertContains('<strong>foobar</strong>', (string) $result->getExtraData('highlighted_fields', ['body' => ['']])['body'][0]);
+      $this->assertStringContainsString('<strong>foobar</strong>', (string) $result->getExtraData('highlighted_fields', ['body' => ['']])['body'][0]);
       $this->assertEquals(['foobar'], $result->getExtraData('highlighted_keys', []));
       $this->assertEquals('… bar … test <strong>foobar</strong> Case …', $result->getExcerpt());
     }
@@ -1335,21 +1335,21 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     foreach ($files as $file_name => $expected_strings) {
       $this->assertArrayHasKey($file_name, $config_files);
       foreach ($expected_strings as $string) {
-        $this->assertContains($string, $config_files[$file_name]);
+        $this->assertStringContainsString($string, $config_files[$file_name]);
       }
     }
 
     $config_name = 'name="drupal-' . SolrBackendInterface::SEARCH_API_SOLR_MIN_SCHEMA_VERSION . '-solr-' . $solr_major_version . '.x"';
-    $this->assertContains($config_name, $config_files['solrconfig.xml']);
-    $this->assertContains($config_name, $config_files['schema.xml']);
-    $this->assertContains('solr.luceneMatchVersion=' . $solr_major_version, $config_files['solrcore.properties']);
-    $this->assertContains($server->id(), $config_files['test.txt']);
-    $this->assertNotContains('<jmx />', $config_files['solrconfig_extra.xml']);
+    $this->assertStringContainsString($config_name, $config_files['solrconfig.xml']);
+    $this->assertStringContainsString($config_name, $config_files['schema.xml']);
+    $this->assertStringContainsString('solr.luceneMatchVersion=' . $solr_major_version, $config_files['solrcore.properties']);
+    $this->assertStringContainsString($server->id(), $config_files['test.txt']);
+    $this->assertStringNotContainsString('<jmx />', $config_files['solrconfig_extra.xml']);
     if ('true' === SOLR_CLOUD) {
-      $this->assertContains('<statsCache class="org.apache.solr.search.stats.LRUStatsCache" />', $config_files['solrconfig_extra.xml']);
+      $this->assertStringContainsString('<statsCache class="org.apache.solr.search.stats.LRUStatsCache" />', $config_files['solrconfig_extra.xml']);
     }
     else {
-      $this->assertNotContains('<statsCache', $config_files['solrconfig_extra.xml']);
+      $this->assertStringNotContainsString('<statsCache', $config_files['solrconfig_extra.xml']);
     }
 
     /*
@@ -1370,39 +1370,39 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $solr_configset_controller->setServer($server);
 
     $config_files = $solr_configset_controller->getConfigFiles();
-    $this->assertContains('<jmx />', $config_files['solrconfig_extra.xml']);
-    $this->assertNotContains('solr.install.dir', $config_files['solrcore.properties']);
-    $this->assertContains('text_en', $config_files['schema_extra_types.xml']);
-    $this->assertNotContains('text_foo_en', $config_files['schema_extra_types.xml']);
-    $this->assertNotContains('text_de', $config_files['schema_extra_types.xml']);
+    $this->assertStringContainsString('<jmx />', $config_files['solrconfig_extra.xml']);
+    $this->assertStringNotContainsString('solr.install.dir', $config_files['solrcore.properties']);
+    $this->assertStringContainsString('text_en', $config_files['schema_extra_types.xml']);
+    $this->assertStringNotContainsString('text_foo_en', $config_files['schema_extra_types.xml']);
+    $this->assertStringNotContainsString('text_de', $config_files['schema_extra_types.xml']);
     if (version_compare($solr_major_version, '7', '>=')) {
-      $this->assertNotContains('documentCache', $config_files['solrconfig_query.xml']);
-      $this->assertNotContains('filterCache', $config_files['solrconfig_query.xml']);
-      $this->assertContains('httpCaching', $config_files['solrconfig_requestdispatcher.xml']);
-      $this->assertContains('never304="true"', $config_files['solrconfig_requestdispatcher.xml']);
+      $this->assertStringNotContainsString('documentCache', $config_files['solrconfig_query.xml']);
+      $this->assertStringNotContainsString('filterCache', $config_files['solrconfig_query.xml']);
+      $this->assertStringContainsString('httpCaching', $config_files['solrconfig_requestdispatcher.xml']);
+      $this->assertStringContainsString('never304="true"', $config_files['solrconfig_requestdispatcher.xml']);
     }
     else {
-      $this->assertContains('httpCaching', $config_files['solrconfig.xml']);
-      $this->assertContains('never304="true"', $config_files['solrconfig.xml']);
+      $this->assertStringContainsString('httpCaching', $config_files['solrconfig.xml']);
+      $this->assertStringContainsString('never304="true"', $config_files['solrconfig.xml']);
     }
-    $this->assertContains('ts_X3b_en_*', $config_files['schema_extra_fields.xml']);
-    $this->assertNotContains('ts_X3b_de_*', $config_files['schema_extra_fields.xml']);
+    $this->assertStringContainsString('ts_X3b_en_*', $config_files['schema_extra_fields.xml']);
+    $this->assertStringNotContainsString('ts_X3b_de_*', $config_files['schema_extra_fields.xml']);
 
     /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
     $backend = $server->getBackend();
     if ($backend->getSolrConnector()->isCloud()) {
-      $this->assertNotContains('solr.replication', $config_files['solrcore.properties']);
-      $this->assertNotContains('"/replication"', $config_files[(version_compare($solr_major_version, '7', '>=')) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
-      $this->assertNotContains('"/get"', $config_files[(version_compare($solr_major_version, '7', '>=')) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
+      $this->assertStringNotContainsString('solr.replication', $config_files['solrcore.properties']);
+      $this->assertStringNotContainsString('"/replication"', $config_files[(version_compare($solr_major_version, '7', '>=')) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
+      $this->assertStringNotContainsString('"/get"', $config_files[(version_compare($solr_major_version, '7', '>=')) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
     }
     else {
-      $this->assertContains('solr.replication', $config_files['solrcore.properties']);
-      $this->assertContains('"/replication"', $config_files[(version_compare($solr_major_version, '7', '>=')) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
+      $this->assertStringContainsString('solr.replication', $config_files['solrcore.properties']);
+      $this->assertStringContainsString('"/replication"', $config_files[(version_compare($solr_major_version, '7', '>=')) ? 'solrconfig_extra.xml' : 'solrconfig.xml']);
       if (version_compare($solr_major_version, '7', '>=')) {
-        $this->assertNotContains('"/get"', $config_files['solrconfig_extra.xml']);
+        $this->assertStringNotContainsString('"/get"', $config_files['solrconfig_extra.xml']);
       }
       else {
-        $this->assertContains('"/get"', $config_files['solrconfig.xml']);
+        $this->assertStringContainsString('"/get"', $config_files['solrconfig.xml']);
       }
     }
   }
