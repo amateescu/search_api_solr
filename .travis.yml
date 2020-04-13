@@ -58,7 +58,7 @@ before_install:
   - mysql -e 'CREATE DATABASE drupal;'
   - patch -p1 < tests/travis_no_deps.patch
   - git commit -m 'no deps' search_api_solr.info.yml
-  - git tag 3.99
+  - git tag 4.99.0
 
 install:
   # Make sure we don't fail when checking out projects.
@@ -80,7 +80,7 @@ install:
       composer require --no-suggest --ignore-platform-reqs symfony/event-dispatcher:"4.3.4 as 3.4.99" drupal/composer_deploy
       composer run-script drupal-phpunit-upgrade
     fi
-  - composer require --no-suggest --ignore-platform-reqs solarium/solarium:"dev-master as 5.1.99" drupal/search_api:1.x-dev drupal/search_api_autocomplete:1.x-dev drupal/search_api_solr:3.99 drupal/facets:1.x-dev drush/drush:$DRUSH_VERSION drupal/drush_language:1.x-dev drupal/devel:3.x-dev monolog/monolog
+  - composer require --no-suggest --ignore-platform-reqs solarium/solarium:"dev-master as 6.0.99" drupal/search_api:1.x-dev drupal/search_api_autocomplete:1.x-dev drupal/search_api_solr:4.99.0 drupal/facets:1.x-dev drush/drush:$DRUSH_VERSION drupal/drush_language:1.x-dev drupal/devel:3.x-dev monolog/monolog
   # search_api_solr_location is not yet Drupal 9 ready
   # Solr 4 lacks the required features for search_api_location
   - |
