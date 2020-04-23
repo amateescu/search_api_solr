@@ -10,6 +10,7 @@ use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\Plugin\ConfigurablePluginBase;
 use Drupal\search_api\Plugin\PluginFormTrait;
 use Drupal\search_api_solr\SearchApiSolrException;
+use Drupal\search_api_solr\Solarium\Autocomplete\Query as AutocompleteQuery;
 use Drupal\search_api_solr\SolrConnectorInterface;
 use Solarium\Client;
 use Solarium\Component\ComponentAwareQueryInterface;
@@ -24,7 +25,6 @@ use Solarium\Exception\HttpException;
 use Solarium\QueryType\Extract\Result as ExtractResult;
 use Solarium\QueryType\Update\Query\Query as UpdateQuery;
 use Solarium\QueryType\Select\Query\Query;
-use Drupal\search_api_solr\Solarium\Autocomplete\Query as AutocompleteQuery;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -842,6 +842,29 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
         ->setType('param')
         ->setName('commitWithin')
         ->setValue($this->configuration['commit_within']);
+    }
+
+    return $this->execute($query, $endpoint);
+  }
+
+
+  /**
+   * {@inheritdoc}
+   */
+  public function autocomplete(AutocompleteQuery $query, ?Endpoint $endpoint = NULL) {
+    $this->connect();
+
+    if (!$endpoint) {
+      $endpoint = $this->solr->getEndpoint();
+    }
+
+    $this->useTimeout(self::QUERY_TIMEOUT, $endpoint);
+
+    // Use the 'postbigrequest' plugin if no specific http method is
+    // configured. The plugin needs to be loaded before the request is
+    // created.
+    if ($this->configuration['http_method'] === 'AUTO') {
+      $this->solr->getPlugin('postbigrequest');
     }
 
     return $this->execute($query, $endpoint);
