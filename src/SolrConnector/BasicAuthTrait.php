@@ -83,43 +83,6 @@ trait BasicAuthTrait {
   /**
    * {@inheritdoc}
    */
-  public function search(Query $query, Endpoint $endpoint = NULL) {
-    $this->connect();
-
-    if (!$endpoint) {
-      $endpoint = $this->solr->getEndpoint();
-    }
-
-    // Use the 'postbigrequest' plugin if no specific http method is
-    // configured. The plugin needs to be loaded before the request is
-    // created.
-    if ($this->configuration['http_method'] === 'AUTO') {
-      $this->solr->getPlugin('postbigrequest');
-    }
-
-    // Use the manual method of creating a Solarium request so we can control
-    // the HTTP method.
-    $request = $this->solr->createRequest($query);
-
-    // Set the configured HTTP method.
-    if ($this->configuration['http_method'] === 'POST') {
-      $request->setMethod(Request::METHOD_POST);
-    }
-    elseif ($this->configuration['http_method'] === 'GET') {
-      $request->setMethod(Request::METHOD_GET);
-    }
-
-    // Set HTTP Basic Authentication parameter, if login data was set.
-    if (strlen($this->configuration['username']) && strlen($this->configuration['password'])) {
-      $request->setAuthentication($this->configuration['username'], $this->configuration['password']);
-    }
-
-    return $this->executeRequest($request, $endpoint);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function viewSettings() {
     $vars = [
       '%user' => $this->configuration['username'],
