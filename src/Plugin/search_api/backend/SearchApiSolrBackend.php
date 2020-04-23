@@ -3329,7 +3329,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $suggestion_factory = new SuggestionFactory($user_input);
         $this->ensureLanguageCondition($query);
         $this->setAutocompleteTermQuery($query, $solarium_query, $incomplete_key);
-        $result = $this->getSolrConnector()->execute($solarium_query, $this->getCollectionEndpoint($query->getIndex()));
+        $result = $this->getSolrConnector()->search($solarium_query, $this->getCollectionEndpoint($query->getIndex()));
         $suggestions = $this->getAutocompleteTermSuggestions($result, $suggestion_factory, $incomplete_key);
         // Filter out duplicate suggestions.
         $this->filterDuplicateAutocompleteSuggestions($suggestions);
@@ -3445,7 +3445,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $this->setAutocompleteSpellCheckQuery($query, $solarium_query, $user_input);
         // Allow modules to alter the solarium autocomplete query.
         $this->moduleHandler->alter('search_api_solr_spellcheck_autocomplete_query', $solarium_query, $query);
-        $result = $this->getSolrConnector()->execute($solarium_query, $this->getCollectionEndpoint($query->getIndex()));
+        $result = $this->getSolrConnector()->search($solarium_query, $this->getCollectionEndpoint($query->getIndex()));
         $suggestions = $this->getAutocompleteSpellCheckSuggestions($result, $suggestion_factory);
         // Filter out duplicate suggestions.
         $this->filterDuplicateAutocompleteSuggestions($suggestions);
@@ -3471,7 +3471,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         $this->setAutocompleteSuggesterQuery($query, $solarium_query, $user_input, $options);
         // Allow modules to alter the solarium autocomplete query.
         $this->moduleHandler->alter('search_api_solr_suggester_autocomplete_query', $solarium_query, $query);
-        $result = $this->getSolrConnector()->execute($solarium_query, $this->getCollectionEndpoint($query->getIndex()));
+        $result = $this->getSolrConnector()->search($solarium_query, $this->getCollectionEndpoint($query->getIndex()));
         $suggestions = $this->getAutocompleteSuggesterSuggestions($result, $suggestion_factory);
         // Filter out duplicate suggestions.
         $this->filterDuplicateAutocompleteSuggestions($suggestions);
