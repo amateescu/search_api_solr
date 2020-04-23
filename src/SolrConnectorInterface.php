@@ -3,13 +3,13 @@
 namespace Drupal\search_api_solr;
 
 use Drupal\Component\Plugin\ConfigurableInterface;
+use Solarium\Component\ComponentAwareQueryInterface;
 use Solarium\Core\Client\Endpoint;
 use Solarium\Core\Client\Request;
 use Solarium\Core\Client\Response;
 use Solarium\Core\Query\QueryInterface;
 use Solarium\QueryType\Extract\Result as ExtractResult;
 use Solarium\QueryType\Update\Query\Query as UpdateQuery;
-use Solarium\QueryType\Select\Query\Query;
 
 /**
  * The Solr connector interface.
@@ -318,7 +318,7 @@ interface SolrConnectorInterface extends ConfigurableInterface {
   /**
    * Executes a search query and returns the raw response.
    *
-   * @param \Solarium\QueryType\Select\Query\Query $query
+   * @param \Solarium\Component\ComponentAwareQueryInterface $query
    *   The Solarium select query object.
    * @param \Solarium\Core\Client\Endpoint|null $endpoint
    *   (optional) The Solarium endpoint object.
@@ -328,7 +328,7 @@ interface SolrConnectorInterface extends ConfigurableInterface {
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public function search(Query $query, ?Endpoint $endpoint = NULL);
+  public function search(ComponentAwareQueryInterface $query, ?Endpoint $endpoint = NULL);
 
   /**
    * Creates a result from a response.
