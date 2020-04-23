@@ -1154,6 +1154,12 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       }
       $connector = $this->getSolrConnector();
       $update_query = $connector->getUpdateQuery();
+      // Delete documents by IDs (this would cover the case if this index
+      // contains stand-alone (childless) documents). And then also delete by
+      // _root_ field which assures children (nested) documents will be removed
+      // too. The field _root_ is assigned to the ID of the top-level document
+      // across an entire block of parent + children.
+      $update_query->addDeleteQuery('_root_:("' . implode('" OR "', $solr_ids) . '")');
       $update_query->addDeleteByIds($solr_ids);
       $connector->update($update_query, $this->getCollectionEndpoint($index));
       \Drupal::state()->set('search_api_solr.' . $index->id() . '.last_update', \Drupal::time()->getCurrentTime());
