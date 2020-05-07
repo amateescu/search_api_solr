@@ -204,16 +204,16 @@ Patches and Issues Workflow
 
 Our test suite includes integration tests that require a real Solr server. This
 requirement can't be provided by the drupal.org test infrastructure.
-Therefore we leverage travis for our tests and had to establish a more complex
-workflow:
+Therefore we leverage github workflows for our tests and had to establish a more
+complex workflow:
   1. open an issue on drupal.org as usual
   2. upload the patch for being reviewed to that issue on drupal.org as usual
   3. fork https://github.com/mkalkbrenner/search_api_solr
   4. apply your patch and file a PR on github
   5. add a link to the github PR to the drupal.org issue
 
-The PR on github will automatically be tested by travis and the test results will
-be reflected in the PR conversation.
+The PR on github will automatically be tested on github and the test results
+will be reflected in the PR conversation.
 
 Running the test suite locally
 ------------------------------
@@ -225,6 +225,10 @@ address:
 http://localhost:8983/solr/drupal
 ```
 This represents a core named "drupal" in a default installation of Solr.
+
+As long as you're changes don't modify the config-set generation you could
+leverage docker, too. You'll find ready to use docker-compose files in the
+`jump-start` directory.
 
 The tests themselves could be started by running something like this in your
 drupal folder:
