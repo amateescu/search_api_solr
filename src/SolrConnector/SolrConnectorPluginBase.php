@@ -485,6 +485,14 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getSchemaTargetedSolrBranch($reset = FALSE) {
+    $parts = explode('-', $this->getSchemaVersionString($reset));
+    return $parts[3];
+  }
+
+  /**
    * Gets data from a Solr endpoint using a given handler.
    *
    * @param string $handler

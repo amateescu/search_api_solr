@@ -104,7 +104,8 @@ class SearchApiSolrTechproductsTest extends SolrBackendTestBase {
   }
 
   /**
-   *
+   * @group not_solr4
+   * @group not_solr5
    */
   public function testStreamingExpressions() {
     if ('false' === SOLR_CLOUD) {

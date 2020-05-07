@@ -310,7 +310,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
     // Leverage the implicit Solr request handlers with default settings for
     // Solr Cloud.
     // @see https://lucene.apache.org/solr/guide/8_0/implicit-requesthandlers.html
-    if (6 !== $this->getSolrMajorVersion()) {
+    if (version_compare($this->getSolrMajorVersion(), '7', '>=')) {
       $files['solrconfig_extra.xml'] = preg_replace("@<requestHandler\s+name=\"/replication\".*?</requestHandler>@ms", '', $files['solrconfig_extra.xml']);
       $files['solrconfig_extra.xml'] = preg_replace("@<requestHandler\s+name=\"/get\".*?</requestHandler>@ms", '', $files['solrconfig_extra.xml']);
     }

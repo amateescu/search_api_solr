@@ -11,7 +11,7 @@ backend_config:
     host: localhost
     port: 8983
     path: /
-    core: d8
+    core: drupal
     timeout: 5
     index_timeout: 10
     optimize_timeout: 15

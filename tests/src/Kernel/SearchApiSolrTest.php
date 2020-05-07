@@ -995,7 +995,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertEquals('l', $suggestions[0]->getSuggestionSuffix());
     $this->assertEquals(2, $suggestions[0]->getResultsCount());
 
-    if (version_compare($solr_major_version, '5', '>=')) {
+    if ('4.x' !== $backend->getSolrConnector()->getSchemaTargetedSolrBranch()) {
       $query = $this->buildSearch(['articel'], [], ['body'], FALSE);
       $query->setLanguages(['en']);
       $suggestions = $backend->getSpellcheckSuggestions($query, $autocompleteSearch, 'articel', 'articel');

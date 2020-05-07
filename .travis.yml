@@ -56,7 +56,7 @@ before_install:
   - wget -nc --continue -v --tries=3 --directory-prefix=solr_downloads "http://archive.apache.org/dist/lucene/solr/${SOLR}/solr-${SOLR}.tgz"
   - tar -xzf solr_downloads/solr-${SOLR}.tgz
   - mysql -e 'CREATE DATABASE drupal;'
-  - patch -p1 < tests/travis_no_deps.patch
+  - patch -p1 < tests/no_deps.patch
   - git commit -m 'no deps' search_api_solr.info.yml
   - git tag 4.99.0
 
@@ -127,7 +127,6 @@ before_script:
   - ./vendor/bin/drush language-add nb
   - ./vendor/bin/drush language-add nl
   - ./vendor/bin/drush language-add nn
-  - ./vendor/bin/drush language-add no
   - ./vendor/bin/drush language-add pl
   - ./vendor/bin/drush language-add pt-pt
   - ./vendor/bin/drush language-add pt-br
@@ -166,30 +165,30 @@ before_script:
   - |
     if [ ${SOLR} == "4.5.1" ]; then
       cd $TRAVIS_BUILD_DIR/solr-${SOLR}/example
-      mkdir -p multicore/d8
-      unzip -o $TRAVIS_BUILD_DIR/../drupal/conf.zip -d multicore/d8/conf
-      # ls -lh multicore/d8/conf
-      cat multicore/d8/conf/*.xml
+      mkdir -p multicore/drupal
+      unzip -o $TRAVIS_BUILD_DIR/../drupal/conf.zip -d multicore/drupal/conf
+      # ls -lh multicore/drupal/conf
+      cat multicore/drupal/conf/*.xml
       java -Djetty.port=8983 -Dsolr.solr.home=multicore -jar start.jar > /dev/null 2>&1 &
       sleep 20
-      curl "http://localhost:8983/solr/admin/cores?action=CREATE&name=d8&instanceDir=d8&config=solrconfig.xml&schema=schema.xml&dataDir=data"
+      curl "http://localhost:8983/solr/admin/cores?action=CREATE&name=drupal&instanceDir=drupal&config=solrconfig.xml&schema=schema.xml&dataDir=data"
       tail logs/*
       cd -
     else
-      mkdir -p $TRAVIS_BUILD_DIR/solr-${SOLR}/server/solr/d8/conf
-      unzip -o conf.zip -d $TRAVIS_BUILD_DIR/solr-${SOLR}/server/solr/d8/conf
-      # ls -lh $TRAVIS_BUILD_DIR/solr-${SOLR}/server/solr/d8/conf
-      cat $TRAVIS_BUILD_DIR/solr-${SOLR}/server/solr/d8/conf/*.xml
+      mkdir -p $TRAVIS_BUILD_DIR/solr-${SOLR}/server/solr/drupal/conf
+      unzip -o conf.zip -d $TRAVIS_BUILD_DIR/solr-${SOLR}/server/solr/drupal/conf
+      # ls -lh $TRAVIS_BUILD_DIR/solr-${SOLR}/server/solr/drupal/conf
+      cat $TRAVIS_BUILD_DIR/solr-${SOLR}/server/solr/drupal/conf/*.xml
       if [ ${SOLR_CLOUD} == "true" ]; then
         $TRAVIS_BUILD_DIR/solr-${SOLR}/bin/solr start -e cloud -noprompt || travis_terminate 1;
         $TRAVIS_BUILD_DIR/solr-${SOLR}/bin/solr delete -c gettingstarted || travis_terminate 1;
         $TRAVIS_BUILD_DIR/solr-${SOLR}/bin/solr create -c techproducts -s 2 -rf 2 -d $TRAVIS_BUILD_DIR/solr-${SOLR}/server/solr/configsets/sample_techproducts_configs/conf -n sample_techproducts_configs || travis_terminate 1;
         $TRAVIS_BUILD_DIR/solr-${SOLR}/bin/post -c techproducts $TRAVIS_BUILD_DIR/solr-${SOLR}/example/exampledocs/*.xml || travis_terminate 1;
-        $TRAVIS_BUILD_DIR/solr-${SOLR}/bin/solr create -c d8 -s 2 -rf 2 -d $TRAVIS_BUILD_DIR/solr-${SOLR}/server/solr/d8/conf -n d8 || travis_terminate 1;
+        $TRAVIS_BUILD_DIR/solr-${SOLR}/bin/solr create -c drupal -s 2 -rf 2 -d $TRAVIS_BUILD_DIR/solr-${SOLR}/server/solr/drupal/conf -n drupal || travis_terminate 1;
         $TRAVIS_BUILD_DIR/solr-${SOLR}/bin/solr create -c checkpoints -s 1 -rf 2 || travis_terminate 1;
       else
         $TRAVIS_BUILD_DIR/solr-${SOLR}/bin/solr start -e techproducts || travis_terminate 1;
-        $TRAVIS_BUILD_DIR/solr-${SOLR}/bin/solr create -c d8 -d $TRAVIS_BUILD_DIR/solr-${SOLR}/server/solr/d8/conf || travis_terminate 1;
+        $TRAVIS_BUILD_DIR/solr-${SOLR}/bin/solr create -c drupal -d $TRAVIS_BUILD_DIR/solr-${SOLR}/server/solr/drupal/conf || travis_terminate 1;
       fi
     fi
 script:
@@ -198,9 +197,9 @@ script:
   - vendor/bin/phpunit --version
   - |
     if [ ${SOLR} == "4.5.1" ]; then
-      vendor/bin/phpunit -c core --group search_api_solr --exclude-group min_solr_5 modules/contrib/search_api_solr
+      vendor/bin/phpunit -c core --group search_api_solr --exclude-group not_solr4 modules/contrib/search_api_solr
     elif [ ${DRUPAL} == "9.0.x" ]; then
-      vendor/bin/phpunit -c core --group search_api_solr --exclude-group not_drupal_9_ready modules/contrib/search_api_solr
+      vendor/bin/phpunit -c core --group search_api_solr --exclude-group not_drupal9 modules/contrib/search_api_solr
     else
       vendor/bin/phpunit -c core --group search_api_solr modules/contrib/search_api_solr
     fi

@@ -153,6 +153,19 @@ interface SolrConnectorInterface extends ConfigurableInterface {
   public function getSchemaVersion($reset = FALSE);
 
   /**
+   * Gets the Solr branch trageted by the schema.
+   *
+   * @param bool $reset
+   *   If TRUE the server will be asked regardless if a previous call is cached.
+   *
+   * @return string
+   *   The targeted Solr branch.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   */
+  public function getSchemaTargetedSolrBranch($reset = FALSE);
+
+  /**
    * Pings the Solr core to tell whether it can be accessed.
    *
    * @param array $options

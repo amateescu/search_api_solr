@@ -96,7 +96,7 @@ class StreamingExpressionTest extends KernelTestBase {
       );
 
     $this->assertEquals(
-      'select(search(d8, q=ss_search_api_datasource:entity\:entity_test_mulrev_changed, fq="+index_id:server_prefixindex_prefixsolr_search_index +hash:' . Utility::getSiteHash() . '", fl="tm_X3b_und_name,tm_X3b_und_body,ds_created", sort="ds_created DESC", qt="/export"), tm_X3b_und_name,tm_X3b_und_body)',
+      'select(search(drupal, q=ss_search_api_datasource:entity\:entity_test_mulrev_changed, fq="+index_id:server_prefixindex_prefixsolr_search_index +hash:' . Utility::getSiteHash() . '", fl="tm_X3b_und_name,tm_X3b_und_body,ds_created", sort="ds_created DESC", qt="/export"), tm_X3b_und_name,tm_X3b_und_body)',
       $streaming_expression
     );
   }
