@@ -1,0 +1,10 @@
+diff --git a/search_api_solr.info.yml b/search_api_solr.info.yml
+index 1dc0335c..3e75b8fa 100644
+--- a/search_api_solr.info.yml
++++ b/search_api_solr.info.yml
+@@ -6,4 +6,4 @@ php: 7.1.3
+ package: Search
+ dependencies:
+   - drupal:language
+-  - search_api:search_api (>=8.x-1.15)
++  - search_api:search_api
