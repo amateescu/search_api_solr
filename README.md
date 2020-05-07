@@ -12,14 +12,6 @@ cd $DRUPAL
 composer require drupal/search_api_solr
 ```
 
-**Warning!** Unless https://www.drupal.org/project/drupal/issues/2876675 is
-committed to Drupal Core and released you need to modify the composer command:
-
-```
-cd $DRUPAL
-composer require symfony/event-dispatcher:"4.3.4 as 3.4.99" drupal/search_api_solr
-```
-
 Solr
 ====
 
@@ -286,15 +278,14 @@ the "Solr dummy fields" processor and add as many dummy fields to the index as
 you require. Afterwards you should manipulate these fields via API.
 
 Support
--------
+=======
 
 Support is currently provided via our
 [issue queue](https://www.drupal.org/project/issues/search_api_solr?version=8.x)
 or on https://drupalchat.me/channel/search.
 
-Developers
-----------
-
+Development
+===========
 Whenever you need to enhance the functionality you should do it using the API
 instead of extending the SearchApiSolrBackend class!
 
