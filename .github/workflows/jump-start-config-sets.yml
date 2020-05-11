@@ -3,6 +3,9 @@ name: Jump Start Config-Sets
 on:
     push:
 
+    schedule:
+        - cron: '0 8 * * *' # run at 08:00 UTC
+
 jobs:
     generate-config-sets:
         runs-on: ubuntu-latest
