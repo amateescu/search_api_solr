@@ -3,7 +3,7 @@
     "description": "Offers an implementation of the Search API that uses an Apache Solr server for indexing content.",
     "type": "drupal-module",
     "homepage": "https://www.drupal.org/project/search_api_solr",
-    "license": "GPL-2.0+",
+    "license": "GPL-2.0-or-later",
     "authors": [
         {
             "name": "Markus Kalkbrenner",
@@ -16,7 +16,7 @@
     ],
     "support": {
         "issues": "https://www.drupal.org/project/issues/search_api_solr",
-        "irc": "https://drupalchat.me/channel/search",
+        "chat": "https://drupalchat.me/channel/search",
         "source": "http://git.drupal.org/project/search_api_solr.git"
     },
     "require": {
