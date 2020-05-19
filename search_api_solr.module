@@ -17,7 +17,7 @@ use Drupal\search_api_solr\Form\IndexSolrMultisiteCloneForm;
 use Drupal\search_api_solr\Form\IndexSolrMultisiteUpdateForm;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\Utility\Utility;
-use Zend\Stdlib\ArrayUtils;
+use Laminas\Stdlib\ArrayUtils;
 
 /**
  * Implements hook_help().
