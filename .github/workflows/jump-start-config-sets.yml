@@ -22,7 +22,7 @@ jobs:
               with:
                 php-version: 7.3
                 extensions: dom, curl, libxml, mbstring, zip, pdo, sqlite, pdo_sqlite, bcmath, intl, gd, iconv, json, simplexml
-                ini-values: memory_limit=256M,post_max_size=256M
+                ini-values: memory_limit=512M,post_max_size=512M
                 coverage: none
 
             - name: Checkout drupal
@@ -143,7 +143,7 @@ jobs:
               with:
                 php-version: 7.3
                 extensions: dom, curl, libxml, mbstring, zip, pdo, sqlite, pdo_sqlite, bcmath, intl, gd, iconv, json, simplexml
-                ini-values: memory_limit=256M,post_max_size=256M
+                ini-values: memory_limit=512M,post_max_size=512M
                 coverage: none
 
             - uses: actions/download-artifact@v2
@@ -226,7 +226,7 @@ jobs:
               with:
                 php-version: 7.3
                 extensions: dom, curl, libxml, mbstring, zip, pdo, sqlite, pdo_sqlite, bcmath, intl, gd, iconv, json, simplexml
-                ini-values: memory_limit=256M,post_max_size=256M
+                ini-values: memory_limit=512M,post_max_size=512M
                 coverage: none
 
             - uses: actions/download-artifact@v2
