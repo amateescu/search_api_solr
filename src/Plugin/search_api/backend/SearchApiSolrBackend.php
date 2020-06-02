@@ -1762,8 +1762,14 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
       }
       if ($returned_fields) {
+        // Flatten $returned_fields.
         $highlight_fields = array_unique(array_merge(...$returned_fields));
+        // Ensure that required fields are returned.
         $returned_fields = array_unique(array_merge($highlight_fields, $required_fields));
+        // Just highlight string and text fields to avoid Solr exceptions.
+        $highlight_fields = array_filter($highlight_fields, function($v) {
+          return preg_match('/^t.?[sm]_/', $v) || preg_match('/^s[sm]_/', $v);
+        });
       }
       // ... Otherwise return all fields and score.
       else {
