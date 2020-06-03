@@ -3,6 +3,8 @@ name: Jump Start Config-Sets
 on:
     push:
 
+    pull_request:
+
     schedule:
         - cron: '0 8 * * *' # run at 08:00 UTC
 
@@ -11,6 +13,9 @@ jobs:
         runs-on: ubuntu-latest
 
         name: Generate Solr jump-start config-sets
+
+        env:
+          COMPOSER_MEMORY_LIMIT: -1
 
         steps:
             - name: Setup sqlite
@@ -22,7 +27,7 @@ jobs:
               with:
                 php-version: 7.3
                 extensions: dom, curl, libxml, mbstring, zip, pdo, sqlite, pdo_sqlite, bcmath, intl, gd, iconv, json, simplexml
-                ini-values: memory_limit=512M,post_max_size=512M
+                ini-values: memory_limit=256M,post_max_size=256M
                 coverage: none
 
             - name: Checkout drupal
@@ -133,6 +138,9 @@ jobs:
 
         name: Test Drupal 8.8 with Solr ${{ matrix.solr }}
 
+        env:
+          COMPOSER_MEMORY_LIMIT: -1
+
         steps:
             - name: Setup sqlite
               run: |
@@ -143,7 +151,7 @@ jobs:
               with:
                 php-version: 7.3
                 extensions: dom, curl, libxml, mbstring, zip, pdo, sqlite, pdo_sqlite, bcmath, intl, gd, iconv, json, simplexml
-                ini-values: memory_limit=512M,post_max_size=512M
+                ini-values: memory_limit=256M,post_max_size=256M
                 coverage: none
 
             - uses: actions/download-artifact@v2
@@ -214,6 +222,9 @@ jobs:
 
         name: Test Drupal 9.0 with Solr ${{ matrix.solr }}
 
+        env:
+          COMPOSER_MEMORY_LIMIT: -1
+
         steps:
             - name: Setup sqlite
               run: |
@@ -226,7 +237,7 @@ jobs:
               with:
                 php-version: 7.3
                 extensions: dom, curl, libxml, mbstring, zip, pdo, sqlite, pdo_sqlite, bcmath, intl, gd, iconv, json, simplexml
-                ini-values: memory_limit=512M,post_max_size=512M
+                ini-values: memory_limit=256M,post_max_size=256M
                 coverage: none
 
             - uses: actions/download-artifact@v2
