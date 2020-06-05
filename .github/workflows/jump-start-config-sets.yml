@@ -187,7 +187,7 @@ jobs:
                 composer global require hirak/prestissimo
                 cd drupal
                 composer config repositories.search_api_solr '{"type": "vcs", "url": "../search_api_solr"}'
-                composer require symfony/event-dispatcher:"4.3.4 as 3.4.99" drupal/search_api_solr:4.99.0 drupal/search_api_autocomplete drupal/facets drupal/devel drupal/geofield drupal/search_api_location drush/drush monolog/monolog --ignore-platform-reqs --no-interaction --no-suggest
+                composer require drupal/search_api_solr:4.99.0 drupal/search_api_autocomplete drupal/facets drupal/devel drupal/geofield drupal/search_api_location drush/drush monolog/monolog --ignore-platform-reqs --no-interaction --no-suggest
                 composer run-script drupal-phpunit-upgrade
 
             - name: Create Solr collections
@@ -266,10 +266,6 @@ jobs:
             - name: Tag search_api_solr
               run: |
                 cd search_api_solr
-                patch -p1 < tests/no_deps.patch
-                git config --local user.email "action@github.com"
-                git config --local user.name "GitHub Action"
-                git commit -m 'no deps' search_api_solr.info.yml
                 git tag 4.99.0
 
             - name: Install dependencies

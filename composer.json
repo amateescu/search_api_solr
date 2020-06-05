@@ -24,10 +24,10 @@
         "ext-dom": "*",
         "ext-json": "*",
         "ext-simplexml": "*",
-        "drupal/search_api": "~1.15",
+        "drupal/search_api": "~1.17",
         "consolidation/annotated-command": "^2.12|^4.1",
         "maennchen/zipstream-php": "^1.2|^2.0",
-        "solarium/solarium": "~5.0.3|~5.1.5|~5.2.0|~6.0.0",
+        "solarium/solarium": "^6.0",
         "laminas/laminas-stdlib": "^3.2"
     },
     "require-dev": {

@@ -11,6 +11,7 @@ use Drupal\search_api\Plugin\ConfigurablePluginBase;
 use Drupal\search_api\Plugin\PluginFormTrait;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\Solarium\Autocomplete\Query as AutocompleteQuery;
+use Drupal\search_api_solr\Solarium\EventDispatcher\Psr14Bridge;
 use Drupal\search_api_solr\SolrConnectorInterface;
 use Solarium\Client;
 use Solarium\Core\Client\Adapter\Curl;
@@ -81,7 +82,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $plugin = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
-    $plugin->eventDispatcher = $container->get('event_dispatcher');
+    $plugin->eventDispatcher = new Psr14Bridge();
 
     return $plugin;
   }
@@ -845,10 +846,12 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       // @see http://wiki.apache.org/solr/NearRealtimeSearch
       /** @var \Solarium\Plugin\CustomizeRequest\CustomizeRequest $request */
       $request = $this->customizeRequest();
-      $request->createCustomization('id')
-        ->setType('param')
-        ->setName('commitWithin')
-        ->setValue($this->configuration['commit_within']);
+      if (!$request->getCustomization('commitWithin')) {
+        $request->createCustomization('commitWithin')
+          ->setType('param')
+          ->setName('commitWithin')
+          ->setValue($this->configuration['commit_within']);
+      }
     }
 
     return $this->execute($query, $endpoint);
