@@ -1509,7 +1509,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         // in a backward compatible way.
         // @see https://lucene.apache.org/solr/guide/7_2/solr-upgrade-notes.html#solr-7-2
         if ($edismax) {
-          $parse_mode_id = $query->getParseMode()->getPluginId();
+          $parse_mode = $query->getParseMode();
+          $parse_mode_id = $parse_mode->getPluginId();
           /** @var \Solarium\Core\Query\AbstractQuery $solarium_query */
           $params = $solarium_query->getParams();
           // Extract keys.
@@ -1544,7 +1545,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
               // @todo Remove condition together with search_api_solr_legacy.
               if (version_compare($connector->getSolrMajorVersion(), '6', '>=')) {
                 // Since Solr 6 we could use payload_score!
-                $flatten_query[] = Utility::flattenKeysToPayloadScore($keys, $parse_mode_id);
+                $flatten_query[] = Utility::flattenKeysToPayloadScore($keys, $parse_mode);
               }
             }
           }

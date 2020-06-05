@@ -5,6 +5,7 @@ namespace Drupal\search_api_solr\Utility;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\search_api\IndexInterface;
+use Drupal\search_api\ParseMode\ParseModeInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\Entity\SolrCache;
@@ -486,7 +487,7 @@ class Utility {
     foreach ($parameters as $parameter) {
       if ($parameter) {
         if (strpos($parameter, '=')) {
-          list($name, $value) = explode('=', $parameter);
+          [$name, $value] = explode('=', $parameter);
           $params[urldecode($name)][] = urldecode($value);
         }
         else {
@@ -842,74 +843,81 @@ class Utility {
    * @param array|string $keys
    *   The keys array to flatten, formatted as specified by
    *   \Drupal\search_api\Query\QueryInterface::getKeys() or a phrase string.
-   * @param string $parse_mode_id
-   *   (optional) The parse mode ID. Defaults to "phrase".
+   * @param ParseModeInterface $parse_mode
+   *   (optional) The parse mode. Defaults to "terms" if null.
    *
    * @return string
    *   A Solr query string representing the same keys.
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public static function flattenKeysToPayloadScore($keys, string $parse_mode_id = 'phrase'): string {
-    $k = [];
+  public static function flattenKeysToPayloadScore($keys, ?ParseModeInterface $parse_mode = NULL): string {
     $payload_scores = [];
+    $conjunction = $parse_mode ? $parse_mode->getConjunction() : 'OR';
+    if ('OR' === $conjunction) {
+      $parse_mode_id = $parse_mode ? $parse_mode->getPluginId() : 'terms';
+      $k = [];
 
-    if (is_array($keys)) {
-      $queryHelper = \Drupal::service('solarium.query_helper');
+      if (is_array($keys)) {
+        $queryHelper = \Drupal::service('solarium.query_helper');
 
-      $escaped = $keys['#escaped'] ?? FALSE;
+        $escaped = $keys['#escaped'] ?? FALSE;
 
-      foreach ($keys as $key_nr => $key) {
-        if (!$key || strpos($key_nr, '#') === 0) {
-          continue;
-        }
-        if (is_array($key)) {
-          if ($subkeys = self::flattenKeysToPayloadScore($key, $parse_mode_id)) {
-            $payload_scores[] = $subkeys;
+        foreach ($keys as $key_nr => $key) {
+          if (!$key || strpos($key_nr, '#') === 0) {
+            continue;
           }
-        }
-        elseif ($escaped) {
-          $k[] = trim($key);
-        }
-        else {
-          switch ($parse_mode_id) {
-            case 'terms':
-            case "sloppy_terms":
-            case 'phrase':
-            case "sloppy_phrase":
-            case 'edismax':
-              $k[] = $queryHelper->escapePhrase(trim($key));
-              break;
+          if (is_array($key)) {
+            if ($subkeys = self::flattenKeysToPayloadScore($key, $parse_mode)) {
+              $payload_scores[] = $subkeys;
+            }
+          }
+          elseif ($escaped) {
+            $k[] = trim($key);
+          }
+          else {
+            switch ($parse_mode_id) {
+              case 'terms':
+              case "sloppy_terms":
+              case 'edismax':
+                $k[] = $queryHelper->escapePhrase(trim($key));
+                break;
 
-            default:
-              throw new SearchApiSolrException('Incompatible parse mode.');
+              case 'phrase':
+              case "sloppy_phrase":
+                // It makes no sense to search for a phrase within the
+                // boost_terms.
+                break;
+
+              default:
+                throw new SearchApiSolrException('Incompatible parse mode.');
+            }
           }
         }
       }
-    }
-    elseif (is_string($keys)) {
-      switch ($parse_mode_id) {
-        case 'direct':
-          // NOP.
-          break;
+      elseif (is_string($keys)) {
+        switch ($parse_mode_id) {
+          case 'direct':
+            // NOP.
+            break;
 
-        default:
-          throw new SearchApiSolrException('Incompatible parse mode.');
+          default:
+            throw new SearchApiSolrException('Incompatible parse mode.');
+        }
+      }
+
+      // See the boost_term_payload field type in schema.xml. If we send shorter
+      // or larger keys then defined by solr.LengthFilterFactory we'll trigger a
+      // "SpanQuery is null" exception.
+      $k = array_filter($k, function ($v) {
+        $v = trim($v, '"');
+        return (mb_strlen($v) >= 2) && (mb_strlen($v) <= 100);
+      });
+
+      if ($k) {
+        $payload_scores[] = ' {!payload_score f=boost_term v=' . implode(' func=max} {!payload_score f=boost_term v=', $k) . ' func=max}';
       }
     }
-
-    // See the boost_term_payload field type in schema.xml. If we send shorter
-    // or larger keys then defined by solr.LengthFilterFactory we'll trigger a
-    // "SpanQuery is null" exception.
-    $k = array_filter($k, function ($v) {
-      $v = trim($v, '"');
-      return (mb_strlen($v) >= 2) && (mb_strlen($v) <= 100);
-    });
-
-    if ($k) {
-      $payload_scores[] = ' {!payload_score f=boost_term v=' . implode(' func=max} {!payload_score f=boost_term v=', $k) . ' func=max}';
-    }
-
     return implode('', $payload_scores);
   }
 
