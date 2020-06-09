@@ -134,7 +134,7 @@ jobs:
 
         strategy:
             matrix:
-                drupal: ['8.8', '9.0']
+                drupal: ['8.9', '9.0']
                 solr: ['4', '5', '6', '7', '8']
 
         name: Drupal ${{ matrix.drupal }} with Solr ${{ matrix.solr }}
@@ -194,7 +194,7 @@ jobs:
                 composer run-script drupal-phpunit-upgrade
 
             - name: Install search_api_location
-              if: matrix.drupal == '8.8'
+              if: matrix.drupal != '9.0'
               run: |
                 cd drupal
                 composer require drupal/search_api_location
