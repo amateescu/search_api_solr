@@ -154,6 +154,9 @@ The "direct" parse mode for queries will result in the keys being directly used
 as the query to Solr using the
 [Standard Parse Mode](https://lucene.apache.org/solr/guide/7_2/the-standard-query-parser.html).
 
+Adding Devel module (and optionally, addons like Kint) provides the site with
+a Solr Query Debugger and shows how content gets indexed.
+
 Regarding third-party features, the following are supported:
 
 - autocomplete
