@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\search_api_solr\Kernel\Processor;
 
+use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api_solr\Utility\SolrCommitTrait;
 use Monolog\Handler\StreamHandler;
@@ -32,6 +33,8 @@ trait SolrBackendTrait {
     $this->installConfig([
       'devel',
     ]);
+
+    $this->container->get('stream_wrapper_manager')->registerWrapper('temporary', 'Drupal\Core\StreamWrapper\TemporaryStream', StreamWrapperInterface::LOCAL_NORMAL);
 
     $config = '/config/install/search_api.server.solr_search_server' . ('true' === SOLR_CLOUD ? '_cloud' : '') . '.yml';
     $this->server = Server::create(
