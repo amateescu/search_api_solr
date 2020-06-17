@@ -31,10 +31,8 @@ class HtmlFilterTest extends ProcessorTestBase {
    * {@inheritdoc}
    */
   public static $modules = [
-    'devel',
     'filter',
     'search_api_solr',
-    'search_api_solr_devel',
     'search_api_solr_test',
   ];
 

@@ -30,12 +30,6 @@ trait SolrBackendTrait {
    * This function has to be called from the test setUp() function.
    */
   protected function enableSolrServer() {
-    $this->installConfig([
-      'devel',
-    ]);
-
-    $this->container->get('stream_wrapper_manager')->registerWrapper('temporary', 'Drupal\Core\StreamWrapper\TemporaryStream', StreamWrapperInterface::LOCAL_NORMAL);
-
     $config = '/config/install/search_api.server.solr_search_server' . ('true' === SOLR_CLOUD ? '_cloud' : '') . '.yml';
     $this->server = Server::create(
       Yaml::parse(file_get_contents(
@@ -52,10 +46,6 @@ trait SolrBackendTrait {
       ->getStorage('search_api_index');
     $index_storage->resetCache([$this->index->id()]);
     $this->index = $index_storage->load($this->index->id());
-
-    $logger = new Logger('search_api_solr');
-    $logger->pushHandler(new StreamHandler(TRAVIS_BUILD_DIR . '/solr.query.log', Logger::DEBUG));
-    \Drupal::service('search_api_solr_devel.solarium_request_logger')->setLogger($logger);
   }
 
   /**
