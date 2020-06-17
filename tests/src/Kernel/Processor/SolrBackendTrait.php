@@ -9,18 +9,12 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Symfony\Component\Yaml\Yaml;
 
-defined('TRAVIS_BUILD_DIR') || define('TRAVIS_BUILD_DIR', getenv('TRAVIS_BUILD_DIR') ?: '.');
 defined('SOLR_CLOUD') || define('SOLR_CLOUD', getenv('SOLR_CLOUD') ?: 'false');
 
 /**
  * Helper to exchange the DB backend for a Solr backend in processor tests.
  */
 trait SolrBackendTrait {
-
-  /**
-   * @var \Psr\Log\LoggerInterface
-   */
-  protected $travisLogger;
 
   use SolrCommitTrait;
 

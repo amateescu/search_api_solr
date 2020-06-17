@@ -10,7 +10,6 @@ use Drupal\search_api_solr\Utility\SolrCommitTrait;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 
-defined('TRAVIS_BUILD_DIR') || define('TRAVIS_BUILD_DIR', getenv('TRAVIS_BUILD_DIR') ?: '.');
 defined('SOLR_CLOUD') || define('SOLR_CLOUD', getenv('SOLR_CLOUD') ?: 'false');
 
 /**

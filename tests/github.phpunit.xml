@@ -52,7 +52,6 @@
     <!-- The Symfony deprecation listener has to come after the Drupal listener -->
     <listener class="Symfony\Bridge\PhpUnit\SymfonyTestsListener">
     </listener>
-    <listener class="\Drupal\Tests\search_api_solr\TravisLogEventListener" file="./modules/contrib/search_api_solr/tests/src/TravisLogEventListener.php">
     </listener>
   </listeners>
   <!-- Filter for coverage reports. -->
