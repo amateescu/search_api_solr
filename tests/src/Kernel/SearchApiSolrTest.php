@@ -381,14 +381,14 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->addCondition('id', 5, '=');
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
     $this->assertEquals('its_id:"5"', $fq[0]['query']);
-    $this->assertFalse(isset($fq[1]));
+    $this->assertArrayNotHasKey(1, $fq);
 
     $query = $this->buildSearch();
     $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
     $query->addCondition('id', 5, '<>');
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
     $this->assertEquals('(*:* -its_id:"5")', $fq[0]['query']);
-    $this->assertFalse(isset($fq[1]));
+    $this->assertArrayNotHasKey(1, $fq);
 
     $query = $this->buildSearch();
     $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
@@ -406,7 +406,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
     $this->assertEquals('(+(*:* -its_id:"3") +(*:* -its_id:"5"))', $fq[0]['query']);
-    $this->assertFalse(isset($fq[1]));
+    $this->assertArrayNotHasKey(1, $fq);
 
     $query = $this->buildSearch();
     $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
@@ -417,7 +417,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
     $this->assertEquals('(+(*:* -its_id:"5") +ss_type:"3" +ss_category:"7")', $fq[0]['query']);
-    $this->assertFalse(isset($fq[1]));
+    $this->assertArrayNotHasKey(1, $fq);
 
     $query = $this->buildSearch();
     $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
@@ -430,7 +430,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
     $this->assertEquals('(+(*:* -its_id:"5") +(ss_type:"3" ss_category:"7"))', $fq[0]['query']);
-    $this->assertFalse(isset($fq[1]));
+    $this->assertArrayNotHasKey(1, $fq);
 
     // Condition groups with null value queries are special snowflakes.
     // @see https://www.drupal.org/node/2888629
@@ -445,7 +445,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
     $this->assertEquals('(+(*:* -its_id:"5") +(ss_type:"3" (*:* -ss_category:[* TO *])))', $fq[0]['query']);
-    $this->assertFalse(isset($fq[1]));
+    $this->assertArrayNotHasKey(1, $fq);
 
     $query = $this->buildSearch();
     $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
@@ -462,7 +462,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
     $this->assertEquals('(+(its_id:"3" (*:* -ss_type:"7")) +(+its_id:"1" +(*:* -ss_type:"2") +ss_category:{* TO "5"}))', $fq[0]['query']);
-    $this->assertFalse(isset($fq[1]));
+    $this->assertArrayNotHasKey(1, $fq);
 
     $query = $this->buildSearch();
     $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
@@ -472,7 +472,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
     $this->assertEquals('(+its_id:"5" +(*:* -ss_type:("1" "2" "3")))', $fq[0]['query']);
-    $this->assertFalse(isset($fq[1]));
+    $this->assertArrayNotHasKey(1, $fq);
 
     $query = $this->buildSearch();
     $query->setLanguages([LanguageInterface::LANGCODE_NOT_SPECIFIED]);
@@ -484,7 +484,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
     $this->assertEquals('(+its_id:"5" +(*:* -ss_type:("1" "2" "3")))', $fq[0]['query']);
-    $this->assertFalse(isset($fq[1]));
+    $this->assertArrayNotHasKey(1, $fq);
 
     // Test tagging of a single filter query of a facet query.
     $query = $this->buildSearch();
@@ -537,7 +537,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->addCondition('id', 5, '=');
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
     $this->assertEquals('its_id:"5"', $fq[0]['query']);
-    $this->assertFalse(isset($fq[1]));
+    $this->assertArrayNotHasKey(1, $fq);
 
     $query = $this->buildSearch();
     $query->setLanguages(['en', 'de']);
@@ -549,7 +549,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
     $this->assertEquals('(+its_id:"5" +(*:* -ss_type:("1" "2" "3")))', $fq[0]['query']);
-    $this->assertFalse(isset($fq[1]));
+    $this->assertArrayNotHasKey(1, $fq);
 
     $query = $this->buildSearch();
     $query->setLanguages(['en']);
@@ -562,14 +562,14 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->addConditionGroup($condition_group);
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
     $this->assertEquals('(+its_id:"5" +ss_search_api_language:"de" +(*:* -ss_type:("1" "2" "3")))', $fq[0]['query']);
-    $this->assertFalse(isset($fq[1]));
+    $this->assertArrayNotHasKey(1, $fq);
 
     $query = $this->buildSearch();
     $query->setLanguages(['en']);
     $query->addCondition('body', 'some text', '=');
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
     $this->assertEquals('tm_X3b_en_body:("some text")', $fq[0]['query']);
-    $this->assertFalse(isset($fq[1]));
+    $this->assertArrayNotHasKey(1, $fq);
 
     $parse_mode_manager = \Drupal::service('plugin.manager.search_api.parse_mode');
     $parse_mode_phrase = $parse_mode_manager->createInstance('phrase');
@@ -580,7 +580,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->addCondition('body', 'some text', '=');
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
     $this->assertEquals('tm_X3b_en_body:("some text")', $fq[0]['query']);
-    $this->assertFalse(isset($fq[1]));
+    $this->assertArrayNotHasKey(1, $fq);
 
     $query = $this->buildSearch();
     $query->setLanguages(['en']);
@@ -588,7 +588,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $query->addCondition('body', ['some', 'text'], '=');
     $fq = $this->invokeMethod($backend, 'getFilterQueries', [$query, &$options]);
     $this->assertEquals('tm_X3b_en_body:("some" "text")', $fq[0]['query']);
-    $this->assertFalse(isset($fq[1]));
+    $this->assertArrayNotHasKey(1, $fq);
   }
 
   /**
