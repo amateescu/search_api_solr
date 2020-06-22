@@ -178,7 +178,12 @@ function search_api_solr_requirements($phase) {
           }
 
           if (!empty($new_config_set)) {
-            $server_files_list = SearchApiSolrUtility::getServerFiles($server);
+            try {
+              $server_files_list = SearchApiSolrUtility::getServerFiles($server);
+            }
+            catch(SearchApiSolrException $e) {
+              $server_files_list = [];
+            }
             // The files that are already on the server.
             $server_file_names = array_keys($server_files_list);
             $new_config_file_names = array_keys($new_config_set);
