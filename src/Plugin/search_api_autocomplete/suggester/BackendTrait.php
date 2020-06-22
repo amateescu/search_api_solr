@@ -25,17 +25,18 @@ trait BackendTrait {
    */
   protected static function getBackend(IndexInterface $index) {
     try {
-      if (!$index->hasValidServer()) {
-        return NULL;
-      }
-      $server = $index->getServerInstance();
-      $backend = $server->getBackend();
-      if ($backend instanceof SolrAutocompleteInterface && $server->supportsFeature('search_api_autocomplete')) {
+      if (
+        $index->hasValidServer() &&
+        ($server = $index->getServerInstance()) &&
+        ($backend = $server->getBackend()) &&
+        $backend instanceof SolrAutocompleteInterface &&
+        $server->supportsFeature('search_api_autocomplete')
+      ) {
         return $backend;
       }
     }
     catch (\Exception $e) {
-      $this->logException($e);
+      watchdog_exception('search_api', $e);
     }
     return NULL;
   }
