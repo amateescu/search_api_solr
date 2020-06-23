@@ -301,11 +301,17 @@ class SolrConfigSetController extends ControllerBase {
     // generated dynamically above.
     foreach (scandir($search_api_solr_conf_path) as $file) {
       if (strpos($file, '.') !== 0 && !array_key_exists($file, $files)) {
-        $files[$file] = str_replace(
-          ['SEARCH_API_SOLR_MIN_SCHEMA_VERSION', 'SEARCH_API_SOLR_BRANCH'],
-          [SolrBackendInterface::SEARCH_API_SOLR_MIN_SCHEMA_VERSION, $real_solr_branch],
-          file_get_contents($search_api_solr_conf_path . '/' . $file)
-        );
+        $file_path = $search_api_solr_conf_path . '/' . $file;
+        if (file_exists($file_path) && is_readable($file_path)) {
+          $files[$file] = str_replace(
+            ['SEARCH_API_SOLR_MIN_SCHEMA_VERSION', 'SEARCH_API_SOLR_BRANCH'],
+            [SolrBackendInterface::SEARCH_API_SOLR_MIN_SCHEMA_VERSION, $real_solr_branch],
+            file_get_contents($search_api_solr_conf_path . '/' . $file)
+          );
+        }
+        else {
+          throw new SearchApiSolrException(sprintf('%s template is not readable.', $file));
+        }
       }
     }
 
