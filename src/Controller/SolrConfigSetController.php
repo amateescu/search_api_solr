@@ -6,6 +6,7 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api_solr\SearchApiSolrConflictingEntitiesException;
+use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrBackendInterface;
 use Drupal\search_api_solr\Utility\Utility;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -229,6 +230,7 @@ class SolrConfigSetController extends ControllerBase {
    *   An associative array of files names and content.
    *
    * @throws \Drupal\search_api\SearchApiException
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function getConfigFiles(): array {
     /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
@@ -249,13 +251,23 @@ class SolrConfigSetController extends ControllerBase {
     $this->moduleHandler()->alter('search_api_solr_configset_template_mapping', $solr_configset_template_mapping);
 
     $search_api_solr_conf_path = $solr_configset_template_mapping[$solr_branch];
-    $solrcore_properties = parse_ini_file($search_api_solr_conf_path . '/solrcore.properties', FALSE, INI_SCANNER_RAW);
+    $solrcore_properties_file = $search_api_solr_conf_path . '/solrcore.properties';
+    if (file_exists($solrcore_properties_file) && is_readable($solrcore_properties_file)) {
+      $solrcore_properties = parse_ini_file($solrcore_properties_file, FALSE, INI_SCANNER_RAW);
+    }
+    else {
+      throw new SearchApiSolrException('solrcore.properties template could not be parsed.');
+    }
 
     $files = [
       'schema_extra_types.xml' => $this->getSchemaExtraTypesXml(),
       'schema_extra_fields.xml' => $this->getSchemaExtraFieldsXml($backend->getServer()),
       'solrconfig_extra.xml' => $this->getSolrconfigExtraXml(),
     ];
+
+    if (empty($files['schema_extra_types.xml']) || empty($files['schema_extra_fields.xml'])) {
+      throw new SearchApiSolrException('The configs of the essential Solr field types are missing or broken on your site.');
+    }
 
     if (version_compare($solr_major_version, '7', '>=')) {
       $files['solrconfig_query.xml'] = $this->getSolrconfigQueryXml();
@@ -288,12 +300,7 @@ class SolrConfigSetController extends ControllerBase {
     // Now add all remaining static files from the conf dir that have not been
     // generated dynamically above.
     foreach (scandir($search_api_solr_conf_path) as $file) {
-      if (strpos($file, '.') !== 0) {
-        foreach (array_keys($files) as $existing_file) {
-          if ($file == $existing_file) {
-            continue 2;
-          }
-        }
+      if (strpos($file, '.') !== 0 && !array_key_exists($file, $files)) {
         $files[$file] = str_replace(
           ['SEARCH_API_SOLR_MIN_SCHEMA_VERSION', 'SEARCH_API_SOLR_BRANCH'],
           [SolrBackendInterface::SEARCH_API_SOLR_MIN_SCHEMA_VERSION, $real_solr_branch],
