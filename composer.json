@@ -33,7 +33,7 @@
     "require-dev": {
         "phayes/geophp": "^1.2",
         "monolog/monolog": "^1.25",
-        "drupal/devel": "3.x-dev",
+        "drupal/devel": "^4.0",
         "drupal/facets": "1.x-dev",
         "drupal/geofield": "1.x-dev",
         "drupal/search_api_autocomplete": "1.x-dev",
