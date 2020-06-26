@@ -52,16 +52,14 @@ function search_api_solr_help($route_name, RouteMatchInterface $route_match) {
  */
 function search_api_solr_cron() {
   $document_counts = [];
-  $optimize = FALSE;
+  $end_of_day = FALSE;
   $request_time = \Drupal::time()->getRequestTime();
   // 86400 seconds are one day. We use slightly less here to allow for some
   // variation in the request time of the cron run, so that the time of day will
   // (more or less) stay the same.
   if ($request_time - \Drupal::state()->get('search_api_solr.last_optimize') > 86340) {
     \Drupal::state()->set('search_api_solr.last_optimize', $request_time);
-    // Delete cached endpoint data once a day.
-    \Drupal::state()->delete('search_api_solr.endpoint.data');
-    $optimize = TRUE;
+    $end_of_day = TRUE;
   }
 
   foreach (search_api_solr_get_servers() as $server) {
@@ -78,9 +76,21 @@ function search_api_solr_cron() {
           }
         }
 
-        if ($optimize && $backend->isOptimizeEnabled()) {
-          $connector->optimize($backend->getCollectionEndpoint($index));
-          $backend->getLogger()->info('Optimized Solr server @server.', ['@server' => $server->label()]);
+        if ($end_of_day) {
+          $endpoint = $backend->getCollectionEndpoint($index);
+
+          // Delete "cached" endpoint data and schema_parts once a day. We keep
+          // theses in states instead of a caches because we might need to
+          // access this data even if Solr is temporarily not reachable and
+          // caches have been cleared or Solr itself is used as caching backend.
+          \Drupal::state()->delete('search_api_solr.endpoint.data');
+          \Drupal::state()->delete('search_api_solr.endpoint.schema_parts');
+
+          if ($backend->isOptimizeEnabled()) {
+            $connector->optimize($endpoint);
+            $backend->getLogger()
+              ->info('Optimized Solr server @server.', ['@server' => $server->label()]);
+          }
         }
       }
     }

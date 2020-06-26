@@ -6,6 +6,7 @@ use Drupal\search_api\Backend\BackendInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Query\QueryInterface;
+use Solarium\Core\Client\Endpoint;
 use Solarium\QueryType\Update\Query\Query as UpdateQuery;
 
 /**
@@ -19,7 +20,7 @@ interface SolrBackendInterface extends BackendInterface {
   /**
    * The minimum required Solr schema version.
    */
-  const SEARCH_API_SOLR_MIN_SCHEMA_VERSION = '4.0.0';
+  const SEARCH_API_SOLR_MIN_SCHEMA_VERSION = '4.1.0';
 
   /**
    * The separator to indicate the start of a language ID.
@@ -305,16 +306,20 @@ interface SolrBackendInterface extends BackendInterface {
   /**
    * Gets schema language statistics for the multilingual Solr server.
    *
+   * @param \Solarium\Core\Client\Endpoint|null $endpoint
+   *   If not set, the statistics for the server's default endpoint will be
+   *   returned.
+   *
    * @return array
-   *   Stats as associative array keyed by language IDs and a boolean value to
-   *   indicate if corresponding field types are existing on the server's
-   *   current schema.
+   *   Stats as associative array keyed by language IDs. The value is the
+   *   language id of the corresponding field type existing on the server's
+   *   current schema or FALSE.
    *
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    * @throws \Drupal\search_api\SearchApiException
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  public function getSchemaLanguageStatistics();
+  public function getSchemaLanguageStatistics(?Endpoint $endpoint = NULL);
 
   /**
    * Get document counts for this server, in total and per site / index.

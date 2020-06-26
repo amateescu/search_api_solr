@@ -13,7 +13,7 @@ custom_code: ''
 field_type_language_code: pt-br
 domains: {}
 field_type:
-  name: text_pt-br
+  name: text_pt_br
   class: solr.TextField
   positionIncrementGap: 100
   analyzers:
@@ -22,7 +22,7 @@ field_type:
       charFilters:
         -
           class: solr.MappingCharFilterFactory
-          mapping: accents_pt-br.txt
+          mapping: accents_pt_br.txt
       tokenizer:
         class: solr.WhitespaceTokenizerFactory
       filters:
@@ -30,7 +30,7 @@ field_type:
           class: solr.WordDelimiterGraphFilterFactory
           catenateNumbers: 1
           generateNumberParts: 1
-          protected: protwords_pt-br.txt
+          protected: protwords_pt_br.txt
           splitOnCaseChange: 1
           generateWordParts: 1
           preserveOriginal: 1
@@ -41,7 +41,7 @@ field_type:
         -
           class: solr.StopFilterFactory
           ignoreCase: true
-          words: stopwords_pt-br.txt
+          words: stopwords_pt_br.txt
         -
           class: solr.PortugueseStemFilterFactory
         -
@@ -51,7 +51,7 @@ field_type:
       charFilters:
         -
           class: solr.MappingCharFilterFactory
-          mapping: accents_pt-br.txt
+          mapping: accents_pt_br.txt
       tokenizer:
         class: solr.WhitespaceTokenizerFactory
       filters:
@@ -59,7 +59,7 @@ field_type:
           class: solr.WordDelimiterGraphFilterFactory
           catenateNumbers: 0
           generateNumberParts: 0
-          protected: protwords_pt-br.txt
+          protected: protwords_pt_br.txt
           splitOnCaseChange: 1
           generateWordParts: 1
           preserveOriginal: 1
@@ -70,10 +70,10 @@ field_type:
         -
           class: solr.StopFilterFactory
           ignoreCase: true
-          words: stopwords_pt-br.txt
+          words: stopwords_pt_br.txt
         -
           class: solr.SynonymGraphFilterFactory
-          synonyms: synonyms_pt-br.txt
+          synonyms: synonyms_pt_br.txt
           expand: true
           ignoreCase: true
         -
@@ -81,7 +81,7 @@ field_type:
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
 unstemmed_field_type:
-  name: text_unstemmed_pt-br
+  name: text_unstemmed_pt_br
   class: solr.TextField
   positionIncrementGap: 100
   analyzers:
@@ -90,7 +90,7 @@ unstemmed_field_type:
       charFilters:
         -
           class: solr.MappingCharFilterFactory
-          mapping: accents_pt-br.txt
+          mapping: accents_pt_br.txt
       tokenizer:
         class: solr.WhitespaceTokenizerFactory
       filters:
@@ -98,7 +98,7 @@ unstemmed_field_type:
           class: solr.WordDelimiterGraphFilterFactory
           catenateNumbers: 1
           generateNumberParts: 1
-          protected: protwords_pt-br.txt
+          protected: protwords_pt_br.txt
           splitOnCaseChange: 1
           generateWordParts: 1
           preserveOriginal: 1
@@ -109,7 +109,7 @@ unstemmed_field_type:
         -
           class: solr.StopFilterFactory
           ignoreCase: true
-          words: stopwords_pt-br.txt
+          words: stopwords_pt_br.txt
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
     -
@@ -117,7 +117,7 @@ unstemmed_field_type:
       charFilters:
         -
           class: solr.MappingCharFilterFactory
-          mapping: accents_pt-br.txt
+          mapping: accents_pt_br.txt
       tokenizer:
         class: solr.WhitespaceTokenizerFactory
       filters:
@@ -125,7 +125,7 @@ unstemmed_field_type:
           class: solr.WordDelimiterGraphFilterFactory
           catenateNumbers: 0
           generateNumberParts: 0
-          protected: protwords_pt-br.txt
+          protected: protwords_pt_br.txt
           splitOnCaseChange: 1
           generateWordParts: 1
           preserveOriginal: 1
@@ -135,19 +135,19 @@ unstemmed_field_type:
           class: solr.LowerCaseFilterFactory
         -
           class: solr.SynonymGraphFilterFactory
-          synonyms: synonyms_pt-br.txt
+          synonyms: synonyms_pt_br.txt
           expand: true
           ignoreCase: true
         -
           class: solr.StopFilterFactory
           ignoreCase: true
-          words: stopwords_pt-br.txt
+          words: stopwords_pt_br.txt
         -
           class: solr.RemoveDuplicatesTokenFilterFactory
 collated_field_type:
-  name: collated_pt-br
+  name: collated_pt_br
   class: solr.ICUCollationField
-  locale: pt-br
+  locale: pt
   strength: primary
   caseLevel: false
 solr_configs:
@@ -161,10 +161,10 @@ solr_configs:
           str:
             -
               name: name
-              VALUE: pt-br
+              VALUE: pt_br
             -
               name: field
-              VALUE: spellcheck_pt-br
+              VALUE: spellcheck_pt_br
             -
               name: classname
               VALUE: solr.DirectSolrSpellChecker
@@ -204,7 +204,7 @@ solr_configs:
           str:
             -
               name: name
-              VALUE: pt-br
+              VALUE: pt_br
             -
               name: lookupImpl
               VALUE: AnalyzingInfixLookupFactory
@@ -216,7 +216,7 @@ solr_configs:
               VALUE: twm_suggest
             -
               name: suggestAnalyzerFieldType
-              VALUE: text_pt-br
+              VALUE: text_pt_br
             -
               name: contextField
               VALUE: sm_context_tags

@@ -4219,8 +4219,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
 
     foreach ($query->getLanguages() as $language_id) {
       if (isset($schema_languages[$language_id]) && $schema_languages[$language_id]) {
-        // Convert zk-hans to zk_hans.
-        $dictionaries[] = str_replace('-', '_', $language_id);
+        $dictionaries[] = $schema_languages[$language_id];
       }
     }
 
@@ -4333,14 +4332,20 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   /**
    * {@inheritdoc}
    */
-  public function getSchemaLanguageStatistics() {
-    // @todo iterate over all indexes in case of cloud?
-    $available = $this->getSolrConnector()->pingCore();
+  public function getSchemaLanguageStatistics(?Endpoint $endpoint = NULL) {
+    $available = $this->getSolrConnector()->pingServer();
+
     $stats = [];
     foreach (\Drupal::languageManager()->getLanguages() as $language) {
+      $language_id = $language->getId();
       // Convert zk-hans to zk_hans.
-      $solr_field_type_name = 'text' . '_' . str_replace('-', '_', $language->getId());
-      $stats[$language->getId()] = $available ? $this->isPartOfSchema('fieldTypes', $solr_field_type_name) : FALSE;
+      $converted_language_id = str_replace('-', '_', $language_id);
+      $stats[$language_id] = $available ? ($this->isPartOfSchema('fieldTypes', 'text_' . $converted_language_id, $endpoint) ? $converted_language_id : FALSE) : FALSE;
+      if (!$stats[$language_id]) {
+        // Try language fallback.
+        $converted_language_id = preg_replace('/_.+$/', '', $language_id);
+        $stats[$language_id] = $available ? ($this->isPartOfSchema('fieldTypes', 'text_' . $converted_language_id, $endpoint) ? $converted_language_id : FALSE) : FALSE;
+      }
     }
     return $stats;
   }
@@ -4352,6 +4357,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    *   The kind of the element, for example 'dynamicFields' or 'fieldTypes'.
    * @param string $name
    *   The name of the element.
+   * @param \Solarium\Core\Client\Endpoint|null $endpoint
    *
    * @return bool
    *   TRUE if an element of the given kind and name exists, FALSE otherwise.
@@ -4360,30 +4366,34 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @throws \Drupal\search_api\SearchApiException
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  protected function isPartOfSchema($kind, $name) {
+  protected function isPartOfSchema($kind, $name, ?Endpoint $endpoint = NULL) {
     static $previous_calls;
 
-    $state_key = 'search_api_solr.' . $this->getServer()->id() . '.schema_parts';
+    $endpoint_key = $endpoint ? $endpoint->getKey() : $this->getServer()->id();
+
     $state = \Drupal::state();
-    // @todo Reset that drupal state from time to time.
-    $schema_parts = $state->get($state_key);
+    // This state is resetted once a day via cron.
+    $schema_parts = $state->get('search_api_solr.endpoint.schema_parts');
+
 
     if (
-      !is_array($schema_parts) || empty($schema_parts[$kind]) ||
-      (!in_array($name, $schema_parts[$kind]) && !isset($previous_calls[$kind]))
+      !is_array($schema_parts) ||
+      empty($schema_parts[$endpoint_key]) ||
+      empty($schema_parts[$endpoint_key][$kind]) ||
+      (!in_array($name, $schema_parts[$endpoint_key][$kind]) && !isset($previous_calls[$endpoint_key][$kind]))
     ) {
       $response = $this->getSolrConnector()
-        ->coreRestGet('schema/' . strtolower($kind));
+        ->coreRestGet('schema/' . strtolower($kind), $endpoint);
       if (empty($response[$kind])) {
         throw new SearchApiSolrException('Missing information about ' . $kind . ' in response to REST request.');
       }
       // Delete the old state.
-      $schema_parts[$kind] = [];
+      $schema_parts[$endpoint_key][$kind] = [];
       foreach ($response[$kind] as $row) {
-        $schema_parts[$kind][] = $row['name'];
+        $schema_parts[$endpoint_key][$kind][] = $row['name'];
       }
-      $state->set($state_key, $schema_parts);
-      $previous_calls[$kind] = TRUE;
+      $state->set('search_api_solr.endpoint.schema_parts', $schema_parts);
+      $previous_calls[$endpoint_key][$kind] = TRUE;
     }
 
     return in_array($name, $schema_parts[$kind]);
@@ -4499,7 +4509,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $facet_set = $result->getFacetSet();
 
     // The implicit "count" aggregation over all results matching the query
-    // exists ony any JSONFacet set.
+    // exists only any JSONFacet set.
     /** @var \Solarium\Component\Result\Facet\Aggregation $count */
     $count = $facet_set->getFacet('count');
     $document_counts = [

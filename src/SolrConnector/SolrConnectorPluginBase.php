@@ -341,12 +341,9 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    */
   protected function createClient(array &$configuration) {
     $configuration[self::QUERY_TIMEOUT] = $configuration['timeout'] ?? 5;
-    if (Client::checkMinimal('5.2.0')) {
-      $adapter = extension_loaded('curl') ? new Curl($configuration) : new Http($configuration);
-      unset($configuration['timeout']);
-      return new Client($adapter, $this->eventDispatcher);
-    }
-    return new Client(NULL, $this->eventDispatcher);
+    $adapter = extension_loaded('curl') ? new Curl($configuration) : new Http($configuration);
+    unset($configuration['timeout']);
+    return new Client($adapter, $this->eventDispatcher);
   }
 
   /**
@@ -513,7 +510,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
 
     // We keep the results in a state instead of a cache because we want to
     // access parts of this data even if Solr is temporarily not reachable and
-    // caches are cleared.
+    // caches have been cleared.
     $state_key = 'search_api_solr.endpoint.data';
     $state = \Drupal::state();
     $endpoint_data = $state->get($state_key);
@@ -540,14 +537,28 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    * {@inheritdoc}
    */
   public function pingCore(array $options = []) {
+    return $this->pingEndpoint(NULL, $options);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function pingServer() {
+    return $this->getServerInfo(TRUE);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function pingEndpoint(?Endpoint $endpoint = NULL, array $options = []) {
     $this->connect();
-    $this->useTimeout();
+    $this->useTimeout(self::QUERY_TIMEOUT, $endpoint);
 
     $query = $this->solr->createPing();
 
     try {
       $start = microtime(TRUE);
-      $result = $this->solr->execute($query);
+      $result = $this->solr->execute($query, $endpoint);
       if ($result->getResponse()->getStatusCode() == 200) {
         // Add 1 µs to the ping time so we never return 0.
         return (microtime(TRUE) - $start) + 1E-6;
@@ -558,13 +569,6 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     }
 
     return FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function pingServer() {
-    return $this->getServerInfo(TRUE);
   }
 
   /**
@@ -631,17 +635,17 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * {@inheritdoc}
    */
-  public function coreRestGet($path) {
+  public function coreRestGet($path, ?Endpoint $endpoint = NULL) {
     $this->useTimeout();
-    return $this->restRequest($this->configuration['core'] . '/' . ltrim($path, '/'));
+    return $this->restRequest($this->configuration['core'] . '/' . ltrim($path, '/'), Request::METHOD_GET, '', $endpoint);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function coreRestPost($path, $command_json = '') {
+  public function coreRestPost($path, $command_json = '', ?Endpoint $endpoint = NULL) {
     $this->useTimeout(self::INDEX_TIMEOUT);
-    return $this->restRequest($this->configuration['core'] . '/' . ltrim($path, '/'), Request::METHOD_POST, $command_json);
+    return $this->restRequest($this->configuration['core'] . '/' . ltrim($path, '/'), Request::METHOD_POST, $command_json, $endpoint);
   }
 
   /**
@@ -669,13 +673,14 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    *   The HTTP request method.
    * @param string $command_json
    *   The command to send encoded as JSON.
+   * @param \Solarium\Core\Client\Endpoint|null $endpoint
    *
    * @return array
    *   The decoded response.
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  protected function restRequest($handler, $method = Request::METHOD_GET, $command_json = '') {
+  protected function restRequest($handler, $method = Request::METHOD_GET, $command_json = '', ?Endpoint $endpoint = NULL) {
     $this->connect();
     $query = $this->solr->createApi([
       'handler' => $handler,
@@ -685,7 +690,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       'rawdata' => (Request::METHOD_POST == $method ? $command_json : NULL),
     ]);
 
-    $response = $this->execute($query);
+    $response = $this->execute($query, $endpoint);
     $output = $response->getData();
     // \Drupal::logger('search_api_solr')->info(print_r($output, true));.
     if (!empty($output['errors'])) {
