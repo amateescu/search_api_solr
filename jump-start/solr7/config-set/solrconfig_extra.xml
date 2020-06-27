@@ -329,8 +329,8 @@
     </lst>
   
     <lst name="spellchecker">
-      <str name="name">pt-br</str>
-      <str name="field">spellcheck_pt-br</str>
+      <str name="name">pt_br</str>
+      <str name="field">spellcheck_pt_br</str>
       <str name="classname">solr.DirectSolrSpellChecker</str>
       <str name="distanceMeasure">internal</str>
       <str name="accuracy">0.5</str>
@@ -344,8 +344,8 @@
     </lst>
   
     <lst name="spellchecker">
-      <str name="name">pt-pt</str>
-      <str name="field">spellcheck_pt-pt</str>
+      <str name="name">pt_pt</str>
+      <str name="field">spellcheck_pt_pt</str>
       <str name="classname">solr.DirectSolrSpellChecker</str>
       <str name="distanceMeasure">internal</str>
       <str name="accuracy">0.5</str>
@@ -754,22 +754,22 @@
     </lst>
   
     <lst name="suggester">
-      <str name="name">pt-br</str>
+      <str name="name">pt_br</str>
       <str name="lookupImpl">AnalyzingInfixLookupFactory</str>
       <str name="dictionaryImpl">DocumentDictionaryFactory</str>
       <str name="field">twm_suggest</str>
-      <str name="suggestAnalyzerFieldType">text_pt-br</str>
+      <str name="suggestAnalyzerFieldType">text_pt_br</str>
       <str name="contextField">sm_context_tags</str>
       <str name="buildOnCommit">true</str>
       <str name="buildOnStartup">false</str>
     </lst>
   
     <lst name="suggester">
-      <str name="name">pt-pt</str>
+      <str name="name">pt_pt</str>
       <str name="lookupImpl">AnalyzingInfixLookupFactory</str>
       <str name="dictionaryImpl">DocumentDictionaryFactory</str>
       <str name="field">twm_suggest</str>
-      <str name="suggestAnalyzerFieldType">text_pt-pt</str>
+      <str name="suggestAnalyzerFieldType">text_pt_pt</str>
       <str name="contextField">sm_context_tags</str>
       <str name="buildOnCommit">true</str>
       <str name="buildOnStartup">false</str>
