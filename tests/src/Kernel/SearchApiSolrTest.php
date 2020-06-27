@@ -53,7 +53,6 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     'nb' => 'nb',
     'nl' => 'nl',
     'nn' => 'nn',
-    'no' => 'no',
     'pl' => 'pl',
     'pt-br' => 'pt_br',
     'pt-pt' => 'pt_pt',
@@ -281,35 +280,37 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     if (version_compare($targeted_solr_major_version, '9', '<')) {
       // 'et' requires Solr 8.2, the jump-start-config targets 8.0.
       $language_ids['et'] = FALSE;
-      if (version_compare($targeted_solr_major_version, '7', '<')) {
-        $language_ids['bg'] = FALSE;
-        $language_ids['ca'] = FALSE;
-        $language_ids['da'] = FALSE;
-        $language_ids['fa'] = FALSE;
+      if (version_compare($targeted_solr_major_version, '8', '<')) {
+        // 'ga' requires Solr 7.7, the jump-start-config targets 7.0.
         $language_ids['ga'] = FALSE;
-        $language_ids['hi'] = FALSE;
-        $language_ids['hr'] = FALSE;
-        $language_ids['id'] = FALSE;
-        $language_ids['lv'] = FALSE;
-        $language_ids['nb'] = FALSE;
-        $language_ids['nn'] = FALSE;
-        $language_ids['no'] = FALSE;
-        $language_ids['pl'] = FALSE;
-        $language_ids['pt-br'] = FALSE;
-        $language_ids['pt-pt'] = FALSE;
-        $language_ids['ro'] = FALSE;
-        $language_ids['sr'] = FALSE;
-        $language_ids['sv'] = FALSE;
-        $language_ids['th'] = FALSE;
-        $language_ids['tr'] = FALSE;
-        $language_ids['zh-hans'] = FALSE;
-        $language_ids['zh-hant'] = FALSE;
-        if (version_compare($targeted_solr_major_version, '6', '<')) {
-          $language_ids['ar'] = FALSE;
-          $language_ids['ja'] = FALSE;
-          $language_ids['sk'] = FALSE;
-          if (version_compare($targeted_solr_major_version, '5', '<')) {
-            $language_ids['cs'] = FALSE;
+        if (version_compare($targeted_solr_major_version, '7', '<')) {
+          $language_ids['bg'] = FALSE;
+          $language_ids['ca'] = FALSE;
+          $language_ids['da'] = FALSE;
+          $language_ids['fa'] = FALSE;
+          $language_ids['hi'] = FALSE;
+          $language_ids['hr'] = FALSE;
+          $language_ids['id'] = FALSE;
+          $language_ids['lv'] = FALSE;
+          $language_ids['nb'] = FALSE;
+          $language_ids['nn'] = FALSE;
+          $language_ids['pl'] = FALSE;
+          $language_ids['pt-br'] = FALSE;
+          $language_ids['pt-pt'] = FALSE;
+          $language_ids['ro'] = FALSE;
+          $language_ids['sr'] = FALSE;
+          $language_ids['sv'] = FALSE;
+          $language_ids['th'] = FALSE;
+          $language_ids['tr'] = FALSE;
+          $language_ids['zh-hans'] = FALSE;
+          $language_ids['zh-hant'] = FALSE;
+          if (version_compare($targeted_solr_major_version, '6', '<')) {
+            $language_ids['ar'] = FALSE;
+            $language_ids['ja'] = FALSE;
+            $language_ids['sk'] = FALSE;
+            if (version_compare($targeted_solr_major_version, '5', '<')) {
+              $language_ids['cs'] = FALSE;
+            }
           }
         }
       }
