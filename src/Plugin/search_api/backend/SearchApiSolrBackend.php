@@ -4343,7 +4343,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $stats[$language_id] = $available ? ($this->isPartOfSchema('fieldTypes', 'text_' . $converted_language_id, $endpoint) ? $converted_language_id : FALSE) : FALSE;
       if (!$stats[$language_id]) {
         // Try language fallback.
-        $converted_language_id = preg_replace('/_.+$/', '', $language_id);
+        $converted_language_id = preg_replace('/-.+$/', '', $language_id);
         $stats[$language_id] = $available ? ($this->isPartOfSchema('fieldTypes', 'text_' . $converted_language_id, $endpoint) ? $converted_language_id : FALSE) : FALSE;
       }
     }

@@ -275,11 +275,11 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   protected function checkSchemaLanguages() {
     /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
     $backend = Server::load($this->serverId)->getBackend();
-    $solr_major_version = $backend->getSolrConnector()->getSolrMajorVersion();
+    $targeted_solr_major_version = (int) $backend->getSolrConnector()->getSchemaTargetedSolrBranch();
     $language_ids = $this->languageIds;
-    if (version_compare($solr_major_version, '8', '<')) {
+    if (version_compare($targeted_solr_major_version, '8', '<')) {
       $language_ids['et'] = FALSE;
-      if (version_compare($solr_major_version, '7', '<')) {
+      if (version_compare($targeted_solr_major_version, '7', '<')) {
         $language_ids['bg'] = FALSE;
         $language_ids['ca'] = FALSE;
         $language_ids['da'] = FALSE;
@@ -302,11 +302,11 @@ class SearchApiSolrTest extends SolrBackendTestBase {
         $language_ids['tr'] = FALSE;
         $language_ids['zh-hans'] = FALSE;
         $language_ids['zh-hant'] = FALSE;
-        if (version_compare($solr_major_version, '6', '<')) {
+        if (version_compare($targeted_solr_major_version, '6', '<')) {
           $language_ids['ar'] = FALSE;
           $language_ids['ja'] = FALSE;
           $language_ids['sk'] = FALSE;
-          if (version_compare($solr_major_version, '5', '<')) {
+          if (version_compare($targeted_solr_major_version, '5', '<')) {
             $language_ids['cs'] = FALSE;
           }
         }
