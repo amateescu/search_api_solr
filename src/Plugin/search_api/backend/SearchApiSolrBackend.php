@@ -4396,7 +4396,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $previous_calls[$endpoint_key][$kind] = TRUE;
     }
 
-    return in_array($name, $schema_parts[$kind]);
+    return in_array($name, $schema_parts[$endpoint_key][$kind]);
   }
 
   /**
