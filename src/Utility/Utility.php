@@ -467,7 +467,7 @@ class Utility {
     if ($custom_code = $solr_field_type->getCustomCode()) {
       $text_file_name .= '_' . $custom_code;
     }
-    return $text_file_name . '_' . $solr_field_type->getFieldTypeLanguageCode() . '.txt';
+    return $text_file_name . '_' . str_replace('-', '_', $solr_field_type->getFieldTypeLanguageCode()) . '.txt';
   }
 
   /**
