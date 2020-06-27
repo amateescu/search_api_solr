@@ -55,8 +55,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     'nn' => 'nn',
     'no' => 'no',
     'pl' => 'pl',
-    'pt-br' => 'pt-br',
-    'pt-pt' => 'pt-pt',
+    'pt-br' => 'pt_br',
+    'pt-pt' => 'pt_pt',
     'ro' => 'ro',
     'ru' => 'ru',
     'sk' => 'sk',
@@ -66,8 +66,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     'tr' => 'tr',
     'xx' => FALSE,
     'uk' => 'uk',
-    'zh-hans' => 'zh-hans',
-    'zh-hant' => 'zh-hant',
+    'zh-hans' => 'zh_hans',
+    'zh-hant' => 'zh_hant',
   ];
 
   /**
@@ -275,9 +275,11 @@ class SearchApiSolrTest extends SolrBackendTestBase {
   protected function checkSchemaLanguages() {
     /** @var \Drupal\search_api_solr\SolrBackendInterface $backend */
     $backend = Server::load($this->serverId)->getBackend();
-    $targeted_solr_major_version = (int) $backend->getSolrConnector()->getSchemaTargetedSolrBranch();
+    $connector = $backend->getSolrConnector();
+    $targeted_solr_major_version = (int) $connector->getSchemaTargetedSolrBranch();
     $language_ids = $this->languageIds;
-    if (version_compare($targeted_solr_major_version, '8', '<')) {
+    if (version_compare($targeted_solr_major_version, '9', '<')) {
+      // 'et' requires Solr 8.2, the jump-start-config targets 8.0.
       $language_ids['et'] = FALSE;
       if (version_compare($targeted_solr_major_version, '7', '<')) {
         $language_ids['bg'] = FALSE;
