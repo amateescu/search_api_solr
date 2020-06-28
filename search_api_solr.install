@@ -133,6 +133,7 @@ function search_api_solr_requirements($phase) {
                     break;
                   }
                   elseif ($version_number_server === $version_number_new) {
+                    $requirements['search_api_solr_schema_' . $server_id . '_modifications']['title'] = 'Search API Solr';
                     $requirements['search_api_solr_schema_' . $server_id . '_modifications']['value'] = t('Schema modified');
                     $requirements['search_api_solr_schema_' . $server_id . '_modifications']['severity'] = REQUIREMENT_WARNING;
                     $requirements['search_api_solr_schema_' . $server_id . '_modifications']['description'] = t(
