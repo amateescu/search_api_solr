@@ -59,7 +59,8 @@ function search_api_solr_requirements($phase) {
             $new_config_set = $config_set_controller->getConfigFiles();
           }
           catch (\Exception $e) {
-            $requirements['search_api_solr_schema_' . $server_id . '_modifications']['title'] = t('Schema not generated');
+            $requirements['search_api_solr_schema_' . $server_id . '_modifications']['title'] = t('Solr Server %server', ['%server' => $server->label()]);
+            $requirements['search_api_solr_schema_' . $server_id . '_modifications']['value'] = t('Schema coul not be generated');
             $requirements['search_api_solr_schema_' . $server_id . '_modifications']['severity'] = REQUIREMENT_ERROR;
 
             if ($e instanceof SearchApiSolrConflictingEntitiesException) {
@@ -91,7 +92,8 @@ function search_api_solr_requirements($phase) {
             $new_config_file_names = array_keys($new_config_set);
             $extra_release_files = array_diff($new_config_file_names, $server_file_names);
             if (!empty($extra_release_files)) {
-              $requirements['search_api_solr_schema_' . $server_id . '_modifications']['title'] = t('Schema incomplete');
+              $requirements['search_api_solr_schema_' . $server_id . '_modifications']['title'] = t('Solr Server %server', ['%server' => $server->label()]);
+              $requirements['search_api_solr_schema_' . $server_id . '_modifications']['value'] = t('Schema incomplete');
               $requirements['search_api_solr_schema_' . $server_id . '_modifications']['severity'] = REQUIREMENT_WARNING;
               $requirements['search_api_solr_schema_' . $server_id . '_modifications']['description'] = t(
                 'There are some files missing in the Solr server schema <a href=":url">@server</a>: @files. An updated config.zip should be downloaded and deployed to your Solr server.', [
@@ -121,6 +123,7 @@ function search_api_solr_requirements($phase) {
                 ] = SearchApiSolrUtility::normalizeXml($new_file_body);
                 if (strcmp($xml_server, $xml_new) !== 0) {
                   if ($version_number_server !== $version_number_new) {
+                    $requirements['search_api_solr_schema_' . $server_id . '_modifications']['title'] = t('Solr Server %server', ['%server' => $server->label()]);
                     $requirements['search_api_solr_schema_' . $server_id . '_modifications']['value'] = t('Schema not up to date');
                     $requirements['search_api_solr_schema_' . $server_id . '_modifications']['severity'] = REQUIREMENT_ERROR;
                     $requirements['search_api_solr_schema_' . $server_id . '_modifications']['description'] = t(
@@ -133,7 +136,7 @@ function search_api_solr_requirements($phase) {
                     break;
                   }
                   elseif ($version_number_server === $version_number_new) {
-                    $requirements['search_api_solr_schema_' . $server_id . '_modifications']['title'] = 'Search API Solr';
+                    $requirements['search_api_solr_schema_' . $server_id . '_modifications']['title'] = t('Solr Server %server', ['%server' => $server->label()]);
                     $requirements['search_api_solr_schema_' . $server_id . '_modifications']['value'] = t('Schema modified');
                     $requirements['search_api_solr_schema_' . $server_id . '_modifications']['severity'] = REQUIREMENT_WARNING;
                     $requirements['search_api_solr_schema_' . $server_id . '_modifications']['description'] = t(
@@ -154,7 +157,7 @@ function search_api_solr_requirements($phase) {
                 })) {
                   $requirements['search_api_solr_schema_' . $server_id . $endpoint->getKey() . '_languages'] = [
                     'title' => t('Solr Server %server', ['%server' => $server->label()]),
-                    'value' => t(' %index up to date', ['%index' => $index->label()]),
+                    'value' => t('Schema incomplete'),
                     'severity' => REQUIREMENT_WARNING,
                     'description' => t('There are some language-specific field types missing in schema of index <a href=":index_url">@index</a> on server <a href=":url">@server</a>.', [
                       ':index_url' => $index->toUrl('canonical')->toString(),
@@ -167,6 +170,8 @@ function search_api_solr_requirements($phase) {
               }
               else {
                 $requirements['search_api_solr_' . $server_id . $endpoint->getKey() . '_endpoint'] = [
+                  'title' => t('Solr Server %server', ['%server' => $server->label()]),
+                  'value' => t('Endpoint not reachable'),
                   'description' => \Drupal::translation()
                     ->translate('The endpoint for Index %index on Solr server <a href=":url">@server</a> could not be reached.',
                       [
@@ -184,7 +189,8 @@ function search_api_solr_requirements($phase) {
       }
       else {
         $requirements['search_api_solr_' . $server_id . '_modifications'] = [
-          'title' => t('Solr not reachable'),
+          'title' => t('Solr Server %server', ['%server' => $server->label()]),
+          'value' => t('Solr not reachable'),
           'description' => t(
           'Solr server <a href=":url">@server</a> is not reachable.', [
               ':url' => $server->toUrl('canonical')->toString(),
@@ -198,7 +204,8 @@ function search_api_solr_requirements($phase) {
 
     if (!Client::checkMinimal('6.0.0')) {
       $requirements['search_api_solr_solarium'] = [
-        'title' => t('solarium library'),
+        'title' => t('Solarium library'),
+        'value' => t('Solarium library'),
         'description' => t('Solarium @version is too old!'),
         'severity' => REQUIREMENT_ERROR,
       ];
@@ -1924,5 +1931,17 @@ function search_api_solr_update_8401() {
   foreach (search_api_solr_update_helper_get_backend_configs() as $server_name => $backend_config) {
     \Drupal::state()
       ->delete('search_api_solr.' . $server_name . '.schema_parts');
+  }
+
+  foreach (['br', 'pt'] as $locale) {
+    $filename = __DIR__ . '/config/optional/search_api_solr.solr_field_type.text_pt-' . $locale . '_7_0_0.yml';
+    $pt = Yaml::decode(file_get_contents($filename));
+
+    foreach (search_api_solr_update_helper_get_field_type_configs() as $field_type_name => $field_type_config) {
+      if ('search_api_solr.solr_field_type.text_pt-' . $locale . '_7_0_0' === $field_type_name) {
+        search_api_solr_update_helper_save_field_type_config($field_type_name, $pt);
+        break;
+      }
+    }
   }
 }
