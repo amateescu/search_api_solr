@@ -87,7 +87,6 @@ class SolariumRequestLogger implements EventSubscriberInterface {
     /** @var \Solarium\Core\Event\PostExecuteRequest $event */
     $response = $event->getResponse();
 
-    $this->develDumperManager->message($response, 'Solr response', 'debug', 'kint');
     $this->develDumperManager->debug($response, 'Solr response');
   }
 }
