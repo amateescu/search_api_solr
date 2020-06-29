@@ -11,7 +11,7 @@
      For more details about configurations options that may appear in
      this file, see http://wiki.apache.org/solr/SolrConfigXml.
 -->
-<config name="drupal-SEARCH_API_SOLR_MIN_SCHEMA_VERSION-solr-SEARCH_API_SOLR_BRANCH" >
+<config name="drupal-SEARCH_API_SOLR_MIN_SCHEMA_VERSION-solr-SEARCH_API_SOLR_BRANCH-SEARCH_API_SOLR_JUMP_START_CONFIG_SET" >
   <!-- In all configuration below, a prefix of "solr." for class names
        is an alias that causes solr to search appropriate packages,
        including org.apache.solr.(search|update|request|core|analysis)

@@ -16,6 +16,7 @@ jobs:
 
         env:
           COMPOSER_MEMORY_LIMIT: -1
+          SEARCH_API_SOLR_JUMP_START_CONFIG_SET: 1
 
         steps:
             - name: Setup sqlite

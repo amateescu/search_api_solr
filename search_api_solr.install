@@ -60,7 +60,7 @@ function search_api_solr_requirements($phase) {
           }
           catch (\Exception $e) {
             $requirements['search_api_solr_schema_' . $server_id . '_modifications']['title'] = t('Solr Server %server', ['%server' => $server->label()]);
-            $requirements['search_api_solr_schema_' . $server_id . '_modifications']['value'] = t('Schema coul not be generated');
+            $requirements['search_api_solr_schema_' . $server_id . '_modifications']['value'] = t('Schema could not be generated');
             $requirements['search_api_solr_schema_' . $server_id . '_modifications']['severity'] = REQUIREMENT_ERROR;
 
             if ($e instanceof SearchApiSolrConflictingEntitiesException) {
@@ -135,7 +135,7 @@ function search_api_solr_requirements($phase) {
                     );
                     break;
                   }
-                  elseif ($version_number_server === $version_number_new) {
+                  elseif ($version_number_server === $version_number_new && !$connector->isJumpStartConfigSet()) {
                     $requirements['search_api_solr_schema_' . $server_id . '_modifications']['title'] = t('Solr Server %server', ['%server' => $server->label()]);
                     $requirements['search_api_solr_schema_' . $server_id . '_modifications']['value'] = t('Schema modified');
                     $requirements['search_api_solr_schema_' . $server_id . '_modifications']['severity'] = REQUIREMENT_WARNING;

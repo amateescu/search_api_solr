@@ -153,7 +153,7 @@ interface SolrConnectorInterface extends ConfigurableInterface {
   public function getSchemaVersion($reset = FALSE);
 
   /**
-   * Gets the Solr branch trageted by the schema.
+   * Gets the Solr branch targeted by the schema.
    *
    * @param bool $reset
    *   If TRUE the server will be asked regardless if a previous call is cached.
@@ -164,6 +164,19 @@ interface SolrConnectorInterface extends ConfigurableInterface {
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public function getSchemaTargetedSolrBranch($reset = FALSE);
+
+  /**
+   * Indicates if the Solr config-set is our jum-start config-set.
+   *
+   * @param bool $reset
+   *   If TRUE the server will be asked regardless if a previous call is cached.
+   *
+   * @return bool
+   *   The targeted Solr branch.
+   *
+   * @throws \Drupal\search_api_solr\SearchApiSolrException
+   */
+  public function isJumpStartConfigSet(bool $reset = FALSE): bool;
 
   /**
    * Pings the Solr core to tell whether it can be accessed.

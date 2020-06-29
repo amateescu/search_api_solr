@@ -1071,7 +1071,12 @@ class Utility {
     $version_number = '';
     $root = $document->documentElement;
     if (isset($root) && $root->hasAttribute('name')) {
-      $version_number = $root->getAttribute('name');
+      $parts = explode('-', $root->getAttribute('name'));
+      if (isset($parts[4])) {
+        // Remove jump-start config-set flag.
+        unset($parts[4]);
+      }
+      $version_number = implode('-', $parts);
       $root->removeAttribute('name');
     }
     $xpath = new \DOMXPath($document);

@@ -14,6 +14,8 @@ use Symfony\Component\HttpFoundation\Response;
 use ZipStream\Option\Archive;
 use ZipStream\ZipStream;
 
+defined('SEARCH_API_SOLR_JUMP_START_CONFIG_SET') || define('SEARCH_API_SOLR_JUMP_START_CONFIG_SET', getenv('SEARCH_API_SOLR_JUMP_START_CONFIG_SET') ?: 0);
+
 /**
  * Provides different listings of SolrFieldType.
  */
@@ -304,8 +306,8 @@ class SolrConfigSetController extends ControllerBase {
         $file_path = $search_api_solr_conf_path . '/' . $file;
         if (file_exists($file_path) && is_readable($file_path)) {
           $files[$file] = str_replace(
-            ['SEARCH_API_SOLR_MIN_SCHEMA_VERSION', 'SEARCH_API_SOLR_BRANCH'],
-            [SolrBackendInterface::SEARCH_API_SOLR_MIN_SCHEMA_VERSION, $real_solr_branch],
+            ['SEARCH_API_SOLR_MIN_SCHEMA_VERSION', 'SEARCH_API_SOLR_BRANCH', 'SEARCH_API_SOLR_JUMP_START_CONFIG_SET'],
+            [SolrBackendInterface::SEARCH_API_SOLR_MIN_SCHEMA_VERSION, $real_solr_branch, SEARCH_API_SOLR_JUMP_START_CONFIG_SET],
             file_get_contents($search_api_solr_conf_path . '/' . $file)
           );
         }

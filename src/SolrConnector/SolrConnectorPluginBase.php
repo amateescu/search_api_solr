@@ -491,6 +491,14 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function isJumpStartConfigSet(bool $reset = FALSE): bool {
+    $parts = explode('-', $this->getSchemaVersionString($reset));
+    return (bool) ($parts[4] ?? 0);
+  }
+
+  /**
    * Gets data from a Solr endpoint using a given handler.
    *
    * @param string $handler
