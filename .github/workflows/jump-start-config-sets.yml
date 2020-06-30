@@ -138,6 +138,7 @@ jobs:
             matrix:
                 drupal: ['8.9', '9.0']
                 solr: ['4', '5', '6', '7', '8']
+                php: ['7.2', '7.4']
 
         name: Drupal ${{ matrix.drupal }} with Solr ${{ matrix.solr }}
 
@@ -154,7 +155,7 @@ jobs:
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
               with:
-                php-version: 7.3
+                php-version: ${{ matrix.php }}
                 extensions: dom, curl, libxml, mbstring, zip, pdo, sqlite, pdo_sqlite, bcmath, intl, gd, iconv, json, simplexml
                 ini-values: memory_limit=256M,post_max_size=256M
                 coverage: none
