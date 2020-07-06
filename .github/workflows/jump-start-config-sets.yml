@@ -104,24 +104,34 @@ jobs:
               run: |
                 cd drupal
                 vendor/bin/drush -v solr-gsc solr config.zip 4.5
+                rm ../search_api_solr/jump-start/solr4/config-set/*
                 unzip -o -d ../search_api_solr/jump-start/solr4/config-set config.zip
                 vendor/bin/drush -v solr-gsc solr config.zip 5
+                rm ../search_api_solr/jump-start/solr5/config-set/*
                 unzip -o -d ../search_api_solr/jump-start/solr5/config-set config.zip
                 vendor/bin/drush -v solr-gsc solr config.zip 6
+                rm ../search_api_solr/jump-start/solr6/config-set/*
                 unzip -o -d ../search_api_solr/jump-start/solr6/config-set config.zip
                 vendor/bin/drush -v solr-gsc solr config.zip 7
+                rm ../search_api_solr/jump-start/solr7/config-set/*
                 unzip -o -d ../search_api_solr/jump-start/solr7/config-set config.zip
                 vendor/bin/drush -v solr-gsc solr config.zip 8
+                rm ../search_api_solr/jump-start/solr8/config-set/*
                 unzip -o -d ../search_api_solr/jump-start/solr8/config-set config.zip
                 vendor/bin/drush -v solr-gsc solr_cloud config.zip 4.5
+                rm ../search_api_solr/jump-start/solr4/cloud-config-set/*
                 unzip -o -d ../search_api_solr/jump-start/solr4/cloud-config-set config.zip
                 vendor/bin/drush -v solr-gsc solr_cloud config.zip 5
+                rm ../search_api_solr/jump-start/solr5/cloud-config-set/*
                 unzip -o -d ../search_api_solr/jump-start/solr5/cloud-config-set config.zip
                 vendor/bin/drush -v solr-gsc solr_cloud config.zip 6
+                rm ../search_api_solr/jump-start/solr6/cloud-config-set/*
                 unzip -o -d ../search_api_solr/jump-start/solr6/cloud-config-set config.zip
                 vendor/bin/drush -v solr-gsc solr_cloud config.zip 7
+                rm ../search_api_solr/jump-start/solr7/cloud-config-set/*
                 unzip -o -d ../search_api_solr/jump-start/solr7/cloud-config-set config.zip
                 vendor/bin/drush -v solr-gsc solr_cloud config.zip 8
+                rm ../search_api_solr/jump-start/solr8/cloud-config-set/*
                 unzip -o -d ../search_api_solr/jump-start/solr8/cloud-config-set config.zip
 
             - uses: actions/upload-artifact@v2
