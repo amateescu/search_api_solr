@@ -150,6 +150,22 @@ class SolrConfigSetController extends ControllerBase {
   }
 
   /**
+   * Provides an XML snippet containing all index settings as XML.
+   *
+   * @param \Drupal\search_api\ServerInterface|null $search_api_server
+   *   The Search API server entity.
+   *
+   * @return string
+   *   XML snippet containing all index settings.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   */
+  public function getSolrconfigIndexXml(?ServerInterface $search_api_server = NULL): string {
+    // Reserved for future internal use.
+    return '';
+  }
+
+  /**
    * Provides an XML snippet containing all query cache settings as XML.
    *
    * @param \Drupal\search_api\ServerInterface|null $search_api_server
@@ -265,6 +281,7 @@ class SolrConfigSetController extends ControllerBase {
       'schema_extra_types.xml' => $this->getSchemaExtraTypesXml(),
       'schema_extra_fields.xml' => $this->getSchemaExtraFieldsXml($backend->getServer()),
       'solrconfig_extra.xml' => $this->getSolrconfigExtraXml(),
+      'solrconfig_index.xml' => $this->getSolrconfigIndexXml(),
     ];
 
     if (empty($files['schema_extra_types.xml']) || empty($files['schema_extra_fields.xml'])) {
