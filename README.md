@@ -55,13 +55,17 @@ Drupal setup.
 
 But the Search API Solr Search module will create the correct configs for you!
 
-1. Create a Search API Server according to the search_api documentation using
-   "Solr" as Backend and the connector that meets your setup.
-2. Download the config.zip from the server's details page or by using
+1. Make sure you have Apache Solr started and accessible (i.e. via port 8983).
+   You can start it without having a core configured at this stage.
+2. Visit Drupal configuration (/admin/config/search/search-api) and create a
+   new Search API Server according to the search_api documentation using
+   "Solr" as Backend and the connector that matches your setup.
+   Input the correct core name (which you will create at step 4, below).
+3. Download the config.zip from the server's details page or by using
    `drush solr-gsc` with proper options, for example for a server named
    "my_solr_server": `drush solr-gsc my_solr_server config.zip 8.4`.
-3. Copy config.zip to the Solr server and extract. The unpacked configuration
-   directory is named `$CONF` in these instructions.
+4. Copy the config.zip to the Solr server and extract. The unpacked
+   configuration directory is named `$CONF` in these instructions.
 
 **_Now_** you can create a Solr core using this config-set on a running Solr server.
 There're different ways to do so. For most Linux distributions you can run
@@ -124,7 +128,7 @@ instance. To do so you have to read the Solr handbook.
    "Solr" or "Multilingual Solr" as Backend and the "Solr Cloud" or
    "Solr Cloud with Basic Auth" Connector.
 2. Download the config.zip from the server's details page or by using
-   `drush solr-gsc
+   `drush solr-gsc`
 3. Deploy the config.zip via zookeeper.
 
 Using Linux specific Solr Packages
