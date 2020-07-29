@@ -931,11 +931,17 @@ class Utility {
    *   TRUE if the index only contains "solr_*" datasources, FALSE otherwise.
    */
   public static function hasIndexJustSolrDatasources(IndexInterface $index): bool {
-    $datasource_ids = $index->getDatasourceIds();
-    $datasource_ids = array_filter($datasource_ids, function ($datasource_id) {
-      return strpos($datasource_id, 'solr_') !== 0;
-    });
-    return !$datasource_ids;
+    static $datasources = [];
+
+    if (!isset($datasources[$index->id()])) {
+      $datasource_ids = $index->getDatasourceIds();
+      $datasource_ids = array_filter($datasource_ids, function ($datasource_id) {
+        return strpos($datasource_id, 'solr_') !== 0;
+      });
+      $datasources[$index->id()] = !$datasource_ids;
+    }
+
+    return $datasources[$index->id()];
   }
 
   /**
@@ -948,11 +954,17 @@ class Utility {
    *   TRUE if the index contains "solr_*" datasources, FALSE otherwise.
    */
   public static function hasIndexSolrDatasources(IndexInterface $index): bool {
-    $datasource_ids = $index->getDatasourceIds();
-    $datasource_ids = array_filter($datasource_ids, function ($datasource_id) {
-      return strpos($datasource_id, 'solr_') === 0;
-    });
-    return !empty($datasource_ids);
+    static $datasources = [];
+
+    if (!isset($datasources[$index->id()])) {
+      $datasource_ids = $index->getDatasourceIds();
+      $datasource_ids = array_filter($datasource_ids, function ($datasource_id) {
+        return strpos($datasource_id, 'solr_') === 0;
+      });
+      $datasources[$index->id()] = !empty($datasource_ids);
+    }
+
+    return $datasources[$index->id()];
   }
 
   /**
@@ -966,8 +978,14 @@ class Utility {
    *   otherwise.
    */
   public static function hasIndexJustSolrDocumentDatasource(IndexInterface $index): bool {
-    $datasource_ids = $index->getDatasourceIds();
-    return (1 === count($datasource_ids)) && in_array('solr_document', $datasource_ids);
+    static $datasources = [];
+
+    if (!isset($datasources[$index->id()])) {
+      $datasource_ids = $index->getDatasourceIds();
+      $datasources[$index->id()] = ((1 === count($datasource_ids)) && in_array('solr_document', $datasource_ids));
+    }
+
+    return $datasources[$index->id()];
   }
 
   /**

@@ -2522,7 +2522,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         throw new SearchApiSolrException(sprintf('The result does not contain the essential ID field "%s".', $id_field));
       }
 
-      $item_id = $doc_fields[$id_field];
+      $highlight_id = $item_id = $doc_fields[$id_field];
       // For items coming from a different site, we need to adapt the item ID.
       if (isset($doc_fields['hash']) && !$this->configuration['site_hash'] && $doc_fields['hash'] != $site_hash) {
         $item_id = $doc_fields['hash'] . '--' . $item_id;
@@ -2581,7 +2581,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
             $type_info = Utility::getDataTypeInfo($field->getType()) + ['prefix' => '_'];
             switch (substr($type_info['prefix'], 0, 1)) {
               case 'd':
-                // Field type convertions
+                // Field type conversions
                 // Date fields need some special treatment to become valid date
                 // values (i.e., timestamps) again.
                 if (preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $value)) {
@@ -2599,10 +2599,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
       }
 
-      $solr_id = Utility::hasIndexJustSolrDatasources($index) ?
-        str_replace('solr_document/', '', $result_item->getId()) :
-        $this->createId($this->getTargetedSiteHash($index), $this->getTargetedIndexId($index), $result_item->getId());
-      $this->getHighlighting($result->getData(), $solr_id, $result_item, $field_names);
+      $this->getHighlighting($result->getData(), $highlight_id, $result_item, $field_names);
 
       $result_set->addResultItem($result_item);
     }
@@ -3696,16 +3693,28 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * {@inheritdoc}
    */
   public function getTargetedIndexId(IndexInterface $index) {
-    $config = $this->getDatasourceConfig($index);
-    return $config['target_index'] ?? $this->getIndexId($index);
+    static $targeted_index = [];
+
+    if (!isset($targeted_index[$index->id()])) {
+      $config = $this->getDatasourceConfig($index);
+      $targeted_index[$index->id()] = $config['target_index'] ?? $this->getIndexId($index);
+    }
+
+    return $targeted_index[$index->id()];
   }
 
   /**
    * {@inheritdoc}
    */
   public function getTargetedSiteHash(IndexInterface $index) {
-    $config = $this->getDatasourceConfig($index);
-    return $config['target_hash'] ?? Utility::getSiteHash();
+    static $targeted_site_hash = [];
+
+    if (!isset($targeted_site_hash[$index->id()])) {
+      $config = $this->getDatasourceConfig($index);
+      $targeted_site_hash[$index->id()] = $config['target_hash'] ?? Utility::getSiteHash();
+    }
+
+    return $targeted_site_hash[$index->id()];
   }
 
   /**

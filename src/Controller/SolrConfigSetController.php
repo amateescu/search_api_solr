@@ -284,8 +284,8 @@ class SolrConfigSetController extends ControllerBase {
       'solrconfig_index.xml' => $this->getSolrconfigIndexXml(),
     ];
 
-    if (empty($files['schema_extra_types.xml']) || empty($files['schema_extra_fields.xml'])) {
-      throw new SearchApiSolrException('The configs of the essential Solr field types are missing or broken on your site.');
+    if (!$backend->isNonDrupalOrOutdatedConfigSetAllowed() && (empty($files['schema_extra_types.xml']) || empty($files['schema_extra_fields.xml']))) {
+      throw new SearchApiSolrException(sprintf('The configs of the essential Solr field types are missing or broken for server "%s".', $backend->getServer()->id()));
     }
 
     if (version_compare($solr_major_version, '7', '>=')) {
