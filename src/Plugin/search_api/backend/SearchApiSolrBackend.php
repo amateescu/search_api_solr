@@ -2522,7 +2522,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         throw new SearchApiSolrException(sprintf('The result does not contain the essential ID field "%s".', $id_field));
       }
 
-      $highlight_id = $item_id = $doc_fields[$id_field];
+      $item_id = $doc_fields[$id_field];
       // For items coming from a different site, we need to adapt the item ID.
       if (isset($doc_fields['hash']) && !$this->configuration['site_hash'] && $doc_fields['hash'] != $site_hash) {
         $item_id = $doc_fields['hash'] . '--' . $item_id;
@@ -2599,7 +2599,10 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
         }
       }
 
-      $this->getHighlighting($result->getData(), $highlight_id, $result_item, $field_names);
+      $solr_id = Utility::hasIndexJustSolrDatasources($index) ?
+        str_replace('solr_document/', '', $result_item->getId()) :
+        $this->createId($this->getTargetedSiteHash($index), $this->getTargetedIndexId($index), $result_item->getId());
+      $this->getHighlighting($result->getData(), $solr_id, $result_item, $field_names);
 
       $result_set->addResultItem($result_item);
     }
