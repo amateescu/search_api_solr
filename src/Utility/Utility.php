@@ -528,6 +528,10 @@ class Utility {
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   public static function getSortableSolrField(string $field_name, array $solr_field_names, QueryInterface $query) {
+    if (!isset($solr_field_names[$field_name])) {
+      throw new SearchApiSolrException(sprintf('Sort "%s" is not valid solr field.', $field_name));
+    }
+
     $first_solr_field_name = reset($solr_field_names[$field_name]);
 
     if (Utility::hasIndexJustSolrDocumentDatasource($query->getIndex())) {
