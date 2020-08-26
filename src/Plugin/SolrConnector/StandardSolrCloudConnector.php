@@ -199,6 +199,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
    * {@inheritdoc}
    */
   public function stream(StreamQuery $query, ?Endpoint $endpoint = NULL) {
+    $this->useTimeout(self::QUERY_TIMEOUT, $endpoint);
     return $this->execute($query, $endpoint);
   }
 
@@ -214,6 +215,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
    * {@inheritdoc}
    */
   public function graph(GraphQuery $query, ?Endpoint $endpoint = NULL) {
+    $this->useTimeout(self::QUERY_TIMEOUT, $endpoint);
     return $this->execute($query, $endpoint);
   }
 
@@ -285,6 +287,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
    */
   public function reloadCollection(?string $collection = NULL) {
     $this->connect();
+    $this->useTimeout(self::INDEX_TIMEOUT);
 
     try {
       $collection = $collection ?? $this->configuration['core'];

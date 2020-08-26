@@ -22,6 +22,7 @@ class StandardSolrConnector extends SolrConnectorPluginBase {
    */
   public function reloadCore() {
     $this->connect();
+    $this->useTimeout(self::INDEX_TIMEOUT);
 
     try {
       $core = $this->configuration['core'];
