@@ -261,9 +261,7 @@ class SolrConfigSetController extends ControllerBase {
     $solr_configset_template_mapping = [
       '6.x' => $template_path . '6.x',
       '7.x' => $template_path . '7.x',
-      // Solr 8.x uses the same schema and solrconf as 7.x. So we can use the
-      // same templates and only adjusts luceneMatchVersion to 8.
-      '8.x' => $template_path . '7.x',
+      '8.x' => $template_path . '8.x',
     ];
 
     $this->moduleHandler()->alter('search_api_solr_configset_template_mapping', $solr_configset_template_mapping);
