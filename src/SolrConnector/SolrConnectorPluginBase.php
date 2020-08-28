@@ -397,7 +397,20 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
       // corresponding full version string.
       $min_version = ['0', '0', '0'];
       $version = implode('.', explode('.', $this->configuration['solr_version']) + $min_version);
-      return '4.0.0' === $version ? '4.5.0' : $version;
+      switch ($version) {
+        case '4.0.0':
+          // 4.5.0 is the minimum supported Solr version by the
+          // search_api_solr_legacy module.
+          $version = '4.5.0';
+          break;
+        case '6.0.0':
+          // 6.4.0 is the minimum supported Solr version. Earlier Solr 6
+          // versions should run in Solr 5 compatibility mode using the
+          // search_api_solr_legacy module.
+          $version = '6.4.0';
+          break;
+      }
+      return $version;
     }
 
     $info = [];
@@ -1151,13 +1164,6 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   public function alterConfigFiles(array &$files, string $lucene_match_version, string $server_id = '') {
     if (!empty($this->configuration['jmx'])) {
       $files['solrconfig_extra.xml'] .= "<jmx />\n";
-    }
-
-    if (!empty($this->configuration['solr_install_dir'])) {
-      $files['solrcore.properties'] = preg_replace("/solr\.install\.dir.*$/m", 'solr.install.dir=' . $this->configuration['solr_install_dir'], $files['solrcore.properties']);
-    }
-    else {
-      $files['solrcore.properties'] = preg_replace("/solr\.install\.dir.*$/m", '', $files['solrcore.properties']);
     }
   }
 

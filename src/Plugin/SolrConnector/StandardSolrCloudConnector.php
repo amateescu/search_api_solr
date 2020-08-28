@@ -5,6 +5,7 @@ namespace Drupal\search_api_solr\Plugin\SolrConnector;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api_solr\SearchApiSolrException;
 use Drupal\search_api_solr\SolrCloudConnectorInterface;
+use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginBase;
 use Drupal\search_api_solr\Utility\Utility;
 use Solarium\Core\Client\Endpoint;
 use Solarium\Exception\HttpException;
@@ -308,7 +309,7 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
    * {@inheritdoc}
    */
   public function alterConfigFiles(array &$files, string $lucene_match_version, string $server_id = '') {
-    parent::alterConfigFiles($files, $lucene_match_version, $server_id);
+    SolrConnectorPluginBase::alterConfigFiles($files, $lucene_match_version, $server_id);
 
     // Leverage the implicit Solr request handlers with default settings for
     // Solr Cloud.
@@ -321,12 +322,15 @@ class StandardSolrCloudConnector extends StandardSolrConnector implements SolrCl
       $files['solrconfig.xml'] = preg_replace("@<requestHandler\s+name=\"/replication\".*?</requestHandler>@ms", '', $files['solrconfig.xml']);
       $files['solrconfig.xml'] = preg_replace("@<requestHandler\s+name=\"/get\".*?</requestHandler>@ms", '', $files['solrconfig.xml']);
     }
-    $files['solrcore.properties'] = preg_replace("/solr\.replication.*\n/", '', $files['solrcore.properties']);
 
     // Set the StatsCache.
     // @see https://lucene.apache.org/solr/guide/8_0/distributed-requests.html#configuring-statscache-distributed-idf
     if (!empty($this->configuration['stats_cache'])) {
       $files['solrconfig_extra.xml'] .= '<statsCache class="' . $this->configuration['stats_cache'] . '" />' . "\n";
+    }
+
+    if (!empty($this->configuration['solr_install_dir'])) {
+      $files['solrconfig.xml'] = preg_replace("/{solr\.install\.dir:[^}]*}/", '{solr.install.dir:' . $this->configuration['solr_install_dir'] . '}', $files['solrconfig.xml']);
     }
   }
 
