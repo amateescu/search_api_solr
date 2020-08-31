@@ -265,6 +265,8 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->clearIndex();
     $this->checkRetrieveData();
     $this->clearIndex();
+    $this->checkIndexFallback();
+    $this->clearIndex();
     $this->checkSearchResultSorts();
   }
 
@@ -757,6 +759,41 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     $this->assertArrayHasKey('category_edge', $fulltext_fields);
     // body_suggest should be removed by getQueryFulltextFields().
     $this->assertArrayNotHasKey('body_suggest', $fulltext_fields);
+  }
+
+  /**
+   * Tests retrieve_data options.
+   */
+  protected function checkIndexFallback() {
+    global $index_fallback_test;
+
+    // If set to TRUE, search_api_solr_test_search_api_solr_documents_alter()
+    // turns one out of five test documents into an illegal one.
+    $index_fallback_test = TRUE;
+
+    // If five documents are updated as batch, one illegal document causes the
+    // entire batch to fail.
+    $this->assertEqual($this->indexItems($this->indexId), 0);
+
+    // Enable the fallback to index the documents one by one.
+    $server = $this->getIndex()->getServerInstance();
+    $config = $server->getBackendConfig();
+    $config['index_single_documents_fallback_count'] = 10;
+    $server->setBackendConfig($config);
+    $server->save();
+
+    // Indexed one by one, four documents get indexed successfully.
+    $this->assertEqual($this->indexItems($this->indexId), 4);
+
+    // Don't mess up the remionaing document anymnore.
+    $index_fallback_test = FALSE;
+    // Disable the fallback to index the documents one by one.
+    $config['index_single_documents_fallback_count'] = 0;
+    $server->setBackendConfig($config);
+    $server->save();
+
+    // Index the previously broken document that is still in the queue.
+    $this->assertEqual($this->indexItems($this->indexId), 1);
   }
 
   /**

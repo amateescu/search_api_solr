@@ -54,3 +54,6 @@ plugin.plugin_configuration.search_api_backend.search_api_solr:
     rows:
       type: integer
       label: 'The default result rows limit if no limit is set as query option'
+    index_single_documents_fallback_count:
+      type: integer
+      label: 'Limit the number of documents in songle document indexing fallback'

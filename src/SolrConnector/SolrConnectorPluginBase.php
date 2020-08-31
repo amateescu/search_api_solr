@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api_solr\SolrConnector;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Plugin\PluginFormInterface;
@@ -953,18 +954,27 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
   protected function handleHttpException(HttpException $e, Endpoint $endpoint) {
+    $body = $e->getBody();
     $response_code = (int) $e->getCode();
     switch ((string) $response_code) {
-      case '404':
+      case '400': // Bad Request.
+        $description = 'bad request';
+        $response_decoded = Json::decode($body);
+        if ($response_decoded && isset($response_decoded['error'])) {
+          $body = $response_decoded['error']['msg'] ?? $body;
+        }
+        break;
+
+      case '404': // Not Found.
         $description = 'not found';
         break;
 
-      case '401':
-      case '403':
+      case '401': // Unauthorized.
+      case '403': // Forbidden.
         $description = 'access denied';
         break;
 
-      case '500':
+      case '500': // Internal Server Error.
       case '0':
         $description = 'internal Solr server error';
         break;

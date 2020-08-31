@@ -1945,3 +1945,15 @@ function search_api_solr_update_8401() {
     }
   }
 }
+
+/**
+ * Set index_single_documents_fallback_count to default.
+ */
+function search_api_solr_update_8402() {
+  foreach (search_api_solr_update_helper_get_backend_configs() as $server_name => $backend_config) {
+    if (!isset($backend_config['index_single_documents_fallback_count'])) {
+      $backend_config['index_single_documents_fallback_count'] = 10;
+      search_api_solr_update_helper_save_backend_config($server_name, $backend_config);
+    }
+  }
+}

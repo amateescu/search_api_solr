@@ -9,6 +9,7 @@ backend_config:
   skip_schema_check: false
   domain: generic
   server_prefix: 'server_prefix'
+  index_single_documents_fallback_count: 0
   connector: basic_auth_test
   connector_config:
     scheme: http
