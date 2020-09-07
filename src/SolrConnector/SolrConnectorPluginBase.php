@@ -1000,7 +1000,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    * @return string
    */
   protected function getEndpointUri(Endpoint $endpoint): string {
-    $endpoint->getServerUri();
+    return $endpoint->getServerUri();
   }
 
   /**
