@@ -946,6 +946,11 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
   /**
    * Converts a HttpException in an easier to read SearchApiSolrException.
    *
+   * Connectors must not overwrite this function. Otherwise support requests are
+   * hard to handle in the issue queue. If you want to extend this function and
+   * add more sophisticated error handling, please contribute a patch to
+   * the search_api_solr project on drupal.org.
+   *
    * @param \Solarium\Exception\HttpException $e
    *   The HttpException object.
    * @param \Solarium\Core\Client\Endpoint $endpoint
@@ -953,7 +958,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
    *
    * @throws \Drupal\search_api_solr\SearchApiSolrException
    */
-  protected function handleHttpException(HttpException $e, Endpoint $endpoint) {
+  final protected function handleHttpException(HttpException $e, Endpoint $endpoint) {
     $body = $e->getBody();
     $response_code = (int) $e->getCode();
     switch ((string) $response_code) {
