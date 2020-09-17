@@ -944,7 +944,7 @@
   <!-- ping/healthcheck -->
   <requestHandler name="/admin/ping" class="solr.PingRequestHandler">
     <lst name="invariants">
-      <str name="qt">pinkPony</str>
+      <str name="qt">standard</str>
       <str name="q">solrpingquery</str>
     </lst>
     <lst name="defaults">
