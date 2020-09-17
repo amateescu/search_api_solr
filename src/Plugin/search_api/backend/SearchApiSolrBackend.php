@@ -4508,6 +4508,11 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   protected function doDocumentCounts(Endpoint $endpoint): array {
     $connector = $this->getSolrConnector();
 
+    if (version_compare($connector->getSolrVersion(), '5.0.0', '<')) {
+      // The code below doesn't work in Solr below 5.x anyway.
+      return ['#total' => 0];
+    }
+
     $facet_key = Client::checkMinimal('5.2') ? 'local_key' : 'key';
 
     try {
