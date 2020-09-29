@@ -70,11 +70,19 @@ class SolariumRequestLogger implements EventSubscriberInterface {
    *   The pre execute event.
    */
   public function preExecuteRequest($event) {
+    static $counter = 0;
+    $counter++;
+
     /** @var \Solarium\Core\Event\PreExecuteRequest $event */
     $request = $event->getRequest();
+    $endpoint = $event->getEndpoint();
 
-    $this->develDumperManager->message($request, 'Solr request', 'debug', 'kint');
+    $this->develDumperManager->message($request, $counter . '. Solr request object', 'debug', 'kint');
+    $this->develDumperManager->message($endpoint, $counter . '. Solr endpoint object', 'debug', 'kint');
+    $this->develDumperManager->message($endpoint->getBaseUri() . $request->getUri(), $counter . '. Solr request', 'debug', 'kint');
+
     $this->develDumperManager->debug($request, 'Solr request');
+    $this->develDumperManager->debug($endpoint, 'Solr endpoint');
   }
 
   /**
