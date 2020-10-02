@@ -57,20 +57,18 @@ trait BasicAuthTrait {
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
-    // Since the form is nested into another, we can't simply use #parents for
-    // doing this array restructuring magic. (At least not without creating an
-    // unnecessary dependency on internal implementation.)
-    $values += $values['auth'];
-
-    // For password fields, there is no default value, they're empty by default.
-    // Therefore we ignore empty submissions if the user didn't change either.
-    if ($values['password'] === ''
-      && isset($this->configuration['username'])
-      && $values['username'] === $this->configuration['username']) {
-      $values['password'] = $this->configuration['password'];
-    }
 
     foreach ($values['auth'] as $key => $value) {
+      // For password fields, there is no default value, they're empty by
+      // default. Therefore we ignore empty submissions if the user didn't
+      // change either.
+      if ('password' === $key && '' === $value
+        && isset($this->configuration['auth']['username'])
+        && $values['auth']['username'] === $this->configuration['auth']['username']
+      ) {
+        $value = $this->configuration['auth']['password'];
+      }
+
       $form_state->setValue($key, $value);
     }
 
