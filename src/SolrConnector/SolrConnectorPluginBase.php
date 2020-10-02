@@ -576,7 +576,7 @@ abstract class SolrConnectorPluginBase extends ConfigurablePluginBase implements
     $this->connect();
     $this->useTimeout(self::QUERY_TIMEOUT, $endpoint);
 
-    $query = $this->solr->createPing();
+    $query = $this->solr->createPing($options);
 
     try {
       $start = microtime(TRUE);
