@@ -49,6 +49,8 @@ trait BasicAuthTrait {
       '#description' => $this->t('If this field is left blank and the HTTP username is filled out, the current password will not be changed.'),
     ];
 
+    $form_state->set('previous_password', $this->configuration['password']);
+
     return $form;
   }
 
@@ -66,7 +68,7 @@ trait BasicAuthTrait {
         && isset($this->configuration['auth']['username'])
         && $values['auth']['username'] === $this->configuration['auth']['username']
       ) {
-        $value = $this->configuration['auth']['password'];
+        $value = $form_state->get('previous_password');
       }
 
       $form_state->setValue($key, $value);
