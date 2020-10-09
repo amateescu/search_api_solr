@@ -6,6 +6,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\devel\DevelDumperManagerInterface;
 use Drupal\search_api\LoggerTrait;
 use Drupal\search_api_solr\Utility\Utility;
+use Solarium\Core\Client\Adapter\AdapterHelper;
 use Solarium\Core\Event\Events;
 use Solarium\QueryType\Select\Query\Query;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -79,7 +80,7 @@ class SolariumRequestLogger implements EventSubscriberInterface {
 
     $this->develDumperManager->message($request, $counter . '. Solr request object', 'debug', 'kint');
     $this->develDumperManager->message($endpoint, $counter . '. Solr endpoint object', 'debug', 'kint');
-    $this->develDumperManager->message($endpoint->getBaseUri() . $request->getUri(), $counter . '. Solr request', 'debug', 'kint');
+    $this->develDumperManager->message(AdapterHelper::buildUri($request, $endpoint), $counter . '. Solr request', 'debug', 'kint');
 
     $this->develDumperManager->debug($request, 'Solr request');
     $this->develDumperManager->debug($endpoint, 'Solr endpoint');
@@ -95,6 +96,7 @@ class SolariumRequestLogger implements EventSubscriberInterface {
     /** @var \Solarium\Core\Event\PostExecuteRequest $event */
     $response = $event->getResponse();
 
+    //$this->develDumperManager->message($response, 'Solr response', 'debug', 'kint');
     $this->develDumperManager->debug($response, 'Solr response');
   }
 }
