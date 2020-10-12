@@ -5,6 +5,7 @@ namespace Drupal\search_api_solr\Plugin\search_api\backend;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\Config;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\TypedData\EntityDataDefinitionInterface;
@@ -89,6 +90,8 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
   }
 
   use PluginDependencyTrait;
+
+  use DependencySerializationTrait;
 
   use SolrCommitTrait;
 
