@@ -40,7 +40,7 @@ class FacetsTest extends SearchApiBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function tearDown() {
+  protected function tearDown(): void {
     if ($this->indexId) {
       $index = Index::load($this->indexId);
       $index->clear();

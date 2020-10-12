@@ -45,7 +45,7 @@ class DateRangeTest extends ProcessorTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp($processor = NULL) {
+  public function setUp($processor = NULL): void {
     parent::setUp('solr_date_range');
     $this->enableSolrServer();
 

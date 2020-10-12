@@ -27,7 +27,7 @@ class ViewsTest extends SearchApiViewsTest {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     // Skip parent::setUp().
     SearchApiBrowserTestBase::setUp();
 
@@ -54,7 +54,7 @@ class ViewsTest extends SearchApiViewsTest {
   /**
    * {@inheritdoc}
    */
-  protected function tearDown() {
+  protected function tearDown(): void {
     $index = Index::load($this->indexId);
     $index->clear();
     $this->ensureCommit($index);

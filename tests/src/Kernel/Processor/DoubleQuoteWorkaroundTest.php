@@ -33,7 +33,7 @@ class DoubleQuoteWorkaroundTest extends ProcessorTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp($processor = NULL) {
+  public function setUp($processor = NULL): void {
     parent::setUp('double_quote_workaround');
     $this->enableSolrServer();
 

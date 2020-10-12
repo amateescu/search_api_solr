@@ -55,7 +55,7 @@ abstract class SolrBackendTestBase extends BackendTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     if ('true' === SOLR_CLOUD) {
       $this->serverId .= '_cloud';
       $this->indexId .= '_cloud';

@@ -28,7 +28,7 @@ class AddHierarchyTest extends SearchApiAddHierarchyTest {
   /**
    * {@inheritdoc}
    */
-  public function setUp($processor = NULL) {
+  public function setUp($processor = NULL): void {
     parent::setUp();
     $this->enableSolrServer();
   }

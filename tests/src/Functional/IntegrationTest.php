@@ -14,6 +14,7 @@ use Drupal\Tests\search_api\Functional\IntegrationTest as SearchApiIntegrationTe
 class IntegrationTest extends SearchApiIntegrationTest {
 
   use SolrCommitTrait;
+
   /**
    * The backend of the search server used for this test.
    *
@@ -32,7 +33,7 @@ class IntegrationTest extends SearchApiIntegrationTest {
   /**
    * {@inheritdoc}
    */
-  protected function tearDown() {
+  protected function tearDown(): void {
     if ($this->indexId) {
       if ($index = $this->getIndex()) {
         $index->clear();

@@ -4312,7 +4312,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     if (version_compare($solr_version, '8.6', '>=') && version_compare($solr_version, '8.6.3', '<')) {
       $this->getLogger()
         ->error('Solr 8.6.0, 8.6.1 and 8.6.2 contain a bug that breaks content extraction form files. Upgrade to 8.6.3 at least.');
-      return NULL;
+      return '';
     }
 
     $query = $connector->getExtractQuery();
