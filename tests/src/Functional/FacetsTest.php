@@ -78,7 +78,8 @@ class FacetsTest extends SearchApiBrowserTestBase {
     // Create a facet, enable 'show numbers'.
     $this->createFacet('Owl', 'owl');
     $edit = ['widget' => 'links', 'widget_config[show_numbers]' => '1'];
-    $this->drupalPostForm('admin/config/search/facets/owl/edit', $edit, 'Save');
+    $this->drupalGet('admin/config/search/facets/owl/edit');
+    $this->submitForm($edit, 'Save');
 
     // Verify that the facet results are correct.
     $this->drupalGet('search-api-test-fulltext');
