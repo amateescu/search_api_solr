@@ -27,7 +27,7 @@ jobs:
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
               with:
-                php-version: 7.3
+                php-version: 7.4
                 extensions: dom, curl, libxml, mbstring, zip, pdo, sqlite, pdo_sqlite, bcmath, intl, gd, iconv, json, simplexml
                 ini-values: memory_limit=256M,post_max_size=256M
                 coverage: none
@@ -36,7 +36,7 @@ jobs:
               uses: actions/checkout@v2
               with:
                 repository: drupal/drupal
-                ref: 8.8.x
+                ref: 8.9.x
                 path: drupal
 
             - name: Checkout search_api_solr
