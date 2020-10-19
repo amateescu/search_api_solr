@@ -203,14 +203,14 @@ jobs:
                 composer global require hirak/prestissimo
                 cd drupal
                 composer config repositories.search_api_solr '{"type": "vcs", "url": "../search_api_solr"}'
-                composer require solarium/solarium:"dev-master as 6.0.99" drupal/search_api_solr:4.99.0 drupal/search_api_autocomplete:1.x-dev drupal/search_api_spellcheck:3.x-dev drupal/facets:1.x-dev drupal/devel:3.x-dev drupal/geofield drush/drush monolog/monolog --ignore-platform-reqs --no-interaction --no-suggest
+                composer require solarium/solarium:"dev-master as 6.0.99" drupal/search_api_solr:4.99.0 drupal/search_api_autocomplete:1.x-dev drupal/search_api_spellcheck:3.x-dev drupal/facets:1.x-dev drupal/devel:3.x-dev drupal/search_api_location:1.x-dev drupal/geofield drush/drush monolog/monolog --ignore-platform-reqs --no-interaction --no-suggest
                 composer run-script drupal-phpunit-upgrade
 
-            - name: Install search_api_location
-              if: matrix.drupal != '9.0'
-              run: |
-                cd drupal
-                composer require drupal/search_api_location
+            #- name: Install search_api_location
+            #  if: matrix.drupal != '9.0'
+            #  run: |
+            #    cd drupal
+            #    composer require drupal/search_api_location
 
             - name: Create Solr collections
               run: |

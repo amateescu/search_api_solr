@@ -12,7 +12,7 @@ use Drupal\search_api\Entity\Server;
  *
  * @group search_api_solr
  * @group not_solr4
- * @group not_drupal9.0
+ * @group not_solr3
  */
 class SearchApiSolrLocationTest extends SolrBackendTestBase {
 
