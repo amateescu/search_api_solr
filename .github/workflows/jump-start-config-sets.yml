@@ -149,6 +149,19 @@ jobs:
                 drupal: ['8.9', '9.0', '9.1']
                 solr: ['4', '5', '6', '7', '8']
                 php: ['7.3', '7.4']
+                exclude:
+                  - drupal: '9.1'
+                    solr: '4'
+                    php: '7.3'
+                  - drupal: '9.1'
+                    solr: '5'
+                    php: '7.3'
+                  - drupal: '9.1'
+                    solr: '6'
+                    php: '7.3'
+                  - drupal: '9.1'
+                    solr: '7'
+                    php: '7.3'
 
         name: Drupal ${{ matrix.drupal }}, Solr ${{ matrix.solr }}, PHP ${{ matrix.php }}
 
