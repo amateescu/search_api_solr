@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\search_api_solr_test\Plugin\DataType;
+namespace Drupal\search_api_solr_test\Plugin\DataType;
 
 use Drupal\Core\TypedData\Plugin\DataType\Map;
 
