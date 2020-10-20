@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api_solr_test\Plugin\search_api\datasource;
+namespace Drupal\Tests\search_api_solr_test\Plugin\search_api\datasource;
 
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\Datasource\DatasourcePluginBase;

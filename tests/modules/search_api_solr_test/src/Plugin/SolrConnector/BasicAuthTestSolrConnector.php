@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api_solr_test\Plugin\SolrConnector;
+namespace Drupal\Tests\search_api_solr_test\Plugin\SolrConnector;
 
 use Drupal\search_api_solr\Plugin\SolrConnector\BasicAuthSolrConnector;
 use Drupal\search_api_solr\Utility\Utility;
