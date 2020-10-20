@@ -43,6 +43,8 @@ class ViewsTest extends SearchApiViewsTest {
       ->set('id', 'database_search_index')
       ->save();
 
+    $this->adjustBackendConfig();
+
     // Now do the same as parent::setUp().
     \Drupal::getContainer()
       ->get('search_api.index_task_manager')
@@ -50,6 +52,11 @@ class ViewsTest extends SearchApiViewsTest {
     $this->insertExampleContent();
     $this->indexItems($this->indexId);
   }
+
+  /**
+   * Allow 3rd party SOlr connectors to manipulate the config.
+   */
+  protected function adjustBackendConfig() {}
 
   /**
    * {@inheritdoc}
