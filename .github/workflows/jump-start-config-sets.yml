@@ -171,6 +171,8 @@ jobs:
         steps:
             - name: Setup sqlite
               run: |
+                # Drupal 9 requires a newer sqlite version which is available using this ppa.
+                sudo add-apt-repository ppa:sergey-dryabzhinsky/packages
                 sudo apt-get update
                 sudo apt-get install sqlite3 libsqlite3-dev
 
