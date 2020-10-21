@@ -785,7 +785,7 @@ class SearchApiSolrTest extends SolrBackendTestBase {
     // Indexed one by one, four documents get indexed successfully.
     $this->assertEqual($this->indexItems($this->indexId), 4);
 
-    // Don't mess up the remionaing document anymnore.
+    // Don't mess up the remaining document anymore.
     $index_fallback_test = FALSE;
     // Disable the fallback to index the documents one by one.
     $config['index_single_documents_fallback_count'] = 0;

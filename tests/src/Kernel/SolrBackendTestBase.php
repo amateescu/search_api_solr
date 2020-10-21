@@ -88,7 +88,7 @@ abstract class SolrBackendTestBase extends BackendTestBase {
   /**
    * Clear the index after every test.
    */
-  public function tearDown() {
+  public function tearDown(): void {
     $this->clearIndex();
     parent::tearDown();
   }
