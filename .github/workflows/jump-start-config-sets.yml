@@ -52,7 +52,6 @@ jobs:
 
             - name: Install dependencies
               run: |
-                composer global require hirak/prestissimo
                 cd drupal
                 composer config repositories.search_api_solr '{"type": "vcs", "url": "../search_api_solr"}'
                 composer require drupal/search_api_solr:4.99.0 drush/drush drupal/drush_language:1.x-dev --ignore-platform-reqs --no-interaction --no-suggest
@@ -214,7 +213,6 @@ jobs:
 
             - name: Install dependencies
               run: |
-                composer global require hirak/prestissimo
                 cd drupal
                 composer config repositories.search_api_solr '{"type": "vcs", "url": "../search_api_solr"}'
                 composer require solarium/solarium:"dev-master as 6.0.99" drupal/search_api_solr:4.99.0 drupal/search_api_autocomplete:1.x-dev drupal/search_api_spellcheck:3.x-dev drupal/facets:1.x-dev drupal/devel:3.x-dev drupal/search_api_location:1.x-dev drupal/geofield drush/drush monolog/monolog --ignore-platform-reqs --no-interaction --no-suggest
