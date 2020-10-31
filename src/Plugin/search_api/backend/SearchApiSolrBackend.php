@@ -1700,7 +1700,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
       $language_ids[] = LanguageInterface::LANGCODE_NOT_APPLICABLE;
     }
 
-    $query->setLanguages($language_ids);
+    $query->setLanguages(array_unique($language_ids));
     return $language_ids;
   }
 
@@ -1801,7 +1801,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $highlight_fields = ['*'];
 
     if (!empty($this->configuration['retrieve_data'])) {
-      $field_names = $this->getSolrFieldNamesKeyedByLanguage($query->getLanguages(), $query->getIndex());
+      $field_names = $this->getSolrFieldNamesKeyedByLanguage($this->ensureLanguageCondition($query), $query->getIndex());
 
       // If Search API provides information about the fields to retrieve, limit
       // the fields accordingly. ...
@@ -2877,7 +2877,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     // If there's no language condition on the first level, take the one from
     // the query.
     if (!$language_ids) {
-      $language_ids = $query->getLanguages();
+      $language_ids = $this->ensureLanguageCondition($query);
     }
 
     if (!$language_ids) {
@@ -3448,8 +3448,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected function getAutocompleteFields(QueryInterface $query) {
     $fl = [];
-    $language_ids = $query->getLanguages();
-    $field_names = $this->getSolrFieldNamesKeyedByLanguage($language_ids, $query->getIndex());
+    $field_names = $this->getSolrFieldNamesKeyedByLanguage($this->ensureLanguageCondition($query), $query->getIndex());
     // We explicit allow to get terms from twm_suggest. Therefore we call
     // parent::getQueryFulltextFields() to not filter twm_suggest.
     foreach (parent::getQueryFulltextFields($query) as $fulltext_field) {
@@ -3601,7 +3600,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    */
   protected function setAutocompleteSuggesterQuery(QueryInterface $query, AutocompleteQuery $solarium_query, $user_input, array $options = []) {
     if (isset($options['context_filter_tags']) && in_array('drupal/langcode:multilingual', $options['context_filter_tags'])) {
-      $langcodes = $query->getLanguages();
+      $langcodes = $this->ensureLanguageCondition($query);
       if ($langcodes && count($langcodes) == 1) {
         $langcode = reset($langcodes);
         $options['context_filter_tags'] = str_replace('drupal/langcode:multilingual', 'drupal/langcode:' . $langcode, $options['context_filter_tags']);
@@ -3948,7 +3947,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $connector = $this->getSolrConnector();
     $solarium_query = $connector->getMoreLikeThisQuery();
     $mlt_options = $query->getOption('search_api_mlt');
-    $language_ids = $query->getLanguages();
+    $language_ids = $this->ensureLanguageCondition($query);
     $field_names = $this->getSolrFieldNamesKeyedByLanguage($language_ids, $query->getIndex());
 
     $ids = [];
@@ -4193,7 +4192,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
    * @throws \Drupal\search_api\SearchApiException
    */
   protected function setSorts(Query $solarium_query, QueryInterface $query) {
-    $field_names = $this->getSolrFieldNamesKeyedByLanguage($query->getLanguages(), $query->getIndex());
+    $field_names = $this->getSolrFieldNamesKeyedByLanguage($this->ensureLanguageCondition($query), $query->getIndex());
     foreach ($query->getSorts() as $field => $order) {
       $solarium_query->addSort(Utility::getSortableSolrField($field, $field_names, $query), strtolower($order));
     }
@@ -4277,7 +4276,7 @@ class SearchApiSolrBackend extends BackendPluginBase implements SolrBackendInter
     $schema_languages = $this->getSchemaLanguageStatistics();
     $dictionaries = [];
 
-    foreach ($query->getLanguages() as $language_id) {
+    foreach ($this->ensureLanguageCondition($query) as $language_id) {
       if (isset($schema_languages[$language_id]) && $schema_languages[$language_id]) {
         $dictionaries[] = $schema_languages[$language_id];
       }

@@ -3,6 +3,7 @@
 namespace Drupal\search_api_solr\Utility;
 
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\ParseMode\ParseModeInterface;
@@ -563,7 +564,7 @@ class Utility {
       // For string and fulltext fields use the dedicated sort field for faster
       // and language specific sorts. If multiple languages are specified, use
       // the first one.
-      $language_ids = $query->getLanguages();
+      $language_ids = $query->getLanguages() ?? [LanguageInterface::LANGCODE_NOT_SPECIFIED];
       return Utility::encodeSolrName('sort' . SolrBackendInterface::SEARCH_API_SOLR_LANGUAGE_SEPARATOR . reset($language_ids) . '_' . $field_name);
     }
     elseif (preg_match('/^([a-z]+)m(_.*)/', $first_solr_field_name, $matches)) {
